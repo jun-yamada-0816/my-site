@@ -416,7 +416,7 @@
     <div class="text-center text-slate-700 text-xs space-y-1">
       <p>このサイトは当事者による相互サポートの場です。医療的な診断・治療の代わりにはなりません。</p>
       <p>&copy; 2026 星と海</p>
-      <p id="visit-counter" class="text-slate-800"></p>
+      <p id="visit-counter" class="text-slate-600">読み込み中…</p>
     </div>
   </footer>
 
@@ -1392,7 +1392,8 @@
     /* ══ 訪問者カウンター ══ */
     async function updateVisitCounter() {
       const el = document.getElementById('visit-counter');
-      if (!el || !sb) return;
+      if (!el) return;
+      if (!sb) { el.textContent = ''; return; }
       try {
         if (adminUser) {
           // 管理者のアクセスはカウントせず、現在の値だけ表示する
@@ -1406,6 +1407,7 @@
         }
       } catch (e) {
         console.error('updateVisitCounter:', e);
+        el.textContent = '訪問者数：取得エラー（Supabase未設定の可能性）';
       }
     }
 
