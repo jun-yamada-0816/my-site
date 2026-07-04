@@ -53,6 +53,33 @@
   create policy "admin_upload"  on storage.objects for insert with check (bucket_id = 'music' and auth.role() = 'authenticated');
   create policy "admin_delete"  on storage.objects for delete using (bucket_id = 'music' and auth.role() = 'authenticated');
 
+  ── 訪問者カウンター ──
+  create table site_visits (
+    id int primary key default 1,
+    count bigint not null default 0,
+    constraint single_row check (id = 1)
+  );
+  insert into site_visits (id, count) values (1, 0);
+  alter table site_visits enable row level security;
+  create policy "select_all" on site_visits for select using (true);
+
+  -- security definer なので anon は count を直接更新できず、
+  -- この関数経由で +1 するだけに制限される
+  create or replace function increment_visit_count()
+  returns bigint
+  language plpgsql
+  security definer
+  set search_path = public
+  as $$
+  declare
+    new_count bigint;
+  begin
+    update site_visits set count = count + 1 where id = 1 returning count into new_count;
+    return new_count;
+  end;
+  $$;
+  grant execute on function increment_visit_count() to anon, authenticated;
+
   3. Authentication > Users で管理者アカウントを作成
      （メールアドレスとパスワードを設定）
 
@@ -389,6 +416,7 @@
     <div class="text-center text-slate-700 text-xs space-y-1">
       <p>このサイトは当事者による相互サポートの場です。医療的な診断・治療の代わりにはなりません。</p>
       <p>&copy; 2026 星と海</p>
+      <p id="visit-counter" class="text-slate-800"></p>
     </div>
   </footer>
 
@@ -863,6 +891,7 @@
       renderPosts();
       renderMessages();
       renderTracks();
+      updateVisitCounter();
     }
 
     window.onAdminBtnClick = function () {
@@ -1360,10 +1389,30 @@
         </div>`;
     }
 
+    /* ══ 訪問者カウンター ══ */
+    async function updateVisitCounter() {
+      const el = document.getElementById('visit-counter');
+      if (!el || !sb) return;
+      try {
+        if (adminUser) {
+          // 管理者のアクセスはカウントせず、現在の値だけ表示する
+          const { data, error } = await sb.from('site_visits').select('count').eq('id', 1).single();
+          if (error) throw error;
+          el.textContent = `訪問者数：${(data?.count ?? 0).toLocaleString()}`;
+        } else {
+          const { data, error } = await sb.rpc('increment_visit_count');
+          if (error) throw error;
+          el.textContent = `訪問者数：${(data ?? 0).toLocaleString()}`;
+        }
+      } catch (e) {
+        console.error('updateVisitCounter:', e);
+      }
+    }
+
     /* ══ INIT ══ */
     async function init() {
       await checkSession();
-      await Promise.all([fetchPosts(), fetchMessages(), fetchTracks()]);
+      await Promise.all([fetchPosts(), fetchMessages(), fetchTracks(), updateVisitCounter()]);
       subscribeRealtime();
     }
 
