@@ -193,6 +193,7 @@
       <div class="flex items-center gap-6">
         <ul class="hidden md:flex gap-8 text-sm text-slate-400">
           <li><a href="#hero"     class="hover:text-aurora-blue transition-colors">Home</a></li>
+          <li><a href="#promise"  class="hover:text-aurora-blue transition-colors">約束</a></li>
           <li><a href="#blog"     class="hover:text-aurora-blue transition-colors">Blog</a></li>
           <li><a href="#music"    class="hover:text-aurora-blue transition-colors">音楽</a></li>
           <li><a href="#coping"   class="hover:text-aurora-blue transition-colors">こころのケア</a></li>
@@ -258,6 +259,65 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
       </svg>
+    </div>
+  </section>
+
+  <!-- ========== 星と海の約束 ========== -->
+  <section id="promise" class="relative z-10 py-32 overflow-hidden">
+    <div class="absolute inset-0" style="background:rgba(1,4,8,0.78);"></div>
+    <div class="absolute top-0 left-1/3 w-[600px] h-[300px] rounded-full pointer-events-none"
+         style="background:rgba(181,123,238,0.05);filter:blur(110px);"></div>
+
+    <div class="relative z-10 max-w-4xl mx-auto px-6">
+      <div class="text-center mb-14">
+        <p class="text-aurora-violet/70 text-sm tracking-widest mb-4">安心して過ごすために</p>
+        <h2 class="text-4xl md:text-5xl font-black mb-6">
+          <span class="text-shimmer">星と海の約束</span>
+        </h2>
+        <div class="w-16 h-px bg-gradient-to-r from-transparent via-aurora-violet to-transparent mx-auto mb-6"></div>
+        <p class="text-slate-400 text-sm leading-relaxed max-w-lg mx-auto">
+          ここは、批判や評価をされず、安心して気持ちを話せる場所でありたいと思っています。<br/>
+          ブログにも掲示板にも、共通して大切にしたいお約束です。
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-5">
+        <div class="glass rounded-2xl p-6" style="border-color:rgba(181,123,238,0.18);">
+          <p class="text-aurora-violet text-2xl font-black mb-2">01</p>
+          <h3 class="text-slate-100 font-semibold mb-1 text-sm">批判やアドバイスより、まず聴き合う</h3>
+          <p class="text-slate-500 text-xs leading-relaxed">
+            すぐに正しさや解決策を返そうとしなくて大丈夫です。まずは相手の気持ちに耳を傾けてください。
+          </p>
+        </div>
+        <div class="glass rounded-2xl p-6" style="border-color:rgba(181,123,238,0.18);">
+          <p class="text-aurora-violet text-2xl font-black mb-2">02</p>
+          <h3 class="text-slate-100 font-semibold mb-1 text-sm">お互いの体調を尊重する</h3>
+          <p class="text-slate-500 text-xs leading-relaxed">
+            その日によって、話せる・話せないコンディションは変わります。返信がなくても、自分や相手を責めないでください。
+          </p>
+        </div>
+        <div class="glass rounded-2xl p-6" style="border-color:rgba(181,123,238,0.18);">
+          <p class="text-aurora-violet text-2xl font-black mb-2">03</p>
+          <h3 class="text-slate-100 font-semibold mb-1 text-sm">否定的・攻撃的な言葉を使わない</h3>
+          <p class="text-slate-500 text-xs leading-relaxed">
+            ここに来る人はみな、何かを抱えてここに来ています。傷つける言葉は避けてください。
+          </p>
+        </div>
+        <div class="glass rounded-2xl p-6" style="border-color:rgba(181,123,238,0.18);">
+          <p class="text-aurora-violet text-2xl font-black mb-2">04</p>
+          <h3 class="text-slate-100 font-semibold mb-1 text-sm">個人が特定される情報を書き込まない</h3>
+          <p class="text-slate-500 text-xs leading-relaxed">
+            本名・連絡先など、あなたや他の人を特定できる情報の書き込みは控えてください。
+          </p>
+        </div>
+        <div class="glass rounded-2xl p-6 md:col-span-2" style="border-color:rgba(181,123,238,0.18);">
+          <p class="text-aurora-violet text-2xl font-black mb-2">05</p>
+          <h3 class="text-slate-100 font-semibold mb-1 text-sm">医療的な助言・診断はできません</h3>
+          <p class="text-slate-500 text-xs leading-relaxed">
+            ここでの言葉は医療行為の代わりにはなりません。つらくてたまらないときは、ページ下部の相談窓口も頼ってください。
+          </p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -407,12 +467,11 @@
       <!-- 書き込みガイドライン -->
       <div class="glass rounded-xl px-5 py-4 mb-6 text-xs text-slate-400 leading-relaxed"
            style="border-color:rgba(45,212,191,0.18);">
-        <p class="text-aurora-teal/80 font-semibold mb-2 tracking-widest">書き込む前に、少しだけお願いです</p>
-        <ul class="space-y-1 list-disc list-inside">
-          <li>医療的な助言や診断はできません。つらいときはページ下部の相談窓口もご利用ください。</li>
-          <li>否定・攻撃的な言葉は避け、お互いを大切にしてください。</li>
-          <li>本名・連絡先など、個人が特定される情報は書き込まないでください。</li>
-        </ul>
+        <p>
+          ここでの過ごし方は
+          <a href="#promise" class="text-aurora-teal hover:underline">「星と海の約束」</a>
+          を大切にしています。書き込む前に、少しだけ目を通してみてください。
+        </p>
       </div>
 
       <!-- 書き込みフォーム -->
