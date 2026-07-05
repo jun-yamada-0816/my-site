@@ -160,6 +160,19 @@
       -webkit-box-orient:vertical;
       overflow:hidden;
     }
+    /* 呼吸法アニメーション: 4秒吸う→4秒止める→4秒吐く→4秒止める（計16秒ループ） */
+    .breathe-circle {
+      background: radial-gradient(circle, rgba(79,195,247,0.30), rgba(45,212,191,0.12));
+      border: 1px solid rgba(45,212,191,0.4);
+      animation: breathe 16s ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0%   { transform: scale(0.62); }
+      25%  { transform: scale(1); }
+      50%  { transform: scale(1); }
+      75%  { transform: scale(0.62); }
+      100% { transform: scale(0.62); }
+    }
     ::-webkit-scrollbar       { width:5px; }
     ::-webkit-scrollbar-track { background:#010408; }
     ::-webkit-scrollbar-thumb { background:#0f2040; border-radius:3px; }
@@ -182,6 +195,7 @@
           <li><a href="#hero"     class="hover:text-aurora-blue transition-colors">Home</a></li>
           <li><a href="#blog"     class="hover:text-aurora-blue transition-colors">Blog</a></li>
           <li><a href="#music"    class="hover:text-aurora-blue transition-colors">音楽</a></li>
+          <li><a href="#coping"   class="hover:text-aurora-blue transition-colors">こころのケア</a></li>
           <li><a href="#bulletin" class="hover:text-aurora-blue transition-colors">掲示板</a></li>
         </ul>
         <!-- 管理者ボタン（ナビ右端） -->
@@ -323,6 +337,53 @@
     </div>
   </section>
 
+  <!-- ========== こころのケア ========== -->
+  <section id="coping" class="relative z-10 py-32 overflow-hidden">
+    <div class="absolute inset-0" style="background:rgba(1,4,8,0.78);"></div>
+    <div class="absolute top-0 right-1/3 w-[600px] h-[300px] rounded-full pointer-events-none"
+         style="background:rgba(45,212,191,0.05);filter:blur(110px);"></div>
+
+    <div class="relative z-10 max-w-4xl mx-auto px-6">
+      <div class="text-center mb-14">
+        <p class="text-aurora-teal/70 text-sm tracking-widest mb-4">つらいときに、ひとりで</p>
+        <h2 class="text-4xl md:text-5xl font-black mb-6">
+          <span class="text-shimmer">こころのケア</span>
+        </h2>
+        <div class="w-16 h-px bg-gradient-to-r from-transparent via-aurora-teal to-transparent mx-auto mb-6"></div>
+        <p class="text-slate-400 text-sm leading-relaxed max-w-lg mx-auto">
+          不安や恐怖で頭がいっぱいになったとき、少し落ち着くための方法です。<br/>
+          効果には個人差があります。つらいときは無理せず、下記の相談窓口も頼ってください。
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- 呼吸法 -->
+        <div class="glass glass-teal rounded-2xl p-8 flex flex-col items-center text-center">
+          <h3 class="text-slate-200 font-semibold mb-1">呼吸法（ボックスブリージング）</h3>
+          <p class="text-slate-600 text-xs mb-8">丸の動きに合わせて、ゆっくり呼吸してみてください</p>
+          <div class="relative w-36 h-36 flex items-center justify-center mb-8">
+            <div class="breathe-circle absolute inset-0 rounded-full"></div>
+            <span id="breathe-label" class="relative text-aurora-teal text-sm font-semibold tracking-widest">吸って</span>
+          </div>
+          <p class="text-slate-600 text-xs">4秒吸う → 4秒止める → 4秒吐く → 4秒止める</p>
+        </div>
+
+        <!-- 5-4-3-2-1 グラウンディング -->
+        <div class="glass rounded-2xl p-8" style="border-color:rgba(79,195,247,0.18);">
+          <h3 class="text-slate-200 font-semibold mb-1">5-4-3-2-1 グラウンディング</h3>
+          <p class="text-slate-600 text-xs mb-6">五感を使って、「今ここ」に意識を戻す方法です</p>
+          <ol class="space-y-3 text-sm text-slate-300">
+            <li class="flex gap-3"><span class="text-aurora-blue font-bold w-4 shrink-0">5</span>見えるものを5つ、心の中で挙げる</li>
+            <li class="flex gap-3"><span class="text-aurora-blue font-bold w-4 shrink-0">4</span>触れるものを4つ、実際に触ってみる</li>
+            <li class="flex gap-3"><span class="text-aurora-blue font-bold w-4 shrink-0">3</span>聞こえる音を3つ探す</li>
+            <li class="flex gap-3"><span class="text-aurora-blue font-bold w-4 shrink-0">2</span>香りを2つ感じてみる</li>
+            <li class="flex gap-3"><span class="text-aurora-blue font-bold w-4 shrink-0">1</span>味わえるものを1つ意識する</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ========== 掲示板 ========== -->
   <section id="bulletin" class="relative z-10 py-32 overflow-hidden">
     <div class="absolute inset-0" style="background:rgba(1,4,8,0.78);"></div>
@@ -341,6 +402,17 @@
           悩んでいること、誰かに話したかったこと、今日感じたこと——なんでも書いていいです。<br/>
           ニックネームで大丈夫。あなたのペースで、ゆっくり話してください。
         </p>
+      </div>
+
+      <!-- 書き込みガイドライン -->
+      <div class="glass rounded-xl px-5 py-4 mb-6 text-xs text-slate-400 leading-relaxed"
+           style="border-color:rgba(45,212,191,0.18);">
+        <p class="text-aurora-teal/80 font-semibold mb-2 tracking-widest">書き込む前に、少しだけお願いです</p>
+        <ul class="space-y-1 list-disc list-inside">
+          <li>医療的な助言や診断はできません。つらいときはページ下部の相談窓口もご利用ください。</li>
+          <li>否定・攻撃的な言葉は避け、お互いを大切にしてください。</li>
+          <li>本名・連絡先など、個人が特定される情報は書き込まないでください。</li>
+        </ul>
       </div>
 
       <!-- 書き込みフォーム -->
@@ -1421,6 +1493,18 @@
       }
     }
 
+    /* ══ 呼吸法ラベル切り替え ══ */
+    function startBreathingLabel() {
+      const label = document.getElementById('breathe-label');
+      if (!label) return;
+      const phases = ['吸って', '止めて', '吐いて', '止めて'];
+      let i = 0;
+      setInterval(() => {
+        i = (i + 1) % phases.length;
+        label.textContent = phases[i];
+      }, 4000);
+    }
+
     /* ══ INIT ══ */
     async function init() {
       await checkSession();
@@ -1428,6 +1512,7 @@
       subscribeRealtime();
     }
 
+    startBreathingLabel();
     init();
   })();
   </script>
