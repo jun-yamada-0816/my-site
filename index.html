@@ -203,6 +203,16 @@
             <a href="niigata-cafes-list.html" target="_blank" class="hover:text-aurora-blue transition-colors">カフェ一覧</a>
           </li>
         </ul>
+        <!-- モバイルメニューボタン -->
+        <button id="mobile-menu-btn" onclick="toggleMobileMenu()" title="メニュー" aria-label="メニュー"
+                class="md:hidden p-2 rounded-lg text-slate-400 hover:text-aurora-blue transition-colors">
+          <svg id="mobile-menu-icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+          <svg id="mobile-menu-icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
         <!-- 管理者ボタン（ナビ右端） -->
         <button id="admin-btn" onclick="onAdminBtnClick()" title="管理者ログイン"
                 class="p-2 rounded-lg text-slate-600 hover:text-aurora-blue/70 transition-colors">
@@ -217,6 +227,19 @@
         </button>
       </div>
     </div>
+    <!-- モバイルメニュー パネル -->
+    <ul id="mobile-menu" class="hidden md:hidden flex-col gap-1 px-6 pb-4 text-sm text-slate-400 border-t border-aurora-blue/10">
+      <li><a href="#hero"     onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">Home</a></li>
+      <li><a href="#promise"  onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">約束</a></li>
+      <li><a href="#blog"     onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">Blog</a></li>
+      <li><a href="#music"    onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">音楽</a></li>
+      <li><a href="#coping"   onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">こころのケア</a></li>
+      <li><a href="#bulletin" onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">掲示板</a></li>
+      <li id="admin-page-links-mobile" class="hidden flex-col gap-1">
+        <a href="next-business-expo.html" target="_blank" class="block py-2 hover:text-aurora-blue transition-colors">展示会</a>
+        <a href="niigata-cafes-list.html" target="_blank" class="block py-2 hover:text-aurora-blue transition-colors">カフェ一覧</a>
+      </li>
+    </ul>
   </nav>
 
   <!-- ========== HERO ========== -->
@@ -1032,11 +1055,47 @@
         adminPageLinks.classList.remove('flex');
       }
 
+      const adminPageLinksMobile = document.getElementById('admin-page-links-mobile');
+      if (adminUser) {
+        adminPageLinksMobile.classList.remove('hidden');
+        adminPageLinksMobile.classList.add('flex');
+      } else {
+        adminPageLinksMobile.classList.add('hidden');
+        adminPageLinksMobile.classList.remove('flex');
+      }
+
       renderPosts();
       renderMessages();
       renderTracks();
       updateVisitCounter();
     }
+
+    /* ══ モバイルメニュー ══ */
+    window.toggleMobileMenu = function () {
+      const menu = document.getElementById('mobile-menu');
+      const iconOpen = document.getElementById('mobile-menu-icon-open');
+      const iconClose = document.getElementById('mobile-menu-icon-close');
+      const isOpen = !menu.classList.contains('hidden');
+      if (isOpen) {
+        menu.classList.add('hidden');
+        menu.classList.remove('flex');
+        iconOpen.classList.remove('hidden');
+        iconClose.classList.add('hidden');
+      } else {
+        menu.classList.remove('hidden');
+        menu.classList.add('flex');
+        iconOpen.classList.add('hidden');
+        iconClose.classList.remove('hidden');
+      }
+    };
+
+    window.closeMobileMenu = function () {
+      const menu = document.getElementById('mobile-menu');
+      document.getElementById('mobile-menu-icon-open').classList.remove('hidden');
+      document.getElementById('mobile-menu-icon-close').classList.add('hidden');
+      menu.classList.add('hidden');
+      menu.classList.remove('flex');
+    };
 
     window.onAdminBtnClick = function () {
       if (adminUser) {
