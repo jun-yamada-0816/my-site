@@ -198,6 +198,10 @@
           <li><a href="#music"    class="hover:text-aurora-blue transition-colors">音楽</a></li>
           <li><a href="#coping"   class="hover:text-aurora-blue transition-colors">こころのケア</a></li>
           <li><a href="#bulletin" class="hover:text-aurora-blue transition-colors">掲示板</a></li>
+          <li id="admin-page-links" class="hidden gap-8">
+            <a href="next-business-expo.html" target="_blank" class="hover:text-aurora-blue transition-colors">展示会</a>
+            <a href="niigata-cafes-list.html" target="_blank" class="hover:text-aurora-blue transition-colors">カフェ一覧</a>
+          </li>
         </ul>
         <!-- 管理者ボタン（ナビ右端） -->
         <button id="admin-btn" onclick="onAdminBtnClick()" title="管理者ログイン"
@@ -1017,6 +1021,15 @@
       } else {
         uploadTrackBtn.classList.add('hidden');
         uploadTrackBtn.classList.remove('flex');
+      }
+
+      const adminPageLinks = document.getElementById('admin-page-links');
+      if (adminUser) {
+        adminPageLinks.classList.remove('hidden');
+        adminPageLinks.classList.add('flex');
+      } else {
+        adminPageLinks.classList.add('hidden');
+        adminPageLinks.classList.remove('flex');
       }
 
       renderPosts();

@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>NEXT BUSINESS EXPO 2026 日程表</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html { font-size: 16px; }
+  body {
+    font-family: -apple-system, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+    background: #f2f4f8;
+    color: #1c1c1e;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    background: linear-gradient(150deg, #1a3a5c 0%, #1e6fbf 100%);
+    padding: 48px 20px 28px;
+    color: white;
+    text-align: center;
+  }
+  .header-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    opacity: 0.75;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+  .header-sub {
+    font-size: 13px;
+    opacity: 0.8;
+    line-height: 1.6;
+  }
+  .header-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 14px;
+  }
+  .badge {
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  /* ===== NOTICE ===== */
+  .notice {
+    margin: 16px 16px 0;
+    background: #fff4e5;
+    border: 1.5px solid #ff9500;
+    border-radius: 12px;
+    padding: 13px 16px;
+    font-size: 13px;
+    color: #7c4500;
+    line-height: 1.6;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .notice-icon { font-size: 18px; flex-shrink: 0; margin-top: -1px; }
+
+  /* ===== TABS ===== */
+  .tab-bar {
+    display: flex;
+    gap: 0;
+    margin: 16px 16px 0;
+    background: white;
+    border-radius: 12px;
+    padding: 4px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+  }
+  .tab-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    border-radius: 9px;
+    padding: 12px 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #8e8e93;
+    transition: all 0.2s;
+    line-height: 1.3;
+  }
+  .tab-btn.active {
+    background: linear-gradient(135deg, #1e6fbf, #2e90ff);
+    color: white;
+    box-shadow: 0 2px 8px rgba(30,111,191,0.35);
+  }
+  .tab-btn .tab-day { font-size: 11px; font-weight: 500; opacity: 0.8; display: block; }
+
+  /* ===== TAB CONTENT ===== */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ===== SECTION HEADER ===== */
+  .section-header {
+    margin: 20px 16px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .section-dot.blue { background: #2e90ff; }
+  .section-dot.green { background: #30d158; }
+  .section-dot.red { background: #ff3b30; }
+  .section-dot.purple { background: #af52de; }
+  .section-dot.gray { background: #8e8e93; }
+  .section-title { font-size: 12px; font-weight: 700; color: #636366; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  /* ===== TIMELINE CARD ===== */
+  .card {
+    margin: 0 16px 10px;
+    background: white;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.08);
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .card.session-card {
+    background: linear-gradient(135deg, #fff1f0, #fff8f7);
+    border: 1.5px solid #ffb3ae;
+  }
+  .card.session-card.session2 {
+    background: linear-gradient(135deg, #f3f0ff, #faf8ff);
+    border: 1.5px solid #c4b5fd;
+  }
+  .card.transit-card {
+    background: #f0f8ff;
+    border-left: 3px solid #2e90ff;
+  }
+  .card.event-card {
+    background: #f0fff4;
+    border-left: 3px solid #30d158;
+  }
+  .card-icon { font-size: 22px; flex-shrink: 0; width: 30px; text-align: center; }
+  .card-body { flex: 1; min-width: 0; }
+  .card-time {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1e6fbf;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .card.session-card .card-time { color: #c0392b; }
+  .card.session-card.session2 .card-time { color: #7c3aed; }
+  .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1c1c1e;
+    line-height: 1.4;
+    margin-bottom: 5px;
+  }
+  .card-sub {
+    font-size: 13px;
+    color: #636366;
+    line-height: 1.55;
+  }
+  .speakers-block { margin-top: 8px; }
+  .speaker-chip {
+    display: inline-block;
+    background: rgba(255,255,255,0.75);
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1c1c1e;
+    margin: 3px 4px 3px 0;
+    line-height: 1.4;
+  }
+  .paid-tag {
+    display: inline-block;
+    background: #ff3b30;
+    color: white;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 7px;
+  }
+
+  /* ===== STAY OPTION ===== */
+  .stay-box {
+    margin: 16px 16px 10px;
+    background: #f0fdf4;
+    border: 1.5px dashed #30d158;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: #166534;
+    line-height: 1.65;
+  }
+  .stay-box strong { display: block; font-size: 14px; margin-bottom: 6px; color: #15803d; }
+  .or-divider {
+    text-align: center;
+    font-size: 12px;
+    color: #8e8e93;
+    font-weight: 600;
+    margin: 6px 0;
+  }
+
+  /* ===== DAY2 ALTERNATE PLAN ===== */
+  .plan-box {
+    margin: 0 16px 10px;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.65;
+  }
+  .plan-box.plan-a {
+    background: #eff6ff;
+    border: 1.5px solid #93c5fd;
+    color: #1e40af;
+  }
+  .plan-box.plan-b {
+    background: #fdf4ff;
+    border: 1.5px solid #d8b4fe;
+    color: #6b21a8;
+  }
+  .plan-box strong { display: block; font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+
+  /* ===== TIPS ===== */
+  .tips-section { margin: 20px 16px 0; }
+  .tips-title { font-size: 14px; font-weight: 700; color: #1c1c1e; margin-bottom: 12px; }
+  .tip-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: #3c3c43;
+    line-height: 1.6;
+    background: white;
+    border-radius: 10px;
+    padding: 12px 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    align-items: flex-start;
+  }
+  .tip-icon { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    text-align: center;
+    font-size: 11px;
+    color: #aeaeb2;
+    margin-top: 24px;
+    padding: 0 16px;
+    line-height: 1.8;
+  }
+  .footer a { color: #2e90ff; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-label">参加日程表</div>
+  <h1>NEXT BUSINESS EXPO<br>SUMMER 2026</h1>
+  <div class="header-sub">堀江貴文氏 全4セッション参加プラン<br>JR新潟大学前駅 出発</div>
+  <div class="header-badges">
+    <span class="badge">📅 7月16日（木）・17日（金）</span>
+    <span class="badge">🏢 浜松町館</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('day1', this)">
+    <span class="tab-day">DAY 1</span>
+    7月16日（木）
+  </button>
+  <button class="tab-btn" onclick="switchTab('day2', this)">
+    <span class="tab-day">DAY 2</span>
+    7月17日（金）
+  </button>
+</div>
+
+<!-- ===================== DAY 1 ===================== -->
+<div id="day1" class="tab-content active">
+
+  <div class="section-header">
+    <div class="section-dot blue"></div>
+    <div class="section-title">🚃 新潟 → 東京（往路）</div>
+  </div>
+
+  <div class="card transit-card">
+    <div class="card-icon">🚃</div>
+    <div class="card-body">
+      <div class="card-time">05:30</div>
+      <div class="card-title">新潟大学前駅 出発</div>
+      <div class="card-sub">JR越後線 始発（新発田行）</div>
+    </div>
+  </div>
+
+  <div class="card transit-card">
+    <div class="card-icon">🚉</div>
+    <div class="card-body">
+      <div class="card-time">05:50</div>
+      <div class="card-title">新潟駅 着 → 新幹線乗り換え</div>
+      <div class="card-sub">新幹線改札・ホームへ移動</div>
+    </div>
+  </div>
+
+  <div class="card transit-card">
+    <div class="card-icon">🚄</div>
+    <div class="card-body">
+      <div class="card-time">06:12</div>
+      <div class="card-title">新潟駅 出発 — とき300号</div>
+      <div class="card-sub">上越新幹線 / 指定席 10号車 11番C席<br>予約番号：E55743</div>
+    </div>
+  </div>
+
+  <div class="card transit-card">
+    <div class="card-icon">🗼</div>
+    <div class="card-body">
+      <div class="card-time">07:45</div>
+      <div class="card-title">大宮駅 着 → JR線乗り換え</div>
+      <div class="card-sub">京浜東北線などで浜松町方面へ（約1時間）</div>
+    </div>
+  </div>
+
+  <div class="card transit-card">
+    <div class="card-icon">🏢</div>
+    <div class="card-body">
+      <div class="card-time">08:46</div>
+      <div class="card-title">浜松町着 → 会場入り</div>
+      <div class="card-sub">東京都立産業貿易センター浜松町館 徒歩3分<br>開場まで約1時間15分・会場前で待機可</div>
+    </div>
+  </div>
+
+  <!-- EXPO -->
+  <div class="section-header">
+    <div class="section-dot green"></div>
+    <div class="section-title">🎪 EXPO 会場（10:00〜18:00）</div>
+  </div>
+
+  <div class="card event-card">
+    <div class="card-icon">🚪</div>
+    <div class="card-body">
+      <div class="card-time">10:00</div>
+      <div class="card-title">開場 — 展示ブース見学</div>
+      <div class="card-sub">10:20のセッション前にカンファレンス会場の席を確保しておく</div>
+    </div>
+  </div>
+
+  <!-- SESSION 1 -->
+  <div class="card session-card">
+    <div class="card-icon">⭐</div>
+    <div class="card-body">
+
+      <div class="card-time">10:20 〜 10:55</div>
+      <div class="card-title">堀江貴文 × 深津貴之 対談</div>
+      <div class="speakers-block">
+        <span class="speaker-chip">👤 深津 貴之<br>株式会社THE GUILD 代表取締役</span>
+        <span class="speaker-chip">👤 堀江 貴文<br>実業家</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card event-card">
+    <div class="card-icon">☕</div>
+    <div class="card-body">
+      <div class="card-time">10:55 〜 11:10</div>
+      <div class="card-title">セッション間 休憩（15分）</div>
+      <div class="card-sub">席を移動せず次のセッションに備える</div>
+    </div>
+  </div>
+
+  <!-- SESSION 2 -->
+  <div class="card session-card session2">
+    <div class="card-icon">⭐</div>
+    <div class="card-body">
+
+      <div class="card-time">11:10 〜 11:45</div>
+      <div class="card-title">堀江貴文 × 中山敬一 対談</div>
+      <div class="speakers-block">
+        <span class="speaker-chip">🎓 中山 敬一<br>東京科学大学 特別栄誉教授</span>
+        <span class="speaker-chip">👤 堀江 貴文<br>実業家</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card event-card">
+    <div class="card-icon">🍽</div>
+    <div class="card-body">
+      <div class="card-time">12:00頃</div>
+      <div class="card-title">昼食・展示ブース見学</div>
+      <div class="card-sub">浜松町駅周辺にランチスポット多数。展示会場内も確認を。</div>
+    </div>
+  </div>
+
+  <div class="card event-card">
+    <div class="card-icon">🏛</div>
+    <div class="card-body">
+      <div class="card-time">13:00 〜 18:00</div>
+      <div class="card-title">フリー見学・他セッション参加</div>
+      <div class="card-sub">AI・DXソリューション各社ブース、サブカンファレンス等</div>
+    </div>
+  </div>
+
+  <!-- ホテルチェックイン -->
+  <div class="section-header">
+    <div class="section-dot purple"></div>
+    <div class="section-title">🏨 ホテルチェックイン</div>
+  </div>
+
+  <div class="card" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1.5px solid #86efac;">
+    <div class="card-icon">🏨</div>
+    <div class="card-body">
+      <div class="card-time" style="color: #15803d;">16:00〜</div>
+      <div class="card-title">ベイホテル東京浜松町 チェックイン</div>
+      <div class="card-sub">〒105-0013 港区浜松町1-16-9<br>ダブルルーム 禁煙 ／ Booking.com 予約番号：6297125455<br>翌7月17日（金）10:00 チェックアウト</div>
+    </div>
+  </div>
+
+</div><!-- /day1 -->
+
+<!-- ===================== DAY 2 ===================== -->
+<div id="day2" class="tab-content">
+
+  <div class="section-header">
+    <div class="section-dot blue"></div>
+    <div class="section-title">🏨 チェックアウト → 会場へ</div>
+  </div>
+
+  <div class="card" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1.5px solid #86efac;">
+    <div class="card-icon">🛏</div>
+    <div class="card-body">
+      <div class="card-time" style="color: #15803d;">〜10:00</div>
+      <div class="card-title">ベイホテル東京浜松町 チェックアウト</div>
+      <div class="card-sub">港区浜松町1-16-9 ／ チェックアウト 10:00まで<br>会場（浜松町館）まで徒歩約3分。チェックアウト後すぐ会場へ</div>
+    </div>
+  </div>
+
+  <!-- EXPO Day2 -->
+  <div class="section-header">
+    <div class="section-dot green"></div>
+    <div class="section-title">🎪 EXPO 会場（10:00〜18:00）</div>
+  </div>
+
+  <div class="card event-card">
+    <div class="card-icon">🏛</div>
+    <div class="card-body">
+      <div class="card-time">10:00 〜</div>
+      <div class="card-title">展示ブース見学・フリー参加</div>
+      <div class="card-sub">午前中はゆっくり各社展示を見学</div>
+    </div>
+  </div>
+
+  <div class="card event-card">
+    <div class="card-icon">🍽</div>
+    <div class="card-body">
+      <div class="card-time">12:00頃</div>
+      <div class="card-title">昼食</div>
+      <div class="card-sub">14:45頃までにカンファレンス会場の席を確保</div>
+    </div>
+  </div>
+
+  <!-- SESSION 3 -->
+  <div class="card session-card">
+    <div class="card-icon">⭐</div>
+    <div class="card-body">
+
+      <div class="card-time">15:00 〜 15:40</div>
+      <div class="card-title">堀江貴文 × 古田貴之 対談</div>
+      <div class="speakers-block">
+        <span class="speaker-chip">🤖 古田 貴之<br>千葉工業大学 未来ロボット技術研究センター所長</span>
+        <span class="speaker-chip">👤 堀江 貴文<br>実業家</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card event-card">
+    <div class="card-icon">☕</div>
+    <div class="card-body">
+      <div class="card-time">15:40 〜 15:50</div>
+      <div class="card-title">セッション間 休憩（10分）</div>
+      <div class="card-sub">席をキープしたまま次のセッションへ</div>
+    </div>
+  </div>
+
+  <!-- SESSION 4 -->
+  <div class="card session-card session2">
+    <div class="card-icon">⭐</div>
+    <div class="card-body">
+
+      <div class="card-time">15:50 〜 16:20</div>
+      <div class="card-title">堀江貴文 × 近藤義仁 対談</div>
+      <div class="speakers-block">
+        <span class="speaker-chip">💻 近藤 義仁【ナル先生】<br>エージェンティック無職</span>
+        <span class="speaker-chip">👤 堀江 貴文<br>実業家</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card event-card">
+    <div class="card-icon">🔔</div>
+    <div class="card-body">
+      <div class="card-time">16:20</div>
+      <div class="card-title">全セッション終了 🎉</div>
+      <div class="card-sub">残り時間で展示ブース見学後、18:00の閉場に合わせて出発</div>
+    </div>
+  </div>
+
+  <!-- 帰路 Day2 -->
+  <div class="section-header">
+    <div class="section-dot gray"></div>
+    <div class="section-title">🌆 東京 → 新潟（帰路）</div>
+  </div>
+
+  <div class="card transit-card">
+    <div class="card-icon">🚃</div>
+    <div class="card-body">
+      <div class="card-time">16:52</div>
+      <div class="card-title">浜松町 → 東京駅</div>
+      <div class="card-sub">JR山手線 内回りで東京駅へ 約5分</div>
+    </div>
+  </div>
+
+  <div class="card transit-card">
+    <div class="card-icon">🚄</div>
+    <div class="card-body">
+      <div class="card-time">17:08発</div>
+      <div class="card-title">東京駅 出発 — とき333号</div>
+      <div class="card-sub">上越新幹線 / 指定席 8号車 3番C席<br>予約番号：E91570 / 新潟 18:57着</div>
+    </div>
+  </div>
+
+  <div class="card transit-card">
+    <div class="card-icon">🏠</div>
+    <div class="card-body">
+      <div class="card-time">19:45</div>
+      <div class="card-title">新潟大学前駅 着（帰宅）</div>
+      <div class="card-sub">新潟 18:57着 → 越後線で約20〜30分</div>
+    </div>
+  </div>
+
+</div><!-- /day2 -->
+
+<!-- TIPS -->
+<div class="tips-section">
+  <div class="tips-title">💡 参加のポイント</div>
+  <div class="tip-row">
+    <div class="tip-icon">🏨</div>
+    <div><strong>ベイホテル東京浜松町</strong>予約済み（Booking.com 予約番号：6297125455）。会場まで徒歩約3分です。</div>
+  </div>
+</div>
+
+<div class="footer">
+  情報は2026年6月27日時点のものです。時刻は目安です。必ず公式情報をご確認ください。<br>
+  <a href="https://www.next-business-expo.jp/" target="_blank">🔗 NEXT BUSINESS EXPO 公式サイト</a>
+  ／
+  <a href="https://timetables.jreast.co.jp/" target="_blank">🔗 JR東日本 時刻表</a>
+</div>
+
+<script>
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
