@@ -80,6 +80,44 @@
   $$;
   grant execute on function increment_visit_count() to anon, authenticated;
 
+  ── ブログ閲覧数・音楽再生数カウンター ──
+  alter table blog_posts   add column if not exists view_count bigint not null default 0;
+  alter table music_tracks add column if not exists play_count bigint not null default 0;
+
+  -- security definer なので anon はカウントを直接更新できず、
+  -- これらの関数経由で +1 するだけに制限される
+  create or replace function increment_post_views(post_id uuid)
+  returns bigint
+  language plpgsql
+  security definer
+  set search_path = public
+  as $$
+  declare
+    new_count bigint;
+  begin
+    update blog_posts set view_count = view_count + 1
+      where id = post_id returning view_count into new_count;
+    return new_count;
+  end;
+  $$;
+  grant execute on function increment_post_views(uuid) to anon, authenticated;
+
+  create or replace function increment_track_plays(track_id uuid)
+  returns bigint
+  language plpgsql
+  security definer
+  set search_path = public
+  as $$
+  declare
+    new_count bigint;
+  begin
+    update music_tracks set play_count = play_count + 1
+      where id = track_id returning play_count into new_count;
+    return new_count;
+  end;
+  $$;
+  grant execute on function increment_track_plays(uuid) to anon, authenticated;
+
   3. Authentication > Users で管理者アカウントを作成
      （メールアドレスとパスワードを設定）
 
@@ -939,7 +977,10 @@
     <div class="relative glass rounded-2xl p-8 w-full max-w-2xl shadow-2xl shadow-black/60
                 max-h-[92vh] flex flex-col">
       <div class="flex-1 overflow-y-auto modal-scroll pr-1">
-        <p id="detail-date" class="text-aurora-blue/60 text-xs mb-3"></p>
+        <div class="flex items-center gap-3 mb-3">
+          <p id="detail-date" class="text-aurora-blue/60 text-xs"></p>
+          <p id="detail-views" class="text-slate-500 text-xs"></p>
+        </div>
         <h2 id="detail-title" class="text-2xl font-bold text-slate-100 mb-6 leading-snug"></h2>
         <div id="detail-content" class="text-slate-300 leading-relaxed text-sm whitespace-pre-wrap"></div>
       </div>
@@ -1449,7 +1490,17 @@
                         hover:shadow-xl hover:shadow-aurora-blue/10 transition-all duration-300 group">
           <div class="flex items-start justify-between gap-4">
             <div class="flex-1 min-w-0">
-              <p class="text-aurora-blue/60 text-xs mb-1.5">${fmtDate(p.created_at)}</p>
+              <div class="flex items-center gap-3 mb-1.5">
+                <p class="text-aurora-blue/60 text-xs">${fmtDate(p.created_at)}</p>
+                <p class="flex items-center gap-1 text-slate-500 text-xs">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>${(p.view_count ?? 0).toLocaleString()} 回閲覧
+                </p>
+              </div>
               <h3 class="text-base font-bold text-slate-100 mb-2 group-hover:text-aurora-blue
                          transition-colors leading-snug">${esc(p.title)}</h3>
               <p class="text-slate-500 text-sm leading-relaxed line-clamp-2">${esc(p.content)}</p>
@@ -1610,6 +1661,10 @@
             <div class="flex-1 min-w-0">
               <p class="text-slate-100 font-semibold text-sm truncate">${esc(t.title)}</p>
               ${t.description ? `<p class="text-slate-500 text-xs mt-0.5 truncate">${esc(t.description)}</p>` : ''}
+              <p class="flex items-center gap-1 text-slate-500 text-xs mt-1">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <span id="play-count-${t.id}">${(t.play_count ?? 0).toLocaleString()} 回再生</span>
+              </p>
             </div>
             ${adminUser ? `
             <button onclick="confirmDeleteTrack('${t.id}')"
@@ -1667,7 +1722,27 @@
       showPlayer(id);
       setPlay(id, true);
       currentAudio.play().catch(() => setPlay(id, false));
+      countPlay(id);
     };
+
+    // 再生数を +1（新しく曲を再生し始めたときのみ。一時停止からの再開は数えない）
+    function countPlay(id) {
+      const track = allTracks.find(t => t.id === id);
+      const setCount = (n) => {
+        const el = document.getElementById(`play-count-${id}`);
+        if (el) el.textContent = `${n.toLocaleString()} 回再生`;
+      };
+      if (track) {
+        track.play_count = (track.play_count ?? 0) + 1;
+        setCount(track.play_count);
+      }
+      if (!sb) return;
+      sb.rpc('increment_track_plays', { track_id: id }).then(({ data, error }) => {
+        if (error || typeof data !== 'number') return;
+        if (track) track.play_count = data;
+        setCount(data);
+      });
+    }
 
     window.seekTrack = function (id, e) {
       if (currentTrackId !== id || !currentAudio) return;
@@ -1774,10 +1849,22 @@
     window.openPost = (id) => {
       const p = allPosts.find(x => x.id === id);
       if (!p) return;
+      p.view_count = (p.view_count ?? 0) + 1;
+      if (sb) {
+        sb.rpc('increment_post_views', { post_id: id }).then(({ data, error }) => {
+          if (error || typeof data !== 'number') return;
+          p.view_count = data;
+          renderPosts();
+          const el = document.getElementById('detail-views');
+          if (el) el.textContent = `${data.toLocaleString()} 回閲覧`;
+        });
+      }
       document.getElementById('detail-date').textContent    = fmtDate(p.created_at);
+      document.getElementById('detail-views').textContent   = `${p.view_count.toLocaleString()} 回閲覧`;
       document.getElementById('detail-title').textContent   = p.title;
       document.getElementById('detail-content').textContent = p.content;
       document.getElementById('detail-modal').classList.remove('hidden');
+      renderPosts();
     };
     window.closePostDetail = () => document.getElementById('detail-modal').classList.add('hidden');
 
