@@ -1853,10 +1853,86 @@
       await fetchPosts();
     }
 
-    // Xの投稿画面を開き、ブログと同じ内容を入力済みにする（実際の投稿はユーザーがXの画面上で行う）
-    function buildXIntentUrl(title, content) {
-      const text = `${title}\n\n${content}`.slice(0, 270);
-      return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    /* ══ Xへの投稿準備 ══
+       ブログと同じ内容を入力済みにしてXの投稿画面を開く（実際の投稿はXの画面上で行う）。
+       スマホではブラウザ版だとログインを求められるため、Xアプリを直接起動する。 */
+
+    // 投稿文の末尾に必ず付ける2行。本文が長い場合も削らず、本文側を切り詰める。
+    const X_SITE_URL  = 'https://hoshitoumi.vercel.app';
+    const X_HASHTAGS  = '#精神障害 #生きづらさ #居場所';
+    const X_MAX_LEN   = 280;
+    const X_URL_LEN   = 23;  // XはURLの実際の長さに関わらず23字として数える
+
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    // Xの文字数計算。日本語などの全角文字は2字として数えられる。
+    function xLength(s) {
+      let n = 0;
+      for (const ch of s) {
+        const c = ch.codePointAt(0);
+        const halfWidth =
+          (c >= 0x0000 && c <= 0x10ff) || (c >= 0x2000 && c <= 0x200d) ||
+          (c >= 0x2010 && c <= 0x201f) || (c >= 0x2032 && c <= 0x2037);
+        n += halfWidth ? 1 : 2;
+      }
+      return n;
+    }
+
+    function buildXPostText(title, content) {
+      const footer = `\n\n${X_SITE_URL}\n${X_HASHTAGS}`;
+      // フッターは必ず残すので、その分を差し引いた残りが本文に使える枠
+      const footerLen = 2 + X_URL_LEN + 1 + xLength(X_HASHTAGS);
+      const budget = X_MAX_LEN - footerLen;
+
+      let body = `${title}\n\n${content}`;
+      if (xLength(body) > budget) {
+        // 「…」自体も全角で2字ぶん消費するので、その枠を残して切り詰める
+        const ellipsis = '…';
+        const room = budget - xLength(ellipsis);
+        let out = '', n = 0;
+        for (const ch of body) {
+          const w = xLength(ch);
+          if (n + w > room) break;
+          out += ch;
+          n += w;
+        }
+        body = out + ellipsis;
+      }
+      return body + footer;
+    }
+
+    // preOpenedTab はポップアップブロック対策でPC用に事前に開いておいたタブ
+    function openXCompose(text, preOpenedTab) {
+      const webUrl = `https://x.com/intent/post?text=${encodeURIComponent(text)}`;
+
+      if (!isMobile) {
+        if (preOpenedTab) preOpenedTab.location.href = webUrl;
+        else window.open(webUrl, '_blank', 'noopener');
+        return;
+      }
+
+      const appUrl = `twitter://post?message=${encodeURIComponent(text)}`;
+
+      if (/Android/i.test(navigator.userAgent)) {
+        // Androidはintent:でアプリを名指しでき、未インストールなら
+        // browser_fallback_url へ自動的に切り替わる
+        location.href = `intent://post?message=${encodeURIComponent(text)}` +
+          `#Intent;scheme=twitter;package=com.twitter.android;` +
+          `S.browser_fallback_url=${encodeURIComponent(webUrl)};end`;
+        return;
+      }
+
+      // iOSはアプリのURLスキームを試し、切り替わらなければブラウザ版を開く。
+      // アプリが起動した場合はページが背面に回る（document.hidden）ので、
+      // その時はフォールバックしない。
+      const fallback = setTimeout(() => {
+        if (!document.hidden) location.href = webUrl;
+      }, 1500);
+      window.addEventListener('pagehide', () => clearTimeout(fallback), { once: true });
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) clearTimeout(fallback);
+      }, { once: true });
+      location.href = appUrl;
     }
 
     async function deletePost(id) {
@@ -2290,12 +2366,13 @@
       const btn     = e.target.querySelector('button[type="submit"]');
       if (!title || !content) return;
       btn.disabled = true;
-      // ポップアップブロック対策として、ユーザー操作の直後（awaitより前）にタブを開いておく
-      const xTab = window.open('');
+      // ポップアップブロック対策として、ユーザー操作の直後（awaitより前）にタブを開いておく。
+      // スマホはアプリ起動のため現在のタブから遷移するので、事前に開くのはPCのみ。
+      const xTab = isMobile ? null : window.open('');
       try {
         await createPost(title, content);
         closePostEditor();
-        if (xTab) xTab.location.href = buildXIntentUrl(title, content);
+        openXCompose(buildXPostText(title, content), xTab);
       } catch {
         if (xTab) xTab.close();
         errEl.textContent = '投稿に失敗しました。ログイン状態を確認してください。';
