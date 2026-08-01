@@ -30,6 +30,18 @@
   create policy "insert_all"   on bulletin_messages for insert with check (true);
   create policy "admin_delete" on bulletin_messages for delete using (auth.role() = 'authenticated');
 
+  ── 掲示板の「返信」と「管理者による編集」を使うために追加で実行 ──
+  -- parent_id … 返信先の書き込みID（親を消すと返信もまとめて消える）
+  -- edited_at … 管理者が編集した日時（「編集済み」表示に使う）
+  alter table bulletin_messages
+    add column if not exists parent_id uuid references bulletin_messages(id) on delete cascade,
+    add column if not exists edited_at timestamptz;
+  create index if not exists bulletin_messages_parent_idx on bulletin_messages(parent_id);
+  create policy "admin_update" on bulletin_messages for update
+    using (auth.role() = 'authenticated')
+    with check (auth.role() = 'authenticated');
+  -- 実行しなくてもサイトは今まで通り動きます（返信ボタンが出ないだけです）
+
   ── 音楽テーブル ──
   create table music_tracks (
     id uuid default gen_random_uuid() primary key,
@@ -803,7 +815,9 @@
       <!-- 書き込みフォーム -->
       <div class="glass glass-teal rounded-2xl p-6 mb-10">
         <h3 class="text-slate-500 font-semibold mb-1 text-sm">ここに書き残していってください</h3>
-        <p class="text-slate-500 text-xs mb-4">返信はできませんが、必ず読んでいます。</p>
+        <p class="text-slate-500 text-xs mb-4">
+          書き込みには「返信する」から返事ができます。返事がなくても、必ず読んでいます。
+        </p>
         <form id="message-form" class="space-y-3">
           <input id="msg-name" type="text" maxlength="30" required
                  placeholder="ニックネームでOK（30文字以内）"
@@ -1085,6 +1099,45 @@
         </div>
       </form>
       <button onclick="closePostEditor()"
+              class="absolute top-4 right-4 p-1 text-slate-500 hover:text-slate-600 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ======================================================
+       MODAL: Xへの投稿（長文のためコピーして貼り付ける）
+       ====================================================== -->
+  <div id="x-share-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-700/25 backdrop-blur-sm" onclick="closeXShareModal()"></div>
+    <div class="relative glass rounded-2xl p-8 w-full max-w-2xl shadow-2xl shadow-slate-400/30
+                max-h-[92vh] flex flex-col">
+      <h2 class="text-xl font-bold text-slate-800 mb-2 shrink-0">Xに投稿する</h2>
+      <p class="text-slate-500 text-xs leading-relaxed mb-4 shrink-0">
+        長い文章はXの投稿画面に直接渡せないため、本文をコピーして貼り付ける形にしています。<br/>
+        下の「コピーする」を押してから「Xを開く」を押し、投稿画面で貼り付けてください。
+      </p>
+      <textarea id="x-share-text" readonly
+                class="flex-1 min-h-[180px] bg-white/70 border border-slate-200 rounded-xl px-4 py-3
+                       text-slate-700 text-sm resize-none modal-scroll overflow-y-auto"></textarea>
+      <p id="x-share-note" class="text-aurora-teal text-xs mt-2 min-h-[1em] shrink-0"></p>
+      <div class="shrink-0 flex flex-col sm:flex-row gap-3 mt-3">
+        <button type="button" onclick="copyXShareText(false)"
+                class="flex-1 glass py-3 rounded-xl text-aurora-teal border border-aurora-teal/40
+                       hover:border-aurora-teal hover:bg-aurora-teal/10 transition-all duration-300
+                       text-sm font-semibold">
+          コピーする
+        </button>
+        <button type="button" onclick="openXBlankCompose()"
+                class="flex-1 glass py-3 rounded-xl text-aurora-blue border border-aurora-blue/40
+                       hover:border-aurora-blue hover:bg-aurora-blue/10 transition-all duration-300
+                       text-sm font-semibold">
+          Xを開く
+        </button>
+      </div>
+      <button onclick="closeXShareModal()"
               class="absolute top-4 right-4 p-1 text-slate-500 hover:text-slate-600 transition-colors">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -1717,6 +1770,16 @@
     let allMessages = [];
     let allTracks   = [];
 
+    /* ── 掲示板（返信スレッド・管理者編集）の状態 ──
+       renderMessages() は一覧をまるごと作り直すため、入力中の内容は
+       ここに退避しておき、描画のたびに書き戻す。 */
+    let threadsReady     = true;  // parent_id / edited_at 列があるか（SQL未実行なら false）
+    let replyOpenFor     = null;  // 返信フォームを開いている書き込みのid
+    let editingMessageId = null;  // 管理者が編集中の書き込みのid
+    let inlineFocusId    = null;  // 直前に入力していた入力欄のid（描画後に戻す）
+    const replyDrafts    = {};    // { メッセージid: { name, content } }
+    let editDraft        = '';
+
     /* ── オーディオプレーヤー状態 ── */
     let currentAudio   = null;
     let currentTrackId = null;
@@ -1860,8 +1923,15 @@
     // 投稿文の末尾に必ず付ける2行。本文が長い場合も削らず、本文側を切り詰める。
     const X_SITE_URL  = 'https://hoshitoumi.vercel.app';
     const X_HASHTAGS  = '#精神障害 #生きづらさ #居場所';
-    const X_MAX_LEN   = 280;
+    // X Premium（有料）なので長文をそのまま投稿できる。無料アカウントに戻すときは 280 にする。
+    const X_MAX_LEN   = 25000;
     const X_URL_LEN   = 23;  // XはURLの実際の長さに関わらず23字として数える
+
+    // Xの投稿画面へ本文を渡す仕組み（intent）は、URLに本文を載せて開くもの。
+    // 有料アカウントでも「この渡し方」は280字までしか受け付けず、
+    // 超えた分は落とされて本文が途中で切れたり空になったりする。
+    // そのため280字を超える長文は、コピーして貼り付ける画面に切り替える。
+    const X_INTENT_MAX_LEN = 280;
 
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -1905,18 +1975,31 @@
     function openXCompose(text, preOpenedTab) {
       const webUrl = `https://x.com/intent/post?text=${encodeURIComponent(text)}`;
 
+      // そのまま渡すと本文が欠けてしまう長さなら、コピー＆貼り付けの画面に切り替える
+      if (xLength(text) > X_INTENT_MAX_LEN) {
+        if (preOpenedTab) preOpenedTab.close();
+        openXShareModal(text);
+        return;
+      }
+
+      navigateToX(`twitter://post?message=${encodeURIComponent(text)}`, webUrl, preOpenedTab);
+    }
+
+    // 本文なしでXの投稿画面だけを開く（貼り付け用）
+    window.openXBlankCompose = () =>
+      navigateToX('twitter://post', 'https://x.com/compose/post', null);
+
+    function navigateToX(appUrl, webUrl, preOpenedTab) {
       if (!isMobile) {
         if (preOpenedTab) preOpenedTab.location.href = webUrl;
         else window.open(webUrl, '_blank', 'noopener');
         return;
       }
 
-      const appUrl = `twitter://post?message=${encodeURIComponent(text)}`;
-
       if (/Android/i.test(navigator.userAgent)) {
         // Androidはintent:でアプリを名指しでき、未インストールなら
         // browser_fallback_url へ自動的に切り替わる
-        location.href = `intent://post?message=${encodeURIComponent(text)}` +
+        location.href = appUrl.replace(/^twitter:\/\//, 'intent://') +
           `#Intent;scheme=twitter;package=com.twitter.android;` +
           `S.browser_fallback_url=${encodeURIComponent(webUrl)};end`;
         return;
@@ -1934,6 +2017,40 @@
       }, { once: true });
       location.href = appUrl;
     }
+
+    /* ══ 長文をXに投稿するための「コピーして貼り付け」画面 ══ */
+    window.openXShareModal = (text) => {
+      document.getElementById('x-share-text').value    = text;
+      document.getElementById('x-share-note').textContent = '';
+      document.getElementById('x-share-modal').classList.remove('hidden');
+      // 開いた時点でクリップボードにも入れておく（ブラウザに拒否されても手動でコピーできる）
+      copyXShareText(true);
+    };
+
+    window.closeXShareModal = () =>
+      document.getElementById('x-share-modal').classList.add('hidden');
+
+    window.copyXShareText = async (silent) => {
+      const ta   = document.getElementById('x-share-text');
+      const note = document.getElementById('x-share-note');
+      try {
+        await navigator.clipboard.writeText(ta.value);
+        note.textContent = 'コピーしました。Xの投稿画面に貼り付けてください。';
+        return;
+      } catch {}
+      // クリップボードAPIが使えないブラウザ向けの昔ながらの方法。
+      // 選択状態になってしまうので、自動コピーのときは試さない。
+      if (silent) return;
+      ta.focus();
+      ta.select();
+      try {
+        if (document.execCommand('copy')) {
+          note.textContent = 'コピーしました。Xの投稿画面に貼り付けてください。';
+          return;
+        }
+      } catch {}
+      note.textContent = '自動でコピーできませんでした。本文を選んでコピーしてください。';
+    };
 
     async function deletePost(id) {
       const { error } = await sb.from('blog_posts').delete().eq('id', id);
@@ -1994,9 +2111,16 @@
           .from('bulletin_messages')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(50);
+          .limit(200);   // 返信もこの中に含まれるので多めに取る
         if (error) throw error;
         allMessages = data ?? [];
+        // SQLをまだ実行していないDBでも動くよう、返信・編集用の列があるか確かめる
+        if (allMessages.length > 0) {
+          threadsReady = 'parent_id' in allMessages[0] && 'edited_at' in allMessages[0];
+        } else {
+          const probe = await sb.from('bulletin_messages').select('parent_id, edited_at').limit(1);
+          threadsReady = !probe.error;
+        }
         renderMessages();
       } catch (e) {
         console.error('fetchMessages:', e);
@@ -2004,10 +2128,12 @@
       }
     }
 
-    async function createMessage(authorName, content) {
+    async function createMessage(authorName, content, parentId = null) {
+      const row = { author_name: authorName, content };
+      if (parentId) row.parent_id = parentId;
       const { data, error } = await sb
         .from('bulletin_messages')
-        .insert({ author_name: authorName, content })
+        .insert(row)
         .select().single();
       if (error) throw error;
       // 楽観的追加（リアルタイムイベントで重複排除）
@@ -2017,10 +2143,25 @@
       }
     }
 
+    async function updateMessage(id, content) {
+      const patch = threadsReady
+        ? { content, edited_at: new Date().toISOString() }
+        : { content };
+      const { data, error } = await sb
+        .from('bulletin_messages')
+        .update(patch)
+        .eq('id', id)
+        .select().single();
+      if (error) throw error;
+      const i = allMessages.findIndex(m => m.id === id);
+      if (i >= 0) allMessages[i] = data;
+    }
+
     async function deleteMessage(id) {
       const { error } = await sb.from('bulletin_messages').delete().eq('id', id);
       if (error) throw error;
-      allMessages = allMessages.filter(m => m.id !== id);
+      // 返信はDB側で一緒に消えるので、画面上でもまとめて取り除く
+      allMessages = allMessages.filter(m => m.id !== id && m.parent_id !== id);
       renderMessages();
     }
 
@@ -2034,25 +2175,259 @@
         el.innerHTML = emptyMsg('まだ書き込みがありません。最初のメッセージを送ってみましょう。');
         return;
       }
-      el.innerHTML = `<div class="space-y-3">${allMessages.map(m => `
-        <div class="glass glass-teal rounded-xl p-4 flex gap-3">
+
+      // 取得件数の上限で親が欠けてしまった返信は、単独の書き込みとして扱う
+      const ids   = new Set(allMessages.map(m => m.id));
+      const roots = allMessages.filter(m => !m.parent_id || !ids.has(m.parent_id));
+      const repliesOf = (id) => allMessages
+        .filter(m => m.parent_id === id)
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+      el.innerHTML = `<div class="space-y-4">${
+        roots.map(m => threadHtml(m, repliesOf(m.id))).join('')
+      }</div>`;
+
+      restoreInlineDrafts();
+    }
+
+    // 元の書き込み＋その返信をひとかたまりにして表示する
+    function threadHtml(m, replies) {
+      return `
+        <div class="glass glass-teal rounded-2xl p-4">
+          ${messageBodyHtml(m, false)}
+          ${replies.length ? `
+          <div class="mt-4 pl-4 border-l-2 border-aurora-teal/25 space-y-3">
+            ${replies.map(r => messageBodyHtml(r, true)).join('')}
+          </div>` : ''}
+          ${threadsReady ? replyAreaHtml(m.id, replies.length) : ''}
+        </div>`;
+    }
+
+    // 1件ぶんの本文。管理者が編集中ならテキストエリアに差し替わる。
+    function messageBodyHtml(m, isReply) {
+      if (editingMessageId === m.id) {
+        return `
+          <div>
+            <textarea id="edit-content-${m.id}" rows="4" maxlength="500"
+                      oninput="onInlineInput(this)"
+                      class="w-full bg-white/80 border border-aurora-teal/40 rounded-xl px-4 py-3
+                             text-slate-700 text-sm resize-none
+                             focus:outline-none focus:border-aurora-teal transition-colors">${esc(m.content)}</textarea>
+            <div class="flex items-center gap-3 mt-2 flex-wrap">
+              <button onclick="saveMessageEdit('${m.id}')"
+                      class="px-4 py-1.5 rounded-lg text-xs font-semibold text-aurora-teal
+                             border border-aurora-teal/40 hover:bg-aurora-teal/10 transition-colors">
+                保存する
+              </button>
+              <button onclick="cancelMessageEdit()"
+                      class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-500
+                             border border-slate-200 hover:border-slate-400 transition-colors">
+                やめる
+              </button>
+              <p id="edit-error-${m.id}" class="text-red-500 text-xs"></p>
+            </div>
+          </div>`;
+      }
+
+      return `
+        <div class="flex gap-3">
           <div class="flex-1 min-w-0">
-            <div class="flex items-baseline gap-2 mb-1.5">
-              <span class="text-aurora-teal text-sm font-semibold">${esc(m.author_name)}</span>
+            <div class="flex items-baseline gap-2 mb-1.5 flex-wrap">
+              ${isReply ? `
+              <svg class="w-3 h-3 text-aurora-teal/60 shrink-0 self-center" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a5 5 0 015 5v3M3 10l5-5M3 10l5 5"/>
+              </svg>` : ''}
+              <span class="text-aurora-teal ${isReply ? 'text-xs' : 'text-sm'} font-semibold">${esc(m.author_name)}</span>
               <span class="text-slate-500 text-xs">${fmtDatetime(m.created_at)}</span>
+              ${m.edited_at ? '<span class="text-slate-400 text-xs">（編集済み）</span>' : ''}
             </div>
             <p class="text-slate-600 text-sm leading-relaxed break-words whitespace-pre-wrap">${esc(m.content)}</p>
           </div>
           ${adminUser ? `
-          <button onclick="confirmDeleteMessage('${m.id}')"
-                  class="shrink-0 self-start p-1.5 rounded-lg text-slate-400
-                         hover:text-red-500 hover:bg-red-500/10 transition-colors duration-200">
+          <div class="shrink-0 self-start flex gap-1">
+            <button onclick="startMessageEdit('${m.id}')" title="編集"
+                    class="p-1.5 rounded-lg text-slate-400
+                           hover:text-aurora-teal hover:bg-aurora-teal/10 transition-colors duration-200">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+            </button>
+            <button onclick="confirmDeleteMessage('${m.id}')" title="削除"
+                    class="p-1.5 rounded-lg text-slate-400
+                           hover:text-red-500 hover:bg-red-500/10 transition-colors duration-200">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>` : ''}
+        </div>`;
+    }
+
+    // 「返信する」ボタン、または開いている返信フォーム
+    function replyAreaHtml(id, replyCount) {
+      if (replyOpenFor !== id) {
+        return `
+          <button onclick="openReply('${id}')"
+                  class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs
+                         text-aurora-teal/90 hover:text-aurora-teal hover:bg-aurora-teal/10
+                         transition-colors">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a5 5 0 015 5v3M3 10l5-5M3 10l5 5"/>
             </svg>
-          </button>` : ''}
-        </div>
-      `).join('')}</div>`;
+            ${replyCount ? `返信する（${replyCount}件）` : '返信する'}
+          </button>`;
+      }
+      return `
+        <div class="mt-4 pl-4 border-l-2 border-aurora-teal/40 space-y-2">
+          <input id="reply-name-${id}" type="text" maxlength="30" oninput="onInlineInput(this)"
+                 placeholder="ニックネームでOK（30文字以内）"
+                 class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-2.5
+                        text-slate-700 text-sm placeholder-slate-400
+                        focus:outline-none focus:border-aurora-teal/50 transition-colors" />
+          <textarea id="reply-content-${id}" rows="3" maxlength="500" oninput="onInlineInput(this)"
+                    placeholder="この書き込みへの返信（500文字以内）"
+                    class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-2.5
+                           text-slate-700 text-sm placeholder-slate-400 resize-none
+                           focus:outline-none focus:border-aurora-teal/50 transition-colors"></textarea>
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <p id="reply-error-${id}" class="text-red-500 text-xs"></p>
+            <div class="flex gap-2 ml-auto">
+              <button onclick="cancelReply()"
+                      class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-500
+                             border border-slate-200 hover:border-slate-400 transition-colors">
+                やめる
+              </button>
+              <button id="reply-submit-${id}" onclick="submitReply('${id}')"
+                      class="px-4 py-1.5 rounded-lg text-xs font-semibold text-aurora-teal
+                             border border-aurora-teal/40 hover:bg-aurora-teal/10 transition-colors
+                             disabled:opacity-40 disabled:cursor-not-allowed">
+                返信を送る
+              </button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // 描画で作り直された入力欄に、退避しておいた内容とカーソル位置を戻す
+    function restoreInlineDrafts() {
+      if (replyOpenFor) {
+        const d       = replyDrafts[replyOpenFor] ?? {};
+        const nameEl  = document.getElementById(`reply-name-${replyOpenFor}`);
+        const contEl  = document.getElementById(`reply-content-${replyOpenFor}`);
+        if (nameEl) nameEl.value = d.name ?? loadNickname();
+        if (contEl) contEl.value = d.content ?? '';
+      }
+      if (editingMessageId) {
+        const ta = document.getElementById(`edit-content-${editingMessageId}`);
+        if (ta && editDraft) ta.value = editDraft;
+      }
+      if (!replyOpenFor && !editingMessageId) return;
+
+      const target = document.getElementById(inlineFocusId)
+        ?? document.getElementById(`reply-content-${replyOpenFor}`)
+        ?? document.getElementById(`edit-content-${editingMessageId}`);
+      if (!target) return;
+      target.focus({ preventScroll: true });
+      const n = target.value.length;
+      try { target.setSelectionRange(n, n); } catch {}
+    }
+
+    window.onInlineInput = (elForInput) => {
+      inlineFocusId = elForInput.id;
+      if (elForInput.id.startsWith('edit-content-')) { editDraft = elForInput.value; return; }
+      const id = elForInput.id.replace(/^reply-(name|content)-/, '');
+      const d  = replyDrafts[id] ?? (replyDrafts[id] = {});
+      if (elForInput.id.startsWith('reply-name-')) d.name = elForInput.value;
+      else d.content = elForInput.value;
+    };
+
+    /* ── 返信 ── */
+    window.openReply = (id) => {
+      replyOpenFor  = id;
+      inlineFocusId = `reply-content-${id}`;
+      renderMessages();
+    };
+
+    window.cancelReply = () => {
+      if (replyOpenFor) delete replyDrafts[replyOpenFor];
+      replyOpenFor  = null;
+      inlineFocusId = null;
+      renderMessages();
+    };
+
+    window.submitReply = async (id) => {
+      const errEl   = document.getElementById(`reply-error-${id}`);
+      const btn     = document.getElementById(`reply-submit-${id}`);
+      const name    = document.getElementById(`reply-name-${id}`).value.trim();
+      const content = document.getElementById(`reply-content-${id}`).value.trim();
+      if (!name || !content) {
+        errEl.textContent = 'ニックネームと本文を入れてください。';
+        return;
+      }
+      btn.disabled = true;
+      try {
+        // 送信中に再描画されても入力欄が復活しないよう、先に閉じた状態にしておく
+        delete replyDrafts[id];
+        replyOpenFor  = null;
+        inlineFocusId = null;
+        await createMessage(name, content, id);
+        saveNickname(name);
+        renderMessages();
+      } catch (e) {
+        console.error('submitReply:', e);
+        replyOpenFor      = id;
+        replyDrafts[id]   = { name, content };
+        renderMessages();
+        const again = document.getElementById(`reply-error-${id}`);
+        if (again) again.textContent = '返信を送れませんでした。しばらくしてからお試しください。';
+      }
+    };
+
+    /* ── 管理者による編集 ── */
+    window.startMessageEdit = (id) => {
+      const m = allMessages.find(x => x.id === id);
+      editingMessageId = id;
+      editDraft        = m ? m.content : '';
+      inlineFocusId    = `edit-content-${id}`;
+      renderMessages();
+    };
+
+    window.cancelMessageEdit = () => {
+      editingMessageId = null;
+      editDraft        = '';
+      inlineFocusId    = null;
+      renderMessages();
+    };
+
+    window.saveMessageEdit = async (id) => {
+      const ta      = document.getElementById(`edit-content-${id}`);
+      const errEl   = document.getElementById(`edit-error-${id}`);
+      const content = ta.value.trim();
+      if (!content) {
+        errEl.textContent = '本文を入れてください。';
+        return;
+      }
+      try {
+        await updateMessage(id, content);
+        editingMessageId = null;
+        editDraft        = '';
+        inlineFocusId    = null;
+        renderMessages();
+      } catch (e) {
+        console.error('saveMessageEdit:', e);
+        errEl.textContent = '更新できませんでした。ログイン状態を確認してください。';
+      }
+    };
+
+    /* ── ニックネームは端末内にだけ覚えておく ── */
+    const NICKNAME_KEY = 'hoshiumi_nickname';
+
+    function loadNickname() {
+      try { return localStorage.getItem(NICKNAME_KEY) ?? ''; } catch { return ''; }
+    }
+    function saveNickname(name) {
+      try { localStorage.setItem(NICKNAME_KEY, name); } catch {}
     }
 
     /* ══ MUSIC ══ */
@@ -2292,9 +2667,18 @@
             }
           })
         .on('postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'bulletin_messages' },
+          ({ new: row }) => {
+            const i = allMessages.findIndex(m => m.id === row.id);
+            if (i < 0) return;
+            allMessages[i] = row;
+            renderMessages();
+          })
+        .on('postgres_changes',
           { event: 'DELETE', schema: 'public', table: 'bulletin_messages' },
           ({ old: row }) => {
-            allMessages = allMessages.filter(m => m.id !== row.id);
+            // 親が消えたときは、ぶら下がっていた返信も画面から取り除く
+            allMessages = allMessages.filter(m => m.id !== row.id && m.parent_id !== row.id);
             renderMessages();
           })
         .subscribe();
@@ -2340,8 +2724,17 @@
       await deletePost(id);
     };
     window.confirmDeleteMessage = async (id) => {
-      if (!confirm('この書き込みを削除しますか？')) return;
-      await deleteMessage(id);
+      const hasReplies = allMessages.some(m => m.parent_id === id);
+      const msg = hasReplies
+        ? 'この書き込みを削除しますか？ぶら下がっている返信もすべて削除されます。'
+        : 'この書き込みを削除しますか？';
+      if (!confirm(msg)) return;
+      try {
+        await deleteMessage(id);
+      } catch (e) {
+        console.error('deleteMessage:', e);
+        alert('削除できませんでした。ログイン状態を確認してください。');
+      }
     };
 
     /* ══ FORMS ══ */
@@ -2391,6 +2784,7 @@
       btn.disabled = true;
       try {
         await createMessage(name, content);
+        saveNickname(name);
         document.getElementById('msg-content').value = '';
         errEl.textContent = '';
       } catch {
@@ -2517,7 +2911,7 @@
     /* ══ Esc キーでモーダルを閉じる ══ */
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape') return;
-      ['sos-modal','settings-modal','login-modal','post-modal','detail-modal','upload-modal']
+      ['sos-modal','settings-modal','login-modal','post-modal','detail-modal','upload-modal','x-share-modal']
         .forEach(id => document.getElementById(id)?.classList.add('hidden'));
     });
 
@@ -2631,6 +3025,9 @@
 
     /* ══ INIT ══ */
     async function init() {
+      // 前回のニックネームを入れておく（端末内にだけ保存している）
+      const nameEl = document.getElementById('msg-name');
+      if (nameEl && !nameEl.value) nameEl.value = loadNickname();
       await checkSession();
       await Promise.all([fetchPosts(), fetchMessages(), fetchTracks(), updateVisitCounter()]);
       subscribeRealtime();
