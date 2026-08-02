@@ -1780,6 +1780,11 @@
     const replyDrafts    = {};    // { メッセージid: { name, content } }
     let editDraft        = '';
 
+    /* ── ブログ一覧の表示件数 ──
+       投稿が増えても一覧が長くなりすぎないよう、少しずつ開く。 */
+    const BLOG_PAGE_SIZE = 5;
+    let blogVisible = BLOG_PAGE_SIZE;
+
     /* ── オーディオプレーヤー状態 ── */
     let currentAudio   = null;
     let currentTrackId = null;
@@ -1900,7 +1905,7 @@
           .from('blog_posts')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(30);
+          .limit(100);   // 表示は少しずつだが、取得は多めにしておく
         if (error) throw error;
         allPosts = data ?? [];
         renderPosts();
@@ -2068,7 +2073,10 @@
         el.innerHTML = emptyMsg('まだ投稿がありません。');
         return;
       }
-      el.innerHTML = `<div class="space-y-4">${allPosts.map(p => `
+      const shown = allPosts.slice(0, blogVisible);
+      const rest  = allPosts.length - shown.length;
+
+      el.innerHTML = `<div class="space-y-4">${shown.map(p => `
         <article onclick="openPost('${p.id}')"
                  class="glass rounded-2xl p-6 cursor-pointer hover:-translate-y-0.5
                         hover:shadow-xl hover:shadow-aurora-blue/10 transition-all duration-300 group">
@@ -2100,8 +2108,42 @@
             </button>` : ''}
           </div>
         </article>
-      `).join('')}</div>`;
+      `).join('')}</div>
+      ${allPosts.length > BLOG_PAGE_SIZE ? `
+      <div class="mt-6 flex flex-col items-center gap-3">
+        <p class="text-slate-500 text-xs">${allPosts.length}件のうち ${shown.length}件を表示しています</p>
+        <div class="flex flex-wrap justify-center gap-3">
+          ${rest > 0 ? `
+          <button onclick="showMorePosts()"
+                  class="glass px-6 py-2.5 rounded-xl text-aurora-blue border border-aurora-blue/40
+                         hover:border-aurora-blue hover:bg-aurora-blue/10 transition-all duration-300
+                         text-sm font-semibold">
+            もっと見る（あと${rest}件）
+          </button>` : ''}
+          ${blogVisible > BLOG_PAGE_SIZE ? `
+          <button onclick="collapsePosts()"
+                  class="glass px-6 py-2.5 rounded-xl text-slate-500 border border-slate-200
+                         hover:border-slate-400 transition-colors text-sm font-semibold">
+            最初の${BLOG_PAGE_SIZE}件にもどす
+          </button>` : ''}
+        </div>
+      </div>` : ''}`;
     }
+
+    window.showMorePosts = () => {
+      blogVisible += BLOG_PAGE_SIZE;
+      renderPosts();
+    };
+
+    window.collapsePosts = () => {
+      blogVisible = BLOG_PAGE_SIZE;
+      renderPosts();
+      // 一覧が急に短くなると今どこを見ているか分からなくなるので、見出しに戻す
+      document.getElementById('blog')?.scrollIntoView({
+        behavior: displaySettings.reduceMotion ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    };
 
     /* ══ BULLETIN ══ */
     async function fetchMessages() {
@@ -2190,16 +2232,28 @@
       restoreInlineDrafts();
     }
 
-    // 元の書き込み＋その返信をひとかたまりにして表示する
+    // 元の書き込み＋その返信をひとかたまりにして表示する。
+    // 返信は色の付いた枠に入れて、元の書き込みとひと目で見分けられるようにする。
     function threadHtml(m, replies) {
       return `
         <div class="glass glass-teal rounded-2xl p-4">
           ${messageBodyHtml(m, false)}
           ${replies.length ? `
-          <div class="mt-4 pl-4 border-l-2 border-aurora-teal/25 space-y-3">
-            ${replies.map(r => messageBodyHtml(r, true)).join('')}
+          <div class="mt-4 pt-4 border-t border-aurora-teal/20">
+            <p class="flex items-center gap-1.5 text-aurora-teal text-xs font-semibold mb-2.5">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a5 5 0 015 5v3M3 10l5-5M3 10l5 5"/>
+              </svg>
+              返信 ${replies.length}件
+            </p>
+            <div class="space-y-2">
+              ${replies.map(r => `
+              <div class="rounded-xl px-4 py-3 border" style="background:rgba(13,148,136,0.07);border-color:rgba(13,148,136,0.18);">
+                ${messageBodyHtml(r, true)}
+              </div>`).join('')}
+            </div>
           </div>` : ''}
-          ${threadsReady ? replyAreaHtml(m.id, replies.length) : ''}
+          ${threadsReady ? replyAreaHtml(m.id) : ''}
         </div>`;
     }
 
@@ -2233,11 +2287,8 @@
         <div class="flex gap-3">
           <div class="flex-1 min-w-0">
             <div class="flex items-baseline gap-2 mb-1.5 flex-wrap">
-              ${isReply ? `
-              <svg class="w-3 h-3 text-aurora-teal/60 shrink-0 self-center" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a5 5 0 015 5v3M3 10l5-5M3 10l5 5"/>
-              </svg>` : ''}
-              <span class="text-aurora-teal ${isReply ? 'text-xs' : 'text-sm'} font-semibold">${esc(m.author_name)}</span>
+              <span class="text-aurora-teal text-sm font-semibold">${esc(m.author_name)}</span>
+              ${isReply ? '<span class="text-aurora-teal/70 text-xs">が返信</span>' : ''}
               <span class="text-slate-500 text-xs">${fmtDatetime(m.created_at)}</span>
               ${m.edited_at ? '<span class="text-slate-400 text-xs">（編集済み）</span>' : ''}
             </div>
@@ -2265,7 +2316,7 @@
     }
 
     // 「返信する」ボタン、または開いている返信フォーム
-    function replyAreaHtml(id, replyCount) {
+    function replyAreaHtml(id) {
       if (replyOpenFor !== id) {
         return `
           <button onclick="openReply('${id}')"
@@ -2275,11 +2326,11 @@
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a5 5 0 015 5v3M3 10l5-5M3 10l5 5"/>
             </svg>
-            ${replyCount ? `返信する（${replyCount}件）` : '返信する'}
+            返信する
           </button>`;
       }
       return `
-        <div class="mt-4 pl-4 border-l-2 border-aurora-teal/40 space-y-2">
+        <div class="mt-4 pt-4 border-t border-aurora-teal/20 space-y-2">
           <input id="reply-name-${id}" type="text" maxlength="30" oninput="onInlineInput(this)"
                  placeholder="ニックネームでOK（30文字以内）"
                  class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-2.5
