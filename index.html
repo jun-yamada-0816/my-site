@@ -64,7 +64,7 @@
   language plpgsql
   security definer
   set search_path = public, net, vault
-  as $$
+  as $fn$
   declare
     api_key   text;
     parent    bulletin_messages%rowtype;
@@ -72,14 +72,11 @@
     body_html text;
     quoted    text;
   begin
-    -- 管理者自身（ログイン中）の書き込みでは、自分あてに送らない
-    begin
-      if auth.role() = 'authenticated' then
-        return new;
-      end if;
-    exception when others then
-      null;  -- SQL Editorから直接入れた場合などはここに来る。通知は送る。
-    end;
+    -- 管理者自身（ログイン中）の書き込みでは、自分あてに送らない。
+    -- auth.role() は未ログインやSQL Editorからの実行では null を返す。
+    if auth.role() = 'authenticated' then
+      return new;
+    end if;
 
     select decrypted_secret into api_key
       from vault.decrypted_secrets where name = 'resend_api_key';
@@ -124,7 +121,7 @@
 
     return new;
   end;
-  $$;
+  $fn$;
 
   drop trigger if exists on_bulletin_message_created on bulletin_messages;
   create trigger on_bulletin_message_created
