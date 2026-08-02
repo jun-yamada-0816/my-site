@@ -42,6 +42,103 @@
     with check (auth.role() = 'authenticated');
   -- 実行しなくてもサイトは今まで通り動きます（返信ボタンが出ないだけです）
 
+  ── 掲示板に書き込みがあったら管理者にメールで知らせる ──
+  Supabase側（データベース）から送るので、投稿者のブラウザに関係なく必ず届きます。
+  メール送信には Resend（https://resend.com）を使います。
+
+  【事前準備】
+   ① resend.com に jun_yamada_0816@yahoo.co.jp で登録する
+      （無料プランでは、登録したアドレス宛にのみ送信できます）
+   ② API Keys → Create API Key で `re_` から始まるキーを発行してコピー
+   ③ 下の SQL の re_ここにAPIキーを貼る の部分を差し替えて SQL Editor で実行
+
+  -- HTTPリクエストを送るための拡張（Supabaseに同梱されている）
+  create extension if not exists pg_net;
+
+  -- APIキーは金庫(Vault)に入れる。関数の中に直接書かないので後から漏れにくい。
+  select vault.create_secret('re_ここにAPIキーを貼る', 'resend_api_key', '掲示板の通知メール用');
+
+  -- 書き込みが入るたびに呼ばれ、管理者あてにメールを送る
+  create or replace function notify_new_bulletin_message()
+  returns trigger
+  language plpgsql
+  security definer
+  set search_path = public, net, vault
+  as $$
+  declare
+    api_key   text;
+    parent    bulletin_messages%rowtype;
+    kind      text;
+    body_html text;
+    quoted    text;
+  begin
+    -- 管理者自身（ログイン中）の書き込みでは、自分あてに送らない
+    begin
+      if auth.role() = 'authenticated' then
+        return new;
+      end if;
+    exception when others then
+      null;  -- SQL Editorから直接入れた場合などはここに来る。通知は送る。
+    end;
+
+    select decrypted_secret into api_key
+      from vault.decrypted_secrets where name = 'resend_api_key';
+    if api_key is null then
+      return new;  -- キーが未登録なら何もしない（書き込み自体は成功させる）
+    end if;
+
+    -- メール本文に混ざっても崩れないように記号を置き換える
+    quoted := replace(replace(replace(new.content, '&', '&amp;'), '<', '&lt;'), '>', '&gt;');
+
+    if new.parent_id is null then
+      kind := '新しい書き込み';
+    else
+      kind := '返信';
+      select * into parent from bulletin_messages where id = new.parent_id;
+    end if;
+
+    body_html :=
+      '<div style="font-family:sans-serif;line-height:1.8;color:#334155">' ||
+      '<p style="color:#0d9488;font-weight:bold">星と海の掲示板に' || kind || 'がありました</p>' ||
+      '<p>お名前：' || replace(replace(new.author_name, '<', '&lt;'), '>', '&gt;') || '</p>' ||
+      '<div style="border-left:3px solid #0d9488;padding-left:12px;white-space:pre-wrap">' ||
+        quoted || '</div>' ||
+      coalesce('<p style="color:#94a3b8;font-size:13px">返信先：' ||
+        replace(replace(parent.content, '<', '&lt;'), '>', '&gt;') || '</p>', '') ||
+      '<p><a href="https://hoshitoumi.vercel.app/#bulletin">掲示板をひらく</a></p>' ||
+      '</div>';
+
+    perform net.http_post(
+      url     => 'https://api.resend.com/emails',
+      headers => jsonb_build_object(
+        'Content-Type',  'application/json',
+        'Authorization', 'Bearer ' || api_key
+      ),
+      body    => jsonb_build_object(
+        'from',    'Hoshi to Umi <onboarding@resend.dev>',
+        'to',      jsonb_build_array('jun_yamada_0816@yahoo.co.jp'),
+        'subject', '【星と海】掲示板に' || kind || 'がありました',
+        'html',    body_html
+      )
+    );
+
+    return new;
+  end;
+  $$;
+
+  drop trigger if exists on_bulletin_message_created on bulletin_messages;
+  create trigger on_bulletin_message_created
+    after insert on bulletin_messages
+    for each row execute function notify_new_bulletin_message();
+
+  -- 送信できているかの確認（新しい順に、直近の送信結果を見る）
+  --   select created, status_code, content from net._http_response order by created desc limit 5;
+  -- status_code が 200 なら成功。401ならAPIキー、403なら宛先の制限を確認する。
+
+  -- APIキーを入れ替えるときは、消してから入れ直す
+  --   delete from vault.secrets where name = 'resend_api_key';
+  --   select vault.create_secret('re_新しいキー', 'resend_api_key', '掲示板の通知メール用');
+
   ── 音楽テーブル ──
   create table music_tracks (
     id uuid default gen_random_uuid() primary key,
