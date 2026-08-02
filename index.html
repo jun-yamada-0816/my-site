@@ -2460,7 +2460,7 @@
         const d       = replyDrafts[replyOpenFor] ?? {};
         const nameEl  = document.getElementById(`reply-name-${replyOpenFor}`);
         const contEl  = document.getElementById(`reply-content-${replyOpenFor}`);
-        if (nameEl) nameEl.value = d.name ?? loadNickname();
+        if (nameEl) nameEl.value = d.name ?? '';
         if (contEl) contEl.value = d.content ?? '';
       }
       if (editingMessageId) {
@@ -2517,7 +2517,6 @@
         replyOpenFor  = null;
         inlineFocusId = null;
         await createMessage(name, content, id);
-        saveNickname(name);
         renderMessages();
       } catch (e) {
         console.error('submitReply:', e);
@@ -2565,14 +2564,11 @@
       }
     };
 
-    /* ── ニックネームは端末内にだけ覚えておく ── */
-    const NICKNAME_KEY = 'hoshiumi_nickname';
-
-    function loadNickname() {
-      try { return localStorage.getItem(NICKNAME_KEY) ?? ''; } catch { return ''; }
-    }
-    function saveNickname(name) {
-      try { localStorage.setItem(NICKNAME_KEY, name); } catch {}
+    /* ── ニックネームは覚えない ──
+       前に書いた人の名前が残っていると、同じ端末を使う別の人に見えてしまう。
+       掲示板は毎回まっさらな状態から書き始められるようにする。 */
+    function forgetNickname() {
+      try { localStorage.removeItem('hoshiumi_nickname'); } catch {}
     }
 
     /* ══ MUSIC ══ */
@@ -2929,7 +2925,6 @@
       btn.disabled = true;
       try {
         await createMessage(name, content);
-        saveNickname(name);
         document.getElementById('msg-content').value = '';
         errEl.textContent = '';
       } catch {
@@ -3170,9 +3165,7 @@
 
     /* ══ INIT ══ */
     async function init() {
-      // 前回のニックネームを入れておく（端末内にだけ保存している）
-      const nameEl = document.getElementById('msg-name');
-      if (nameEl && !nameEl.value) nameEl.value = loadNickname();
+      forgetNickname();   // 以前の版が端末に保存した名前を消しておく
       await checkSession();
       await Promise.all([fetchPosts(), fetchMessages(), fetchTracks(), updateVisitCounter()]);
       subscribeRealtime();
