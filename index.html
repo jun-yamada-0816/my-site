@@ -3179,5 +3179,50 @@
   })();
   </script>
 
+  <!-- ======================================================
+       ショート動画からの流入を記録する
+       ------------------------------------------------------
+       YouTube / Instagram / TikTok / X に貼ったリンクに
+       ?utm_source=... が付いていると、その1回を記録します。
+       記録先は分析ツール（~/claude/shorts-analytics）と同じ
+       Supabase の sv_site_visits テーブルです。
+
+       ・utm_source が無い普通の訪問は何も記録しません
+       ・記録に失敗してもページの表示には影響しません
+       ・supabase-js は上ですでに読み込み済みなので再読込しません
+       ====================================================== -->
+  <script>
+  (function () {
+    try {
+      var q   = new URLSearchParams(location.search);
+      var src = q.get('utm_source');
+      if (!src) return;                       // 動画から来た人だけを記録する
+      if (!window.supabase) return;           // 読み込めていなければ何もしない
+
+      var slug = q.get('utm_content') || null;
+
+      // 同じ訪問中に再読み込みされても二重に数えないようにする
+      var mark = 'hoshiumi_tracked_' + src + '_' + (slug || '');
+      if (sessionStorage.getItem(mark)) return;
+      sessionStorage.setItem(mark, '1');
+
+      // ログイン状態を持たない専用のつなぎ口を作る
+      // （サイト本体のログインと取り合いにならないようにするため）
+      var tracker = window.supabase.createClient(
+        'https://qnmzjwgacnfxwlbgwxcr.supabase.co',
+        'sb_publishable_BG0n_GkXIwMBUlSN-W5vzA_vb4rbPKq',
+        { auth: { persistSession: false, autoRefreshToken: false } }
+      );
+
+      tracker.from('sv_site_visits').insert({
+        source:     src,
+        video_slug: slug,
+        path:       location.pathname,
+        referrer:   document.referrer || null
+      }).then(function () {}, function () {});
+    } catch (e) { /* 記録できなくてもサイトは普通に使えるようにする */ }
+  })();
+  </script>
+
 </body>
 </html>
