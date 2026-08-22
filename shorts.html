@@ -620,9 +620,16 @@ async function loadAll(){
   state.channel = c.data || [];
   state.visits  = (s.data || []).filter(x => x.source === YT);
 
-  // 各投稿の「いちばん新しい数字」を作る（並びは日付の昇順なので上書きしていけばよい）
+  // 各投稿の「いちばん新しい数字」を作る（並びは日付の昇順なので上書きしていけばよい）。
+  // ただし行ごと差し替えてはいけません。自動取り込みは「再生数だけ」の行を毎朝つくるので、
+  // 行ごと入れ替えると、手で入れたいいね・コメント・登録の増加が消えたように見えてしまいます。
+  // そこで項目ごとに、いちばん新しい「入っている値」を残していきます。
   state.latest = {};
-  state.metrics.forEach(x => { state.latest[x.post_id] = x; });
+  state.metrics.forEach(x => {
+    const cur = state.latest[x.post_id];
+    if (!cur) { state.latest[x.post_id] = Object.assign({}, x); return; }
+    Object.keys(x).forEach(k => { if (x[k] !== null && x[k] !== undefined) cur[k] = x[k]; });
+  });
 
   // 新しい順（投稿日時があればそれ、なければ作った日）
   state.videos.sort((a,b) => postedTime(b) - postedTime(a));
@@ -695,6 +702,17 @@ function showTab(name){
 const postOf   = vid => state.posts.find(p => p.video_id === vid) || null;
 const latestOf = pid => state.latest[pid] || null;
 const seriesOf = pid => state.metrics.filter(m => m.post_id === pid);
+
+/* その日までで、いちばん新しく入っていた値を項目ごとに集めます。
+   入力欄の「前回 N」に使います（その日に入れていなくても、前の数字は残っています）。 */
+function knownUpTo(pid, date){
+  const o = {};
+  seriesOf(pid).forEach(m => {
+    if (m.measured_on > date) return;
+    Object.keys(m).forEach(k => { if (m[k] !== null && m[k] !== undefined) o[k] = m[k]; });
+  });
+  return o;
+}
 
 function postedTime(v){
   const p = postOf(v.id);
@@ -1540,7 +1558,7 @@ function renderEntry(){
       ? t.toLocaleDateString('ja-JP',{month:'numeric',day:'numeric',weekday:'short'}) + ' ' +
         t.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})
       : '投稿日時なし';
-    const last = latestOf(p.id);
+    const last = knownUpTo(p.id, date);
 
     return `<div class="glass rounded-2xl p-3.5">
       <div class="flex items-start gap-2.5 mb-2.5">
@@ -1567,8 +1585,8 @@ function renderEntry(){
       <div class="grid grid-cols-3 gap-2">
         ${fields.map(f=>{
           const auto = f.key === 'views' && ex?.views != null;
-          const ph   = (f.key === 'views' && !auto && last?.views != null)
-                     ? ` placeholder="前回 ${num(last.views)}"` : '';
+          const ph   = (ex?.[f.key] == null && last?.[f.key] != null)
+                     ? ` placeholder="前回 ${num(last[f.key])}"` : '';
           return `<label><span class="block text-[10px] text-slate-500 mb-1">${f.label}${
             auto ? ' <span style="color:#2b7f8c">自動</span>' : ''}</span>
           <input type="number" inputmode="decimal" step="any" min="0" data-post="${p.id}" data-metric="${f.key}"${ph}
@@ -1593,7 +1611,18 @@ $('#entry-save').addEventListener('click', async () => {
     by[id] = by[id] || { post_id:id, measured_on:date };
     by[id][i.dataset.metric] = n;
   });
-  const rows = Object.values(by);
+
+  // まとめて送るとき、どれかの行に無い項目は null で埋められて保存されます。
+  // そのままだと「今回は入れなかった項目」が消えてしまうので、
+  // すべての行に同じ項目をそろえ、空欄にはいまの値を入れ直します。
+  const keys = ENTRY_FIELDS.filter(f => f.key !== 'subs_gained' || state.hasSubs).map(f => f.key);
+  const on = metricsOn(date);
+  const rows = Object.values(by).map(r => {
+    const cur = on[r.post_id] || {};
+    const out = { post_id:r.post_id, measured_on:date };
+    keys.forEach(k => { out[k] = (k in r) ? r[k] : (cur[k] ?? null); });
+    return out;
+  });
   const subsTotal = $('#entry-subs-total').value.trim();
 
   if (!rows.length && subsTotal===''){ msg.className='text-center text-xs mt-2 text-amber-400'; msg.textContent='数字が入っていません。'; return; }
