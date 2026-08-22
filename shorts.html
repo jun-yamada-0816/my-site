@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <!--
   ==========================================================================
-   星と海 ｜ ショート動画 分析
+   星と海 ｜ YouTube 分析
   ==========================================================================
+   このページは YouTube ひとつに絞った分析ページです。
+   目的は「再生数を伸ばすこと」ではなく、
+   「見てくれた人がチャンネル登録し、星と海に来てくれること」です。
+
    セットアップ
      1. Supabase の SQL Editor で schema.sql を実行
      2. 同じく sync-youtube.sql を実行（YouTubeの自動取り込み）
-     3. このファイルをブラウザで開いてログイン
+     3. 同じく youtube-upgrade.sql を実行（登録者数の記録・任意）
+     4. このファイルをブラウザで開いてログイン
 
    スマホから使う
      cd ~/claude/shorts-analytics && npx vercel --prod
@@ -17,7 +22,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>星と海 ｜ ショート動画 分析</title>
+<title>星と海 ｜ YouTube 分析</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49/dist/umd/supabase.min.js"></script>
 <style>
@@ -26,7 +31,7 @@
     --ink:#e2e8f0; --muted:#94a3b8; --dim:#64748b;
     --line:rgba(148,163,184,.18);
     --glass:rgba(148,163,184,.07);
-    --accent:#38bdf8; --accent2:#a78bfa; --good:#34d399; --warn:#fbbf24;
+    --accent:#38bdf8; --accent2:#a78bfa; --good:#34d399; --warn:#fbbf24; --yt:#ff5a5a;
   }
   html,body{background:#070d18;}
   body{
@@ -36,7 +41,7 @@
     min-height:100vh;
     background:
       radial-gradient(1200px 700px at 15% -5%, rgba(56,189,248,.16), transparent 60%),
-      radial-gradient(900px 600px at 85% 5%, rgba(167,139,250,.14), transparent 60%),
+      radial-gradient(900px 600px at 85% 5%, rgba(255,90,90,.10), transparent 60%),
       radial-gradient(1000px 800px at 50% 105%, rgba(13,148,136,.13), transparent 60%),
       #070d18;
     background-attachment:fixed;
@@ -69,6 +74,23 @@
   .spinning{animation:spin .9s linear infinite}
   .rise{animation:rise .5s cubic-bezier(.2,.7,.3,1) both}
   @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  /* ── 棒グラフ ────────────────────────────────
+     数字が読めることを最優先にしています。
+     棒は目安、判断するのは数字。 */
+  .track{height:.5rem;border-radius:99px;background:rgba(148,163,184,.12);overflow:hidden;position:relative}
+  .fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#38bdf8,#a78bfa)}
+  .fill-good{background:linear-gradient(90deg,#34d399,#7dd3fc)}
+  .fill-warn{background:linear-gradient(90deg,#fbbf24,#f97316)}
+  .fill-flat{background:rgba(148,163,184,.35)}
+  .fill-yt{background:linear-gradient(90deg,#ff5a5a,#f9a8d4)}
+  .goal{position:absolute;top:-3px;bottom:-3px;width:2px;background:rgba(226,232,240,.75);border-radius:2px}
+  .vbar{border-radius:.35rem .35rem 0 0;background:linear-gradient(180deg,#7dd3fc,#38bdf8,rgba(56,189,248,.3));width:100%}
+  .vbar-good{background:linear-gradient(180deg,#6ee7b7,#34d399,rgba(52,211,153,.3))}
+  .thumb{width:100%;height:100%;object-fit:cover;background:#0f172a}
+  .ratio916{aspect-ratio:9/16}
+  .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .chip{font-size:10px;border-radius:99px;padding:.1rem .45rem;background:rgba(148,163,184,.14);color:var(--muted)}
 </style>
 </head>
 <body>
@@ -78,7 +100,7 @@
 <div id="login-view" class="hidden min-h-screen flex items-center justify-center p-6">
   <div class="w-full max-w-sm glass rounded-3xl p-7 rise">
     <div class="text-3xl mb-3">🌊</div>
-    <h1 class="text-xl font-bold mb-1">星と海 ｜ 分析</h1>
+    <h1 class="text-xl font-bold mb-1">星と海 ｜ YouTube 分析</h1>
     <p class="text-xs text-slate-400 mb-6">サイトと同じアカウントでログインしてください。</p>
     <input id="login-email" type="email" placeholder="メールアドレス" autocomplete="username" class="fld mb-2">
     <input id="login-pw" type="password" placeholder="パスワード" autocomplete="current-password" class="fld mb-4">
@@ -92,9 +114,9 @@
 <div id="app-view" class="hidden max-w-5xl mx-auto px-4 pt-5 pb-28">
 
   <header class="flex items-center gap-3 mb-5">
-    <div class="text-2xl">🌊</div>
+    <div class="text-2xl">▶︎</div>
     <div class="min-w-0">
-      <h1 class="font-bold leading-tight">ショート動画 分析</h1>
+      <h1 class="font-bold leading-tight">YouTube 分析</h1>
       <p class="text-[11px] text-slate-500 truncate">星と海 ・ @jenjenjenjun</p>
     </div>
     <a id="back-site" href="./" class="hidden ml-auto text-[11px] text-slate-500 hover:text-slate-300">← サイト</a>
@@ -113,6 +135,7 @@
     <div id="tabbar" class="flex gap-1.5 min-w-max glass rounded-2xl p-1.5">
       <button data-tab="home"    class="tab whitespace-nowrap px-4 py-2 rounded-xl text-sm">ダッシュボード</button>
       <button data-tab="advice"  class="tab whitespace-nowrap px-4 py-2 rounded-xl text-sm">次に作る動画</button>
+      <button data-tab="grow"    class="tab whitespace-nowrap px-4 py-2 rounded-xl text-sm">伸ばし方</button>
       <button data-tab="videos"  class="tab whitespace-nowrap px-4 py-2 rounded-xl text-sm">動画</button>
       <button data-tab="entry"   class="tab whitespace-nowrap px-4 py-2 rounded-xl text-sm">数字を入力</button>
       <button data-tab="link"    class="tab whitespace-nowrap px-4 py-2 rounded-xl text-sm">リンク</button>
@@ -121,29 +144,71 @@
 
   <!-- ────── ダッシュボード ────── -->
   <section id="tab-home" class="tabpanel hidden space-y-4">
+
     <div class="glass rounded-3xl p-6 relative overflow-hidden">
-      <div class="absolute -right-10 -top-10 w-48 h-48 rounded-full blur-3xl" style="background:radial-gradient(circle,rgba(56,189,248,.25),transparent 70%)"></div>
-      <p class="text-[11px] text-slate-400 mb-1">4媒体の合計再生数</p>
-      <div id="hero-total" class="num text-5xl font-bold" style="background:linear-gradient(135deg,#e0f2fe,#7dd3fc,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent">—</div>
-      <div id="hero-sub" class="text-xs text-slate-400 mt-2"></div>
+      <div class="absolute -right-10 -top-10 w-48 h-48 rounded-full blur-3xl" style="background:radial-gradient(circle,rgba(255,90,90,.22),transparent 70%)"></div>
+      <div class="flex items-start gap-6">
+        <div>
+          <p class="text-[11px] text-slate-400 mb-1">チャンネル登録者</p>
+          <div id="hero-subs" class="num text-5xl font-bold" style="background:linear-gradient(135deg,#fecdd3,#ff8a8a,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent">—</div>
+          <div id="hero-subs-sub" class="text-xs text-slate-400 mt-2"></div>
+        </div>
+        <div class="ml-auto text-right">
+          <p class="text-[11px] text-slate-400 mb-1">総再生数</p>
+          <div id="hero-views" class="num text-2xl font-bold text-sky-200">—</div>
+          <div id="hero-views-sub" class="text-[11px] text-slate-500 mt-1"></div>
+        </div>
+      </div>
+      <div class="mt-5 flex flex-wrap items-end gap-2">
+        <label class="text-xs">
+          <span class="block text-[10px] text-slate-500 mb-1">今日の登録者数を記録</span>
+          <input id="subs-input" type="number" inputmode="numeric" min="0" placeholder="例 128" class="fld py-1.5" style="width:8.5rem">
+        </label>
+        <button id="subs-save" class="glass rounded-xl px-3 py-2 text-xs hover:border-rose-400/50">記録する</button>
+        <a href="https://studio.youtube.com" target="_blank" rel="noopener"
+           class="text-[11px] text-slate-500 hover:text-slate-300 pb-2">Studio ↗</a>
+        <a id="yt-channel" href="#" target="_blank" rel="noopener"
+           class="text-[11px] text-slate-500 hover:text-slate-300 pb-2">チャンネル ↗</a>
+      </div>
+      <p id="subs-msg" class="text-[11px] mt-2"></p>
     </div>
 
     <div id="home-cards" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5"></div>
 
     <div class="glass rounded-2xl p-5">
-      <h2 class="font-semibold text-sm mb-1">ホームページへ届いた人</h2>
-      <p class="text-[11px] text-slate-500 mb-4">再生数より、こちらが目的の数字です。</p>
-      <div id="home-visits"></div>
+      <h2 class="font-semibold text-sm mb-1">いまの健康診断</h2>
+      <p class="text-[11px] text-slate-500 mb-4">伸びているショート動画の目安と、いまの自分の数字を並べています。</p>
+      <div id="home-score"></div>
+      <button id="to-grow" class="mt-3 text-[11px] text-sky-300 hover:text-sky-200">→ 目安の意味と直し方を見る</button>
     </div>
 
     <div class="glass rounded-2xl p-5">
-      <h2 class="font-semibold text-sm mb-4">最近の伸び</h2>
+      <h2 class="font-semibold text-sm mb-1">登録者の伸び</h2>
+      <p class="text-[11px] text-slate-500 mb-4">記録した日ごとの登録者数です。</p>
+      <div id="home-subchart"></div>
+    </div>
+
+    <div class="glass rounded-2xl p-5">
+      <h2 class="font-semibold text-sm mb-1">1本ずつの再生数</h2>
+      <p class="text-[11px] text-slate-500 mb-4">左が古く、右が新しい動画です。棒の上が再生数。</p>
       <div id="home-spark"></div>
     </div>
 
     <div class="glass rounded-2xl p-5">
       <h2 class="font-semibold text-sm mb-3">よく見られた動画</h2>
-      <div id="home-top" class="scroll-x"></div>
+      <div id="home-top"></div>
+    </div>
+
+    <div class="glass rounded-2xl p-5">
+      <h2 class="font-semibold text-sm mb-1">投稿のペース</h2>
+      <p class="text-[11px] text-slate-500 mb-4">続けて出している時期ほど、おすすめに乗りやすくなります。</p>
+      <div id="home-calendar"></div>
+    </div>
+
+    <div class="glass rounded-2xl p-5">
+      <h2 class="font-semibold text-sm mb-1">ホームページへ届いた人</h2>
+      <p class="text-[11px] text-slate-500 mb-4">再生数より、こちらが目的の数字です。</p>
+      <div id="home-visits"></div>
     </div>
   </section>
 
@@ -160,8 +225,14 @@
 
     <div class="glass rounded-2xl p-5">
       <h2 class="font-semibold text-sm mb-1">何が効いているか</h2>
-      <p class="text-[11px] text-slate-500 mb-4">媒体ごとに再生数の桁が違うため、その媒体の中央値を1.0倍とした倍率で比べています。</p>
+      <p class="text-[11px] text-slate-500 mb-4">動画ごとの再生数を、チャンネルの中央値で割った「倍率」で比べています。1.0倍がふつうです。</p>
       <div id="insight-groups" class="space-y-5"></div>
+    </div>
+
+    <div class="glass rounded-2xl p-5">
+      <h2 class="font-semibold text-sm mb-1">登録につながった動画</h2>
+      <p class="text-[11px] text-slate-500 mb-4">1000回再生あたり何人が登録したか。再生数が多い動画とは限りません。</p>
+      <div id="insight-subs"></div>
     </div>
 
     <div class="glass rounded-2xl p-5">
@@ -171,42 +242,102 @@
     </div>
   </section>
 
+  <!-- ────── 伸ばし方 ────── -->
+  <section id="tab-grow" class="tabpanel hidden space-y-4">
+    <div class="glass rounded-3xl p-6">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-lg">🌱</span>
+        <h2 class="font-bold">伸びているチャンネルがしていること</h2>
+      </div>
+      <p class="text-[11px] text-slate-500 mb-5">
+        再生数はおまけです。ショート動画がおすすめに乗るかどうかは、
+        <b class="text-slate-300">最後まで見てもらえたか</b>と
+        <b class="text-slate-300">もう一度見たくなったか</b>でほぼ決まります。
+        登録者は、そのうえで「次も見たい」と思われた分だけ増えます。
+      </p>
+      <div id="grow-score" class="space-y-4"></div>
+    </div>
+
+    <div class="glass rounded-2xl p-5">
+      <h2 class="font-semibold text-sm mb-1">動画を作るときの型</h2>
+      <p class="text-[11px] text-slate-500 mb-4">できているものには印が付きます。数字が足りないものは灰色のままです。</p>
+      <div id="grow-rules" class="space-y-2.5"></div>
+    </div>
+
+    <div class="glass rounded-2xl p-5">
+      <h2 class="font-semibold text-sm mb-3">星と海の場合の考え方</h2>
+      <div class="text-xs text-slate-300 leading-relaxed space-y-3">
+        <p>
+          このチャンネルが届けたい相手は、<b>いま眠れずにスマホを見ている人</b>です。
+          そういう人は、明るく元気な動画を最後まで見ません。
+          最初の1秒に必要なのは、驚きではなく「これは自分のことだ」という手ざわりです。
+        </p>
+        <p>
+          ですので、伸ばし方も少しだけ普通と違います。
+          派手な効果音や煽りは合いません。かわりに効くのは、
+          <b>静けさ・間・具体的な場面</b>です。
+          「不安なとき」より「23時、天井を見ているとき」のほうが届きます。
+        </p>
+        <p>
+          そして、登録してもらうために必要なのは「登録してね」ではなく
+          <b>次に何が来るか分かる約束</b>です。
+          「毎晩、眠れない人へ1本」のように決まっていると、登録は約束の受け取りになります。
+        </p>
+        <p class="text-slate-400">
+          焦らなくて大丈夫です。1日1本を4週間続けたころに、やっと形が見えてきます。
+          伸びない日が続いても、それはあなたの言葉が届いていないという意味ではありません。
+        </p>
+      </div>
+    </div>
+  </section>
+
   <!-- ────── 動画 ────── -->
   <section id="tab-videos" class="tabpanel hidden space-y-4">
-    <div class="glass rounded-2xl p-4 flex items-center justify-between">
-      <div>
-        <h2 class="font-semibold text-sm">動画</h2>
-        <p class="text-[11px] text-slate-500 mt-0.5">テーマと掴みを入れるほど提案が鋭くなります。</p>
+    <div class="glass rounded-2xl p-4">
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <div>
+          <h2 class="font-semibold text-sm">動画</h2>
+          <p class="text-[11px] text-slate-500 mt-0.5">押すとその場で再生できます。テーマと掴みを入れるほど提案が鋭くなります。</p>
+        </div>
+        <button id="video-new" class="rounded-xl px-3 py-2 text-xs font-medium text-slate-900 whitespace-nowrap" style="background:linear-gradient(135deg,#38bdf8,#a78bfa)">＋ 追加</button>
       </div>
-      <button id="video-new" class="rounded-xl px-3 py-2 text-xs font-medium text-slate-900" style="background:linear-gradient(135deg,#38bdf8,#a78bfa)">＋ 追加</button>
+      <div class="flex items-center gap-2">
+        <label class="text-xs flex-1">
+          <span class="block text-[10px] text-slate-500 mb-1">並べ方</span>
+          <select id="video-sort" class="fld py-1.5 text-sm">
+            <option value="new">新しい順</option>
+            <option value="views">再生が多い順</option>
+            <option value="subs">登録につながった順</option>
+            <option value="ret">最後まで見られた順</option>
+            <option value="visit">サイトに送った順</option>
+          </select>
+        </label>
+      </div>
     </div>
-    <div id="video-list" class="space-y-2"></div>
+    <div id="video-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5"></div>
   </section>
 
   <!-- ────── 数字を入力 ────── -->
   <section id="tab-entry" class="tabpanel hidden space-y-4">
     <div class="glass rounded-2xl p-4">
-      <p class="text-[11px] text-slate-400 mb-3">
-        YouTube は「取り込む」で自動更新されます。ここは Instagram・TikTok・X の手入力用です。
+      <p class="text-[11px] text-slate-400 mb-1">
+        再生数は「取り込む」で自動更新されます。
+        <b class="text-slate-300">いいね・コメント・平均視聴時間・登録者の増加</b>は
+        YouTube Studio の「アナリティクス → コンテンツ」から書き写してください。
       </p>
+      <p class="text-[11px] text-slate-500 mb-3">週に1回でも入れておくと、次に作る動画の提案がはっきりします。</p>
       <div class="flex flex-wrap items-end gap-2">
         <label class="text-xs">
           <span class="block text-[11px] text-slate-500 mb-1">記録する日</span>
           <input id="entry-date" type="date" class="fld">
         </label>
-        <label class="text-xs">
-          <span class="block text-[11px] text-slate-500 mb-1">媒体</span>
-          <select id="entry-platform" class="fld">
-            <option value="">すべて</option>
-            <option value="instagram">Instagram</option>
-            <option value="tiktok">TikTok</option>
-            <option value="x">X</option>
-            <option value="youtube">YouTube</option>
-          </select>
-        </label>
         <label class="text-xs flex items-center gap-1.5 pb-2">
           <input id="entry-unfilled" type="checkbox" class="w-4 h-4 accent-sky-400">
           <span class="text-[11px]">未入力だけ</span>
+        </label>
+        <label class="text-xs">
+          <span class="block text-[11px] text-slate-500 mb-1">登録者の総数（その日）</span>
+          <input id="entry-subs-total" type="number" inputmode="numeric" min="0" class="fld" style="width:9rem">
         </label>
       </div>
     </div>
@@ -221,21 +352,24 @@
   <section id="tab-link" class="tabpanel hidden space-y-4">
     <div class="glass rounded-2xl p-5">
       <h2 class="font-semibold text-sm mb-1">計測できるリンクを作る</h2>
-      <p class="text-[11px] text-slate-500 mb-4">概要欄やプロフィールにこのURLを貼ると、動画ごとの流入が記録されます。</p>
-      <div class="grid sm:grid-cols-2 gap-3 mb-4">
-        <label class="text-xs"><span class="block text-[11px] text-slate-500 mb-1">どの動画から</span>
-          <select id="link-video" class="fld"></select></label>
-        <label class="text-xs"><span class="block text-[11px] text-slate-500 mb-1">どの媒体に貼る</span>
-          <select id="link-platform" class="fld">
-            <option value="youtube">YouTube</option><option value="instagram">Instagram</option>
-            <option value="tiktok">TikTok</option><option value="x">X</option>
-          </select></label>
-      </div>
+      <p class="text-[11px] text-slate-500 mb-4">概要欄と固定コメントにこのURLを貼ると、動画ごとの流入が記録されます。</p>
+      <label class="text-xs block mb-3"><span class="block text-[11px] text-slate-500 mb-1">どの動画から</span>
+        <select id="link-video" class="fld"></select></label>
       <div class="flex gap-2">
         <input id="link-out" readonly class="fld text-xs">
         <button id="link-copy" class="rounded-xl px-4 text-xs whitespace-nowrap text-slate-900 font-medium" style="background:linear-gradient(135deg,#38bdf8,#a78bfa)">コピー</button>
       </div>
       <p id="link-msg" class="text-[11px] text-emerald-400 mt-2"></p>
+    </div>
+
+    <div class="glass rounded-2xl p-5">
+      <h2 class="font-semibold text-sm mb-1">固定コメントの下書き</h2>
+      <p class="text-[11px] text-slate-500 mb-3">
+        ショート動画では概要欄はほとんど読まれません。<b class="text-slate-300">固定コメント</b>が実質の入口です。
+      </p>
+      <textarea id="link-comment" rows="5" class="fld text-xs leading-relaxed"></textarea>
+      <button id="comment-copy" class="mt-2 glass rounded-xl px-3 py-2 text-xs hover:border-sky-400/50">この文をコピー</button>
+      <p id="comment-msg" class="text-[11px] text-emerald-400 mt-2"></p>
     </div>
 
     <div class="glass rounded-2xl p-5">
@@ -251,43 +385,62 @@
   </section>
 </div>
 
-<!-- ══════════ 動画の編集 ══════════ -->
-<div id="video-modal" class="hidden fixed inset-0 z-50 overflow-y-auto p-4" style="background:rgba(2,6,23,.75);backdrop-filter:blur(6px)">
-  <div class="glass rounded-3xl max-w-lg mx-auto my-4 p-6" style="background:rgba(15,23,42,.9)">
-    <div class="flex items-center justify-between mb-5">
-      <h3 id="vm-title" class="font-bold">動画</h3>
+<!-- ══════════ 動画のプレビューと編集 ══════════ -->
+<div id="video-modal" class="hidden fixed inset-0 z-50 overflow-y-auto p-4" style="background:rgba(2,6,23,.8);backdrop-filter:blur(6px)">
+  <div class="glass rounded-3xl max-w-lg mx-auto my-4 p-5" style="background:rgba(15,23,42,.94)">
+    <div class="flex items-center justify-between mb-4">
+      <h3 id="vm-title" class="font-bold text-sm">動画</h3>
       <button id="vm-close" class="text-slate-500 text-2xl leading-none px-2 hover:text-slate-300">&times;</button>
     </div>
-    <div class="space-y-3 text-xs">
-      <div class="grid grid-cols-2 gap-3">
-        <label><span class="block text-[11px] text-slate-500 mb-1">識別子</span><input id="vm-slug" class="fld"></label>
-        <label><span class="block text-[11px] text-slate-500 mb-1">作った日</span><input id="vm-date" type="date" class="fld"></label>
+
+    <!-- プレビュー -->
+    <div id="vm-player-wrap" class="hidden mb-4">
+      <div class="rounded-2xl overflow-hidden mx-auto" style="max-width:260px;aspect-ratio:9/16;background:#000">
+        <iframe id="vm-player" class="w-full h-full" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
       </div>
-      <label class="block"><span class="block text-[11px] text-slate-500 mb-1">タイトル</span><input id="vm-title-in" class="fld"></label>
-      <div class="grid grid-cols-2 gap-3">
-        <label><span class="block text-[11px] text-slate-500 mb-1">テーマ</span>
-          <input id="vm-theme" list="dl-theme" class="fld" placeholder="不安との付き合い方"><datalist id="dl-theme"></datalist></label>
-        <label><span class="block text-[11px] text-slate-500 mb-1">冒頭の掴み</span>
-          <input id="vm-hook" list="dl-hook" class="fld" placeholder="問いかけ">
-          <datalist id="dl-hook"><option value="問いかけ"><option value="共感"><option value="断言"><option value="数字"><option value="体験談"></datalist></label>
-      </div>
-      <div class="grid grid-cols-3 gap-3">
-        <label><span class="block text-[11px] text-slate-500 mb-1">形式</span>
-          <input id="vm-format" list="dl-format" class="fld" placeholder="語り">
-          <datalist id="dl-format"><option value="語り"><option value="テロップのみ"><option value="音楽メイン"><option value="対話"></datalist></label>
-        <label><span class="block text-[11px] text-slate-500 mb-1">尺(秒)</span><input id="vm-dur" type="number" inputmode="numeric" class="fld"></label>
-        <label><span class="block text-[11px] text-slate-500 mb-1">締め</span>
-          <input id="vm-cta" list="dl-cta" class="fld" placeholder="リンクへ">
-          <datalist id="dl-cta"><option value="リンクへ"><option value="コメント促し"><option value="フォロー促し"><option value="なし"></datalist></label>
-      </div>
-      <label class="block"><span class="block text-[11px] text-slate-500 mb-1">メモ</span><textarea id="vm-note" rows="2" class="fld"></textarea></label>
-      <div class="pt-3" style="border-top:1px solid var(--line)">
-        <h4 class="text-[11px] font-semibold text-slate-400 mb-2">投稿した媒体</h4>
-        <div id="vm-posts" class="space-y-2.5"></div>
+      <div class="text-center mt-2">
+        <a id="vm-open" href="#" target="_blank" rel="noopener" class="text-[11px] text-slate-500 hover:text-slate-300">YouTube で開く ↗</a>
       </div>
     </div>
-    <div class="flex gap-2 mt-6">
-      <button id="vm-save" class="flex-1 rounded-xl py-2.5 font-medium text-slate-900" style="background:linear-gradient(135deg,#38bdf8,#a78bfa)">保存</button>
+
+    <!-- この動画の数字 -->
+    <div id="vm-stats" class="grid grid-cols-3 gap-2 mb-4"></div>
+    <div id="vm-curve" class="mb-4"></div>
+
+    <details class="mb-2">
+      <summary class="text-[11px] text-slate-400 cursor-pointer select-none py-1">この動画の記録を編集する</summary>
+      <div class="space-y-3 text-xs mt-3">
+        <div class="grid grid-cols-2 gap-3">
+          <label><span class="block text-[11px] text-slate-500 mb-1">識別子</span><input id="vm-slug" class="fld"></label>
+          <label><span class="block text-[11px] text-slate-500 mb-1">作った日</span><input id="vm-date" type="date" class="fld"></label>
+        </div>
+        <label class="block"><span class="block text-[11px] text-slate-500 mb-1">タイトル</span><input id="vm-title-in" class="fld"></label>
+        <div class="grid grid-cols-2 gap-3">
+          <label><span class="block text-[11px] text-slate-500 mb-1">テーマ</span>
+            <input id="vm-theme" list="dl-theme" class="fld" placeholder="眠れない夜"><datalist id="dl-theme"></datalist></label>
+          <label><span class="block text-[11px] text-slate-500 mb-1">冒頭の掴み</span>
+            <input id="vm-hook" list="dl-hook" class="fld" placeholder="問いかけ">
+            <datalist id="dl-hook"><option value="問いかけ"><option value="共感"><option value="断言"><option value="数字"><option value="体験談"><option value="場面描写"></datalist></label>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <label><span class="block text-[11px] text-slate-500 mb-1">形式</span>
+            <input id="vm-format" list="dl-format" class="fld" placeholder="音楽メイン">
+            <datalist id="dl-format"><option value="語り"><option value="テロップのみ"><option value="音楽メイン"><option value="対話"></datalist></label>
+          <label><span class="block text-[11px] text-slate-500 mb-1">尺(秒)</span><input id="vm-dur" type="number" inputmode="numeric" class="fld"></label>
+          <label><span class="block text-[11px] text-slate-500 mb-1">締め</span>
+            <input id="vm-cta" list="dl-cta" class="fld" placeholder="リンクへ">
+            <datalist id="dl-cta"><option value="リンクへ"><option value="コメント促し"><option value="登録の約束"><option value="なし"></datalist></label>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <label><span class="block text-[11px] text-slate-500 mb-1">YouTubeのURL</span><input id="vm-url" class="fld" placeholder="https://www.youtube.com/shorts/..."></label>
+          <label><span class="block text-[11px] text-slate-500 mb-1">投稿した日時</span><input id="vm-at" type="datetime-local" class="fld"></label>
+        </div>
+        <label class="block"><span class="block text-[11px] text-slate-500 mb-1">メモ</span><textarea id="vm-note" rows="2" class="fld"></textarea></label>
+      </div>
+    </details>
+
+    <div class="flex gap-2 mt-4">
+      <button id="vm-save" class="flex-1 rounded-xl py-2.5 font-medium text-slate-900 text-sm" style="background:linear-gradient(135deg,#38bdf8,#a78bfa)">保存</button>
       <button id="vm-delete" class="text-rose-400 text-xs px-3 hover:text-rose-300">削除</button>
     </div>
     <p id="vm-msg" class="text-xs mt-2"></p>
@@ -300,28 +453,72 @@
 const SUPABASE_URL      = 'https://qnmzjwgacnfxwlbgwxcr.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_BG0n_GkXIwMBUlSN-W5vzA_vb4rbPKq';
 const SITE_URL          = 'https://hoshitoumi.vercel.app';
+const CHANNEL_URL       = 'https://www.youtube.com/@jenjenjenjun';
+const YT                = 'youtube';
 
-const PLATFORMS = {
-  youtube:   { label:'YouTube',   tint:'#f87171', metrics:['views','likes','comments','shares','avg_watch_sec'] },
-  instagram: { label:'Instagram', tint:'#f472b6', metrics:['views','likes','comments','shares','saves','reach','profile_visits'] },
-  tiktok:    { label:'TikTok',    tint:'#22d3ee', metrics:['views','likes','comments','shares','saves','avg_watch_sec'] },
-  x:         { label:'X',         tint:'#cbd5e1', metrics:['views','likes','comments','shares','saves','link_clicks'] },
-};
-const PLATFORM_KEYS = Object.keys(PLATFORMS);
-const METRIC_LABELS = { views:'再生数', likes:'いいね', comments:'コメント', shares:'シェア',
-  saves:'保存', reach:'リーチ', avg_watch_sec:'平均視聴(秒)', profile_visits:'プロフ訪問', link_clicks:'リンク押下' };
+/* 入力してほしい数字（YouTube Studio から書き写すもの） */
+const ENTRY_FIELDS = [
+  { key:'views',         label:'再生数' },
+  { key:'likes',         label:'いいね' },
+  { key:'comments',      label:'コメント' },
+  { key:'shares',        label:'共有' },
+  { key:'avg_watch_sec', label:'平均視聴(秒)' },
+  { key:'subs_gained',   label:'登録の増加' },
+];
 
 const MIN_SAMPLE = 3;   // これ未満の本数は「参考」扱い
 
+/* 伸びているショート動画の目安。
+   数字そのものより、「どこがいちばん足りないか」を見るために置いています。 */
+const GOALS = [
+  { key:'retention', name:'最後まで見られた割合', unit:'%', goal:70,
+    why:'ショート動画がおすすめに乗るかは、ほぼここで決まります。平均視聴時間 ÷ 尺。',
+    fix:'尺を短くする。冒頭の2秒に説明を入れず、いきなり本題から始める。',
+    need:'平均視聴時間と、動画の尺' },
+  { key:'sub', name:'1000再生あたりの登録', unit:'人', goal:3,
+    why:'いちばん大事な数字です。何回再生されたかより、何人が「次も見たい」と思ったか。',
+    fix:'締めで「毎晩1本」のように次の約束を伝える。プロフィールの一言を整える。',
+    need:'登録の増加（YouTube Studio）' },
+  { key:'like', name:'いいね率', unit:'%', goal:4,
+    why:'見た人のうち何%が反応したか。おすすめを広げるかの判断材料になります。',
+    fix:'最後に問いを置く。「あなたはどうですか」と一言だけ。',
+    need:'いいねの数' },
+  { key:'comment', name:'コメント率', unit:'%', goal:0.3,
+    why:'コメントは滞在時間を伸ばし、同じ悩みの人どうしをつなげます。',
+    fix:'答えやすい問いにする。「今日、眠れましたか」くらい具体的に。',
+    need:'コメントの数' },
+  { key:'pace', name:'1週間の本数', unit:'本', goal:5,
+    why:'まとめて出すより、毎日少しずつのほうが届きます。止まると戻すのに時間がかかります。',
+    fix:'完璧をやめる。20秒・テロップ5枚なら、しんどい日でも出せます。',
+    need:'投稿した日時' },
+  { key:'dur', name:'尺', unit:'秒', range:[15,35],
+    why:'長いほど最後まで見られにくくなります。短すぎると内容が残りません。',
+    fix:'言いたいことを1つに絞ると、自然とこの範囲に収まります。',
+    need:'動画の尺' },
+  { key:'title', name:'タイトルの種類', unit:'%', goal:100,
+    why:'同じタイトルが並ぶと、検索でも おすすめでも 同じ動画として扱われます。',
+    fix:'その回のいちばん刺さる一言を、そのままタイトルにする。',
+    need:'動画のタイトル' },
+  { key:'visit', name:'1000再生あたりのサイト到達', unit:'人', goal:5,
+    why:'星と海にとっての本当の成果です。相談ページに人が来て、はじめて前に進みます。',
+    fix:'固定コメントに計測リンクを置く。概要欄だけでは読まれません。',
+    need:'計測リンク（リンクタブ）' },
+];
+
 /* ========================= 状態 ========================= */
 let sb = null;
-let state = { videos: [], posts: [], latest: {}, series: [], visits: [], metricsFor: {}, ready:false };
+let state = {
+  videos: [], posts: [], metrics: [], latest: {}, visits: [], channel: [],
+  hasSubs: false, hasChannel: false, ready: false,
+};
 
 const $  = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = n => (n === null || n === undefined || n === '') ? '—' : Number(n).toLocaleString('ja-JP');
+const dec = (n,d=1) => (n === null || n === undefined || !isFinite(n)) ? '—' : Number(n).toFixed(d);
 const todayStr = () => new Date().toLocaleDateString('sv-SE');
+const missing = /does not exist|schema cache|could not find/i;
 
 /* ========================= 起動 ========================= */
 (async function boot(){
@@ -344,9 +541,9 @@ $('#logout-btn').addEventListener('click', async () => { await sb.auth.signOut()
 
 async function enterApp(){
   $('#app-view').classList.remove('hidden');
+  $('#yt-channel').href = CHANNEL_URL;
   $('#entry-date').value = todayStr();
   // 星と海のサイトに置いたときだけ「サイトへ戻る」を出す。
-  // パソコンでファイルを直接開いたときは戻り先がないので隠したまま。
   if (location.protocol !== 'file:') $('#back-site').classList.remove('hidden');
   await loadAll();
   showTab('home');
@@ -354,49 +551,59 @@ async function enterApp(){
 
 /* ========================= 読み込み ========================= */
 async function loadAll(){
-  const [v,p,l,s,m] = await Promise.all([
+  const [v, p, m, s, c, probe] = await Promise.all([
     sb.from('sv_videos').select('*'),
-    sb.from('sv_posts').select('*'),
-    sb.from('sv_post_latest').select('*'),
-    sb.from('sv_site_visits').select('*').order('visited_at',{ascending:false}).limit(5000),
-    sb.from('sv_metrics').select('post_id,measured_on,views').order('measured_on',{ascending:true}).limit(5000),
+    sb.from('sv_posts').select('*').eq('platform', YT),
+    // 新しいほうから取って、あとで古い順に並べ替えます
+    // （古い順で件数を切ると、最近の数字が落ちてしまうため）
+    sb.from('sv_metrics').select('*').order('measured_on', { ascending:false }).limit(20000),
+    sb.from('sv_site_visits').select('*').order('visited_at', { ascending:false }).limit(5000),
+    sb.from('sv_channel_daily').select('*').order('measured_on', { ascending:true }).limit(2000),
+    sb.from('sv_metrics').select('subs_gained').limit(1),
   ]);
 
-  if ([v,p,l,s,m].some(r => r.error && /does not exist|schema cache/i.test(r.error.message||''))) {
+  if ([v,p,m,s].some(r => r.error && missing.test(r.error.message||''))) {
     state.ready = false;
     $('#setup-warn').classList.remove('hidden');
     $('#setup-warn').innerHTML = '<b>テーブルがまだありません。</b><br>Supabase の SQL Editor で <code>schema.sql</code> を実行してください。';
     return;
   }
-  $('#setup-warn').classList.add('hidden');
   state.ready = true;
 
-  state.videos = v.data || [];
-  state.posts  = p.data || [];
-  state.visits = s.data || [];
-  state.series = m.data || [];
-  state.latest = {};
-  (l.data || []).forEach(x => { state.latest[x.post_id] = x; });
+  state.hasSubs    = !probe.error;
+  state.hasChannel = !c.error;
+  state.videos  = v.data || [];
+  state.posts   = p.data || [];
+  state.metrics = (m.data || []).slice().sort((a,b) => a.measured_on < b.measured_on ? -1 : a.measured_on > b.measured_on ? 1 : 0);
+  state.channel = c.data || [];
+  state.visits  = (s.data || []).filter(x => x.source === YT);
 
-  // 新しい順（公開日時があればそれ、なければ作成日）
-  const when = vid => {
-    const ps = state.posts.filter(x => x.video_id === vid.id && x.posted_at);
-    if (ps.length) return Math.max(...ps.map(x => +new Date(x.posted_at)));
-    return vid.produced_on ? +new Date(vid.produced_on) : 0;
-  };
-  state.videos.sort((a,b) => when(b) - when(a));
+  // 各投稿の「いちばん新しい数字」を作る（並びは日付の昇順なので上書きしていけばよい）
+  state.latest = {};
+  state.metrics.forEach(x => { state.latest[x.post_id] = x; });
+
+  // 新しい順（投稿日時があればそれ、なければ作った日）
+  state.videos.sort((a,b) => postedTime(b) - postedTime(a));
 
   $('#dl-theme').innerHTML = [...new Set(state.videos.map(x=>x.theme).filter(Boolean))]
     .map(t => `<option value="${esc(t)}">`).join('');
 
-  await loadMetricsForDate($('#entry-date').value || todayStr());
-  renderHome(); renderAdvice(); renderVideos(); renderEntry(); renderLinkOptions();
-}
+  // まだ足りない準備があれば、やさしく知らせる
+  const todo = [];
+  if (!state.hasSubs || !state.hasChannel)
+    todo.push('登録者の記録を使うには、Supabase の SQL Editor で <code>youtube-upgrade.sql</code> を実行してください。（実行しなくても、ほかの機能はそのまま使えます）');
+  if (todo.length){
+    $('#setup-warn').classList.remove('hidden');
+    $('#setup-warn').innerHTML = todo.join('<br>');
+  } else {
+    $('#setup-warn').classList.add('hidden');
+  }
 
-async function loadMetricsForDate(date){
-  const { data } = await sb.from('sv_metrics').select('*').eq('measured_on', date);
-  state.metricsFor = {};
-  (data||[]).forEach(x => { state.metricsFor[x.post_id] = x; });
+  const lastSubs = state.channel.length ? state.channel[state.channel.length-1] : null;
+  $('#subs-input').value = '';
+  $('#subs-input').placeholder = lastSubs ? '例 ' + lastSubs.subscribers : '例 128';
+
+  renderHome(); renderAdvice(); renderGrow(); renderVideos(); renderEntry(); renderLinkOptions();
 }
 
 /* ========================= 取り込み ========================= */
@@ -426,9 +633,8 @@ $('#sync-btn').addEventListener('click', async () => {
 });
 
 /* ========================= タブ ========================= */
-/* Tailwind の背景色と CSS が競合して文字が見えなくなっていたため、
-   クラスの取り合いをやめて、選択中の見た目は JS から直接あてています。 */
 $$('.tab').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+$('#to-grow').addEventListener('click', () => showTab('grow'));
 function showTab(name){
   $$('.tabpanel').forEach(p => p.classList.add('hidden'));
   const panel = $('#tab-' + name);
@@ -443,113 +649,332 @@ function showTab(name){
   window.scrollTo(0,0);
 }
 
-/* ========================= 計算 ========================= */
-const latestOf = id => state.latest[id] || null;
-const totalViews = vid => state.posts.filter(p=>p.video_id===vid)
-  .reduce((s,p)=> s + (latestOf(p.id)?.views || 0), 0);
+/* ========================= 計算のもと ========================= */
+const postOf   = vid => state.posts.find(p => p.video_id === vid) || null;
+const latestOf = pid => state.latest[pid] || null;
+const seriesOf = pid => state.metrics.filter(m => m.post_id === pid);
+
+function postedTime(v){
+  const p = postOf(v.id);
+  if (p?.posted_at) return +new Date(p.posted_at);
+  return v.produced_on ? +new Date(v.produced_on) : 0;
+}
+
+/* URL からでも動画IDを拾えるようにしておく（手で追加したときのため） */
+function ytIdOf(v){
+  const p = postOf(v.id);
+  if (!p) return null;
+  if (p.platform_video_id) return p.platform_video_id;
+  const u = p.url || '';
+  const m = u.match(/(?:shorts\/|watch\?v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{6,})/);
+  return m ? m[1] : null;
+}
+const thumbOf = id => `https://i.ytimg.com/vi/${id}/oardefault.jpg`;
+const thumbAlt = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 
 function median(a){
-  const x = a.filter(n=>typeof n==='number'&&isFinite(n)).sort((p,q)=>p-q);
-  if(!x.length) return 0;
+  const x = a.filter(n => typeof n === 'number' && isFinite(n)).sort((p,q)=>p-q);
+  if (!x.length) return 0;
   const m = Math.floor(x.length/2);
-  return x.length%2 ? x[m] : (x[m-1]+x[m])/2;
+  return x.length % 2 ? x[m] : (x[m-1]+x[m])/2;
 }
-function platformMedians(){
+
+function visitsByVideo(){
   const o = {};
-  PLATFORM_KEYS.forEach(k => {
-    o[k] = median(state.posts.filter(p=>p.platform===k)
-      .map(p=>latestOf(p.id)?.views).filter(n=>typeof n==='number'&&n>0));
-  });
+  state.visits.forEach(v => { if (v.video_slug) o[v.video_slug] = (o[v.video_slug]||0)+1; });
   return o;
 }
-/* 媒体ごとに桁が違うので、その媒体の中央値で割った「倍率」で比べる */
-function scoredPosts(){
-  const med = platformMedians();
-  return state.posts.map(p => {
-    const m = latestOf(p.id), base = med[p.platform], views = m?.views;
-    const video = state.videos.find(v=>v.id===p.video_id);
-    return { post:p, video, metrics:m, views,
-      index: (base>0 && typeof views==='number') ? views/base : null };
-  }).filter(x => x.video && x.index !== null);
+
+/* 1本ぶんの数字をひとまとめにする。ここから先はこの形だけを見ます。 */
+function statsOf(v, med, vv){
+  const p = postOf(v.id);
+  const m = p ? latestOf(p.id) : null;
+  const views = (m && typeof m.views === 'number') ? m.views : null;
+  const likes = m?.likes ?? null, comments = m?.comments ?? null, shares = m?.shares ?? null;
+  const subs  = (state.hasSubs ? (m?.subs_gained ?? null) : null);
+  const visits = vv[v.slug] || 0;
+  return {
+    v, post:p, metrics:m, views, likes, comments, shares, subs, visits,
+    id: ytIdOf(v),
+    postedAt: p?.posted_at || null,
+    retention: (m?.avg_watch_sec && v.duration_sec) ? (m.avg_watch_sec / v.duration_sec * 100) : null,
+    likeRate:    (views && likes    != null) ? likes/views*100    : null,
+    commentRate: (views && comments != null) ? comments/views*100 : null,
+    subRate:     (views && subs     != null) ? subs/views*1000    : null,
+    visitRate:   (views) ? visits/views*1000 : null,
+    index: (med > 0 && views) ? views/med : null,
+  };
 }
+function allStats(){
+  const med = median(state.videos.map(v => { const p = postOf(v.id); return p ? latestOf(p.id)?.views : null; })
+                      .filter(n => typeof n === 'number' && n > 0));
+  const vv = visitsByVideo();
+  return { med, list: state.videos.map(v => statsOf(v, med, vv)) };
+}
+const scoredOnly = list => list.filter(s => s.index !== null);
+
 const durationBucket = s => !s ? null : s<=15?'〜15秒' : s<=30?'16〜30秒' : s<=45?'31〜45秒' : s<=60?'46〜60秒' : '60秒超';
 const hourBucket = ts => { if(!ts) return null; const h=new Date(ts).getHours();
   return h<6?'深夜 0〜6時' : h<11?'朝 6〜11時' : h<15?'昼 11〜15時' : h<19?'夕方 15〜19時' : '夜 19〜24時'; };
 const WEEKDAYS = ['日','月','火','水','木','金','土'];
 
-function groupBy(scored, keyFn){
+function groupBy(list, keyFn){
   const m = new Map();
-  scored.forEach(s => { const k = keyFn(s); if(!k) return; (m.get(k) || m.set(k,[]).get(k)).push(s.index); });
-  return [...m.entries()].map(([key,arr]) => ({ key, n:arr.length, avg:arr.reduce((a,b)=>a+b,0)/arr.length }))
-    .sort((a,b)=>b.avg-a.avg);
+  list.forEach(s => {
+    const k = keyFn(s); if (!k) return;
+    if (!m.has(k)) m.set(k, []);
+    m.get(k).push(s);
+  });
+  return [...m.entries()].map(([key, arr]) => ({
+    key, n: arr.length,
+    avg: arr.reduce((a,b)=>a+b.index,0)/arr.length,
+    med: median(arr.map(x=>x.views)),
+  })).sort((a,b) => b.avg - a.avg);
 }
-function visitsByVideo(){
-  const o = {};
-  state.visits.forEach(v => { if(v.video_slug) o[v.video_slug] = (o[v.video_slug]||0)+1; });
-  return o;
+
+/* 投稿した翌日までにどれだけ回ったか（最初の勢い） */
+function firstDay(s){
+  if (!s.post || !s.postedAt) return null;
+  const d0 = new Date(s.postedAt);
+  for (const r of seriesOf(s.post.id)){
+    const diff = (new Date(r.measured_on + 'T12:00:00') - d0) / 864e5;
+    if (diff >= 0.2 && diff <= 2.2 && typeof r.views === 'number') return r.views;
+  }
+  return null;
+}
+
+/* ========================= グラフ =========================
+   棒はだいたいの大きさを見るためのもの、
+   判断するのは数字なので、必ず数値を添えています。 */
+function emptyNote(t){ return `<p class="text-xs text-slate-500">${esc(t)}</p>`; }
+
+/* 縦棒。棒の上に数値を出します。 */
+function vbars(rows, opt = {}){
+  if (!rows.length) return emptyNote(opt.empty || 'まだ数字がありません。');
+  const H = opt.height || 120;
+  const max = Math.max(...rows.map(r => r.value || 0), 1);
+  return `<div class="scroll-x pb-1"><div class="flex items-end gap-1.5" style="min-width:${rows.length*36}px">
+    ${rows.map(r => {
+      const h = Math.max(Math.round((r.value||0) / max * H), 2);
+      return `<div class="flex flex-col items-center gap-1 flex-1" style="min-width:30px">
+        <span class="num text-[9px] ${r.tone==='good'?'text-emerald-300':'text-slate-300'}">${r.text ?? num(r.value)}</span>
+        <div class="vbar ${r.tone==='good'?'vbar-good':''}" style="height:${h}px" title="${esc(r.title||'')}"></div>
+        <span class="text-[9px] text-slate-600 truncate w-full text-center">${esc(r.label||'')}</span>
+      </div>`;
+    }).join('')}
+  </div></div>` + (opt.foot ? `<div class="flex justify-between text-[10px] text-slate-600 mt-2">${opt.foot}</div>` : '');
+}
+
+/* 横棒。左に名前、右に数値。 */
+function hbars(rows, opt = {}){
+  if (!rows.length) return emptyNote(opt.empty || 'まだ数字がありません。');
+  const max = Math.max(...rows.map(r => r.value || 0), opt.max || 0, 1);
+  return rows.map(r => {
+    const w = Math.max((r.value||0) / max * 100, 1);
+    const tone = r.tone === 'good' ? 'fill-good' : r.tone === 'warn' ? 'fill-warn'
+               : r.tone === 'flat' ? 'fill-flat' : r.tone === 'yt' ? 'fill-yt' : '';
+    return `<div class="mb-2.5">
+      <div class="flex justify-between items-baseline gap-3 text-[11px] mb-1">
+        <span class="truncate ${r.dim?'text-slate-600':'text-slate-300'}">${esc(r.label)}${
+          r.sub ? `<span class="text-slate-600"> ${esc(r.sub)}</span>` : ''}</span>
+        <span class="num font-semibold whitespace-nowrap ${r.dim?'text-slate-600':'text-sky-200'}">${r.text ?? num(r.value)}</span>
+      </div>
+      <div class="track"><div class="fill ${tone}" style="width:${w}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+/* 目安つきの棒。いまの数字と、伸びているチャンネルの目安を並べます。 */
+function goalBar(g, val, opt = {}){
+  const isRange = !!g.range;
+  const lo = isRange ? g.range[0] : g.goal;
+  const hi = isRange ? g.range[1] : g.goal;
+  const max = isRange ? hi * 1.7 : g.goal * 1.5;
+  const ok   = val != null && (isRange ? (val >= lo && val <= hi) : val >= g.goal);
+  const near = val != null && !ok && val >= lo * 0.6;
+  const w = val == null ? 0 : Math.min(val / max * 100, 100);
+  const tone = ok ? 'fill-good' : near ? 'fill-warn' : 'fill-flat';
+  const mark = isRange
+    ? `<div style="position:absolute;left:${lo/max*100}%;width:${(hi-lo)/max*100}%;top:0;bottom:0;background:rgba(226,232,240,.14)"></div>`
+    : `<div class="goal" style="left:${Math.min(g.goal/max*100,99)}%"></div>`;
+  const shown = val == null ? '—'
+    : (g.unit === '本' || g.unit === '秒' ? num(Math.round(val)) : dec(val, val < 10 ? 1 : 0)) + g.unit;
+  const goalTxt = isRange ? `${lo}〜${hi}${g.unit}` : `${g.goal}${g.unit}`;
+  return `<div>
+    <div class="flex justify-between items-baseline gap-3 mb-1">
+      <span class="text-xs ${ok?'text-emerald-300':val==null?'text-slate-600':'text-slate-300'}">${ok?'✓ ':''}${esc(g.name)}</span>
+      <span class="text-[11px] whitespace-nowrap">
+        <span class="num font-bold ${ok?'text-emerald-300':near?'text-amber-300':'text-slate-400'}">${shown}</span>
+        <span class="text-slate-600 num"> ／ 目安 ${goalTxt}</span>
+      </span>
+    </div>
+    <div class="track" style="overflow:visible">
+      <div style="position:absolute;inset:0;border-radius:99px;overflow:hidden">
+        ${mark}<div class="fill ${tone}" style="width:${w}%"></div>
+      </div>
+    </div>
+    ${val == null && opt.why !== false
+      ? `<p class="text-[10px] text-slate-600 mt-1">${esc(g.need)}を入れると出ます。</p>` : ''}
+    ${opt.detail ? `<p class="text-[11px] text-slate-400 mt-2 leading-relaxed">${esc(g.why)}</p>
+       <p class="text-[11px] mt-1 leading-relaxed" style="color:#7dd3fc">直し方：${esc(g.fix)}</p>` : ''}
+  </div>`;
+}
+
+/* ========================= いまの数字 ========================= */
+function currentValues(){
+  const { med, list } = allStats();
+  const withViews = list.filter(s => s.views);
+  const totalViews = withViews.reduce((a,b)=>a+b.views, 0);
+
+  // 割合はすべて「その数字が入っている動画だけ」で計算します
+  const rate = key => {
+    let n = 0, d = 0, any = false;
+    withViews.forEach(s => { const x = s.metrics?.[key]; if (x != null){ n += Number(x); d += s.views; any = true; } });
+    return any && d > 0 ? n/d : null;
+  };
+  const rets = withViews.filter(s => s.retention != null);
+  const retention = rets.length
+    ? rets.reduce((a,b)=>a + b.retention * b.views, 0) / rets.reduce((a,b)=>a + b.views, 0) : null;
+
+  const now = Date.now();
+  const pace = state.posts.filter(p => p.posted_at && now - new Date(p.posted_at) < 7*864e5).length;
+  const durs = state.videos.map(v => v.duration_sec).filter(n => n > 0);
+  const titles = state.videos.map(v => v.title).filter(Boolean);
+  const totalVisits = withViews.reduce((a,b)=>a+b.visits, 0);
+
+  return {
+    med, list, withViews, totalViews,
+    values: {
+      retention,
+      like:    rate('likes')    != null ? rate('likes')*100    : null,
+      comment: rate('comments') != null ? rate('comments')*100 : null,
+      sub:     state.hasSubs && rate('subs_gained') != null ? rate('subs_gained')*1000 : null,
+      pace,
+      dur:     durs.length ? median(durs) : null,
+      title:   titles.length ? new Set(titles).size / titles.length * 100 : null,
+      visit:   totalViews > 0 ? totalVisits/totalViews*1000 : null,
+    },
+  };
 }
 
 /* ========================= ダッシュボード ========================= */
 function renderHome(){
-  const total = state.posts.reduce((s,p)=> s + (latestOf(p.id)?.views||0), 0);
-  $('#hero-total').textContent = num(total);
-  $('#hero-sub').textContent = `${state.videos.length}本 ・ ${state.posts.length}投稿`;
+  const cur = currentValues();
+  const { list, withViews, totalViews, med } = cur;
 
-  $('#home-cards').innerHTML = PLATFORM_KEYS.map(k => {
-    const ps = state.posts.filter(p=>p.platform===k);
-    const t  = ps.reduce((s,p)=> s + (latestOf(p.id)?.views||0), 0);
-    return `<div class="glass rounded-2xl p-3.5">
-      <div class="flex items-center gap-1.5 mb-1">
-        <span class="w-1.5 h-1.5 rounded-full" style="background:${PLATFORMS[k].tint}"></span>
-        <span class="text-[11px] text-slate-400">${PLATFORMS[k].label}</span>
-      </div>
-      <div class="num text-2xl font-bold">${num(t)}</div>
-      <div class="text-[10px] text-slate-500 mt-0.5">${ps.length}本</div>
-    </div>`;
-  }).join('');
+  // 登録者
+  const ch = state.channel;
+  const last = ch.length ? ch[ch.length-1] : null;
+  $('#hero-subs').textContent = last ? num(last.subscribers) : '—';
+  if (last){
+    const prev = ch.length > 1 ? ch[ch.length-2] : null;
+    const d = prev ? last.subscribers - prev.subscribers : null;
+    $('#hero-subs-sub').innerHTML = `${last.measured_on} 時点`
+      + (d != null ? ` ・ 前回から <b class="num ${d>=0?'text-emerald-300':'text-rose-300'}">${d>=0?'+':''}${num(d)}</b>` : '');
+  } else {
+    $('#hero-subs-sub').textContent = state.hasChannel
+      ? 'YouTube Studio の登録者数を、下の欄に入れてください。'
+      : 'youtube-upgrade.sql を実行すると記録できるようになります。';
+  }
+
+  $('#hero-views').textContent = num(totalViews);
+  $('#hero-views-sub').textContent = `${state.videos.length}本ぶん`;
+
+  // 小さな数字カード
+  const maxV = withViews.length ? Math.max(...withViews.map(s=>s.views)) : null;
+  const cards = [
+    ['動画',           num(state.videos.length) + '<span class="text-xs">本</span>', '#7dd3fc'],
+    ['再生の中央値',   num(Math.round(med)),                                          '#7dd3fc'],
+    ['いちばん伸びた1本', num(maxV),                                                  '#c4b5fd'],
+    ['この7日の投稿',  num(cur.values.pace) + '<span class="text-xs">本</span>',       cur.values.pace >= 5 ? '#6ee7b7' : '#fcd34d'],
+  ];
+  $('#home-cards').innerHTML = cards.map(([l,v,c]) => `<div class="glass rounded-2xl p-3.5">
+      <div class="text-[11px] text-slate-400 mb-1">${l}</div>
+      <div class="num text-2xl font-bold" style="color:${c}">${v}</div>
+    </div>`).join('');
+
+  // 健康診断（かんたん版）
+  $('#home-score').innerHTML = `<div class="space-y-3">${
+    GOALS.map(g => goalBar(g, cur.values[g.key], { why:false })).join('')}</div>`;
+
+  // 登録者の伸び
+  $('#home-subchart').innerHTML = ch.length
+    ? vbars(ch.slice(-14).map((r,i,arr) => {
+        const prev = i > 0 ? arr[i-1].subscribers : null;
+        return { label: r.measured_on.slice(5).replace('-','/'), value: r.subscribers,
+                 text: num(r.subscribers),
+                 tone: prev != null && r.subscribers > prev ? 'good' : null,
+                 title: `${r.measured_on} ${num(r.subscribers)}人` };
+      }), { height:110 })
+    : emptyNote('まだ記録がありません。上の欄に今日の登録者数を入れてください。1日1回で十分です。');
+
+  // 1本ずつの再生数（古い→新しい）
+  const seq = list.filter(s => s.views).slice(0, 20).reverse();
+  $('#home-spark').innerHTML = vbars(seq.map(s => ({
+      label: s.postedAt ? new Date(s.postedAt).toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'}) : '',
+      value: s.views, text: num(s.views),
+      tone: med > 0 && s.views >= med * 1.5 ? 'good' : null,
+      title: `${s.v.title} ${num(s.views)}回`,
+    })), { height:120, foot:'<span>古い</span><span>新しい →</span>' });
+
+  // よく見られた動画
+  const top = withViews.slice().sort((a,b)=>b.views-a.views).slice(0,8);
+  $('#home-top').innerHTML = hbars(top.map(s => ({
+    label: s.v.title, sub: s.index ? `（${dec(s.index)}倍）` : '',
+    value: s.views, text: num(s.views) + '回',
+    tone: s.index >= 1.5 ? 'good' : null,
+  })));
+
+  // 投稿のペース（8週ぶんのカレンダー）
+  $('#home-calendar').innerHTML = calendarHtml();
 
   // 流入
   const now = Date.now();
   const c7  = state.visits.filter(v => now - new Date(v.visited_at) < 7*864e5).length;
   const c30 = state.visits.filter(v => now - new Date(v.visited_at) < 30*864e5).length;
-  const bySrc = {}; state.visits.forEach(v => { const s=v.source||'不明'; bySrc[s]=(bySrc[s]||0)+1; });
   $('#home-visits').innerHTML = state.visits.length
-    ? `<div class="flex gap-6 mb-4">
+    ? `<div class="flex gap-6">
         ${[[c7,'この7日'],[c30,'この30日'],[state.visits.length,'累計']].map(([n,l])=>
           `<div><div class="num text-3xl font-bold" style="color:#6ee7b7">${num(n)}</div>
            <div class="text-[10px] text-slate-500">${l}</div></div>`).join('')}
-       </div>
-       ${Object.entries(bySrc).sort((a,b)=>b[1]-a[1]).map(([s,n])=>
-         `<div class="flex justify-between text-xs py-1.5" style="border-bottom:1px solid var(--line)">
-            <span class="text-slate-400">${esc(PLATFORMS[s]?.label||s)}</span><span class="num">${num(n)}</span></div>`).join('')}`
-    : `<p class="text-xs text-slate-500">まだ記録がありません。「リンク」タブで作ったURLを投稿に貼ると、ここに出ます。</p>`;
-
-  // 直近の再生数の推移（動画ごとの棒）
-  const rows = state.videos.map(v=>({v,t:totalViews(v.id)})).filter(r=>r.t>0).slice(0,14).reverse();
-  const max = Math.max(...rows.map(r=>r.t), 1);
-  $('#home-spark').innerHTML = rows.length
-    ? `<div class="flex items-end gap-1 h-28">${rows.map(r=>{
-        const h = Math.max(r.t/max*100, 3);
-        return `<div class="flex-1 rounded-t transition-all" title="${esc(r.v.title)} ${num(r.t)}回"
-          style="height:${h}%;background:linear-gradient(180deg,#7dd3fc,#38bdf8,rgba(56,189,248,.25))"></div>`;
-      }).join('')}</div>
-      <div class="flex justify-between text-[10px] text-slate-500 mt-2"><span>古い</span><span>新しい →</span></div>`
-    : `<p class="text-xs text-slate-500">まだ数字がありません。</p>`;
-
-  const top = state.videos.map(v=>({v,t:totalViews(v.id)})).filter(r=>r.t>0)
-    .sort((a,b)=>b.t-a.t).slice(0,10);
-  $('#home-top').innerHTML = top.length
-    ? `<table class="w-full text-xs min-w-[380px]"><tbody>${top.map((r,i)=>`
-        <tr style="border-bottom:1px solid var(--line)">
-          <td class="py-2.5 w-6 text-slate-600 num">${i+1}</td>
-          <td class="py-2.5 pr-2"><div class="truncate max-w-[210px]">${esc(r.v.title)}</div>
-            <div class="text-[10px] text-slate-500">${esc(r.v.theme||r.v.slug)}</div></td>
-          <td class="py-2.5 text-right num font-semibold">${num(r.t)}</td>
-        </tr>`).join('')}</tbody></table>`
-    : `<p class="text-xs text-slate-500">まだ数字がありません。</p>`;
+       </div>`
+    : emptyNote('まだ記録がありません。「リンク」タブで作ったURLを固定コメントに貼ると、ここに出ます。');
 }
 
-/* ========================= 提案 ========================= */
+/* 8週ぶんの投稿カレンダー。続いているかどうかが目で分かります。 */
+function calendarHtml(){
+  const days = 56;
+  const counts = {};
+  state.posts.forEach(p => {
+    if (!p.posted_at) return;
+    const d = new Date(p.posted_at).toLocaleDateString('sv-SE');
+    counts[d] = (counts[d]||0)+1;
+  });
+  const today = new Date(); today.setHours(12,0,0,0);
+  const start = new Date(today); start.setDate(start.getDate() - (days-1));
+  start.setDate(start.getDate() - start.getDay());   // 日曜はじまりにそろえる
+
+  const weeks = [];
+  for (let d = new Date(start); d <= today; d.setDate(d.getDate()+1)){
+    const key = d.toLocaleDateString('sv-SE');
+    const w = Math.floor((d - start) / (7*864e5));
+    (weeks[w] = weeks[w] || []).push({ key, n: counts[key]||0, dow: d.getDay(), label: d.getDate() });
+  }
+  const cell = c => {
+    const bg = c.n === 0 ? 'rgba(148,163,184,.09)'
+             : c.n === 1 ? 'rgba(56,189,248,.55)' : 'rgba(52,211,153,.75)';
+    return `<div class="rounded" title="${c.key} ${c.n}本"
+      style="width:100%;aspect-ratio:1;background:${bg};display:flex;align-items:center;justify-content:center;
+             font-size:9px;color:${c.n?'#04121f':'#475569'};font-weight:${c.n?'700':'400'}">${c.n||''}</div>`;
+  };
+  const total = Object.values(counts).reduce((a,b)=>a+b,0);
+  return `<div class="scroll-x"><div class="flex gap-1" style="min-width:${weeks.length*26}px">
+      ${weeks.map(w => `<div class="flex flex-col gap-1 flex-1">${w.map(cell).join('')}</div>`).join('')}
+    </div></div>
+    <p class="text-[10px] text-slate-600 mt-2">左が8週間前、右が今日。数字はその日に出した本数です（記録がある分：${num(total)}本）。</p>`;
+}
+
+/* ========================= 次に作る動画 ========================= */
 function card(tone, icon, title, body){
   const c = { good:'#6ee7b7', warn:'#fcd34d', info:'#7dd3fc', flat:'#94a3b8' }[tone];
   return `<div class="rounded-2xl p-4" style="background:rgba(148,163,184,.06);border-left:3px solid ${c}">
@@ -559,136 +984,221 @@ function card(tone, icon, title, body){
 }
 
 function renderAdvice(){
-  const scored = scoredPosts();
+  const cur = currentValues();
+  const { list, withViews, med } = cur;
+  const scored = scoredOnly(list);
   const out = [];
 
-  /* ① タイトル・説明文が使い回されていないか。
-     これは本数が少なくても言い切れるので最優先で出す。 */
+  /* ① タイトルの使い回し。本数が少なくても言い切れるので最優先。 */
   const titles = state.videos.map(v=>v.title).filter(Boolean);
-  if (titles.length >= 4) {
+  if (titles.length >= 4){
     const uniq = new Set(titles).size;
-    if (uniq <= Math.max(2, titles.length * 0.3)) {
-      out.push({ p: 100, html: card('warn','✍️','タイトルを1本ずつ変える',
+    if (uniq <= Math.max(2, titles.length * 0.5)){
+      out.push({ p:100, html: card('warn','✍️','タイトルを1本ずつ変える',
         `${titles.length}本のうちタイトルが <b>${uniq}種類</b>しかありません。
-         同じタイトルが並ぶと、検索やおすすめでどの動画も同じものとして扱われ、
-         別々の視聴者に届く機会を失います。<br>
-         <span class="text-slate-400">その回で一番刺さる一言をそのままタイトルにしてください。
-         「眠れない夜にやっていること」「診断が出た日のこと」のように、
-         中身が違えばタイトルも違うはずです。</span>`) });
+         YouTube はタイトルと説明文で「この動画は誰に見せるか」を決めています。
+         同じタイトルが並ぶと、どの動画も同じものとして扱われ、別々の視聴者に届く機会を失います。<br>
+         <span class="text-slate-400">その回のいちばん刺さる一言を、そのままタイトルにしてください。
+         「眠れない夜にやっていること」「診断が出た日のこと」のように、中身が違えばタイトルも違うはずです。
+         検索されそうな言葉（不眠・パニック・障害年金など）が入っていると、投稿後も長く見られます。</span>`) });
     }
   }
 
-  /* ② 投稿する時間帯 */
-  const byHour = groupBy(scored, s => hourBucket(s.post.posted_at));
-  const strongHour = byHour.filter(g => g.n >= MIN_SAMPLE);
-  if (strongHour.length >= 2 && strongHour[0].avg >= strongHour[strongHour.length-1].avg * 1.3) {
-    const b = strongHour[0], w = strongHour[strongHour.length-1];
-    out.push({ p: 80, html: card('good','🕐','投稿する時間を寄せる',
-      `<b>${esc(b.key)}</b>が平均${b.avg.toFixed(1)}倍（${b.n}本）で最も伸びています。
-       いちばん低い${esc(w.key)}は${w.avg.toFixed(1)}倍（${w.n}本）。
-       この時間帯に寄せるだけで差がつきます。`) });
-  } else if (byHour.length >= 2) {
-    const b = byHour[0];
-    out.push({ p: 55, html: card('info','🕐','時間帯に手応えの兆しがあります',
-      `いまのところ<b>${esc(b.key)}</b>が${b.avg.toFixed(1)}倍と最も高いですが、
-       まだ${b.n}本ぶんの結果です。判断するには各時間帯${MIN_SAMPLE}本ほしいところです。
-       <span class="text-slate-400">しばらく同じ時間に投稿して確かめるか、
-       2つの時間帯を交互に試すと早く分かります。</span>`) });
-  }
-
-  /* ③ 飛び抜けた動画 */
-  if (scored.length >= 4) {
-    const top = [...scored].sort((a,b)=>b.index-a.index)[0];
-    if (top && top.index >= 1.8) {
-      const d = top.post.posted_at ? new Date(top.post.posted_at) : null;
-      out.push({ p: 70, html: card('good','🚀','飛び抜けた1本を調べる',
-        `<b>${esc(top.video.title)}</b>が${top.index.toFixed(1)}倍（${num(top.views)}回）と突出しています。
-         ${d ? `${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} の投稿。` : ''}
-         <span class="text-slate-400">この1本の冒頭3秒と話題を見直して、同じ型でもう1本作ってみてください。
-         偶然かどうかは、2本目が伸びるかで分かります。</span>`) });
-    }
-  }
-
-  /* ④ 目的の数字（サイト到達） */
-  const vv = visitsByVideo();
-  if (Object.keys(vv).length) {
-    const cand = scored.filter(s => vv[s.video.slug])
-      .map(s => ({ s, rate: vv[s.video.slug]/Math.max(s.views,1)*1000 }))
-      .sort((a,b)=>b.rate-a.rate);
-    if (cand.length) {
-      const b = cand[0];
-      out.push({ p: 90, html: card('good','🎯','サイトに届いた動画',
-        `<b>${esc(b.s.video.title)}</b>が1000回再生あたり${b.rate.toFixed(1)}人をホームページに送っています。
-         ${b.s.video.theme ? `テーマは「${esc(b.s.video.theme)}」。` : ''}
-         <span class="text-slate-400">再生数の多い動画とは限りません。相談ページを増やすなら、こちらの型を増やすほうが近道です。</span>`) });
-    }
+  /* ② 登録の数字が測れているか（このチャンネルにとって最重要） */
+  const withSubs = withViews.filter(s => s.subs != null);
+  if (!state.hasSubs || !state.hasChannel){
+    out.push({ p:97, html: card('warn','📈','登録者を記録できるようにする',
+      `いま見えているのは再生数だけです。
+       <b>Supabase の SQL Editor で youtube-upgrade.sql</b> を実行すると、
+       登録者数と「動画ごとの登録の増加」を残せるようになります。<br>
+       <span class="text-slate-400">再生数は増えたのに登録が増えない、という状態を早く見つけるための数字です。</span>`) });
+  } else if (!withSubs.length && withViews.length){
+    out.push({ p:96, html: card('warn','📈','登録の増加を入れてください',
+      `YouTube Studio の「アナリティクス → コンテンツ」に、動画ごとの<b>チャンネル登録者の増加数</b>があります。
+       「数字を入力」タブに書き写してください。<br>
+       <span class="text-slate-400">1000回再生あたり何人が登録したか——これが、次に何を作るかを決める一番の手がかりになります。</span>`) });
   } else {
-    out.push({ p: 95, html: card('warn','🎯','まだ目的の数字が測れていません',
-      `いま見えているのは再生数だけです。<b>「リンク」タブで作ったURL</b>を
-       各投稿の概要欄やプロフィールに貼ってください。<br>
-       <span class="text-slate-400">再生数が伸びても相談ページに誰も来なければ、
-       星と海にとっては前に進んでいません。この計測が入って初めて
-       「どの動画が本当に効いたか」が分かります。</span>`) });
+    const best = withSubs.slice().sort((a,b)=>b.subRate-a.subRate)[0];
+    if (best && best.subRate > 0){
+      out.push({ p:90, html: card('good','⭐️','登録につながった型を増やす',
+        `<b>${esc(best.v.title)}</b>が、1000回再生あたり<b class="num">${dec(best.subRate)}人</b>の登録につながっています
+         （再生${num(best.views)}回・登録${num(best.subs)}人）。
+         ${best.v.theme ? `テーマは「${esc(best.v.theme)}」。` : ''}
+         <span class="text-slate-400">再生数がいちばん多い動画とは限りません。
+         この1本と同じ入り口・同じ締め方で、もう2本作ってみてください。</span>`) });
+    }
   }
 
-  /* ⑤ 記録が足りない項目 */
+  /* ③ 最後まで見られているか */
+  if (cur.values.retention != null){
+    if (cur.values.retention < 60){
+      out.push({ p:93, html: card('warn','⏱','最後まで見られていません',
+        `平均で<b class="num">${dec(cur.values.retention,0)}%</b>のところで離れています（目安は70%以上）。
+         ショート動画は、ここが伸びないとおすすめに乗りません。<br>
+         <span class="text-slate-400">直し方は2つだけです。<b>尺を短くする</b>ことと、
+         <b>冒頭の説明をやめる</b>こと。「今日は◯◯について話します」は要りません。1枚目のテロップから本題に入ってください。</span>`) });
+    } else if (cur.values.retention >= 80){
+      out.push({ p:60, html: card('good','⏱','最後まで見られています',
+        `平均<b class="num">${dec(cur.values.retention,0)}%</b>。とても良い状態です。
+         <span class="text-slate-400">この形は変えずに、本数を増やすほうが効きます。</span>`) });
+    }
+  }
+
+  /* ④ 計測リンク */
+  if (!state.visits.length && withViews.length){
+    out.push({ p:94, html: card('warn','🎯','まだサイトに届いた人が測れていません',
+      `<b>「リンク」タブで作ったURL</b>を、各動画の<b>固定コメント</b>に貼ってください。
+       ショート動画では概要欄はほとんど開かれません。<br>
+       <span class="text-slate-400">再生数が伸びても相談ページに誰も来なければ、星と海にとっては前に進んでいません。
+       この計測が入って初めて「どの動画が本当に効いたか」が分かります。</span>`) });
+  } else {
+    const cand = withViews.filter(s => s.visits > 0).sort((a,b)=>b.visitRate-a.visitRate)[0];
+    if (cand) out.push({ p:88, html: card('good','🎯','サイトに届いた動画',
+      `<b>${esc(cand.v.title)}</b>が1000回再生あたり<b class="num">${dec(cand.visitRate)}人</b>をホームページに送っています。
+       <span class="text-slate-400">この動画の締めの言い方を、ほかの動画にも使ってみてください。</span>`) });
+  }
+
+  /* ⑤ 投稿のペース */
+  if (state.posts.some(p=>p.posted_at)){
+    const pace = cur.values.pace;
+    const gaps = state.posts.map(p=>p.posted_at).filter(Boolean).map(t=>+new Date(t)).sort((a,b)=>a-b);
+    const diffs = gaps.slice(1).map((t,i)=> (t-gaps[i])/864e5);
+    const gapMed = diffs.length ? median(diffs) : null;
+    if (pace < 5){
+      out.push({ p:85, html: card('info','🗓','出す本数を少し増やす',
+        `この7日で<b class="num">${pace}本</b>です${gapMed!=null?`（ふだんの間隔は${dec(gapMed)}日）`:''}。
+         ショート動画は、本数がそのまま「試行回数」になります。週5本を目安にすると、当たりを引く確率が上がります。<br>
+         <span class="text-slate-400">がんばって長い動画を作るより、20秒・テロップ5枚を毎日のほうが届きます。
+         しんどい日は、前に作った台本の言い換えでもかまいません。</span>`) });
+    } else {
+      out.push({ p:35, html: card('good','🗓','ペースは保てています',
+        `この7日で<b class="num">${pace}本</b>。この調子で続けてください。`) });
+    }
+  }
+
+  /* ⑥ 時間帯 */
+  const byHour = groupBy(scored, s => hourBucket(s.postedAt));
+  const strongHour = byHour.filter(g => g.n >= MIN_SAMPLE);
+  if (strongHour.length >= 2 && strongHour[0].avg >= strongHour[strongHour.length-1].avg * 1.3){
+    const b = strongHour[0], w = strongHour[strongHour.length-1];
+    out.push({ p:80, html: card('good','🕐','投稿する時間を寄せる',
+      `<b>${esc(b.key)}</b>が平均<b class="num">${dec(b.avg)}倍</b>（${b.n}本・中央値${num(Math.round(b.med))}回）で最も伸びています。
+       いちばん低い${esc(w.key)}は${dec(w.avg)}倍（${w.n}本）。この時間帯に寄せるだけで差がつきます。`) });
+  } else if (byHour.length >= 2){
+    const b = byHour[0];
+    out.push({ p:55, html: card('info','🕐','時間帯に手応えの兆しがあります',
+      `いまのところ<b>${esc(b.key)}</b>が${dec(b.avg)}倍と最も高いですが、まだ${b.n}本ぶんの結果です。
+       判断するには各時間帯${MIN_SAMPLE}本ほしいところです。
+       <span class="text-slate-400">しばらく同じ時間に投稿して確かめるか、2つの時間帯を交互に試すと早く分かります。</span>`) });
+  }
+
+  /* ⑦ 飛び抜けた1本 */
+  if (scored.length >= 4){
+    const top = scored.slice().sort((a,b)=>b.index-a.index)[0];
+    if (top && top.index >= 1.8){
+      const d = top.postedAt ? new Date(top.postedAt) : null;
+      out.push({ p:75, html: card('good','🚀','飛び抜けた1本を調べる',
+        `<b>${esc(top.v.title)}</b>が<b class="num">${dec(top.index)}倍</b>（${num(top.views)}回）と突出しています。
+         ${d ? `${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} の投稿。` : ''}
+         <span class="text-slate-400">この1本の最初の2秒と、話題の切り口を見直してください。
+         同じ型でもう1本作って、2本目も伸びれば「型」、伸びなければ「たまたま」です。</span>`) });
+    }
+  }
+
+  /* ⑧ 尺 */
+  const byDur = groupBy(scored, s => durationBucket(s.v.duration_sec)).filter(g=>g.n>=MIN_SAMPLE);
+  if (byDur.length >= 2){
+    out.push({ p:65, html: card('info','📏','伸びている尺',
+      `<b>${esc(byDur[0].key)}</b>が平均<b class="num">${dec(byDur[0].avg)}倍</b>（${byDur[0].n}本）でいちばん良い結果です。
+       <span class="text-slate-400">迷ったらこの長さで作ってください。</span>`) });
+  } else if (cur.values.dur != null && cur.values.dur > 40){
+    out.push({ p:64, html: card('info','📏','少し短くしてみる',
+      `いまの尺は中央値<b class="num">${num(Math.round(cur.values.dur))}秒</b>です。
+       同じ内容でも、20〜30秒に詰めるほうが最後まで見てもらえます。`) });
+  }
+
+  /* ⑨ 冒頭の掴み */
+  const byHook = groupBy(scored, s => s.v.hook_type).filter(g=>g.n>=MIN_SAMPLE);
+  if (byHook.length >= 2){
+    out.push({ p:62, html: card('good','🪝','効いている掴み',
+      `<b>${esc(byHook[0].key)}</b>で始めた動画が平均<b class="num">${dec(byHook[0].avg)}倍</b>（${byHook[0].n}本）。
+       <span class="text-slate-400">冒頭の1秒は、内容よりも「自分に関係がある」と思わせられるかで決まります。</span>`) });
+  }
+
+  /* ⑩ いいね率 */
+  if (cur.values.like != null && cur.values.like < 3 && withViews.length >= 3){
+    out.push({ p:58, html: card('info','💬','反応をもらう一言を足す',
+      `いいね率は<b class="num">${dec(cur.values.like)}%</b>です（目安は4%）。
+       <span class="text-slate-400">最後のテロップを、言い切りではなく問いにしてみてください。
+       「あなたはどうですか」の一行があるだけで、コメントといいねは変わります。</span>`) });
+  }
+
+  /* ⑪ 記録が足りない項目 */
   const noTheme = state.videos.filter(v => !v.theme).length;
-  if (state.videos.length >= 5 && noTheme >= state.videos.length * 0.6) {
-    out.push({ p: 60, html: card('info','🏷️','テーマを入れると提案が鋭くなります',
+  if (state.videos.length >= 5 && noTheme >= state.videos.length * 0.6){
+    out.push({ p:50, html: card('info','🏷️','テーマを入れると提案が鋭くなります',
       `${state.videos.length}本のうち${noTheme}本にテーマが入っていません。
        テーマ・冒頭の掴み・尺が入ると、「どの話題が届いているか」まで踏み込めます。
        <span class="text-slate-400">5〜7種類にまとめるのがコツです。細かく分けると比べられなくなります。</span>`) });
   }
 
-  /* ⑥ 他の媒体 */
-  const only = PLATFORM_KEYS.filter(k => !state.posts.some(p=>p.platform===k));
-  if (only.length && state.posts.length) {
-    out.push({ p: 40, html: card('flat','📡','記録がない媒体があります',
-      `${only.map(k=>PLATFORMS[k].label).join('・')}の数字がまだ入っていません。
-       同じ動画でも媒体で伸び方が変わるので、入れておくと比較ができます。`) });
+  /* ⑫ 初速 */
+  const speeds = withViews.map(s => ({ s, first: firstDay(s) })).filter(x => x.first != null);
+  if (speeds.length >= 3){
+    const fm = median(speeds.map(x=>x.first));
+    const b = speeds.slice().sort((a,b2)=>b2.first-a.first)[0];
+    out.push({ p:45, html: card('info','⚡️','最初の1日の勢い',
+      `投稿の翌日までに回るのは、ふだん<b class="num">${num(Math.round(fm))}回</b>ほどです。
+       いちばん勢いがあったのは「${esc(b.s.v.title)}」の<b class="num">${num(b.first)}回</b>。
+       <span class="text-slate-400">ショート動画は最初の24時間の反応で、その先どこまで広げるかが決まります。
+       出したあとしばらくは、コメントに返事をすると伸びやすくなります。</span>`) });
   }
 
-  if (!out.length) {
+  if (!out.length){
     out.push({ p:0, html: card('flat','🌙','まだ判断できる材料がありません',
       `右上の「取り込む」で YouTube の数字を取り込むところから始めてください。`) });
   }
 
   $('#advice-list').innerHTML = out.sort((a,b)=>b.p-a.p).map(x=>x.html).join('');
 
-  /* 属性ごとの比較 */
+  /* 属性ごとの比較（倍率と、実際の中央値を並べて出す） */
   const dims = [
-    { name:'投稿した時間帯', fn: s => hourBucket(s.post.posted_at) },
-    { name:'投稿した曜日',   fn: s => s.post.posted_at ? WEEKDAYS[new Date(s.post.posted_at).getDay()]+'曜' : null },
-    { name:'テーマ',         fn: s => s.video.theme },
-    { name:'冒頭の掴み',     fn: s => s.video.hook_type },
-    { name:'形式',           fn: s => s.video.format },
-    { name:'尺',             fn: s => durationBucket(s.video.duration_sec) },
-    { name:'締めの誘導',     fn: s => s.video.cta_type },
+    { name:'投稿した時間帯', fn: s => hourBucket(s.postedAt) },
+    { name:'投稿した曜日',   fn: s => s.postedAt ? WEEKDAYS[new Date(s.postedAt).getDay()]+'曜' : null },
+    { name:'テーマ',         fn: s => s.v.theme },
+    { name:'冒頭の掴み',     fn: s => s.v.hook_type },
+    { name:'形式',           fn: s => s.v.format },
+    { name:'尺',             fn: s => durationBucket(s.v.duration_sec) },
+    { name:'締めの誘導',     fn: s => s.v.cta_type },
   ];
-  $('#insight-groups').innerHTML = dims.map(d => {
+  const groupsHtml = dims.map(d => {
     const g = groupBy(scored, d.fn);
     if (!g.length) return '';
     return `<div><h3 class="text-[11px] font-semibold text-slate-400 mb-2">${d.name}</h3>` +
-      g.map(x => {
-        const weak = x.n < MIN_SAMPLE;
-        const w = Math.min(x.avg/2*100, 100);
-        return `<div class="mb-2">
-          <div class="flex justify-between text-[11px] mb-1">
-            <span class="${weak?'text-slate-600':'text-slate-300'}">${esc(x.key)}
-              <span class="text-slate-600">（${x.n}本${weak?'・参考':''}）</span></span>
-            <span class="num font-semibold ${weak?'text-slate-600':''}" ${weak?'':'style="color:#7dd3fc"'}>${x.avg.toFixed(1)}倍</span>
-          </div>
-          <div class="h-1.5 rounded-full overflow-hidden" style="background:rgba(148,163,184,.12)">
-            <div class="h-full rounded-full" style="width:${w}%;background:${weak?'rgba(148,163,184,.35)':'linear-gradient(90deg,#38bdf8,#a78bfa)'}"></div>
-          </div></div>`;
-      }).join('') + `</div>`;
-  }).join('') || `<p class="text-xs text-slate-500">まだ比べられる材料がありません。</p>`;
+      hbars(g.map(x => ({
+        label: x.key, sub: `（${x.n}本${x.n<MIN_SAMPLE?'・参考':''}）`,
+        value: x.avg, dim: x.n < MIN_SAMPLE,
+        tone: x.n < MIN_SAMPLE ? 'flat' : x.avg >= 1.3 ? 'good' : null,
+        text: `${dec(x.avg)}倍 ・ 中央値 ${num(Math.round(x.med))}回`,
+      })), { max: 2 }) + `</div>`;
+  }).join('');
+  $('#insight-groups').innerHTML = groupsHtml || emptyNote('まだ比べられる材料がありません。');
+
+  /* 登録につながった動画 */
+  const subRows = withViews.filter(s => s.subs != null)
+    .sort((a,b)=> b.subRate - a.subRate).slice(0,12);
+  $('#insight-subs').innerHTML = subRows.length
+    ? hbars(subRows.map(s => ({
+        label: s.v.title, sub: `（再生${num(s.views)}・登録${num(s.subs)}）`,
+        value: s.subRate, text: `${dec(s.subRate)}人`,
+        tone: s.subRate >= 3 ? 'good' : null,
+      })))
+    : emptyNote(state.hasSubs
+        ? '「数字を入力」タブで、動画ごとの登録の増加を入れると出ます。'
+        : 'youtube-upgrade.sql を実行すると記録できるようになります。');
 
   /* サイト到達 */
-  const funnel = state.videos.map(v => {
-    const views = totalViews(v.id), visits = vv[v.slug] || 0;
-    return { v, views, visits, rate: views>0 ? visits/views*1000 : 0 };
-  }).filter(r=>r.views>0).sort((a,b)=>b.rate-a.rate||b.views-a.views).slice(0,15);
+  const funnel = withViews.slice().sort((a,b)=> b.visitRate - a.visitRate || b.views - a.views).slice(0,15);
   $('#insight-funnel').innerHTML = funnel.length
     ? `<table class="w-full text-xs min-w-[420px]">
         <thead><tr class="text-slate-500 text-[10px]" style="border-bottom:1px solid var(--line)">
@@ -698,107 +1208,143 @@ function renderAdvice(){
           <td class="py-2 truncate max-w-[180px]">${esc(r.v.title)}</td>
           <td class="py-2 text-right num">${num(r.views)}</td>
           <td class="py-2 text-right num ${r.visits?'':'text-slate-700'}" ${r.visits?'style="color:#6ee7b7"':''}>${r.visits||0}</td>
-          <td class="py-2 text-right num">${r.rate?r.rate.toFixed(1)+'人':'—'}</td></tr>`).join('')}</tbody></table>`
-    : `<p class="text-xs text-slate-500">まだ数字がありません。</p>`;
+          <td class="py-2 text-right num">${r.visits?dec(r.visitRate)+'人':'—'}</td></tr>`).join('')}</tbody></table>`
+    : emptyNote('まだ数字がありません。');
 }
 
-/* ========================= 数字を入力 ========================= */
-$('#entry-platform').addEventListener('change', renderEntry);
-$('#entry-unfilled').addEventListener('change', renderEntry);
-$('#entry-date').addEventListener('change', async () => {
-  await loadMetricsForDate($('#entry-date').value); renderEntry();
-});
+/* ========================= 伸ばし方 ========================= */
+/* 伸びているショート動画チャンネルに共通してあるものを、
+   このチャンネルでも確かめられる形にしています。 */
+const RULES = [
+  { t:'最初の1秒で「自分のことだ」と思わせる',
+    d:'説明から入らない。「23時、天井を見ているとき」のように、いきなり相手のいる場面から始めます。驚かせる必要はありません。',
+    key:'retention' },
+  { t:'20〜35秒に収める',
+    d:'長いほど最後まで見られません。言いたいことが1つに絞れていれば、自然とこの長さになります。',
+    key:'dur' },
+  { t:'終わりが始まりに戻る（もう一度見たくなる）',
+    d:'最後のテロップが最初の問いの答えになっていると、そのままもう一周されます。この「二周目」がいちばん効きます。',
+    key:null },
+  { t:'1本に伝えることは1つだけ',
+    d:'2つ入れると、どちらも残りません。迷ったら、削るほうを選びます。',
+    key:null },
+  { t:'タイトルを1本ずつ変え、検索される言葉を入れる',
+    d:'「不眠」「パニック」「障害年金」など、実際に検索されている言葉が入っていると、投稿の何か月後でも見られ続けます。',
+    key:'title' },
+  { t:'テロップは大きく、画面の真ん中より少し上に置く',
+    d:'下はタイトルやボタンで隠れます。文字が小さいと、それだけで離脱します。',
+    key:null },
+  { t:'週5本以上、できれば同じ時間に出す',
+    d:'まとめて出すより、毎日少しずつのほうが届きます。時間を決めると、視聴者側にも習慣ができます。',
+    key:'pace' },
+  { t:'締めで「次の約束」を伝える',
+    d:'「登録してください」ではなく「毎晩、眠れない人へ1本出しています」。次に何が来るか分かると、登録は約束の受け取りになります。',
+    key:'sub' },
+  { t:'シリーズにする（#1、#2…）',
+    d:'続きものは、1本見た人がもう1本見てくれます。同じ形・同じ入り方で続けるのがコツです。',
+    key:null },
+  { t:'固定コメントに次の一歩を置く',
+    d:'ショート動画では概要欄はほとんど開かれません。相談ページへのリンクは固定コメントに置きます。',
+    key:'visit' },
+  { t:'最後に問いを置いて、返事をする',
+    d:'コメントが付くと滞在時間が伸びます。出したあとの30分だけでも返事をすると、伸び方が変わります。',
+    key:'comment' },
+  { t:'伸びた1本を型として、もう2本作る',
+    d:'当たりを引いたら、そこで満足せずに繰り返します。2本目も伸びたら、それがこのチャンネルの型です。',
+    key:'like' },
+];
 
-function renderEntry(){
-  const pf = $('#entry-platform').value, only = $('#entry-unfilled').checked;
-  let posts = state.posts.slice();
-  if (pf) posts = posts.filter(p=>p.platform===pf);
-  posts.sort((a,b)=> new Date(b.posted_at||0) - new Date(a.posted_at||0));
+function renderGrow(){
+  const cur = currentValues();
 
-  const html = posts.map(p => {
-    const v = state.videos.find(x=>x.id===p.video_id); if(!v) return '';
-    const ex = state.metricsFor[p.id]; if (only && ex) return '';
-    return `<div class="glass rounded-2xl p-3.5">
-      <div class="flex items-center gap-2 mb-2.5">
-        <span class="w-1.5 h-1.5 rounded-full" style="background:${PLATFORMS[p.platform].tint}"></span>
-        <span class="text-[11px] text-slate-400">${PLATFORMS[p.platform].label}</span>
-        <span class="text-xs truncate flex-1">${esc(v.title)}</span>
-        ${ex?'<span class="text-[10px]" style="color:#6ee7b7">入力済</span>':''}
-      </div>
-      <div class="grid grid-cols-3 sm:grid-cols-5 gap-2">
-        ${PLATFORMS[p.platform].metrics.map(m=>`
-          <label><span class="block text-[10px] text-slate-500 mb-1">${METRIC_LABELS[m]}</span>
-          <input type="number" inputmode="decimal" step="any" min="0" data-post="${p.id}" data-metric="${m}"
-            value="${ex?.[m] ?? ''}" class="entry-in fld py-1.5 text-sm"></label>`).join('')}
+  $('#grow-score').innerHTML = GOALS.map(g =>
+    `<div class="rounded-2xl p-4" style="background:rgba(148,163,184,.06)">
+       ${goalBar(g, cur.values[g.key], { detail:true })}
+     </div>`).join('');
+
+  $('#grow-rules').innerHTML = RULES.map(r => {
+    const g = r.key ? GOALS.find(x => x.key === r.key) : null;
+    const val = g ? cur.values[g.key] : null;
+    const ok = g && val != null && (g.range ? (val >= g.range[0] && val <= g.range[1]) : val >= g.goal);
+    const mark = ok ? '✓' : (g && val != null) ? '△' : '・';
+    const col  = ok ? '#6ee7b7' : (g && val != null) ? '#fcd34d' : '#475569';
+    return `<div class="rounded-2xl p-3.5" style="background:rgba(148,163,184,.05)">
+      <div class="flex items-start gap-2.5">
+        <span class="num text-sm font-bold shrink-0" style="color:${col}">${mark}</span>
+        <div class="min-w-0">
+          <div class="text-xs font-semibold text-slate-200">${esc(r.t)}</div>
+          <div class="text-[11px] text-slate-400 mt-1 leading-relaxed">${esc(r.d)}</div>
+          ${g && val != null ? `<div class="text-[10px] text-slate-600 mt-1.5 num">
+            いまの数字：${g.range ? num(Math.round(val))+g.unit : dec(val, val<10?1:0)+g.unit}
+            ／ 目安 ${g.range ? g.range[0]+'〜'+g.range[1]+g.unit : g.goal+g.unit}</div>` : ''}
+        </div>
       </div></div>`;
   }).join('');
-
-  $('#entry-list').innerHTML = html ||
-    `<div class="glass rounded-2xl p-8 text-center text-xs text-slate-500">
-      ${state.posts.length ? '条件に合うものがありません。' : '「取り込む」か「動画」タブから動画を登録してください。'}</div>`;
 }
 
-$('#entry-save').addEventListener('click', async () => {
-  const date = $('#entry-date').value || todayStr();
-  const by = {};
-  $$('.entry-in').forEach(i => {
-    const val = i.value.trim(); if (val==='') return;
-    const n = Number(val); if (!isFinite(n)) return;
-    const id = i.dataset.post;
-    by[id] = by[id] || { post_id:id, measured_on:date };
-    by[id][i.dataset.metric] = n;
-  });
-  const rows = Object.values(by);
-  const msg = $('#entry-msg');
-  if (!rows.length){ msg.className='text-center text-xs mt-2 text-amber-400'; msg.textContent='数字が入っていません。'; return; }
-
-  $('#entry-save').disabled = true;
-  const { error } = await sb.from('sv_metrics').upsert(rows, { onConflict:'post_id,measured_on' });
-  $('#entry-save').disabled = false;
-  if (error){ msg.className='text-center text-xs mt-2 text-rose-400'; msg.textContent='保存できませんでした：'+error.message; return; }
-  msg.className='text-center text-xs mt-2'; msg.style.color='#6ee7b7';
-  msg.textContent=`${rows.length}件を保存しました。`;
-  await loadAll();
-});
-
 /* ========================= 動画 ========================= */
+$('#video-sort').addEventListener('change', renderVideos);
+
 function renderVideos(){
   if (!state.videos.length){
-    $('#video-list').innerHTML = `<div class="glass rounded-2xl p-8 text-center text-xs text-slate-500">
+    $('#video-grid').innerHTML = `<div class="col-span-full glass rounded-2xl p-8 text-center text-xs text-slate-500">
       右上の「取り込む」で YouTube から取り込むか、「＋ 追加」で登録してください。</div>`;
     return;
   }
-  $('#video-list').innerHTML = state.videos.map(v => {
-    const ps = state.posts.filter(p=>p.video_id===v.id);
-    const at = ps.map(p=>p.posted_at).filter(Boolean).sort()[0];
-    return `<button data-vid="${v.id}" class="video-row w-full text-left glass rounded-2xl p-3.5 hover:border-sky-400/40 transition">
-      <div class="flex items-start justify-between gap-3">
-        <div class="min-w-0 flex-1">
-          <div class="text-sm truncate">${esc(v.title)}</div>
-          <div class="text-[10px] text-slate-500 mt-1">
-            ${esc(v.slug)}${v.theme?' ・ '+esc(v.theme):''}${v.duration_sec?' ・ '+v.duration_sec+'秒':''}
-            ${at?' ・ '+new Date(at).toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'}):''}
-            ${v.auto_imported?' ・ 自動取込':''}
-          </div>
-          <div class="mt-2 flex gap-1">${PLATFORM_KEYS.map(k=>{
-            const has = ps.some(p=>p.platform===k);
-            return `<span class="w-1.5 h-1.5 rounded-full" title="${PLATFORMS[k].label}"
-              style="background:${has?PLATFORMS[k].tint:'rgba(148,163,184,.2)'}"></span>`;}).join('')}</div>
+  const { list } = currentValues();
+  const key = $('#video-sort').value;
+  const pick = { views:'views', subs:'subRate', ret:'retention', visit:'visitRate' }[key];
+  let rows = list.slice();
+  if (pick) rows.sort((a,b) => (b[pick] ?? -1) - (a[pick] ?? -1));
+
+  $('#video-grid').innerHTML = rows.map(s => {
+    const id = s.id;
+    const face = id
+      ? `<img class="thumb" loading="lazy" src="${thumbOf(id)}" alt=""
+             onerror="this.onerror=null;this.src='${thumbAlt(id)}'">`
+      : `<div class="thumb flex items-center justify-center text-2xl text-slate-700">🌊</div>`;
+    const badge = s.index ? `<span class="chip absolute top-1.5 left-1.5"
+        style="background:${s.index>=1.5?'rgba(52,211,153,.85)':'rgba(2,6,23,.7)'};color:${s.index>=1.5?'#04121f':'#cbd5e1'}">${dec(s.index)}倍</span>` : '';
+    const sub = [
+      s.subs != null ? `登録+${num(s.subs)}` : null,
+      s.retention != null ? `${dec(s.retention,0)}%` : null,
+      s.visits ? `サイト${num(s.visits)}` : null,
+    ].filter(Boolean).join(' ・ ');
+    return `<button data-vid="${s.v.id}" class="video-card glass rounded-2xl overflow-hidden text-left hover:border-sky-400/50 transition">
+      <div class="relative ratio916">
+        ${face}${badge}
+        <div class="absolute inset-0 flex items-center justify-center">
+          <span style="width:2.2rem;height:2.2rem;border-radius:99px;background:rgba(2,6,23,.55);
+                       display:flex;align-items:center;justify-content:center;font-size:.8rem">▶︎</span>
         </div>
-        <div class="text-right shrink-0">
-          <div class="num text-lg font-bold" style="color:#7dd3fc">${num(totalViews(v.id))}</div>
-          <div class="text-[10px] text-slate-600">再生</div>
+        <div class="absolute inset-x-0 bottom-0 px-2 pt-6 pb-1.5"
+             style="background:linear-gradient(0deg,rgba(2,6,23,.95),rgba(2,6,23,.6) 55%,transparent)">
+          <div class="num text-base font-bold text-sky-200 leading-none">${num(s.views)}<span class="text-[9px] text-slate-400"> 回</span></div>
+          ${sub ? `<div class="text-[9px] text-slate-400 mt-1 truncate num">${sub}</div>` : ''}
         </div>
-      </div></button>`;
+      </div>
+      <div class="p-2">
+        <div class="text-[11px] leading-snug clamp2">${esc(s.v.title)}</div>
+        <div class="text-[9px] text-slate-600 mt-1 truncate">
+          ${s.postedAt ? new Date(s.postedAt).toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'}) : '未投稿'}
+          ${s.v.theme ? ' ・ '+esc(s.v.theme) : ''}${s.v.duration_sec ? ' ・ '+s.v.duration_sec+'秒' : ''}
+        </div>
+      </div>
+    </button>`;
   }).join('');
-  $$('.video-row').forEach(b => b.addEventListener('click', ()=>openVideo(b.dataset.vid)));
+
+  $$('.video-card').forEach(b => b.addEventListener('click', () => openVideo(b.dataset.vid)));
 }
 
 let editingId = null;
 $('#video-new').addEventListener('click', ()=>openVideo(null));
-$('#vm-close').addEventListener('click', ()=>$('#video-modal').classList.add('hidden'));
-$('#video-modal').addEventListener('click', e=>{ if(e.target.id==='video-modal') $('#video-modal').classList.add('hidden'); });
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') $('#video-modal').classList.add('hidden'); });
+$('#vm-close').addEventListener('click', closeVideo);
+$('#video-modal').addEventListener('click', e=>{ if(e.target.id==='video-modal') closeVideo(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('#video-modal').classList.contains('hidden')) closeVideo(); });
+function closeVideo(){
+  $('#vm-player').src = '';           // 閉じたら再生を止める
+  $('#video-modal').classList.add('hidden');
+}
 
 function nextSlug(){
   const ns = state.videos.map(v=>parseInt(String(v.slug).replace(/\D/g,''),10)).filter(isFinite);
@@ -810,7 +1356,44 @@ const toLocalInput = ts => { const d=new Date(ts), p=n=>String(n).padStart(2,'0'
 function openVideo(id){
   editingId = id;
   const v = id ? state.videos.find(x=>x.id===id) : null;
-  $('#vm-title').textContent = v ? '動画を編集' : '動画を追加';
+  const { med } = allStats();
+  const s = v ? statsOf(v, med, visitsByVideo()) : null;
+  const p = v ? postOf(v.id) : null;
+
+  $('#vm-title').textContent = v ? (v.title || '動画') : '動画を追加';
+
+  // プレビュー
+  const yid = s?.id;
+  if (yid){
+    $('#vm-player-wrap').classList.remove('hidden');
+    $('#vm-player').src = `https://www.youtube.com/embed/${yid}?playsinline=1&rel=0&modestbranding=1`;
+    $('#vm-open').href = `https://www.youtube.com/shorts/${yid}`;
+  } else {
+    $('#vm-player-wrap').classList.add('hidden');
+    $('#vm-player').src = '';
+  }
+
+  // この動画の数字
+  const tiles = s ? [
+    ['再生',     num(s.views)],
+    ['いいね',   num(s.likes)],
+    ['コメント', num(s.comments)],
+    ['登録の増加', s.subs != null ? num(s.subs) : '—'],
+    ['最後まで', s.retention != null ? dec(s.retention,0)+'%' : '—'],
+    ['サイト到達', s.visits ? num(s.visits)+'人' : '—'],
+  ] : [];
+  $('#vm-stats').innerHTML = tiles.map(([l,x]) => `<div class="rounded-xl p-2.5 text-center" style="background:rgba(148,163,184,.07)">
+      <div class="text-[9px] text-slate-500 mb-0.5">${l}</div>
+      <div class="num text-sm font-bold text-slate-200">${x}</div></div>`).join('');
+
+  // 再生数の伸び方
+  const series = p ? seriesOf(p.id).filter(r => typeof r.views === 'number') : [];
+  $('#vm-curve').innerHTML = series.length >= 2
+    ? `<p class="text-[11px] text-slate-500 mb-2">記録した日ごとの再生数</p>` +
+      vbars(series.slice(-12).map(r => ({ label: r.measured_on.slice(5).replace('-','/'), value: r.views, text: num(r.views) })), { height:80 })
+    : '';
+
+  // 編集欄
   $('#vm-slug').value = v?.slug || nextSlug();
   $('#vm-title-in').value = v?.title || '';
   $('#vm-theme').value = v?.theme || '';
@@ -820,27 +1403,16 @@ function openVideo(id){
   $('#vm-cta').value = v?.cta_type || '';
   $('#vm-date').value = v?.produced_on || todayStr();
   $('#vm-note').value = v?.note || '';
+  $('#vm-url').value = p?.url || '';
+  $('#vm-at').value = p?.posted_at ? toLocalInput(p.posted_at) : '';
   $('#vm-msg').textContent = '';
   $('#vm-delete').classList.toggle('hidden', !v);
-
-  $('#vm-posts').innerHTML = PLATFORM_KEYS.map(k=>{
-    const p = v ? state.posts.find(x=>x.video_id===v.id && x.platform===k) : null;
-    return `<div class="rounded-xl p-2.5" style="border:1px solid var(--line)">
-      <label class="flex items-center gap-2 mb-2">
-        <input type="checkbox" class="vm-pf w-4 h-4 accent-sky-400" data-pf="${k}" ${p?'checked':''}>
-        <span class="text-[11px]" style="color:${PLATFORMS[k].tint}">${PLATFORMS[k].label}</span>
-      </label>
-      <div class="grid grid-cols-2 gap-2">
-        <input class="vm-url fld text-[11px] py-1.5" data-pf="${k}" placeholder="投稿のURL" value="${esc(p?.url||'')}">
-        <input class="vm-at fld text-[11px] py-1.5" data-pf="${k}" type="datetime-local" value="${p?.posted_at?toLocalInput(p.posted_at):''}">
-      </div></div>`;
-  }).join('');
   $('#video-modal').classList.remove('hidden');
 }
 
 $('#vm-save').addEventListener('click', async () => {
   const slug = $('#vm-slug').value.trim(), title = $('#vm-title-in').value.trim();
-  if (!slug || !title){ $('#vm-msg').className='text-xs mt-2 text-rose-400'; $('#vm-msg').textContent='識別子とタイトルは必要です。'; return; }
+  if (!slug || !title){ return failVm({ message:'識別子とタイトルは必要です。' }); }
   const payload = { slug, title,
     theme: $('#vm-theme').value.trim()||null, hook_type: $('#vm-hook').value.trim()||null,
     format: $('#vm-format').value.trim()||null,
@@ -858,31 +1430,124 @@ $('#vm-save').addEventListener('click', async () => {
     if (error) return failVm(error);
     vid = data.id;
   }
-  for (const k of PLATFORM_KEYS){
-    const on  = document.querySelector(`.vm-pf[data-pf="${k}"]`).checked;
-    const url = document.querySelector(`.vm-url[data-pf="${k}"]`).value.trim();
-    const at  = document.querySelector(`.vm-at[data-pf="${k}"]`).value;
-    const ex  = state.posts.find(p=>p.video_id===vid && p.platform===k);
-    if (on){
-      const row = { video_id:vid, platform:k, url:url||null, posted_at: at ? new Date(at).toISOString() : null };
-      if (ex) await sb.from('sv_posts').update(row).eq('id', ex.id);
-      else    await sb.from('sv_posts').insert(row);
-    } else if (ex){
-      await sb.from('sv_posts').delete().eq('id', ex.id);
-    }
+
+  // YouTubeの投稿は動画1本につき1つ。URLか日時が入っていれば作ります。
+  const url = $('#vm-url').value.trim();
+  const at  = $('#vm-at').value;
+  const ex  = state.posts.find(x => x.video_id === vid);
+  if (url || at || ex){
+    const row = { video_id: vid, platform: YT, url: url || null,
+                  posted_at: at ? new Date(at).toISOString() : null };
+    const r = ex ? await sb.from('sv_posts').update(row).eq('id', ex.id)
+                 : await sb.from('sv_posts').insert(row);
+    if (r.error) return failVm(r.error);
   }
+
   $('#vm-save').disabled = false;
-  $('#video-modal').classList.add('hidden');
+  closeVideo();
   await loadAll();
 });
-function failVm(e){ $('#vm-save').disabled=false; $('#vm-msg').className='text-xs mt-2 text-rose-400'; $('#vm-msg').textContent='保存できませんでした：'+e.message; }
+function failVm(e){ $('#vm-save').disabled=false; $('#vm-msg').className='text-xs mt-2 text-rose-400';
+  $('#vm-msg').textContent='保存できませんでした：'+e.message; }
 
 $('#vm-delete').addEventListener('click', async () => {
   if (!editingId) return;
   if (!confirm('この動画と記録した数字をすべて削除します。よろしいですか？')) return;
   await sb.from('sv_videos').delete().eq('id', editingId);
-  $('#video-modal').classList.add('hidden');
+  closeVideo();
   await loadAll();
+});
+
+/* ========================= 数字を入力 ========================= */
+$('#entry-unfilled').addEventListener('change', renderEntry);
+$('#entry-date').addEventListener('change', renderEntry);
+
+const metricsOn = date => {
+  const o = {};
+  state.metrics.forEach(m => { if (m.measured_on === date) o[m.post_id] = m; });
+  return o;
+};
+
+function renderEntry(){
+  const date = $('#entry-date').value || todayStr();
+  const on = metricsOn(date);
+  const only = $('#entry-unfilled').checked;
+  const fields = ENTRY_FIELDS.filter(f => f.key !== 'subs_gained' || state.hasSubs);
+
+  const ch = state.channel.find(c => c.measured_on === date);
+  $('#entry-subs-total').value = ch?.subscribers ?? '';
+  $('#entry-subs-total').disabled = !state.hasChannel;
+
+  const rows = state.videos.map(v => ({ v, p: postOf(v.id) })).filter(x => x.p);
+  rows.sort((a,b) => new Date(b.p.posted_at||0) - new Date(a.p.posted_at||0));
+
+  const html = rows.map(({v,p}) => {
+    const ex = on[p.id];
+    if (only && ex) return '';
+    return `<div class="glass rounded-2xl p-3.5">
+      <div class="flex items-center gap-2 mb-2.5">
+        <span class="w-1.5 h-1.5 rounded-full" style="background:var(--yt)"></span>
+        <span class="text-xs truncate flex-1">${esc(v.title)}</span>
+        ${ex?'<span class="text-[10px]" style="color:#6ee7b7">入力済</span>':''}
+      </div>
+      <div class="grid grid-cols-3 gap-2">
+        ${fields.map(f=>`
+          <label><span class="block text-[10px] text-slate-500 mb-1">${f.label}</span>
+          <input type="number" inputmode="decimal" step="any" min="0" data-post="${p.id}" data-metric="${f.key}"
+            value="${ex?.[f.key] ?? ''}" class="entry-in fld py-1.5 text-sm"></label>`).join('')}
+      </div></div>`;
+  }).join('');
+
+  $('#entry-list').innerHTML = html ||
+    `<div class="glass rounded-2xl p-8 text-center text-xs text-slate-500">
+      ${rows.length ? 'この日はすべて入力済みです。' : '「取り込む」か「動画」タブから動画を登録してください。'}</div>`;
+}
+
+$('#entry-save').addEventListener('click', async () => {
+  const date = $('#entry-date').value || todayStr();
+  const msg = $('#entry-msg');
+  const by = {};
+  $$('.entry-in').forEach(i => {
+    const val = i.value.trim(); if (val==='') return;
+    const n = Number(val); if (!isFinite(n)) return;
+    const id = i.dataset.post;
+    by[id] = by[id] || { post_id:id, measured_on:date };
+    by[id][i.dataset.metric] = n;
+  });
+  const rows = Object.values(by);
+  const subsTotal = $('#entry-subs-total').value.trim();
+
+  if (!rows.length && subsTotal===''){ msg.className='text-center text-xs mt-2 text-amber-400'; msg.textContent='数字が入っていません。'; return; }
+
+  $('#entry-save').disabled = true;
+  if (rows.length){
+    const { error } = await sb.from('sv_metrics').upsert(rows, { onConflict:'post_id,measured_on' });
+    if (error){ $('#entry-save').disabled=false; msg.className='text-center text-xs mt-2 text-rose-400';
+      msg.textContent='保存できませんでした：'+error.message; return; }
+  }
+  if (subsTotal !== '' && state.hasChannel){
+    await sb.from('sv_channel_daily').upsert(
+      { measured_on: date, subscribers: Number(subsTotal) }, { onConflict:'measured_on' });
+  }
+  $('#entry-save').disabled = false;
+  msg.className='text-center text-xs mt-2'; msg.style.color='#6ee7b7';
+  msg.textContent = `${rows.length}件を保存しました。`;
+  await loadAll();
+});
+
+/* ダッシュボードから登録者数だけを記録する */
+$('#subs-save').addEventListener('click', async () => {
+  const msg = $('#subs-msg');
+  const val = $('#subs-input').value.trim();
+  if (val === ''){ msg.className='text-[11px] mt-2 text-amber-400'; msg.textContent='数字を入れてください。'; return; }
+  if (!state.hasChannel){ msg.className='text-[11px] mt-2 text-amber-400';
+    msg.textContent='Supabase の SQL Editor で youtube-upgrade.sql を実行すると記録できるようになります。'; return; }
+  const { error } = await sb.from('sv_channel_daily').upsert(
+    { measured_on: todayStr(), subscribers: Number(val) }, { onConflict:'measured_on' });
+  if (error){ msg.className='text-[11px] mt-2 text-rose-400'; msg.textContent='保存できませんでした：'+error.message; return; }
+  msg.className='text-[11px] mt-2'; msg.style.color='#6ee7b7'; msg.textContent='記録しました。';
+  await loadAll();
+  setTimeout(()=>{ msg.textContent=''; }, 4000);
 });
 
 /* ========================= リンク ========================= */
@@ -890,20 +1555,29 @@ function renderLinkOptions(){
   $('#link-video').innerHTML = state.videos.length
     ? state.videos.map(v=>`<option value="${esc(v.slug)}">${esc(v.title)}（${esc(v.slug)}）</option>`).join('')
     : `<option value="">先に動画を登録してください</option>`;
+  if (state.videos.length) $('#link-video').value = state.videos[0].slug;
   buildLink();
 }
 $('#link-video').addEventListener('change', buildLink);
-$('#link-platform').addEventListener('change', buildLink);
 function buildLink(){
-  const slug = $('#link-video').value, pf = $('#link-platform').value;
-  $('#link-out').value = slug
-    ? `${SITE_URL}/?utm_source=${pf}&utm_medium=short&utm_content=${encodeURIComponent(slug)}` : '';
+  const slug = $('#link-video').value;
+  const url = slug ? `${SITE_URL}/?utm_source=youtube&utm_medium=short&utm_content=${encodeURIComponent(slug)}` : '';
+  $('#link-out').value = url;
+  $('#link-comment').value = url
+    ? `眠れない夜のための場所をつくっています。\n話を聞いてほしいとき、ひとりでつらいとき、ここに来てください。\n${url}\n\n毎晩1本、そっと置いていきます。よかったら登録して待っていてください。`
+    : '';
 }
 $('#link-copy').addEventListener('click', async () => {
   if (!$('#link-out').value) return;
   await navigator.clipboard.writeText($('#link-out').value);
-  $('#link-msg').textContent = 'コピーしました。概要欄やプロフィールに貼ってください。';
+  $('#link-msg').textContent = 'コピーしました。固定コメントに貼ってください。';
   setTimeout(()=>{ $('#link-msg').textContent=''; }, 3000);
+});
+$('#comment-copy').addEventListener('click', async () => {
+  if (!$('#link-comment').value) return;
+  await navigator.clipboard.writeText($('#link-comment').value);
+  $('#comment-msg').textContent = 'コピーしました。動画のコメント欄に貼って、固定してください。';
+  setTimeout(()=>{ $('#comment-msg').textContent=''; }, 4000);
 });
 $('#link-test').addEventListener('click', () => {
   if (!$('#link-out').value){ alert('先に動画を登録してください。'); return; }
