@@ -551,8 +551,23 @@ const GOALS = [
 let sb = null;
 let state = {
   videos: [], posts: [], metrics: [], latest: {}, visits: [], channel: [],
-  hasSubs: false, hasChannel: false, ready: false,
+  hasSubs: false, hasChannel: false, hasLog: false, ready: false,
 };
+
+/* 打ち込んだ数字は、まずこの端末に残します。
+   通信でも Supabase でも何かあったときに、打ち直さずに済むようにするためです。
+   保存が「本当に入った」と確かめられたときだけ消します。 */
+const draftKey = date => 'sv-entry-draft-' + date;
+function readDraft(date){
+  try { return JSON.parse(localStorage.getItem(draftKey(date)) || '{}'); }
+  catch { return {}; }
+}
+function writeDraft(date, d){
+  try {
+    if (d && Object.keys(d).length) localStorage.setItem(draftKey(date), JSON.stringify(d));
+    else localStorage.removeItem(draftKey(date));
+  } catch {}
+}
 
 const $  = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -593,7 +608,7 @@ async function enterApp(){
 
 /* ========================= 読み込み ========================= */
 async function loadAll(){
-  const [v, p, m, s, c, probe] = await Promise.all([
+  const [v, p, m, s, c, probe, logProbe] = await Promise.all([
     sb.from('sv_videos').select('*'),
     sb.from('sv_posts').select('*').eq('platform', YT),
     // 新しいほうから取って、あとで古い順に並べ替えます
@@ -602,6 +617,7 @@ async function loadAll(){
     sb.from('sv_site_visits').select('*').order('visited_at', { ascending:false }).limit(5000),
     sb.from('sv_channel_daily').select('*').order('measured_on', { ascending:true }).limit(2000),
     sb.from('sv_metrics').select('subs_gained').limit(1),
+    sb.from('sv_metrics_log').select('id').limit(1),
   ]);
 
   if ([v,p,m,s].some(r => r.error && missing.test(r.error.message||''))) {
@@ -614,6 +630,7 @@ async function loadAll(){
 
   state.hasSubs    = !probe.error;
   state.hasChannel = !c.error;
+  state.hasLog     = !logProbe.error;
   state.videos  = v.data || [];
   state.posts   = p.data || [];
   state.metrics = (m.data || []).slice().sort((a,b) => a.measured_on < b.measured_on ? -1 : a.measured_on > b.measured_on ? 1 : 0);
@@ -641,6 +658,8 @@ async function loadAll(){
   const todo = [];
   if (!state.hasSubs || !state.hasChannel)
     todo.push('登録者の記録を使うには、Supabase の SQL Editor で <code>youtube-upgrade.sql</code> を実行してください。（実行しなくても、ほかの機能はそのまま使えます）');
+  if (!state.hasLog)
+    todo.push('<b>入力した数字の控えがまだ作られていません。</b>Supabase の SQL Editor で <code>保存を守る.sql</code> を実行してください。実行すると、保存した数字が別の場所にも残り、消えても戻せるようになります。');
   if (todo.length){
     $('#setup-warn').classList.remove('hidden');
     $('#setup-warn').innerHTML = todo.join('<br>');
@@ -1533,11 +1552,12 @@ const metricsOn = date => {
 function renderEntry(){
   const date = $('#entry-date').value || todayStr();
   const on = metricsOn(date);
+  const draft = readDraft(date);
   const only = $('#entry-unfilled').checked;
   const fields = ENTRY_FIELDS.filter(f => f.key !== 'subs_gained' || state.hasSubs);
 
   const ch = state.channel.find(c => c.measured_on === date);
-  $('#entry-subs-total').value = ch?.subscribers ?? '';
+  $('#entry-subs-total').value = draft.subs ?? ch?.subscribers ?? '';
   $('#entry-subs-total').disabled = !state.hasChannel;
 
   const rows = state.videos.map(v => ({ v, p: postOf(v.id) })).filter(x => x.p);
@@ -1587,10 +1607,12 @@ function renderEntry(){
           const auto = f.key === 'views' && ex?.views != null;
           const ph   = (ex?.[f.key] == null && last?.[f.key] != null)
                      ? ` placeholder="前回 ${num(last[f.key])}"` : '';
+          // まだ保存できていない打ちかけの数字があれば、そちらを出します
+          const val  = draft[p.id]?.[f.key] ?? ex?.[f.key] ?? '';
           return `<label><span class="block text-[10px] text-slate-500 mb-1">${f.label}${
             auto ? ' <span style="color:#2b7f8c">自動</span>' : ''}</span>
           <input type="number" inputmode="decimal" step="any" min="0" data-post="${p.id}" data-metric="${f.key}"${ph}
-            value="${ex?.[f.key] ?? ''}" class="entry-in fld py-1.5 text-sm"></label>`;
+            value="${val}" class="entry-in fld py-1.5 text-sm"></label>`;
         }).join('')}
       </div></div>`;
   }).join('');
@@ -1598,7 +1620,27 @@ function renderEntry(){
   $('#entry-list').innerHTML = html ||
     `<div class="glass rounded-2xl p-8 text-center text-xs text-slate-500">
       ${rows.length ? 'この日はすべて入力済みです。' : '「取り込む」か「動画」タブから動画を登録してください。'}</div>`;
+
+  if (Object.keys(draft).length){
+    $('#entry-msg').className = 'text-center text-xs mt-2 text-amber-400';
+    $('#entry-msg').textContent = 'まだ保存できていない数字がこの端末に残っています。「保存する」を押してください。';
+  }
 }
+
+/* 打ち込んだそばから端末に控えます（保存を押す前に閉じても消えません） */
+function stashDraft(){
+  const date = $('#entry-date').value || todayStr();
+  const d = {};
+  $$('.entry-in').forEach(i => {
+    const v = i.value.trim(); if (v === '') return;
+    (d[i.dataset.post] = d[i.dataset.post] || {})[i.dataset.metric] = Number(v);
+  });
+  const subs = $('#entry-subs-total').value.trim();
+  if (subs !== '') d.subs = Number(subs);
+  writeDraft(date, d);
+}
+$('#entry-list').addEventListener('input', stashDraft);
+$('#entry-subs-total').addEventListener('input', stashDraft);
 
 $('#entry-save').addEventListener('click', async () => {
   const date = $('#entry-date').value || todayStr();
@@ -1627,20 +1669,58 @@ $('#entry-save').addEventListener('click', async () => {
 
   if (!rows.length && subsTotal===''){ msg.className='text-center text-xs mt-2 text-amber-400'; msg.textContent='数字が入っていません。'; return; }
 
+  const fail = t => { $('#entry-save').disabled=false;
+    msg.className='text-center text-xs mt-2 text-rose-400'; msg.style.color='';
+    msg.innerHTML = t + '<br>打ち込んだ数字はこの端末に残してあります。もう一度「保存する」を押せます。'; };
+
   $('#entry-save').disabled = true;
+  msg.className='text-center text-xs mt-2 text-slate-400'; msg.style.color=''; msg.textContent='保存しています…';
+
+  // 1. まず控えに残します。ここは足すだけなので、あとで何が起きても消えません。
+  //    先に控えてから本体を書くので、途中で失敗しても打ち直しにはなりません。
+  if (state.hasLog && rows.length){
+    const { error } = await sb.from('sv_metrics_log').insert(rows.map(r => ({
+      post_id: r.post_id, measured_on: r.measured_on,
+      payload: Object.fromEntries(keys.map(k => [k, r[k]]).filter(([,v]) => v !== null && v !== undefined)),
+    })));
+    if (error) return fail('控えに残せませんでした：' + esc(error.message));
+  }
+
+  // 2. 本体に書きます。
   if (rows.length){
     const { error } = await sb.from('sv_metrics').upsert(rows, { onConflict:'post_id,measured_on' });
-    if (error){ $('#entry-save').disabled=false; msg.className='text-center text-xs mt-2 text-rose-400';
-      msg.textContent='保存できませんでした：'+error.message; return; }
+    if (error) return fail('保存できませんでした：' + esc(error.message));
   }
   if (subsTotal !== '' && state.hasChannel){
-    await sb.from('sv_channel_daily').upsert(
+    const { error } = await sb.from('sv_channel_daily').upsert(
       { measured_on: date, subscribers: Number(subsTotal) }, { onConflict:'measured_on' });
+    if (error) return fail('登録者数を保存できませんでした：' + esc(error.message));
   }
+
+  // 3. 書けたつもりで書けていないことがあるので、読み直して数字が合うか確かめます。
+  //    ここを通らないかぎり、端末に残した控えは消しません。
+  if (rows.length){
+    const { data:back, error } = await sb.from('sv_metrics')
+      .select(['post_id','measured_on', ...keys].join(','))
+      .eq('measured_on', date).in('post_id', rows.map(r => r.post_id));
+    if (error) return fail('保存を確かめられませんでした：' + esc(error.message));
+
+    const got = {}; (back||[]).forEach(r => { got[r.post_id] = r; });
+    const bad = [];
+    Object.values(by).forEach(r => {
+      const g = got[r.post_id];
+      if (!g) { bad.push(r.post_id); return; }
+      // 入力した項目だけを見ます（触っていない項目はここでは問いません）
+      keys.forEach(k => { if (k in r && Number(g[k]) !== Number(r[k])) bad.push(r.post_id); });
+    });
+    if (bad.length) return fail(`${new Set(bad).size}本ぶんが入っていませんでした。`);
+  }
+
+  writeDraft(date, {});          // ここで初めて端末の控えを消します
   $('#entry-save').disabled = false;
-  msg.className='text-center text-xs mt-2'; msg.style.color='#2b7f8c';
-  msg.textContent = `${rows.length}件を保存しました。`;
   await loadAll();
+  msg.className='text-center text-xs mt-2'; msg.style.color='#2b7f8c';
+  msg.textContent = `${rows.length}件を保存しました。読み直して数字も合っています。`;
 });
 
 /* ダッシュボードから登録者数だけを記録する */
