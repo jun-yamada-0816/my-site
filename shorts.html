@@ -498,12 +498,12 @@ const SITE_URL          = 'https://hoshitoumi.vercel.app';
 const CHANNEL_URL       = 'https://www.youtube.com/@jenjenjenjun';
 const YT                = 'youtube';
 
-/* 入力してほしい数字（YouTube Studio から書き写すもの） */
+/* 入力してほしい数字（YouTube Studio から書き写すもの）
+   「共有」は Studio に出ないため、入力欄からは外しています。 */
 const ENTRY_FIELDS = [
   { key:'views',         label:'再生数' },
   { key:'likes',         label:'いいね' },
   { key:'comments',      label:'コメント' },
-  { key:'shares',        label:'共有' },
   { key:'avg_watch_sec', label:'平均視聴(秒)' },
   { key:'subs_gained',   label:'登録の増加' },
 ];
