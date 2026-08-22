@@ -488,6 +488,18 @@
       font-size:.95rem; letter-spacing:.22em; color:var(--asagi);
     }
 
+    .nav-scroll{ scrollbar-width:none; -ms-overflow-style:none; }
+    .nav-scroll::-webkit-scrollbar{ display:none; }
+
+    .menu-row{
+      display:block; padding:.85rem .2rem;
+      border-bottom:1px solid var(--keisen);
+      letter-spacing:.12em; transition:color .3s;
+    }
+    .menu-row:last-child{ border-bottom:0; }
+    .menu-row:hover, .menu-row:active{ color:var(--ai); }
+    html.reduce-motion .menu-row{ transition:none; }
+
     .tel-row{
       display:flex; align-items:baseline; gap:1rem;
       padding:.95rem .2rem; border-top:1px solid var(--keisen);
@@ -517,9 +529,10 @@
   <!-- ========== NAV ========== -->
   <nav class="fixed top-0 inset-x-0 z-50 glass" style="border-radius:0;border:0;border-bottom:1px solid var(--keisen);">
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-      <a href="#" class="mincho text-lg tracking-[.4em]" style="color:var(--ai);">星と海</a>
-      <div class="flex items-center gap-6">
-        <ul class="hidden md:flex gap-7 text-[.8rem] tracking-[.16em]" style="color:#5b6167;">
+      <a href="#" class="mincho text-lg tracking-[.35em] shrink-0 whitespace-nowrap" style="color:var(--ai);">星と海</a>
+      <div class="flex items-center gap-4 lg:gap-6 min-w-0">
+        <ul class="nav-scroll hidden lg:flex flex-nowrap items-center gap-5 xl:gap-7 text-[.78rem] tracking-[.04em] xl:tracking-[.1em] whitespace-nowrap min-w-0 overflow-x-auto"
+            style="color:#5b6167;">
           <li><a href="#hero"     class="hover:text-aurora-blue transition-colors">ホーム</a></li>
           <li><a href="#promise"  class="hover:text-aurora-blue transition-colors">約束</a></li>
           <li><a href="#blog"     class="hover:text-aurora-blue transition-colors">ブログ</a></li>
@@ -528,15 +541,16 @@
           <li><a href="#coping"   class="hover:text-aurora-blue transition-colors">こころのケア</a></li>
           <li><a href="#services" class="hover:text-aurora-blue transition-colors">制度・サービス</a></li>
           <li><a href="#bulletin" class="hover:text-aurora-blue transition-colors">掲示板</a></li>
-          <li id="admin-page-links" class="hidden gap-8">
-            <a href="shorts.html" target="_blank" class="hover:text-aurora-blue transition-colors">YouTube分析</a>
-            <a href="next-business-expo.html" target="_blank" class="hover:text-aurora-blue transition-colors">展示会</a>
-            <a href="niigata-cafes-list.html" target="_blank" class="hover:text-aurora-blue transition-colors">カフェ一覧</a>
+          <li id="admin-page-links" class="hidden items-center gap-4 pl-4 xl:pl-5 text-[.7rem]"
+              style="border-left:1px solid var(--keisen);color:#7d848b;">
+            <a href="shorts.html" target="_blank" title="YouTube分析" class="hover:text-aurora-blue transition-colors">分析</a>
+            <a href="next-business-expo.html" target="_blank" title="展示会" class="hover:text-aurora-blue transition-colors">展示会</a>
+            <a href="niigata-cafes-list.html" target="_blank" title="新潟のカフェ一覧" class="hover:text-aurora-blue transition-colors">カフェ</a>
           </li>
         </ul>
         <!-- モバイルメニューボタン -->
         <button id="mobile-menu-btn" onclick="toggleMobileMenu()" title="メニュー" aria-label="メニュー"
-                class="md:hidden p-2 rounded-lg text-slate-500 hover:text-aurora-blue transition-colors">
+                class="lg:hidden p-2 rounded-lg text-slate-500 hover:text-aurora-blue transition-colors">
           <svg id="mobile-menu-icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
@@ -568,19 +582,20 @@
       </div>
     </div>
     <!-- モバイルメニュー パネル -->
-    <ul id="mobile-menu" class="hidden md:hidden flex-col gap-1 px-6 pb-4 text-sm tracking-[.14em]" style="color:#5b6167;border-top:1px solid var(--keisen);">
-      <li><a href="#hero"     onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">ホーム</a></li>
-      <li><a href="#promise"  onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">約束</a></li>
-      <li><a href="#blog"     onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">ブログ</a></li>
-      <li><a href="#music"    onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">音楽</a></li>
-      <li><a href="#mood"     onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">きもち</a></li>
-      <li><a href="#coping"   onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">こころのケア</a></li>
-      <li><a href="#services" onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">制度・サービス</a></li>
-      <li><a href="#bulletin" onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">掲示板</a></li>
-      <li id="admin-page-links-mobile" class="hidden flex-col gap-1">
-        <a href="shorts.html" target="_blank" class="block py-2 hover:text-aurora-blue transition-colors">YouTube分析</a>
-        <a href="next-business-expo.html" target="_blank" class="block py-2 hover:text-aurora-blue transition-colors">展示会</a>
-        <a href="niigata-cafes-list.html" target="_blank" class="block py-2 hover:text-aurora-blue transition-colors">カフェ一覧</a>
+    <ul id="mobile-menu" class="hidden lg:hidden flex-col px-6 pb-5 text-[.9rem]"
+        style="color:#4d545b;border-top:1px solid var(--keisen);">
+      <li><a href="#hero"     onclick="closeMobileMenu()" class="menu-row">ホーム</a></li>
+      <li><a href="#promise"  onclick="closeMobileMenu()" class="menu-row">星と海の約束</a></li>
+      <li><a href="#music"    onclick="closeMobileMenu()" class="menu-row">音楽</a></li>
+      <li><a href="#blog"     onclick="closeMobileMenu()" class="menu-row">ひとりごと</a></li>
+      <li><a href="#mood"     onclick="closeMobileMenu()" class="menu-row">きょうのきもち</a></li>
+      <li><a href="#coping"   onclick="closeMobileMenu()" class="menu-row">こころのケア</a></li>
+      <li><a href="#services" onclick="closeMobileMenu()" class="menu-row">支えになる制度</a></li>
+      <li><a href="#bulletin" onclick="closeMobileMenu()" class="menu-row">掲示板</a></li>
+      <li id="admin-page-links-mobile" class="hidden flex-col mt-2 pt-2" style="border-top:1px solid var(--keisen);">
+        <a href="shorts.html" target="_blank" class="menu-row" style="border:0;color:#7d848b;font-size:.8rem;">YouTube分析</a>
+        <a href="next-business-expo.html" target="_blank" class="menu-row" style="border:0;color:#7d848b;font-size:.8rem;">展示会</a>
+        <a href="niigata-cafes-list.html" target="_blank" class="menu-row" style="border:0;color:#7d848b;font-size:.8rem;">カフェ一覧</a>
       </li>
     </ul>
   </nav>
@@ -795,31 +810,31 @@
       <p class="lead mb-12 max-w-2xl">今日の気分にいちばん近いものを、ひとつ選んでみてください。記録は<strong style="color:var(--asagi);font-weight:500;">この端末の中だけ</strong>に保存され、外部には一切送信されません。誰にも見られない、あなただけの記録です。</p>
 
       <!-- きもちボタン -->
-      <div class="flex flex-wrap justify-center gap-3 mb-8" role="group" aria-label="今日の気分を選ぶ">
+      <div class="flex flex-nowrap justify-center gap-1.5 sm:gap-3 mb-8" role="group" aria-label="今日の気分を選ぶ">
         <button onclick="recordMood(0)" data-mood="0" aria-label="つらい"
-                class="mood-btn glass rounded-2xl px-5 py-4 flex flex-col items-center gap-1.5 w-24">
-          <span class="text-2xl" aria-hidden="true">🌧️</span>
-          <span class="text-slate-600 text-xs">つらい</span>
+                class="mood-btn glass rounded-2xl px-0.5 sm:px-5 py-3.5 flex flex-col items-center gap-1.5 flex-1 min-w-0 max-w-[6rem]">
+          <span class="text-xl sm:text-2xl" aria-hidden="true">🌧️</span>
+          <span class="text-slate-600 text-[.62rem] sm:text-xs whitespace-nowrap">つらい</span>
         </button>
         <button onclick="recordMood(1)" data-mood="1" aria-label="しんどい"
-                class="mood-btn glass rounded-2xl px-5 py-4 flex flex-col items-center gap-1.5 w-24">
-          <span class="text-2xl" aria-hidden="true">🌫️</span>
-          <span class="text-slate-600 text-xs">しんどい</span>
+                class="mood-btn glass rounded-2xl px-0.5 sm:px-5 py-3.5 flex flex-col items-center gap-1.5 flex-1 min-w-0 max-w-[6rem]">
+          <span class="text-xl sm:text-2xl" aria-hidden="true">🌫️</span>
+          <span class="text-slate-600 text-[.62rem] sm:text-xs whitespace-nowrap">しんどい</span>
         </button>
         <button onclick="recordMood(2)" data-mood="2" aria-label="ふつう"
-                class="mood-btn glass rounded-2xl px-5 py-4 flex flex-col items-center gap-1.5 w-24">
-          <span class="text-2xl" aria-hidden="true">☁️</span>
-          <span class="text-slate-600 text-xs">ふつう</span>
+                class="mood-btn glass rounded-2xl px-0.5 sm:px-5 py-3.5 flex flex-col items-center gap-1.5 flex-1 min-w-0 max-w-[6rem]">
+          <span class="text-xl sm:text-2xl" aria-hidden="true">☁️</span>
+          <span class="text-slate-600 text-[.62rem] sm:text-xs whitespace-nowrap">ふつう</span>
         </button>
         <button onclick="recordMood(3)" data-mood="3" aria-label="まあまあ"
-                class="mood-btn glass rounded-2xl px-5 py-4 flex flex-col items-center gap-1.5 w-24">
-          <span class="text-2xl" aria-hidden="true">🌤️</span>
-          <span class="text-slate-600 text-xs">まあまあ</span>
+                class="mood-btn glass rounded-2xl px-0.5 sm:px-5 py-3.5 flex flex-col items-center gap-1.5 flex-1 min-w-0 max-w-[6rem]">
+          <span class="text-xl sm:text-2xl" aria-hidden="true">🌤️</span>
+          <span class="text-slate-600 text-[.62rem] sm:text-xs whitespace-nowrap">まあまあ</span>
         </button>
         <button onclick="recordMood(4)" data-mood="4" aria-label="おだやか"
-                class="mood-btn glass rounded-2xl px-5 py-4 flex flex-col items-center gap-1.5 w-24">
-          <span class="text-2xl" aria-hidden="true">⭐</span>
-          <span class="text-slate-600 text-xs">おだやか</span>
+                class="mood-btn glass rounded-2xl px-0.5 sm:px-5 py-3.5 flex flex-col items-center gap-1.5 flex-1 min-w-0 max-w-[6rem]">
+          <span class="text-xl sm:text-2xl" aria-hidden="true">⭐</span>
+          <span class="text-slate-600 text-[.62rem] sm:text-xs whitespace-nowrap">おだやか</span>
         </button>
       </div>
 
