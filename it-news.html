@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<!--
+  ==========================================================================
+   星と海 ｜ IT ニュース
+  ==========================================================================
+   いろいろなサイトの RSS を集めて、新しい順に並べるページです。
+   「更新」を押すと、Supabase 自身が各サイトを読みに行きます。
+
+   セットアップ
+     1. Supabase の SQL Editor で it-news.sql を実行
+     2. このページを開いてログイン（サイトと同じアカウント）
+     3. 「更新」を押す
+
+   Xの投稿について
+     X の API は読み取りが有料なので、投稿そのものは取り込みません。
+     代わりに、下の「X で見る」から検索を開きます。
+     もし X のフィード（RSSHub など）を用意できたら、
+     「収集元」に URL を足すだけで、この一覧に混ざります。
+  ==========================================================================
+-->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f2efe7">
+<title>星と海 ｜ IT ニュース</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49/dist/umd/supabase.min.js"></script>
+<style>
+  /* 星と海のサイト・分析ページと同じ和の色です。 */
+  :root{
+    --sumi:#2b2f33;      /* 墨 … 本文 */
+    --usuzumi:#6f757b;   /* 薄墨 … 補足 */
+    --ai:#17456b;        /* 藍 */
+    --asagi:#2b7f8c;     /* 浅葱 */
+    --fuji:#6b6ba3;      /* 藤 */
+    --shu:#b7472a;       /* 朱 */
+    --yamabuki:#9a7420;  /* 山吹 … 注意 */
+    --washi:#fbf9f4;     /* 和紙 … カード */
+    --kinari:#f2efe7;    /* 生成り … 地 */
+    --keisen:rgba(43,47,51,.13);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{background:var(--kinari);}
+  body{
+    color:var(--sumi);
+    font-family:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;
+    -webkit-text-size-adjust:100%;
+    min-height:100vh;
+    letter-spacing:.03em;
+    line-height:1.7;
+    background:
+      radial-gradient(900px 520px at 10% -10%, rgba(23,69,107,.07), transparent 62%),
+      radial-gradient(820px 520px at 92% -4%, rgba(43,127,140,.06), transparent 62%),
+      var(--kinari);
+    background-attachment:fixed;
+    padding-bottom:56px;
+  }
+  h1,h2,h3,.mincho{
+    font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
+    font-weight:500; letter-spacing:.09em;
+  }
+  a{color:inherit;}
+  input,select,textarea,button{font:inherit;font-size:16px;color:inherit;}
+
+  /* 3ページ共通の上の帯 */
+  .site-bar{
+    display:flex; align-items:center; gap:.9rem;
+    padding:.85rem 1rem;
+    background:rgba(251,249,244,.88);
+    border-bottom:1px solid var(--keisen);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    position:sticky; top:0; z-index:60;
+  }
+  .site-bar a.home{
+    font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
+    color:var(--ai); text-decoration:none; letter-spacing:.3em; font-size:.9rem; white-space:nowrap;
+  }
+  .site-bar .sep{ width:1px; height:1rem; background:var(--keisen); }
+  .site-bar .here{ font-size:.75rem; letter-spacing:.22em; color:var(--usuzumi); white-space:nowrap; }
+
+  .wrap{max-width:56rem;margin:0 auto;padding:1.25rem 1rem 0;}
+  .glass{background:var(--washi);border:1px solid var(--keisen);border-radius:2px;}
+  .hidden{display:none !important;}
+  .muted{color:var(--usuzumi);}
+  .tiny{font-size:.72rem;}
+  .small{font-size:.8rem;}
+
+  .fld{
+    background:rgba(255,255,255,.72);border:1px solid var(--keisen);
+    border-radius:2px;padding:.5rem .65rem;width:100%;
+  }
+  .fld:focus{outline:none;border-color:var(--ai);box-shadow:0 0 0 3px rgba(23,69,107,.12);}
+  .fld::placeholder{color:#a9a396;}
+
+  .btn{
+    background:var(--washi);border:1px solid var(--keisen);border-radius:2px;
+    padding:.45rem .85rem;cursor:pointer;font-size:.8rem;white-space:nowrap;
+    transition:border-color .2s,background .2s;
+  }
+  .btn:hover{border-color:rgba(23,69,107,.45);}
+  .btn:disabled{opacity:.5;cursor:default;}
+  .btn-main{background:var(--ai);color:var(--washi);border-color:var(--ai);}
+  .btn-main:hover{background:#123a5c;}
+
+  /* 見出し（サイト本体の .sec-head と同じ考え方） */
+  .sec-head{display:flex;align-items:baseline;gap:.8rem;margin:2rem 0 .9rem;}
+  .sec-head .no{font-family:"Shippori Mincho B1",serif;color:var(--ai);font-size:.85rem;letter-spacing:.2em;}
+  .sec-head h2{font-size:1.05rem;white-space:nowrap;}
+  .sec-head .rule{flex:1;height:1px;background:var(--keisen);}
+  .sec-head .label{font-size:.68rem;letter-spacing:.2em;color:var(--usuzumi);white-space:nowrap;}
+
+  /* 絞り込み */
+  .tabs{display:flex;gap:.25rem;overflow-x:auto;padding-bottom:.15rem;}
+  .tabs::-webkit-scrollbar{height:4px;}
+  .tabs::-webkit-scrollbar-thumb{background:rgba(43,47,51,.2);}
+  .tab{
+    border:1px solid var(--keisen);background:var(--washi);border-radius:2px;
+    padding:.4rem .8rem;font-size:.78rem;cursor:pointer;white-space:nowrap;color:var(--usuzumi);
+  }
+  .tab.on{background:var(--ai);color:var(--washi);border-color:var(--ai);}
+
+  /* 記事 */
+  .day{
+    font-family:"Shippori Mincho B1",serif;font-size:.78rem;letter-spacing:.2em;
+    color:var(--usuzumi);margin:1.4rem 0 .5rem;padding-bottom:.3rem;
+    border-bottom:1px solid var(--keisen);
+  }
+  .item{
+    display:flex;gap:.7rem;align-items:flex-start;
+    padding:.75rem .2rem;border-bottom:1px solid var(--keisen);
+  }
+  .item:last-child{border-bottom:0;}
+  .star{
+    background:none;border:0;cursor:pointer;font-size:.95rem;line-height:1.4;
+    color:rgba(43,47,51,.22);padding:0 .1rem;flex-shrink:0;
+  }
+  .star.on{color:var(--yamabuki);}
+  .item-body{min-width:0;flex:1;}
+  .item a.title{
+    text-decoration:none;font-size:.95rem;line-height:1.55;display:block;
+    border-bottom:1px solid transparent;
+  }
+  .item a.title:hover{border-bottom-color:var(--ai);color:var(--ai);}
+  .item.read a.title{color:var(--usuzumi);}
+  .meta{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-top:.3rem;font-size:.7rem;color:var(--usuzumi);}
+  .src{border:1px solid var(--keisen);border-radius:2px;padding:.02rem .4rem;}
+  .g-ai{color:var(--fuji);}   .g-kokunai{color:var(--ai);}
+  .g-dev{color:var(--asagi);} .g-kaigai{color:var(--shu);}
+  .summary{
+    font-size:.78rem;color:var(--usuzumi);margin-top:.3rem;line-height:1.65;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .xlink{font-size:.7rem;color:var(--usuzumi);text-decoration:none;border-bottom:1px solid var(--keisen);}
+  .xlink:hover{color:var(--sumi);}
+
+  /* X のチップ */
+  .chips{display:flex;flex-wrap:wrap;gap:.4rem;}
+  .chip{
+    display:inline-flex;align-items:center;gap:.35rem;
+    border:1px solid var(--keisen);background:var(--washi);border-radius:2px;
+    padding:.3rem .6rem;font-size:.75rem;text-decoration:none;color:var(--sumi);
+  }
+  .chip:hover{border-color:rgba(23,69,107,.45);}
+  .chip .del{color:var(--usuzumi);cursor:pointer;font-size:.7rem;}
+
+  /* 収集元 */
+  .src-row{display:flex;gap:.6rem;align-items:center;padding:.5rem .2rem;border-bottom:1px solid var(--keisen);font-size:.78rem;}
+  .src-row:last-child{border-bottom:0;}
+  .dot{width:.45rem;height:.45rem;border-radius:50%;flex-shrink:0;}
+  .dot.ok{background:var(--asagi);} .dot.ng{background:var(--shu);} .dot.off{background:rgba(43,47,51,.2);}
+
+  /* スマホでは、下までスクロールしても更新できるように親指の届く場所へ置く */
+  #fab{
+    position:fixed; right:1rem; bottom:1rem; z-index:70;
+    width:3.4rem; height:3.4rem; border-radius:50%;
+    background:var(--ai); color:var(--washi); border:0; cursor:pointer;
+    font-size:1.2rem; line-height:1;
+    box-shadow:0 3px 14px rgba(43,47,51,.28);
+    display:none;
+  }
+  #fab:disabled{opacity:.7;}
+  #fab.on{display:block;}
+  @media (min-width:641px){ #fab.on{display:none;} }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spinning{display:inline-block;animation:spin .9s linear infinite;}
+
+  .bar{height:2px;background:rgba(23,69,107,.12);overflow:hidden;}
+  .bar > span{display:block;height:100%;background:var(--ai);width:0;transition:width .3s;}
+
+  @media (max-width:640px){
+    /* 下に固定した更新ボタンで最後の記事が隠れないように */
+    body{padding-bottom:6.5rem;}
+  }
+  @media (max-width:480px){
+    .sec-head h2{white-space:normal;}
+    .item a.title{font-size:.9rem;}
+  }
+</style>
+</head>
+<body>
+
+<div class="site-bar">
+  <a class="home" href="./">星と海</a><span class="sep"></span><span class="here">IT ニュース</span>
+</div>
+
+<!-- ══════════ ログイン ══════════ -->
+<div id="login-view" class="hidden wrap" style="max-width:24rem;padding-top:4rem;">
+  <div class="glass" style="padding:2rem;">
+    <h1 style="font-size:1.1rem;margin-bottom:.3rem;">星と海 ｜ IT ニュース</h1>
+    <p class="tiny muted" style="margin-bottom:1.4rem;">サイトと同じアカウントでログインしてください。</p>
+    <input id="login-email" type="email" placeholder="メールアドレス" autocomplete="username" class="fld" style="margin-bottom:.5rem;">
+    <input id="login-pw" type="password" placeholder="パスワード" autocomplete="current-password" class="fld" style="margin-bottom:1rem;">
+    <button id="login-btn" class="btn btn-main" style="width:100%;padding:.6rem;">ログイン</button>
+    <p id="login-msg" class="tiny" style="color:var(--shu);margin-top:.8rem;"></p>
+  </div>
+</div>
+
+<!-- ══════════ 本体 ══════════ -->
+<div id="app-view" class="hidden wrap">
+
+  <header style="display:flex;align-items:center;gap:.8rem;padding-bottom:1rem;border-bottom:1px solid var(--keisen);">
+    <div style="min-width:0;">
+      <h1 style="font-size:1.1rem;line-height:1.4;">IT ニュース</h1>
+      <p id="head-sub" class="tiny muted" style="margin-top:.15rem;">読み込んでいます…</p>
+    </div>
+    <button id="refresh-btn" class="btn btn-main" style="margin-left:auto;">⟳ 更新</button>
+    <button id="logout-btn" class="btn tiny" style="padding:.4rem .6rem;">出る</button>
+  </header>
+  <div id="progress" class="bar hidden"><span></span></div>
+  <p id="msg" class="hidden small" style="margin-top:.7rem;padding:.5rem .7rem;border-radius:2px;"></p>
+
+  <!-- まだ SQL を流していないとき -->
+  <div id="setup" class="hidden glass" style="padding:1rem;margin-top:1rem;border-color:rgba(154,116,32,.4);background:rgba(154,116,32,.08);">
+    <b>まだ準備ができていません。</b><br>
+    <span class="small">Supabase の SQL Editor で <code>it-news.sql</code> を実行してください。実行すると、この画面に記事が並びます。</span>
+  </div>
+
+  <!-- ── 絞り込み ── -->
+  <div id="filters" class="hidden">
+    <div class="sec-head">
+      <span class="no">一</span><h2>読む</h2><span class="rule"></span><span class="label" id="count-label"></span>
+    </div>
+    <div class="tabs" id="genre-tabs"></div>
+    <div style="display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap;">
+      <input id="q" class="fld" placeholder="ことばで絞り込む（例：Claude、セキュリティ）" style="flex:1;min-width:12rem;">
+      <select id="period" class="fld" style="width:auto;">
+        <option value="1">24時間</option>
+        <option value="3" selected>3日</option>
+        <option value="7">7日</option>
+        <option value="0">すべて</option>
+      </select>
+    </div>
+    <div id="list" style="margin-top:.4rem;"></div>
+  </div>
+
+  <!-- ── X ── -->
+  <div id="x-block" class="hidden">
+    <div class="sec-head">
+      <span class="no">二</span><h2>X で見る</h2><span class="rule"></span><span class="label">投稿は取り込まず検索を開きます</span>
+    </div>
+    <div class="chips" id="x-chips"></div>
+    <div style="display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap;">
+      <input id="x-label" class="fld" placeholder="表示名（例：MCP）" style="flex:1;min-width:8rem;">
+      <input id="x-query" class="fld" placeholder="検索のことば（例：MCP OR from:AnthropicAI）" style="flex:2;min-width:12rem;">
+      <button id="x-add" class="btn">足す</button>
+    </div>
+    <p class="tiny muted" style="margin-top:.5rem;">
+      X の API は読み取りが有料のため、投稿そのものは集めていません。
+      RSSHub などで X のフィードを用意できたら、下の「収集元」に URL を足すと一覧に混ざります。
+    </p>
+  </div>
+
+  <!-- ── 収集元 ── -->
+  <div id="src-block" class="hidden">
+    <div class="sec-head">
+      <span class="no">三</span><h2>収集元</h2><span class="rule"></span>
+      <span class="label" style="cursor:pointer;" id="src-toggle">ひらく</span>
+    </div>
+    <div id="src-panel" class="hidden">
+      <div id="src-list" class="glass" style="padding:.4rem .8rem;"></div>
+      <div style="display:flex;gap:.5rem;margin-top:.7rem;flex-wrap:wrap;">
+        <input id="ns-name" class="fld" placeholder="名前" style="flex:1;min-width:8rem;">
+        <input id="ns-url"  class="fld" placeholder="フィードの URL（RSS / Atom）" style="flex:2;min-width:12rem;">
+        <select id="ns-genre" class="fld" style="width:auto;">
+          <option value="ai">AI・生成AI</option>
+          <option value="kokunai">国内IT</option>
+          <option value="dev">開発</option>
+          <option value="kaigai">海外</option>
+          <option value="other">その他</option>
+        </select>
+        <button id="ns-add" class="btn">足す</button>
+      </div>
+      <p class="tiny muted" style="margin-top:.5rem;">
+        止めたいフィードは「休む」を押すと、更新のときに読みに行かなくなります。
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<button id="fab" title="更新">⟳</button>
+
+<script>
+/* ========================= 設定 ========================= */
+const SUPABASE_URL      = 'https://qnmzjwgacnfxwlbgwxcr.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_BG0n_GkXIwMBUlSN-W5vzA_vb4rbPKq';
+
+const GENRES = [
+  { key:'all',     label:'すべて'      },
+  { key:'ai',      label:'AI・生成AI'  },
+  { key:'kokunai', label:'国内IT'      },
+  { key:'dev',     label:'開発'        },
+  { key:'kaigai',  label:'海外'        },
+  { key:'star',    label:'★ 気になる'  },
+];
+
+/* X の検索チップ。端末ごとに覚えます（Supabase には送りません）。 */
+const X_KEY = 'hoshiumi_x_queries';
+const X_DEFAULT = [
+  { label:'生成AI',      q:'生成AI' },
+  { label:'Claude Code', q:'"Claude Code"' },
+  { label:'MCP',         q:'MCP OR "Model Context Protocol"' },
+  { label:'AnthropicAI', q:'from:AnthropicAI' },
+  { label:'OpenAI',      q:'from:OpenAI' },
+  { label:'ITmedia',     q:'from:itmedia_news' },
+];
+
+/* ========================= 状態 ========================= */
+let sb = null;
+let items = [], sources = [];
+let genre = 'all', keyword = '', days = 3;
+let ready = false, busy = false;
+
+const $  = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const missing = /does not exist|schema cache|could not find|relation/i;
+
+/* ========================= 起動 ========================= */
+(async function boot(){
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { data:{ session } } = await sb.auth.getSession();
+  if (session) await enterApp(); else $('#login-view').classList.remove('hidden');
+})();
+
+$('#login-btn').addEventListener('click', doLogin);
+$('#login-pw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+async function doLogin(){
+  $('#login-msg').textContent = '';
+  const { error } = await sb.auth.signInWithPassword({
+    email: $('#login-email').value.trim(), password: $('#login-pw').value });
+  if (error) { $('#login-msg').textContent = 'ログインできませんでした：' + error.message; return; }
+  $('#login-view').classList.add('hidden');
+  await enterApp();
+}
+$('#logout-btn').addEventListener('click', async () => { await sb.auth.signOut(); location.reload(); });
+
+async function enterApp(){
+  $('#app-view').classList.remove('hidden');
+  drawGenreTabs();
+  drawXChips();
+  await loadAll();
+  render();
+}
+
+/* ========================= 読み込み ========================= */
+async function loadAll(){
+  const [it, sr] = await Promise.all([
+    sb.from('it_news_items').select('*')
+      .order('published_at', { ascending:false, nullsFirst:false })
+      .order('fetched_at',   { ascending:false })
+      .limit(600),
+    sb.from('it_news_sources').select('*').order('sort_order').order('name'),
+  ]);
+
+  if ((it.error && missing.test(it.error.message || '')) ||
+      (sr.error && missing.test(sr.error.message || ''))) {
+    ready = false;
+    $('#setup').classList.remove('hidden');
+    $('#head-sub').textContent = '準備待ち';
+    return;
+  }
+  ready = true;
+  $('#setup').classList.add('hidden');
+  items   = it.data || [];
+  sources = sr.data || [];
+}
+
+/* ========================= 更新 ========================= */
+$('#refresh-btn').addEventListener('click', refresh);
+$('#fab').addEventListener('click', refresh);
+
+function setBusyUI(on){
+  const btn = $('#refresh-btn'), fab = $('#fab');
+  btn.disabled = on; fab.disabled = on;
+  btn.innerHTML = on ? '<span class="spinning">⟳</span> 集めています…' : '⟳ 更新';
+  fab.innerHTML = on ? '<span class="spinning">⟳</span>' : '⟳';
+}
+
+async function refresh(){
+  if (busy || !ready) return;
+  busy = true;
+  setBusyUI(true);
+  $('#progress').classList.remove('hidden');
+  setBar(0);
+  hideMsg();
+
+  const total = sources.filter(s => s.enabled).length || 1;
+  let added = 0, err = null;
+
+  try {
+    await sb.rpc('it_news_queue_all');
+    for (let i = 0; i < 40; i++) {
+      const { data, error } = await sb.rpc('refresh_it_news', { p_limit: 3 });
+      if (error) { err = error.message; break; }
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) break;
+      added += row.added || 0;
+      setBar(Math.round(((total - (row.remaining || 0)) / total) * 100));
+      if ((row.remaining || 0) === 0) break;
+    }
+  } catch (e) { err = String(e && e.message || e); }
+
+  await loadAll();
+  render();
+
+  busy = false;
+  setBusyUI(false);
+  setBar(100);
+  setTimeout(() => $('#progress').classList.add('hidden'), 600);
+
+  const ng = sources.filter(s => s.enabled && s.last_status && !/追加|新着なし/.test(s.last_status));
+  if (err) {
+    showMsg('更新の途中で止まりました：' + err, 'ng');
+  } else if (ng.length) {
+    showMsg(added + '件の新着。' + ng.length + '件のフィードは読めませんでした（「収集元」で理由が見られます）。', 'warn');
+  } else {
+    showMsg(added > 0 ? added + '件の新着がありました。' : '新しい記事はありませんでした。', 'ok');
+  }
+}
+
+function setBar(p){ $('#progress').firstElementChild.style.width = p + '%'; }
+function hideMsg(){ $('#msg').classList.add('hidden'); }
+function showMsg(text, kind){
+  const el = $('#msg');
+  el.textContent = text;
+  el.className = 'small';
+  el.style.background = kind === 'ng'   ? 'rgba(183,71,42,.09)'
+                      : kind === 'warn' ? 'rgba(154,116,32,.10)'
+                                        : 'rgba(43,127,140,.10)';
+  el.style.color = kind === 'ng' ? 'var(--shu)' : kind === 'warn' ? 'var(--yamabuki)' : 'var(--asagi)';
+}
+
+/* ========================= 描画 ========================= */
+function drawGenreTabs(){
+  $('#genre-tabs').innerHTML = GENRES.map(g =>
+    `<button class="tab${g.key === genre ? ' on' : ''}" data-g="${g.key}">${esc(g.label)}</button>`).join('');
+  $('#genre-tabs').querySelectorAll('.tab').forEach(b => {
+    b.addEventListener('click', () => { genre = b.dataset.g; drawGenreTabs(); render(); });
+  });
+}
+$('#q').addEventListener('input', e => { keyword = e.target.value.trim(); render(); });
+$('#period').addEventListener('change', e => { days = Number(e.target.value); render(); });
+
+function render(){
+  if (!ready) return;
+  $('#filters').classList.remove('hidden');
+  $('#fab').classList.add('on');
+  $('#x-block').classList.remove('hidden');
+  $('#src-block').classList.remove('hidden');
+
+  const shown = filtered();
+  $('#count-label').textContent = shown.length + ' 件';
+
+  const last = sources.filter(s => s.last_fetched_at)
+                      .map(s => new Date(s.last_fetched_at))
+                      .sort((a,b) => b - a)[0];
+  $('#head-sub').textContent =
+    items.length + '件を保存 ・ ' + sources.filter(s => s.enabled).length + 'つの収集元' +
+    (last ? ' ・ 最後の更新 ' + when(last) : ' ・ まだ集めていません');
+
+  drawList(shown);
+  drawSources();
+}
+
+function filtered(){
+  const now = Date.now();
+  const kw  = keyword.toLowerCase();
+  return items.filter(x => {
+    if (genre === 'star') { if (!x.starred) return false; }
+    else if (genre !== 'all' && x.genre !== genre) return false;
+
+    if (days > 0 && genre !== 'star') {
+      const t = new Date(x.published_at || x.fetched_at).getTime();
+      if (now - t > days * 86400000) return false;
+    }
+    if (kw) {
+      const hay = ((x.title || '') + ' ' + (x.summary || '') + ' ' + (x.source_name || '')).toLowerCase();
+      if (!hay.includes(kw)) return false;
+    }
+    return true;
+  });
+}
+
+function drawList(list){
+  if (!list.length) {
+    $('#list').innerHTML =
+      `<p class="small muted" style="padding:2rem 0;text-align:center;">
+         ${items.length ? 'この条件に合う記事はありません。' : '「更新」を押すと集まります。'}
+       </p>`;
+    return;
+  }
+
+  let html = '', curDay = '';
+  for (const x of list) {
+    const d = new Date(x.published_at || x.fetched_at);
+    const dayKey = d.toLocaleDateString('ja-JP', { month:'long', day:'numeric', weekday:'short' });
+    if (dayKey !== curDay) { curDay = dayKey; html += `<div class="day">${esc(dayKey)}</div>`; }
+
+    const sum = niceSummary(x);
+    const xq  = encodeURIComponent(String(x.title || '').slice(0, 60));
+    html += `
+      <div class="item${x.read_at ? ' read' : ''}" data-id="${x.id}">
+        <button class="star${x.starred ? ' on' : ''}" data-star="${x.id}" title="気になる">${x.starred ? '★' : '☆'}</button>
+        <div class="item-body">
+          <a class="title" href="${esc(x.url)}" target="_blank" rel="noopener" data-open="${x.id}">${esc(x.title)}</a>
+          ${sum ? `<div class="summary">${esc(sum)}</div>` : ''}
+          <div class="meta">
+            <span class="src g-${esc(x.genre || 'other')}">${esc(x.source_name || '—')}</span>
+            <span>${esc(when(d))}</span>
+            <a class="xlink" href="https://x.com/search?q=${xq}&f=live" target="_blank" rel="noopener">X で探す</a>
+          </div>
+        </div>
+      </div>`;
+  }
+  $('#list').innerHTML = html;
+
+  $('#list').querySelectorAll('[data-star]').forEach(b =>
+    b.addEventListener('click', () => toggleStar(b.dataset.star)));
+  $('#list').querySelectorAll('[data-open]').forEach(a =>
+    a.addEventListener('click', () => markRead(a.dataset.open)));
+}
+
+/* 要約は「読んで分かるもの」だけ出す。
+   リンクの羅列（Hacker News）や、タイトルの繰り返し（ニュース検索）は隠します。 */
+function niceSummary(x){
+  const s = (x.summary || '').trim();
+  if (!s) return '';
+  if (/^Article URL:/.test(s)) {                       // Hacker News
+    const m = s.match(/Points:\s*(\d+).*?Comments:\s*(\d+)/);
+    return m ? '▲ ' + m[1] + ' ・ コメント ' + m[2] : '';
+  }
+  if (/^https?:\/\/\S+$/.test(s)) return '';          // URL しか入っていない
+  if (sameAsTitle(s, x.title)) return '';
+  return s;
+}
+
+function sameAsTitle(sum, title){
+  if (!sum) return true;
+  const n = s => String(s || '').replace(/\s+/g, '').slice(0, 40);
+  return n(sum).startsWith(n(title).slice(0, 24));
+}
+
+function when(d){
+  const diff = (Date.now() - d.getTime()) / 1000;
+  if (diff < 90)     return 'たった今';
+  if (diff < 3600)   return Math.round(diff / 60) + '分前';
+  if (diff < 86400)  return Math.round(diff / 3600) + '時間前';
+  if (diff < 172800) return '昨日 ' + d.toLocaleTimeString('ja-JP', { hour:'2-digit', minute:'2-digit' });
+  return d.toLocaleDateString('ja-JP', { month:'numeric', day:'numeric' }) + ' ' +
+         d.toLocaleTimeString('ja-JP', { hour:'2-digit', minute:'2-digit' });
+}
+
+async function toggleStar(id){
+  const x = items.find(i => i.id === id);
+  if (!x) return;
+  x.starred = !x.starred;
+  render();
+  await sb.from('it_news_items').update({ starred: x.starred }).eq('id', id);
+}
+
+async function markRead(id){
+  const x = items.find(i => i.id === id);
+  if (!x || x.read_at) return;
+  x.read_at = new Date().toISOString();
+  const el = $(`.item[data-id="${id}"]`);
+  if (el) el.classList.add('read');
+  await sb.from('it_news_items').update({ read_at: x.read_at }).eq('id', id);
+}
+
+/* ========================= X の検索チップ ========================= */
+function xQueries(){
+  try {
+    const raw = localStorage.getItem(X_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e){}
+  return X_DEFAULT.slice();
+}
+function saveX(list){
+  try { localStorage.setItem(X_KEY, JSON.stringify(list)); } catch(e){}
+}
+function drawXChips(){
+  const list = xQueries();
+  $('#x-chips').innerHTML = list.map((x, i) => `
+    <span class="chip">
+      <a href="https://x.com/search?q=${encodeURIComponent(x.q)}&f=live" target="_blank" rel="noopener"
+         style="text-decoration:none;">${esc(x.label)}</a>
+      <span class="del" data-x="${i}" title="消す">×</span>
+    </span>`).join('') || '<span class="tiny muted">まだありません。下から足せます。</span>';
+  $('#x-chips').querySelectorAll('[data-x]').forEach(b =>
+    b.addEventListener('click', () => {
+      const l = xQueries(); l.splice(Number(b.dataset.x), 1); saveX(l); drawXChips();
+    }));
+}
+$('#x-add').addEventListener('click', () => {
+  const label = $('#x-label').value.trim(), q = $('#x-query').value.trim();
+  if (!q) return;
+  const l = xQueries(); l.push({ label: label || q, q }); saveX(l);
+  $('#x-label').value = ''; $('#x-query').value = '';
+  drawXChips();
+});
+
+/* ========================= 収集元 ========================= */
+$('#src-toggle').addEventListener('click', () => {
+  const closed = $('#src-panel').classList.toggle('hidden');
+  $('#src-toggle').textContent = closed ? 'ひらく' : 'とじる';
+});
+
+const GENRE_LABEL = { ai:'AI', kokunai:'国内', dev:'開発', kaigai:'海外', other:'その他' };
+
+function drawSources(){
+  $('#src-list').innerHTML = sources.map(s => {
+    const ok = s.last_status && /追加|新着なし/.test(s.last_status);
+    const cls = !s.enabled ? 'off' : ok ? 'ok' : s.last_status ? 'ng' : 'off';
+    return `
+      <div class="src-row">
+        <span class="dot ${cls}"></span>
+        <span style="flex:1;min-width:0;">
+          <span style="${s.enabled ? '' : 'color:var(--usuzumi);'}">${esc(s.name)}</span>
+          <span class="tiny muted"> ${esc(GENRE_LABEL[s.genre] || s.genre)}</span>
+          <span class="tiny muted" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            ${esc(s.last_status || 'まだ読んでいません')}
+          </span>
+        </span>
+        <button class="btn tiny" style="padding:.2rem .5rem;" data-toggle="${s.id}">${s.enabled ? '休む' : '使う'}</button>
+        <button class="btn tiny" style="padding:.2rem .5rem;" data-del="${s.id}">消す</button>
+      </div>`;
+  }).join('') || '<p class="small muted" style="padding:.6rem 0;">まだありません。</p>';
+
+  $('#src-list').querySelectorAll('[data-toggle]').forEach(b =>
+    b.addEventListener('click', async () => {
+      const s = sources.find(x => x.id === b.dataset.toggle);
+      s.enabled = !s.enabled; drawSources();
+      await sb.from('it_news_sources').update({ enabled: s.enabled }).eq('id', s.id);
+    }));
+
+  $('#src-list').querySelectorAll('[data-del]').forEach(b =>
+    b.addEventListener('click', async () => {
+      const s = sources.find(x => x.id === b.dataset.del);
+      if (!confirm(`「${s.name}」を消します。集めた記事はそのまま残ります。`)) return;
+      await sb.from('it_news_sources').delete().eq('id', s.id);
+      await loadAll(); render();
+    }));
+}
+
+$('#ns-add').addEventListener('click', async () => {
+  const name = $('#ns-name').value.trim(), url = $('#ns-url').value.trim();
+  if (!name || !/^https?:\/\//.test(url)) { showMsg('名前と、http で始まる URL を入れてください。', 'warn'); return; }
+  const { error } = await sb.from('it_news_sources')
+    .insert({ name, url, genre: $('#ns-genre').value, sort_order: 90 });
+  if (error) { showMsg('足せませんでした：' + error.message, 'ng'); return; }
+  $('#ns-name').value = ''; $('#ns-url').value = '';
+  await loadAll(); render();
+  showMsg('足しました。「更新」を押すと読みに行きます。', 'ok');
+});
+</script>
+</body>
+</html>
