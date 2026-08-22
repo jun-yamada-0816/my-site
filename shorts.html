@@ -357,11 +357,15 @@
   <section id="tab-entry" class="tabpanel hidden space-y-4">
     <div class="glass rounded-2xl p-4">
       <p class="text-[11px] text-slate-400 mb-1">
-        再生数は「取り込む」で自動更新されます。
+        再生数は「再生数を取り込む」で自動で入ります（<span style="color:#2b7f8c">自動</span>と出ます）。
         <b class="text-slate-300">いいね・コメント・平均視聴時間・登録者の増加</b>は
         YouTube Studio の「アナリティクス → コンテンツ」から書き写してください。
       </p>
-      <p class="text-[11px] text-slate-500 mb-3">週に1回でも入れておくと、次に作る動画の提案がはっきりします。</p>
+      <p class="text-[11px] text-slate-500 mb-3">
+        <b class="text-slate-400">分かるところだけで大丈夫です。</b>空欄のまま保存できます。
+        タイトルが同じ動画は、サムネイル・投稿日時・動画IDで見分けてください。
+        「Studio でこの動画の数字を見る」を押すと、その動画の画面がそのまま開きます。
+      </p>
       <div class="flex flex-wrap items-end gap-2">
         <label class="text-xs">
           <span class="block text-[11px] text-slate-500 mb-1">記録する日</span>
@@ -375,6 +379,8 @@
           <span class="block text-[11px] text-slate-500 mb-1">登録者の総数（その日）</span>
           <input id="entry-subs-total" type="number" inputmode="numeric" min="0" class="fld" style="width:9rem">
         </label>
+        <button id="entry-sync" class="glass px-3 py-2 text-xs hover:border-sky-400/50"
+                style="border-radius:2px">⟳ 再生数を取り込む</button>
       </div>
     </div>
     <div id="entry-list" class="space-y-2.5"></div>
@@ -1497,6 +1503,8 @@ $('#vm-delete').addEventListener('click', async () => {
 /* ========================= 数字を入力 ========================= */
 $('#entry-unfilled').addEventListener('change', renderEntry);
 $('#entry-date').addEventListener('change', renderEntry);
+// 入力画面からでも取り込めるように（上の「取り込む」と同じ処理を呼びます）
+$('#entry-sync').addEventListener('click', () => $('#sync-btn').click());
 
 const metricsOn = date => {
   const o = {};
@@ -1520,17 +1528,52 @@ function renderEntry(){
   const html = rows.map(({v,p}) => {
     const ex = on[p.id];
     if (only && ex) return '';
+
+    // タイトルが同じ動画が並ぶので、サムネイル・投稿日時・動画IDで見分けます。
+    const id = ytIdOf(v);
+    const face = id
+      ? `<img class="thumb" loading="lazy" src="${thumbOf(id)}" alt=""
+             onerror="this.onerror=null;this.src='${thumbAlt(id)}'">`
+      : `<div class="thumb flex items-center justify-center text-lg">🌊</div>`;
+    const t = p.posted_at ? new Date(p.posted_at) : null;
+    const stamp = t
+      ? t.toLocaleDateString('ja-JP',{month:'numeric',day:'numeric',weekday:'short'}) + ' ' +
+        t.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})
+      : '投稿日時なし';
+    const last = latestOf(p.id);
+
     return `<div class="glass rounded-2xl p-3.5">
-      <div class="flex items-center gap-2 mb-2.5">
-        <span class="w-1.5 h-1.5 rounded-full" style="background:var(--yt)"></span>
-        <span class="text-xs truncate flex-1">${esc(v.title)}</span>
-        ${ex?'<span class="text-[10px]" style="color:#2b7f8c">入力済</span>':''}
+      <div class="flex items-start gap-2.5 mb-2.5">
+        <a class="block shrink-0 rounded-lg overflow-hidden" style="width:2.6rem"
+           href="${id ? `https://www.youtube.com/shorts/${id}` : '#'}" target="_blank" rel="noopener"
+           title="この動画をYouTubeで開く">
+          <div class="ratio916">${face}</div>
+        </a>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="chip">${esc(v.slug)}</span>
+            <span class="text-xs">${esc(stamp)}</span>
+            ${ex?'<span class="text-[10px]" style="color:#2b7f8c">入力済</span>':''}
+          </div>
+          <p class="text-[11px] text-slate-500 truncate mt-1">${esc(v.title)}</p>
+          ${id ? `<div class="flex items-center gap-2.5 mt-1">
+            <a class="text-[10px]" style="color:var(--accent);border-bottom:1px solid var(--line)"
+               href="https://studio.youtube.com/video/${id}/analytics/tab-overview/period-default"
+               target="_blank" rel="noopener">Studio でこの動画の数字を見る</a>
+            <span class="text-[10px] text-slate-500">${id}</span>
+          </div>` : ''}
+        </div>
       </div>
       <div class="grid grid-cols-3 gap-2">
-        ${fields.map(f=>`
-          <label><span class="block text-[10px] text-slate-500 mb-1">${f.label}</span>
-          <input type="number" inputmode="decimal" step="any" min="0" data-post="${p.id}" data-metric="${f.key}"
-            value="${ex?.[f.key] ?? ''}" class="entry-in fld py-1.5 text-sm"></label>`).join('')}
+        ${fields.map(f=>{
+          const auto = f.key === 'views' && ex?.views != null;
+          const ph   = (f.key === 'views' && !auto && last?.views != null)
+                     ? ` placeholder="前回 ${num(last.views)}"` : '';
+          return `<label><span class="block text-[10px] text-slate-500 mb-1">${f.label}${
+            auto ? ' <span style="color:#2b7f8c">自動</span>' : ''}</span>
+          <input type="number" inputmode="decimal" step="any" min="0" data-post="${p.id}" data-metric="${f.key}"${ph}
+            value="${ex?.[f.key] ?? ''}" class="entry-in fld py-1.5 text-sm"></label>`;
+        }).join('')}
       </div></div>`;
   }).join('');
 
@@ -1589,7 +1632,11 @@ $('#subs-save').addEventListener('click', async () => {
 /* ========================= リンク ========================= */
 function renderLinkOptions(){
   $('#link-video').innerHTML = state.videos.length
-    ? state.videos.map(v=>`<option value="${esc(v.slug)}">${esc(v.title)}（${esc(v.slug)}）</option>`).join('')
+    ? state.videos.map(v=>{
+        const p = postOf(v.id);
+        const d = p?.posted_at ? new Date(p.posted_at).toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'}) : '';
+        return `<option value="${esc(v.slug)}">${esc(v.slug)}${d?' ・ '+d:''} ・ ${esc(v.title)}</option>`;
+      }).join('')
     : `<option value="">先に動画を登録してください</option>`;
   if (state.videos.length) $('#link-video').value = state.videos[0].slug;
   buildLink();
