@@ -237,6 +237,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="星と海は、精神障害を抱える方が安心して気持ちを話せる、当事者による相互サポートの場です。" />
   <title>星と海</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49/dist/umd/supabase.min.js"></script>
   <script>
@@ -244,12 +247,17 @@
       theme: {
         extend: {
           colors: {
+            /* 和の色。クラス名は変えずに、色だけ入れ替えています。
+               blue=藍 / indigo=群青 / violet=藤 / teal=浅葱 */
             aurora: {
-              blue:   '#0284c7',
-              indigo: '#6366f1',
-              violet: '#8b5cf6',
-              teal:   '#0d9488',
+              blue:   '#17456b',
+              indigo: '#3a5b8c',
+              violet: '#6b6ba3',
+              teal:   '#2b7f8c',
             },
+            sumi:   '#2b2f33',
+            kinari: '#f6f3ec',
+            shu:    '#b7472a',
           },
           animation: {
             'float':      'float 6s ease-in-out infinite',
@@ -281,23 +289,6 @@
     }
   </script>
   <style>
-    .text-shimmer {
-      background: linear-gradient(90deg,#0284c7 0%,#6366f1 25%,#8b5cf6 50%,#6366f1 75%,#0284c7 100%);
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: shimmer 8s linear infinite;
-    }
-    /* 夜空（ヒーロー）用の明るいシマー */
-    .text-shimmer-bright {
-      background: linear-gradient(90deg,#7dd3fc 0%,#a5b4fc 25%,#d8b4fe 50%,#a5b4fc 75%,#7dd3fc 100%);
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: shimmer 8s linear infinite;
-    }
     .glass {
       background: rgba(255,255,255,0.72);
       backdrop-filter: blur(18px);
@@ -347,8 +338,6 @@
     html.large-text { font-size: 115%; }
     /* アニメーションを減らす設定 */
     html.reduce-motion { scroll-behavior: auto !important; }
-    html.reduce-motion .text-shimmer,
-    html.reduce-motion .text-shimmer-bright { animation: none !important; }
     html.reduce-motion .animate-float { animation: none !important; }
     html.reduce-motion .animate-fade-in,
     html.reduce-motion .animate-fade-in-up {
@@ -374,6 +363,142 @@
     /* modal scroll */
     .modal-scroll::-webkit-scrollbar { width:4px; }
     .modal-scroll::-webkit-scrollbar-thumb { background:#9cc4e8; border-radius:2px; }
+
+    /* ══════════════════════════════════════════════════════════
+       和の余白  ── 明朝と縦書き、紙の手ざわりで組み直したもの。
+       色や角丸を一か所で決めているので、ここを直せば全体が変わります。
+       ══════════════════════════════════════════════════════════ */
+    :root{
+      --sumi:#2b2f33;      /* 墨 … 本文 */
+      --usuzumi:#6f757b;   /* 薄墨 … 補足 */
+      --ai:#17456b;        /* 藍 */
+      --asagi:#2b7f8c;     /* 浅葱 */
+      --fuji:#6b6ba3;      /* 藤 */
+      --shu:#b7472a;       /* 朱 … ごく少しだけ */
+      --kinari:#f6f3ec;    /* 生成り … 紙 */
+      --keisen:rgba(43,47,51,.13);  /* 罫線 */
+    }
+    html body{
+      font-family:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;
+      color:var(--sumi);
+      letter-spacing:.04em;
+      font-weight:400;
+    }
+    /* 見出しは明朝。太らせずに、字間で見せる */
+    html h1, html h2, html h3, .mincho{
+      font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
+      font-weight:500;
+      letter-spacing:.10em;
+    }
+    html .font-black{ font-weight:500 !important; }
+    html .tracking-widest{ letter-spacing:.28em; }
+
+    /* ── 紙 ────────────────────────────────── */
+    html .glass-panel{
+      background:linear-gradient(180deg, rgba(251,249,244,.94), rgba(244,241,233,.90));
+      border:1px solid rgba(43,47,51,.10);
+      border-radius:2px;
+      box-shadow:0 1px 0 rgba(255,255,255,.7) inset,
+                 0 22px 60px -34px rgba(12,32,56,.55);
+      backdrop-filter:blur(6px);
+      -webkit-backdrop-filter:blur(6px);
+      position:relative;
+      overflow:hidden;
+    }
+    /* 紙の繊維。うっすら乗せるだけ */
+    html .glass-panel::before{
+      content:'';position:absolute;inset:0;pointer-events:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+      opacity:.045; mix-blend-mode:multiply;
+    }
+    html .glass-panel > *{ position:relative; }
+
+    /* ── 面ではなく、罫線で区切る ───────────── */
+    html .glass{
+      background:rgba(251,249,244,.88);
+      border:1px solid rgba(43,47,51,.12);
+      border-radius:2px;
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+    }
+    html .glass:hover{ border-color:rgba(23,69,107,.30); }
+    /* 紙の上に置かれたものは、白い箱にせず、うっすら沈ませるだけ */
+    html .glass-panel .glass{
+      background:rgba(255,255,255,.40);
+      border:1px solid var(--keisen);
+      border-radius:2px;
+      backdrop-filter:none;
+      -webkit-backdrop-filter:none;
+      box-shadow:none;
+    }
+    html .glass-panel .glass:hover{ border-color:rgba(23,69,107,.30); }
+    /* 読み物として並べるものは、箱をやめて罫線だけで区切る */
+    html .rule-card{
+      background:transparent !important;
+      border:0 !important;
+      border-top:1px solid var(--keisen) !important;
+      border-radius:0 !important;
+      padding:1.7rem 0 1.4rem !important;
+      box-shadow:none !important;
+    }
+    html .rule-card:hover{ border-top-color:rgba(23,69,107,.34) !important; }
+    html .glass-teal, html .glass-panel .glass-teal{ border-color:var(--keisen) !important; }
+
+    /* ── 見出しの組み ───────────────────────── */
+    .sec-head{ display:flex; align-items:baseline; gap:1.1rem; margin-bottom:2.75rem; }
+    .sec-no{
+      font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
+      font-size:.9rem; color:var(--asagi); letter-spacing:.34em; white-space:nowrap;
+    }
+    .sec-title{ font-size:1.65rem; line-height:1.5; white-space:nowrap; }
+    @media (min-width:768px){ .sec-title{ font-size:1.95rem; } }
+    /* 画面がせまいときは、見出しを折り返して横スクロールを出さない */
+    @media (max-width:480px){
+      .sec-head{ flex-wrap:wrap; gap:.6rem .9rem; margin-bottom:2rem; }
+      .sec-title{ white-space:normal; font-size:1.4rem; }
+      .sec-rule{ min-width:2rem; }
+    }
+    .sec-rule{ flex:1 1 auto; height:1px; background:linear-gradient(90deg,var(--keisen),rgba(43,47,51,0)); }
+    .lead{ color:var(--usuzumi); font-size:.9rem; line-height:2.1; }
+
+    /* ── 縦書き ─────────────────────────────── */
+    .tate{
+      writing-mode:vertical-rl;
+      -webkit-writing-mode:vertical-rl;
+      text-orientation:upright;
+      -webkit-text-orientation:upright;
+      letter-spacing:.34em;
+      line-height:1.1;
+    }
+    .tate-rule{ width:1px; background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0)); }
+
+    /* ── 罫線のボタン（丸いピルをやめる） ────── */
+    .btn-line{
+      display:inline-flex; align-items:center; justify-content:center; gap:.7rem;
+      padding:.9rem 2rem; border:1px solid currentColor; border-radius:1px;
+      letter-spacing:.18em; font-size:.85rem; font-weight:500;
+      transition:background .35s, color .35s, border-color .35s;
+    }
+    .btn-line:hover{ background:rgba(255,255,255,.10); }
+    html.reduce-motion .btn-line{ transition:none; }
+
+    /* 番号（〇一、〇二…）は明朝の数字で小さく */
+    .num-mincho{
+      font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
+      font-size:.95rem; letter-spacing:.22em; color:var(--asagi);
+    }
+
+    .tel-row{
+      display:flex; align-items:baseline; gap:1rem;
+      padding:.95rem .2rem; border-top:1px solid var(--keisen);
+      color:var(--sumi); transition:color .3s, border-color .3s;
+    }
+    .tel-row:hover{ color:var(--ai); border-top-color:rgba(23,69,107,.35); }
+    html.reduce-motion .tel-row{ transition:none; }
+
+    ::-webkit-scrollbar-track { background:#eae6dc; }
+    ::-webkit-scrollbar-thumb { background:#c3bdae; border-radius:0; }
+    :focus-visible{ outline-color:var(--ai); }
   </style>
 </head>
 <body style="background:#e7f3fd;" class="text-slate-800 font-sans antialiased overflow-x-hidden">
@@ -390,14 +515,14 @@
   <canvas id="cosmos" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
 
   <!-- ========== NAV ========== -->
-  <nav class="fixed top-0 inset-x-0 z-50 glass border-b border-aurora-blue/10">
+  <nav class="fixed top-0 inset-x-0 z-50 glass" style="border-radius:0;border:0;border-bottom:1px solid var(--keisen);">
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-      <a href="#" class="text-lg font-bold text-shimmer tracking-widest">星と海</a>
+      <a href="#" class="mincho text-lg tracking-[.4em]" style="color:var(--ai);">星と海</a>
       <div class="flex items-center gap-6">
-        <ul class="hidden md:flex gap-8 text-sm text-slate-500">
-          <li><a href="#hero"     class="hover:text-aurora-blue transition-colors">Home</a></li>
+        <ul class="hidden md:flex gap-7 text-[.8rem] tracking-[.16em]" style="color:#5b6167;">
+          <li><a href="#hero"     class="hover:text-aurora-blue transition-colors">ホーム</a></li>
           <li><a href="#promise"  class="hover:text-aurora-blue transition-colors">約束</a></li>
-          <li><a href="#blog"     class="hover:text-aurora-blue transition-colors">Blog</a></li>
+          <li><a href="#blog"     class="hover:text-aurora-blue transition-colors">ブログ</a></li>
           <li><a href="#music"    class="hover:text-aurora-blue transition-colors">音楽</a></li>
           <li><a href="#mood"     class="hover:text-aurora-blue transition-colors">きもち</a></li>
           <li><a href="#coping"   class="hover:text-aurora-blue transition-colors">こころのケア</a></li>
@@ -443,10 +568,10 @@
       </div>
     </div>
     <!-- モバイルメニュー パネル -->
-    <ul id="mobile-menu" class="hidden md:hidden flex-col gap-1 px-6 pb-4 text-sm text-slate-500 border-t border-aurora-blue/10">
-      <li><a href="#hero"     onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">Home</a></li>
+    <ul id="mobile-menu" class="hidden md:hidden flex-col gap-1 px-6 pb-4 text-sm tracking-[.14em]" style="color:#5b6167;border-top:1px solid var(--keisen);">
+      <li><a href="#hero"     onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">ホーム</a></li>
       <li><a href="#promise"  onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">約束</a></li>
-      <li><a href="#blog"     onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">Blog</a></li>
+      <li><a href="#blog"     onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">ブログ</a></li>
       <li><a href="#music"    onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">音楽</a></li>
       <li><a href="#mood"     onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">きもち</a></li>
       <li><a href="#coping"   onclick="closeMobileMenu()" class="block py-2 hover:text-aurora-blue transition-colors">こころのケア</a></li>
@@ -462,78 +587,73 @@
 
   <!-- ========== HERO ========== -->
   <section id="hero" class="relative z-10 min-h-screen flex items-center justify-center overflow-hidden">
-    <div class="relative z-10 text-center px-6 max-w-4xl mx-auto">
-      <p class="animate-fade-in opacity-0 text-sky-300 text-sm tracking-widest mb-6"
-         style="animation-delay:.3s;animation-fill-mode:forwards;">
-        あなたはひとりじゃない
-      </p>
-      <h1 class="animate-fade-in-up opacity-0 text-5xl md:text-7xl font-black leading-tight mb-8"
-          style="animation-delay:.7s;animation-fill-mode:forwards;">
-        <span class="text-shimmer-bright">ひとり</span><br />
-        <span class="text-slate-100">じゃない</span>
-      </h1>
-      <p class="animate-fade-in-up opacity-0 text-slate-300 text-lg md:text-xl leading-relaxed mb-12 max-w-2xl mx-auto"
-         style="animation-delay:1.1s;animation-fill-mode:forwards;">
-        精神障害を抱えていると、誰にも言えないことがある。<br class="hidden md:block"/>
-        不安、恐怖、悲しさ——そんな気持ちを、ここでそっと話してください。<br class="hidden md:block"/>
-        星と海のように、広くあなたを受け止めます。
-      </p>
-      <div class="animate-fade-in-up opacity-0 flex flex-col sm:flex-row gap-4 justify-center"
-           style="animation-delay:1.5s;animation-fill-mode:forwards;">
-        <a href="#bulletin"
-           class="group inline-flex items-center gap-2 px-8 py-4 rounded-full
-                  bg-sky-400/10 border border-sky-300/50 text-sky-300 font-semibold
-                  hover:border-sky-300 hover:bg-sky-400/20
-                  transition-all duration-300 hover:shadow-lg hover:shadow-sky-400/20">
-          <span>掲示板で話す</span>
-          <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-          </svg>
-        </a>
-        <a href="#blog"
-           class="inline-flex items-center gap-2 px-8 py-4 rounded-full
-                  border border-slate-500 text-slate-300 font-semibold
-                  hover:border-slate-300 hover:text-white transition-all duration-300">
-          ブログを読む
-        </a>
+    <!-- 右に縦書きの見出し、左に本文。夜空の暗いところに文字を置いています -->
+    <div class="relative z-10 w-full max-w-4xl mx-auto px-6 pt-16 pb-24
+                flex flex-col md:flex-row-reverse md:items-center md:justify-center gap-12 md:gap-20">
+
+      <div class="animate-fade-in-up opacity-0 flex items-start justify-center gap-5 md:gap-7 shrink-0"
+           style="animation-delay:.5s;animation-fill-mode:forwards;">
+        <span class="tate-rule self-stretch" aria-hidden="true"></span>
+        <h1 class="tate text-[2.05rem] md:text-[2.6rem] leading-none"
+            style="color:#f4f1ea;text-shadow:0 2px 34px rgba(3,10,24,.85);">ひとりじゃない</h1>
+        <p class="tate text-[.8rem] md:text-[.88rem] mt-1"
+           style="color:rgba(186,220,240,.75);letter-spacing:.55em;">あなたは、</p>
+      </div>
+
+      <div class="animate-fade-in opacity-0 text-center md:text-left md:max-w-sm"
+           style="animation-delay:1.1s;animation-fill-mode:forwards;">
+        <p class="text-[.9rem] md:text-[.95rem] leading-[2.4] mb-10"
+           style="color:rgba(238,244,250,.92);text-shadow:0 2px 22px rgba(3,10,24,.9);">
+          精神障害を抱えていると、誰にも言えないことがある。
+          不安、恐怖、悲しさ——そんな気持ちを、ここでそっと話してください。
+          星と海のように、広くあなたを受け止めます。
+        </p>
+        <div class="flex flex-col sm:flex-row items-center sm:items-stretch gap-4 justify-center md:justify-start">
+          <a href="#bulletin" class="btn-line"
+             style="color:#d3e9f7;background:rgba(3,12,26,.28);text-shadow:0 1px 14px rgba(3,10,24,.8);">掲示板で話す</a>
+          <a href="#blog" class="btn-line"
+             style="color:rgba(214,224,235,.9);background:rgba(3,12,26,.28);text-shadow:0 1px 14px rgba(3,10,24,.8);">ブログを読む</a>
+        </div>
       </div>
     </div>
-    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2
-                text-slate-500 animate-float z-10">
-      <span class="text-xs tracking-widest">SCROLL</span>
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-      </svg>
+
+    <!-- 下へ続く合図。矢印ではなく、沈んでいく一本の線 -->
+    <div class="absolute bottom-5 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-2 z-10" aria-hidden="true">
+      <span class="tate text-[10px]" style="color:rgba(148,163,184,.5);letter-spacing:.5em;">海へ</span>
+      <span class="block w-px h-9 animate-float"
+            style="background:linear-gradient(180deg,rgba(148,163,184,.5),rgba(148,163,184,0));"></span>
     </div>
   </section>
 
   <!-- ========== はじめての方へ ========== -->
   <section id="welcome" class="relative z-10 py-24 px-4 sm:px-6 overflow-hidden">
-    <div class="glass-panel relative z-10 max-w-4xl mx-auto px-6 md:px-10 py-12">
-      <div class="text-center mb-10">
-        <p class="text-aurora-blue text-sm tracking-widest mb-3">はじめての方へ</p>
-        <h2 class="text-2xl md:text-3xl font-black text-slate-800">このサイトの過ごし方</h2>
+    <div class="glass-panel relative z-10 max-w-4xl mx-auto px-6 md:px-14 py-14 md:py-16">
+      <div class="sec-head">
+        <span class="sec-no">一</span>
+        <h2 class="sec-title">このサイトの過ごし方</h2>
+        <span class="sec-rule" aria-hidden="true"></span>
+        <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">はじめての方へ</span>
       </div>
-      <div class="grid md:grid-cols-3 gap-5">
-        <div class="glass rounded-2xl p-6 text-center">
-          <span class="text-3xl" aria-hidden="true">🌊</span>
-          <h3 class="text-slate-800 font-semibold text-sm mt-3 mb-2">読むだけで、大丈夫</h3>
-          <p class="text-slate-500 text-xs leading-relaxed">
+      <div class="grid md:grid-cols-3 gap-x-10 gap-y-0">
+        <div class="glass rule-card">
+          <p class="num-mincho">一</p>
+          <h3 class="mincho text-[.98rem] mt-3 mb-2.5" style="color:var(--sumi);">読むだけで、大丈夫</h3>
+          <p class="text-xs leading-[2.1]" style="color:var(--usuzumi);">
             登録もログインも必要ありません。ブログや掲示板を、波の音を聞くようにただ眺めるだけでも十分です。
           </p>
         </div>
-        <div class="glass rounded-2xl p-6 text-center">
-          <span class="text-3xl" aria-hidden="true">⭐</span>
-          <h3 class="text-slate-800 font-semibold text-sm mt-3 mb-2">話したくなったら、ニックネームで</h3>
-          <p class="text-slate-500 text-xs leading-relaxed">
+        <div class="glass rule-card">
+          <p class="num-mincho">二</p>
+          <h3 class="mincho text-[.98rem] mt-3 mb-2.5" style="color:var(--sumi);">話したくなったら、ニックネームで</h3>
+          <p class="text-xs leading-[2.1]" style="color:var(--usuzumi);">
             掲示板は匿名（ニックネーム）で書き込めます。うまくまとまらない言葉のままで大丈夫です。
           </p>
         </div>
-        <div class="glass rounded-2xl p-6 text-center">
-          <span class="text-3xl" aria-hidden="true">🕊️</span>
-          <h3 class="text-slate-800 font-semibold text-sm mt-3 mb-2">つらいときは、右下のボタン</h3>
-          <p class="text-slate-500 text-xs leading-relaxed">
-            画面右下の「つらいとき」ボタンから、呼吸法や相談窓口にすぐたどり着けます。いつでも使ってください。
+        <div class="glass rule-card">
+          <p class="num-mincho">三</p>
+          <h3 class="mincho text-[.98rem] mt-3 mb-2.5" style="color:var(--sumi);">つらいときは、右下のボタン</h3>
+          <p class="text-xs leading-[2.1]" style="color:var(--usuzumi);">
+            画面右下の「つらいとき」から、呼吸法や相談窓口にすぐたどり着けます。いつでも使ってください。
           </p>
         </div>
       </div>
@@ -542,55 +662,49 @@
 
   <!-- ========== 星と海の約束 ========== -->
   <section id="promise" class="relative z-10 py-24 px-4 sm:px-6 overflow-hidden">
-    <div class="absolute top-0 left-1/3 w-[600px] h-[300px] rounded-full pointer-events-none"
-         style="background:rgba(139,92,246,0.10);filter:blur(110px);"></div>
 
-    <div class="glass-panel relative z-10 max-w-4xl mx-auto px-6 md:px-10 py-12">
-      <div class="text-center mb-14">
-        <p class="text-aurora-violet text-sm tracking-widest mb-4">安心して過ごすために</p>
-        <h2 class="text-4xl md:text-5xl font-black mb-6">
-          <span class="text-shimmer">星と海の約束</span>
-        </h2>
-        <div class="w-16 h-px bg-gradient-to-r from-transparent via-aurora-violet to-transparent mx-auto mb-6"></div>
-        <p class="text-slate-500 text-sm leading-relaxed max-w-lg mx-auto">
-          ここは、批判や評価をされず、安心して気持ちを話せる場所でありたいと思っています。<br/>
-          ブログにも掲示板にも、共通して大切にしたいお約束です。
-        </p>
+    <div class="glass-panel relative z-10 max-w-4xl mx-auto px-6 md:px-14 py-14 md:py-16">
+      <div class="sec-head">
+        <span class="sec-no">二</span>
+        <h2 class="sec-title">星と海の約束</h2>
+        <span class="sec-rule" aria-hidden="true"></span>
+        <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">安心して過ごすために</span>
       </div>
+      <p class="lead mb-12 max-w-2xl">ここは、批判や評価をされず、安心して気持ちを話せる場所でありたいと思っています。ブログにも掲示板にも、共通して大切にしたいお約束です。</p>
 
-      <div class="grid md:grid-cols-2 gap-5">
-        <div class="glass rounded-2xl p-6" style="border-color:rgba(139,92,246,0.30);">
-          <p class="text-aurora-violet text-2xl font-black mb-2">01</p>
-          <h3 class="text-slate-800 font-semibold mb-1 text-sm">批判やアドバイスより、まず聴き合う</h3>
-          <p class="text-slate-500 text-xs leading-relaxed">
+      <div class="grid md:grid-cols-2 gap-x-10 gap-y-0">
+        <div class="glass rule-card">
+          <p class="num-mincho">一</p>
+          <h3 class="mincho text-[.98rem] mt-3 mb-2.5" style="color:var(--sumi);">批判やアドバイスより、まず聴き合う</h3>
+          <p class="text-xs leading-[2.1]" style="color:var(--usuzumi);">
             すぐに正しさや解決策を返そうとしなくて大丈夫です。まずは相手の気持ちに耳を傾けてください。
           </p>
         </div>
-        <div class="glass rounded-2xl p-6" style="border-color:rgba(139,92,246,0.30);">
-          <p class="text-aurora-violet text-2xl font-black mb-2">02</p>
-          <h3 class="text-slate-800 font-semibold mb-1 text-sm">お互いの体調を尊重する</h3>
-          <p class="text-slate-500 text-xs leading-relaxed">
+        <div class="glass rule-card">
+          <p class="num-mincho">二</p>
+          <h3 class="mincho text-[.98rem] mt-3 mb-2.5" style="color:var(--sumi);">お互いの体調を尊重する</h3>
+          <p class="text-xs leading-[2.1]" style="color:var(--usuzumi);">
             その日によって、話せる・話せないコンディションは変わります。返信がなくても、自分や相手を責めないでください。
           </p>
         </div>
-        <div class="glass rounded-2xl p-6" style="border-color:rgba(139,92,246,0.30);">
-          <p class="text-aurora-violet text-2xl font-black mb-2">03</p>
-          <h3 class="text-slate-800 font-semibold mb-1 text-sm">否定的・攻撃的な言葉を使わない</h3>
-          <p class="text-slate-500 text-xs leading-relaxed">
+        <div class="glass rule-card">
+          <p class="num-mincho">三</p>
+          <h3 class="mincho text-[.98rem] mt-3 mb-2.5" style="color:var(--sumi);">否定的・攻撃的な言葉を使わない</h3>
+          <p class="text-xs leading-[2.1]" style="color:var(--usuzumi);">
             ここに来る人はみな、何かを抱えてここに来ています。傷つける言葉は避けてください。
           </p>
         </div>
-        <div class="glass rounded-2xl p-6" style="border-color:rgba(139,92,246,0.30);">
-          <p class="text-aurora-violet text-2xl font-black mb-2">04</p>
-          <h3 class="text-slate-800 font-semibold mb-1 text-sm">個人が特定される情報を書き込まない</h3>
-          <p class="text-slate-500 text-xs leading-relaxed">
+        <div class="glass rule-card">
+          <p class="num-mincho">四</p>
+          <h3 class="mincho text-[.98rem] mt-3 mb-2.5" style="color:var(--sumi);">個人が特定される情報を書き込まない</h3>
+          <p class="text-xs leading-[2.1]" style="color:var(--usuzumi);">
             本名・連絡先など、あなたや他の人を特定できる情報の書き込みは控えてください。
           </p>
         </div>
-        <div class="glass rounded-2xl p-6 md:col-span-2" style="border-color:rgba(139,92,246,0.30);">
-          <p class="text-aurora-violet text-2xl font-black mb-2">05</p>
-          <h3 class="text-slate-800 font-semibold mb-1 text-sm">医療的な助言・診断はできません</h3>
-          <p class="text-slate-500 text-xs leading-relaxed">
+        <div class="glass rule-card md:col-span-2">
+          <p class="num-mincho">五</p>
+          <h3 class="mincho text-[.98rem] mt-3 mb-2.5" style="color:var(--sumi);">医療的な助言・診断はできません</h3>
+          <p class="text-xs leading-[2.1]" style="color:var(--usuzumi);">
             ここでの言葉は医療行為の代わりにはなりません。つらくてたまらないときは、ページ下部の相談窓口も頼ってください。
           </p>
         </div>
@@ -600,16 +714,14 @@
 
   <!-- ========== 音楽 ========== -->
   <section id="music" class="relative z-10 py-24 px-4 sm:px-6 overflow-hidden">
-    <div class="absolute top-0 right-1/4 w-[500px] h-[400px] rounded-full pointer-events-none"
-         style="background:rgba(99,102,241,0.10);filter:blur(120px);"></div>
 
-    <div class="glass-panel relative z-10 max-w-3xl mx-auto px-6 md:px-10 py-12">
-      <div class="flex items-end justify-between mb-8">
-        <div>
-          <p class="text-aurora-indigo text-sm tracking-widest mb-3">Suno で制作</p>
-          <h2 class="text-4xl md:text-5xl font-black">
-            <span class="text-shimmer">音楽</span>
-          </h2>
+    <div class="glass-panel relative z-10 max-w-3xl mx-auto px-6 md:px-14 py-14 md:py-16">
+      <div class="flex items-end justify-between gap-5 mb-8">
+        <div class="sec-head flex-1" style="margin-bottom:0;">
+          <span class="sec-no">三</span>
+          <h2 class="sec-title">音楽</h2>
+          <span class="sec-rule" aria-hidden="true"></span>
+          <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">Suno で制作</span>
         </div>
         <button id="upload-track-btn" onclick="openUploadModal()"
                 class="hidden glass rounded-xl px-5 py-2.5 text-aurora-indigo border border-aurora-indigo/40
@@ -636,17 +748,15 @@
 
   <!-- ========== BLOG ========== -->
   <section id="blog" class="relative z-10 py-24 px-4 sm:px-6 overflow-hidden">
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[320px] rounded-full pointer-events-none"
-         style="background:rgba(2,132,199,0.08);filter:blur(100px);"></div>
 
-    <div class="glass-panel relative z-10 max-w-4xl mx-auto px-6 md:px-10 py-12">
+    <div class="glass-panel relative z-10 max-w-4xl mx-auto px-6 md:px-14 py-14 md:py-16">
       <!-- ヘッダー -->
-      <div class="flex items-end justify-between mb-8">
-        <div>
-          <p class="text-aurora-blue text-sm tracking-widest mb-3">管理者のひとりごと</p>
-          <h2 class="text-4xl md:text-5xl font-black">
-            <span class="text-shimmer">Blog</span>
-          </h2>
+      <div class="flex items-end justify-between gap-5 mb-8">
+        <div class="sec-head flex-1" style="margin-bottom:0;">
+          <span class="sec-no">四</span>
+          <h2 class="sec-title">ひとりごと</h2>
+          <span class="sec-rule" aria-hidden="true"></span>
+          <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">管理者のブログ</span>
         </div>
         <button id="new-post-btn" onclick="openPostEditor()"
                 class="hidden glass rounded-xl px-5 py-2.5 text-aurora-blue border border-aurora-blue/40
@@ -674,21 +784,15 @@
 
   <!-- ========== きょうのきもち ========== -->
   <section id="mood" class="relative z-10 py-24 px-4 sm:px-6 overflow-hidden">
-    <div class="absolute top-0 left-1/4 w-[500px] h-[300px] rounded-full pointer-events-none"
-         style="background:rgba(13,148,136,0.09);filter:blur(110px);"></div>
 
-    <div class="glass-panel relative z-10 max-w-3xl mx-auto px-6 md:px-10 py-12">
-      <div class="text-center mb-12">
-        <p class="text-aurora-teal text-sm tracking-widest mb-4">じぶんをそっと見つめる</p>
-        <h2 class="text-4xl md:text-5xl font-black mb-6">
-          <span class="text-shimmer">きょうのきもち</span>
-        </h2>
-        <div class="w-16 h-px bg-gradient-to-r from-transparent via-aurora-teal to-transparent mx-auto mb-6"></div>
-        <p class="text-slate-500 text-sm leading-relaxed max-w-lg mx-auto">
-          今日の気分にいちばん近いものを、ひとつ選んでみてください。<br/>
-          記録は<strong class="text-aurora-teal font-semibold">この端末の中だけ</strong>に保存され、外部には一切送信されません。誰にも見られない、あなただけの記録です。
-        </p>
+    <div class="glass-panel relative z-10 max-w-3xl mx-auto px-6 md:px-14 py-14 md:py-16">
+      <div class="sec-head">
+        <span class="sec-no">五</span>
+        <h2 class="sec-title">きょうのきもち</h2>
+        <span class="sec-rule" aria-hidden="true"></span>
+        <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">じぶんをそっと見つめる</span>
       </div>
+      <p class="lead mb-12 max-w-2xl">今日の気分にいちばん近いものを、ひとつ選んでみてください。記録は<strong style="color:var(--asagi);font-weight:500;">この端末の中だけ</strong>に保存され、外部には一切送信されません。誰にも見られない、あなただけの記録です。</p>
 
       <!-- きもちボタン -->
       <div class="flex flex-wrap justify-center gap-3 mb-8" role="group" aria-label="今日の気分を選ぶ">
@@ -745,21 +849,15 @@
 
   <!-- ========== こころのケア ========== -->
   <section id="coping" class="relative z-10 py-24 px-4 sm:px-6 overflow-hidden">
-    <div class="absolute top-0 right-1/3 w-[600px] h-[300px] rounded-full pointer-events-none"
-         style="background:rgba(13,148,136,0.09);filter:blur(110px);"></div>
 
-    <div class="glass-panel relative z-10 max-w-4xl mx-auto px-6 md:px-10 py-12">
-      <div class="text-center mb-14">
-        <p class="text-aurora-teal text-sm tracking-widest mb-4">つらいときに、ひとりで</p>
-        <h2 class="text-4xl md:text-5xl font-black mb-6">
-          <span class="text-shimmer">こころのケア</span>
-        </h2>
-        <div class="w-16 h-px bg-gradient-to-r from-transparent via-aurora-teal to-transparent mx-auto mb-6"></div>
-        <p class="text-slate-500 text-sm leading-relaxed max-w-lg mx-auto">
-          不安や恐怖で頭がいっぱいになったとき、少し落ち着くための方法です。<br/>
-          効果には個人差があります。つらいときは無理せず、下記の相談窓口も頼ってください。
-        </p>
+    <div class="glass-panel relative z-10 max-w-4xl mx-auto px-6 md:px-14 py-14 md:py-16">
+      <div class="sec-head">
+        <span class="sec-no">六</span>
+        <h2 class="sec-title">こころのケア</h2>
+        <span class="sec-rule" aria-hidden="true"></span>
+        <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">つらいときに、ひとりで</span>
       </div>
+      <p class="lead mb-12 max-w-2xl">不安や恐怖で頭がいっぱいになったとき、少し落ち着くための方法です。効果には個人差があります。つらいときは無理せず、下の相談窓口も頼ってください。</p>
 
       <div class="grid md:grid-cols-2 gap-6">
         <!-- 呼吸法 -->
@@ -805,68 +903,62 @@
 
   <!-- ========== 支えになる制度・サービス ========== -->
   <section id="services" class="relative z-10 py-24 px-4 sm:px-6 overflow-hidden">
-    <div class="absolute top-0 right-1/4 w-[500px] h-[300px] rounded-full pointer-events-none"
-         style="background:rgba(2,132,199,0.08);filter:blur(110px);"></div>
 
-    <div class="glass-panel relative z-10 max-w-4xl mx-auto px-6 md:px-10 py-12">
-      <div class="text-center mb-14">
-        <p class="text-aurora-blue text-sm tracking-widest mb-4">ひとりで抱えなくていい</p>
-        <h2 class="text-4xl md:text-5xl font-black mb-6">
-          <span class="text-shimmer">支えになる制度・サービス</span>
-        </h2>
-        <div class="w-16 h-px bg-gradient-to-r from-transparent via-aurora-blue to-transparent mx-auto mb-6"></div>
-        <p class="text-slate-500 text-sm leading-relaxed max-w-lg mx-auto">
-          精神障害とともに生きる人を支える公的な制度が、いくつも用意されています。<br/>
-          「知らなかった」で損をしないように、代表的なものをまとめました。
-        </p>
+    <div class="glass-panel relative z-10 max-w-4xl mx-auto px-6 md:px-14 py-14 md:py-16">
+      <div class="sec-head">
+        <span class="sec-no">七</span>
+        <h2 class="sec-title">支えになる制度</h2>
+        <span class="sec-rule" aria-hidden="true"></span>
+        <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">ひとりで抱えなくていい</span>
       </div>
+      <p class="lead mb-12 max-w-2xl">精神障害とともに生きる人を支える公的な制度が、いくつも用意されています。「知らなかった」で損をしないように、代表的なものをまとめました。</p>
 
       <div class="grid md:grid-cols-2 gap-5">
         <a href="https://www.mhlw.go.jp/kokoro/support/mhcenter.html" target="_blank" rel="noopener"
-           class="glass rounded-2xl p-6 block hover:-translate-y-0.5 transition-all duration-300 group">
-          <span class="text-2xl" aria-hidden="true">🏥</span>
+           class="glass rule-card block group">
+          <span class="num-mincho">一</span>
           <h3 class="text-slate-800 font-semibold text-sm mt-3 mb-1.5 group-hover:text-aurora-blue transition-colors">精神保健福祉センター</h3>
-          <p class="text-slate-500 text-xs leading-relaxed">
+          <p class="text-xs leading-[2.1]" style="color:var(--usuzumi);">
             各都道府県・政令指定都市にある、こころの健康の専門相談機関。本人だけでなく家族も、無料で相談できます。
           </p>
         </a>
         <a href="https://www.mhlw.go.jp/kokoro/support/notebook.html" target="_blank" rel="noopener"
-           class="glass rounded-2xl p-6 block hover:-translate-y-0.5 transition-all duration-300 group">
-          <span class="text-2xl" aria-hidden="true">📗</span>
+           class="glass rule-card block group">
+          <span class="num-mincho">二</span>
           <h3 class="text-slate-800 font-semibold text-sm mt-3 mb-1.5 group-hover:text-aurora-blue transition-colors">精神障害者保健福祉手帳</h3>
-          <p class="text-slate-500 text-xs leading-relaxed">
+          <p class="text-xs leading-[2.1]" style="color:var(--usuzumi);">
             税金の軽減、公共料金や交通機関の割引、障害者雇用での就職などにつながる手帳です。申請は市区町村の窓口へ。
           </p>
         </a>
         <a href="https://www.mhlw.go.jp/bunya/shougaihoken/jiritsu/gaiyo.html" target="_blank" rel="noopener"
-           class="glass rounded-2xl p-6 block hover:-translate-y-0.5 transition-all duration-300 group">
-          <span class="text-2xl" aria-hidden="true">💊</span>
+           class="glass rule-card block group">
+          <span class="num-mincho">三</span>
           <h3 class="text-slate-800 font-semibold text-sm mt-3 mb-1.5 group-hover:text-aurora-blue transition-colors">自立支援医療（精神通院医療）</h3>
-          <p class="text-slate-500 text-xs leading-relaxed">
+          <p class="text-xs leading-[2.1]" style="color:var(--usuzumi);">
             精神科への通院医療費の自己負担が、原則1割に軽減される制度です。通院を続けるうえで大きな支えになります。
           </p>
         </a>
         <a href="https://www.nenkin.go.jp/service/jukyu/shougainenkin/jukyu-yoken/20150401-01.html" target="_blank" rel="noopener"
-           class="glass rounded-2xl p-6 block hover:-translate-y-0.5 transition-all duration-300 group">
-          <span class="text-2xl" aria-hidden="true">🌱</span>
+           class="glass rule-card block group">
+          <span class="num-mincho">四</span>
           <h3 class="text-slate-800 font-semibold text-sm mt-3 mb-1.5 group-hover:text-aurora-blue transition-colors">障害年金</h3>
-          <p class="text-slate-500 text-xs leading-relaxed">
+          <p class="text-xs leading-[2.1]" style="color:var(--usuzumi);">
             病気により生活や仕事が制限される場合に受け取れる年金です。精神疾患も対象です。年金事務所や専門家に相談を。
           </p>
         </a>
         <a href="https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/shougaishahukushi/service/naiyou.html" target="_blank" rel="noopener"
-           class="glass rounded-2xl p-6 block hover:-translate-y-0.5 transition-all duration-300 group">
-          <span class="text-2xl" aria-hidden="true">🤝</span>
+           class="glass rule-card block group">
+          <span class="num-mincho">五</span>
           <h3 class="text-slate-800 font-semibold text-sm mt-3 mb-1.5 group-hover:text-aurora-blue transition-colors">就労移行支援・就労継続支援</h3>
-          <p class="text-slate-500 text-xs leading-relaxed">
+          <p class="text-xs leading-[2.1]" style="color:var(--usuzumi);">
             「働きたい」という気持ちを、体調に合わせたペースで支える福祉サービスです。焦らず一歩ずつで大丈夫。
           </p>
         </a>
         <a href="https://seishinhoken.jp/" target="_blank" rel="noopener"
-           class="glass rounded-2xl p-6 block hover:-translate-y-0.5 transition-all duration-300 group">
-          <span class="text-2xl" aria-hidden="true">👪</span>
+           class="glass rule-card block group">
+          <span class="num-mincho">六</span>
           <h3 class="text-slate-800 font-semibold text-sm mt-3 mb-1.5 group-hover:text-aurora-blue transition-colors">みんなねっと（家族会）</h3>
-          <p class="text-slate-500 text-xs leading-relaxed">
+          <p class="text-xs leading-[2.1]" style="color:var(--usuzumi);">
             精神障害のある方の家族による全国組織。同じ立場の家族どうしで支え合えます。家族もまた、支えが必要です。
           </p>
         </a>
@@ -881,22 +973,16 @@
 
   <!-- ========== 掲示板 ========== -->
   <section id="bulletin" class="relative z-10 py-24 px-4 sm:px-6 overflow-hidden">
-    <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[900px] h-[280px] rounded-full pointer-events-none"
-         style="background:rgba(13,148,136,0.08);filter:blur(90px);"></div>
 
-    <div class="glass-panel relative z-10 max-w-3xl mx-auto px-6 md:px-10 py-12">
+    <div class="glass-panel relative z-10 max-w-3xl mx-auto px-6 md:px-14 py-14 md:py-16">
       <!-- ヘッダー -->
-      <div class="text-center mb-14">
-        <p class="text-aurora-teal text-sm tracking-widest mb-4">みんなのひとこと</p>
-        <h2 class="text-4xl md:text-5xl font-black mb-6">
-          <span class="text-shimmer">掲示板</span>
-        </h2>
-        <div class="w-16 h-px bg-gradient-to-r from-transparent via-aurora-teal to-transparent mx-auto mb-6"></div>
-        <p class="text-slate-500 text-sm leading-relaxed max-w-lg mx-auto">
-          悩んでいること、誰かに話したかったこと、今日感じたこと——なんでも書いていいです。<br/>
-          ニックネームで大丈夫。あなたのペースで、ゆっくり話してください。
-        </p>
+      <div class="sec-head">
+        <span class="sec-no">八</span>
+        <h2 class="sec-title">掲示板</h2>
+        <span class="sec-rule" aria-hidden="true"></span>
+        <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">みんなのひとこと</span>
       </div>
+      <p class="lead mb-12 max-w-2xl">悩んでいること、誰かに話したかったこと、今日感じたこと——なんでも書いていいです。ニックネームで大丈夫。あなたのペースで、ゆっくり話してください。</p>
 
       <!-- 書き込みガイドライン -->
       <div class="glass rounded-xl px-5 py-4 mb-6 text-xs text-slate-500 leading-relaxed"
@@ -928,10 +1014,8 @@
           <div class="flex items-center justify-between">
             <p id="msg-error" class="text-red-500 text-xs"></p>
             <button id="msg-submit" type="submit"
-                    class="glass glass-teal px-6 py-2.5 rounded-xl text-aurora-teal
-                           border border-aurora-teal/40 hover:border-aurora-teal
-                           hover:bg-aurora-teal/10 transition-all duration-300
-                           text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed">
+                    class="btn-line disabled:opacity-40 disabled:cursor-not-allowed"
+                    style="color:var(--asagi);padding:.7rem 2.2rem;">
               送る
             </button>
           </div>
@@ -949,63 +1033,45 @@
   </section>
 
   <!-- ========== FOOTER ========== -->
-  <footer class="relative z-10 border-t border-white/10 py-12">
-    <!-- 相談窓口 -->
-    <div id="support" class="max-w-2xl mx-auto px-6 mb-8">
-      <div class="glass rounded-2xl px-6 py-5 text-center" style="border-color:rgba(13,148,136,0.30);">
-        <p class="text-aurora-teal text-xs tracking-widest mb-3">もしも、つらくてたまらないときは</p>
-        <div class="flex flex-col sm:flex-row gap-3 justify-center text-sm mb-3">
-          <a href="tel:0120279338"
-             class="flex items-center justify-center gap-2 px-4 py-2 rounded-xl
-                    bg-aurora-teal/10 border border-aurora-teal/30 text-aurora-teal
-                    hover:bg-aurora-teal/20 transition-colors">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-            </svg>
-            よりそいホットライン　0120-279-338（24時間）
-          </a>
-          <a href="tel:0570064556"
-             class="flex items-center justify-center gap-2 px-4 py-2 rounded-xl
-                    bg-aurora-blue/10 border border-aurora-blue/30 text-aurora-blue
-                    hover:bg-aurora-blue/20 transition-colors">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-            </svg>
-            こころの健康相談統一ダイヤル　0570-064-556
-          </a>
+  <footer class="relative z-10 py-20" style="border-top:1px solid rgba(255,255,255,.08);">
+
+    <!-- 相談窓口。ここだけは、暗い海の底でも読めるように紙を敷く -->
+    <div id="support" class="max-w-2xl mx-auto px-6">
+      <div class="glass-panel px-6 md:px-10 py-10">
+        <div class="sec-head" style="margin-bottom:1.75rem;">
+          <span class="sec-no">相談</span>
+          <h2 class="sec-title" style="font-size:1.15rem;">もしも、つらくてたまらないときは</h2>
+          <span class="sec-rule" aria-hidden="true"></span>
         </div>
-        <div class="flex flex-col sm:flex-row gap-3 justify-center text-sm">
-          <a href="tel:0570783556"
-             class="flex items-center justify-center gap-2 px-4 py-2 rounded-xl
-                    bg-aurora-indigo/10 border border-aurora-indigo/30 text-aurora-indigo
-                    hover:bg-aurora-indigo/20 transition-colors">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-            </svg>
-            いのちの電話　0570-783-556
-          </a>
-          <a href="https://www.mhlw.go.jp/mamorouyokokoro/" target="_blank" rel="noopener"
-             class="flex items-center justify-center gap-2 px-4 py-2 rounded-xl
-                    bg-aurora-violet/10 border border-aurora-violet/30 text-aurora-violet
-                    hover:bg-aurora-violet/20 transition-colors">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-            </svg>
-            LINE・チャットで相談する（まもろうよ こころ）
-          </a>
-        </div>
-        <p class="text-slate-500 text-xs mt-3">電話が苦手な方は、チャットやSNSでの相談も利用できます。</p>
+        <ul class="text-sm">
+          <li><a href="tel:0120279338" class="tel-row">
+            <span class="mincho">よりそいホットライン</span>
+            <span class="num-mincho ml-auto whitespace-nowrap">0120-279-338<span class="hidden sm:inline">（24時間）</span></span></a></li>
+          <li><a href="tel:0570064556" class="tel-row">
+            <span class="mincho">こころの健康相談統一ダイヤル</span>
+            <span class="num-mincho ml-auto whitespace-nowrap">0570-064-556</span></a></li>
+          <li><a href="tel:0570783556" class="tel-row">
+            <span class="mincho">いのちの電話</span>
+            <span class="num-mincho ml-auto whitespace-nowrap">0570-783-556</span></a></li>
+          <li><a href="https://www.mhlw.go.jp/mamorouyokokoro/" target="_blank" rel="noopener" class="tel-row">
+            <span class="mincho">まもろうよ こころ</span>
+            <span class="num-mincho ml-auto whitespace-nowrap">LINE・チャット</span></a></li>
+        </ul>
+        <p class="text-[11px] mt-5 leading-[2]" style="color:var(--usuzumi);">
+          電話が苦手な方は、チャットやSNSでの相談も利用できます。
+        </p>
       </div>
     </div>
-    <!-- コピーライト -->
-    <div class="text-center text-slate-400 text-xs space-y-1">
-      <p>このサイトは当事者による相互サポートの場です。医療的な診断・治療の代わりにはなりません。</p>
-      <p>&copy; 2026 星と海</p>
-      <p id="visit-counter" class="text-slate-400">読み込み中…</p>
+
+    <!-- 結び -->
+    <div class="flex flex-col items-center gap-6 mt-16">
+      <span class="tate mincho text-[.85rem]" style="color:rgba(203,213,225,.5);letter-spacing:.5em;">星と海</span>
+      <span class="block w-px h-10" style="background:linear-gradient(180deg,rgba(148,163,184,.35),rgba(148,163,184,0));" aria-hidden="true"></span>
+      <div class="text-center text-[11px] leading-[2.2] px-6" style="color:rgba(148,163,184,.65);">
+        <p>このサイトは当事者による相互サポートの場です。医療的な診断・治療の代わりにはなりません。</p>
+        <p class="num-mincho mt-2" style="color:rgba(148,163,184,.55);">&copy; 2026 星と海</p>
+        <p id="visit-counter" class="num-mincho" style="color:rgba(148,163,184,.55);">読み込み中…</p>
+      </div>
     </div>
   </footer>
 
@@ -1013,10 +1079,11 @@
        つらいとき ボタン（常に画面右下に表示）
        ====================================================== -->
   <button id="sos-btn" onclick="openSosModal()" aria-label="つらいときのサポートを開く"
-          class="fixed bottom-5 right-5 z-[100] glass glass-teal rounded-full px-5 py-3
-                 flex items-center gap-2 text-aurora-teal text-sm font-semibold
-                 border border-aurora-teal/40 hover:border-aurora-teal hover:bg-aurora-teal/10
-                 transition-all duration-300 shadow-lg shadow-slate-400/30">
+          class="fixed bottom-5 right-5 z-[100] glass px-5 py-3
+                 flex items-center gap-2 text-sm mincho tracking-[.18em]
+                 transition-all duration-300"
+          style="color:var(--shu);border:1px solid rgba(183,71,42,.38);border-radius:2px;
+                 box-shadow:0 10px 30px -12px rgba(12,32,56,.5);">
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
             d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
@@ -1042,7 +1109,7 @@
         <a href="#coping" onclick="closeSosModal()"
            class="flex items-center gap-3 glass rounded-xl px-5 py-4 border border-aurora-teal/30
                   hover:border-aurora-teal hover:bg-aurora-teal/10 transition-all">
-          <span class="text-xl" aria-hidden="true">🫧</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" stroke-width="1.2"/><circle cx="12" cy="12" r="3.2" stroke-width="1.2"/></svg>
           <span class="flex-1 text-left">
             <span class="block text-slate-800 text-sm font-semibold">ゆっくり呼吸する</span>
             <span class="block text-slate-500 text-xs mt-0.5">丸の動きに合わせて、4秒ずつ</span>
@@ -1051,7 +1118,7 @@
         <a href="#coping" onclick="closeSosModal()"
            class="flex items-center gap-3 glass rounded-xl px-5 py-4 border border-aurora-blue/30
                   hover:border-aurora-blue hover:bg-aurora-blue/10 transition-all">
-          <span class="text-xl" aria-hidden="true">🖐</span>
+          <span class="num-mincho">五</span>
           <span class="flex-1 text-left">
             <span class="block text-slate-800 text-sm font-semibold">「今ここ」に意識を戻す</span>
             <span class="block text-slate-500 text-xs mt-0.5">5-4-3-2-1 グラウンディング</span>
@@ -1069,7 +1136,7 @@
         <a href="https://www.mhlw.go.jp/mamorouyokokoro/" target="_blank" rel="noopener"
            class="flex items-center gap-3 glass rounded-xl px-5 py-4 border border-aurora-violet/30
                   hover:border-aurora-violet hover:bg-aurora-violet/10 transition-all">
-          <span class="text-xl" aria-hidden="true">💬</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
           <span class="flex-1 text-left">
             <span class="block text-slate-800 text-sm font-semibold">チャット・LINEで相談する</span>
             <span class="block text-slate-500 text-xs mt-0.5">電話が苦手でも大丈夫（まもろうよ こころ）</span>
@@ -2172,14 +2239,13 @@
       const shown = allPosts.slice(0, blogVisible);
       const rest  = allPosts.length - shown.length;
 
-      el.innerHTML = `<div class="space-y-4">${shown.map(p => `
+      el.innerHTML = `<div>${shown.map(p => `
         <article onclick="openPost('${p.id}')"
-                 class="glass rounded-2xl p-6 cursor-pointer hover:-translate-y-0.5
-                        hover:shadow-xl hover:shadow-aurora-blue/10 transition-all duration-300 group">
+                 class="glass rule-card cursor-pointer group">
           <div class="flex items-start justify-between gap-4">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-3 mb-1.5">
-                <p class="text-aurora-blue/80 text-xs">${fmtDate(p.created_at)}</p>
+                <p class="num-mincho" style="font-size:.72rem;letter-spacing:.14em;">${fmtDate(p.created_at)}</p>
                 <p class="flex items-center gap-1 text-slate-500 text-xs">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -2189,9 +2255,9 @@
                   </svg>${(p.view_count ?? 0).toLocaleString()} 回閲覧
                 </p>
               </div>
-              <h3 class="text-base font-bold text-slate-800 mb-2 group-hover:text-aurora-blue
-                         transition-colors leading-snug">${esc(p.title)}</h3>
-              <p class="text-slate-500 text-sm leading-relaxed line-clamp-2">${esc(p.content)}</p>
+              <h3 class="mincho text-[1.05rem] mb-2.5 group-hover:text-aurora-blue
+                         transition-colors leading-snug" style="color:var(--sumi);">${esc(p.title)}</h3>
+              <p class="text-[.8rem] leading-[2] line-clamp-2" style="color:var(--usuzumi);">${esc(p.content)}</p>
             </div>
             ${adminUser ? `
             <button onclick="event.stopPropagation();confirmDeletePost('${p.id}')"
@@ -2211,15 +2277,12 @@
         <div class="flex flex-wrap justify-center gap-3">
           ${rest > 0 ? `
           <button onclick="showMorePosts()"
-                  class="glass px-6 py-2.5 rounded-xl text-aurora-blue border border-aurora-blue/40
-                         hover:border-aurora-blue hover:bg-aurora-blue/10 transition-all duration-300
-                         text-sm font-semibold">
+                  class="btn-line" style="color:var(--ai);">
             もっと見る（あと${rest}件）
           </button>` : ''}
           ${blogVisible > BLOG_PAGE_SIZE ? `
           <button onclick="collapsePosts()"
-                  class="glass px-6 py-2.5 rounded-xl text-slate-500 border border-slate-200
-                         hover:border-slate-400 transition-colors text-sm font-semibold">
+                  class="btn-line" style="color:var(--usuzumi);">
             最初の${BLOG_PAGE_SIZE}件にもどす
           </button>` : ''}
         </div>
@@ -2631,8 +2694,7 @@
       }
       el.innerHTML = `<div class="space-y-3">${allTracks.map(t => `
         <div id="track-card-${t.id}"
-             class="glass rounded-2xl p-5 transition-all duration-300"
-             style="border-color:rgba(99,102,241,0.30);">
+             class="glass rule-card">
           <div class="flex items-center gap-4">
             <button onclick="toggleTrack('${t.id}','${esc(t.file_url)}')"
                     id="play-btn-${t.id}"
@@ -2644,7 +2706,7 @@
               <svg id="pause-icon-${t.id}" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
             </button>
             <div class="flex-1 min-w-0">
-              <p class="text-slate-800 font-semibold text-sm truncate">${esc(t.title)}</p>
+              <p class="mincho text-[1rem] truncate" style="color:var(--sumi);">${esc(t.title)}</p>
               ${t.description ? `<p class="text-slate-500 text-xs mt-0.5 truncate">${esc(t.description)}</p>` : ''}
               <p class="flex items-center gap-1 text-slate-500 text-xs mt-1">
                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
