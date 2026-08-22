@@ -252,6 +252,36 @@
   <section id="tab-advice" class="tabpanel hidden space-y-4">
     <div class="glass rounded-3xl p-6">
       <div class="flex items-center gap-2 mb-1">
+        <span class="text-lg">📝</span>
+        <h2 class="font-bold">次の1本を Claude に頼む</h2>
+      </div>
+      <p class="text-[11px] text-slate-500 mb-4">
+        入力した数字と、いま効いている型をまとめて、指示文にします。
+        いつも動画を作ってもらっている Claude に、そのまま貼ってください。
+        <b class="text-slate-300">動画の構成・題名・説明文・固定コメント用の計測リンク</b>まで返ってきます。
+      </p>
+      <button id="prompt-build" class="w-full rounded-2xl py-3.5 font-medium text-slate-900 shadow-2xl"
+              style="background:#17456b">分析してプロンプトを作る</button>
+
+      <div id="prompt-box" class="hidden mt-4">
+        <textarea id="prompt-out" rows="14" readonly
+                  class="fld text-[11px] leading-relaxed" style="font-family:ui-monospace,monospace"></textarea>
+        <div class="flex gap-2 mt-2">
+          <button id="prompt-copy" class="flex-1 rounded-xl py-2.5 text-sm font-medium text-slate-900"
+                  style="background:#2b7f8c">コピーする</button>
+          <button id="prompt-build2" class="glass rounded-xl px-4 text-xs whitespace-nowrap">作り直す</button>
+        </div>
+        <p id="prompt-msg" class="text-[11px] mt-2"></p>
+        <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">
+          この動画は <b id="prompt-slug" class="text-slate-300"></b> として数えます。
+          できあがったら「動画」タブで<b class="text-slate-300">同じ識別子</b>で登録してください。
+          そろえておかないと、固定コメントのリンクから来た人がどの動画のぶんか分からなくなります。
+        </p>
+      </div>
+    </div>
+
+    <div class="glass rounded-3xl p-6">
+      <div class="flex items-center gap-2 mb-1">
         <span class="text-lg">🧭</span>
         <h2 class="font-bold">次に作る動画</h2>
       </div>
@@ -1736,6 +1766,191 @@ $('#subs-save').addEventListener('click', async () => {
   msg.className='text-[11px] mt-2'; msg.style.color='#2b7f8c'; msg.textContent='記録しました。';
   await loadAll();
   setTimeout(()=>{ msg.textContent=''; }, 4000);
+});
+
+/* ========================= Claude に渡すプロンプト ========================= */
+
+/* 次の動画の識別子。計測リンクはこの文字列で作ります。 */
+function nextSlug(){
+  const ns = state.videos.map(v => parseInt(String(v.slug || '').replace(/\D/g,''), 10))
+                         .filter(n => isFinite(n));
+  return 'v' + String((ns.length ? Math.max(...ns) : 0) + 1).padStart(3, '0');
+}
+const trackUrl = slug =>
+  `${SITE_URL}/?utm_source=youtube&utm_medium=short&utm_content=${encodeURIComponent(slug)}`;
+
+/* 1本ぶんを1行にまとめる（プロンプトに並べるため） */
+function promptLineOf(s){
+  const bits = [`${dec(s.index)}倍`, `再生${num(s.views)}回`];
+  if (s.subs  != null) bits.push(`登録${num(s.subs)}人（1000再生あたり${dec(s.subRate)}人）`);
+  if (s.visits)        bits.push(`サイト到達${num(s.visits)}人（1000再生あたり${dec(s.visitRate)}人）`);
+  if (s.retention != null) bits.push(`最後まで見られた割合${dec(s.retention,0)}%`);
+  if (s.v.duration_sec) bits.push(`${s.v.duration_sec}秒`);
+  if (s.v.theme)     bits.push(`テーマ:${s.v.theme}`);
+  if (s.v.hook_type) bits.push(`掴み:${s.v.hook_type}`);
+  if (s.v.cta_type)  bits.push(`締め:${s.v.cta_type}`);
+  if (s.postedAt){
+    const d = new Date(s.postedAt);
+    bits.push(`${d.getMonth()+1}/${d.getDate()}(${WEEKDAYS[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}時`);
+  }
+  return `- 「${s.v.title}」 ${bits.join(' ・ ')}`;
+}
+
+function buildPrompt(){
+  const cur = currentValues();
+  const { withViews, values } = cur;
+  const scored = scoredOnly(cur.list).slice().sort((a,b) => b.index - a.index);
+  const slug = nextSlug();
+  const url  = trackUrl(slug);
+  const ch   = state.channel.length ? state.channel[state.channel.length-1] : null;
+  const L = [];
+
+  L.push('あなたは YouTube ショート動画の構成作家です。');
+  L.push('「星と海」というチャンネルの、次の1本を作ってください。');
+  L.push('');
+  L.push('## このチャンネルについて');
+  L.push('- 精神障害の当事者に向けた発信です。見る人の多くは、しんどい夜に「自分だけじゃない」と思いたくて開きます。');
+  L.push('- 励ましません。教えません。同じところに立って、同じ景色を言葉にします。');
+  L.push('- ゴールは再生数ではなく、チャンネル登録と、相談ページ（星と海）まで来てもらうことです。');
+  L.push('');
+
+  /* ── いまの数字 ── */
+  L.push(`## いまの数字（${todayStr()} 時点・${state.videos.length}本ぶん）`);
+  if (ch) L.push(`- チャンネル登録者：${num(ch.subscribers)}人（${ch.measured_on} 時点）`);
+  L.push(`- 総再生数：${num(cur.totalViews)}回 ／ 1本あたりの中央値：${num(Math.round(cur.med))}回`);
+  if (values.retention != null) L.push(`- 最後まで見られた割合：${dec(values.retention,0)}%（伸びているチャンネルの目安は70%）`);
+  if (values.like    != null) L.push(`- いいね率：${dec(values.like)}%（目安4%）`);
+  if (values.comment != null) L.push(`- コメント率：${dec(values.comment,2)}%（目安0.3%）`);
+  if (values.sub     != null) L.push(`- 1000回再生あたりの登録：${dec(values.sub)}人（目安3人）`);
+  if (values.visit   != null) L.push(`- 1000回再生あたりのサイト到達：${dec(values.visit)}人（目安5人）`);
+  L.push(`- この7日で出した本数：${values.pace}本（目安は週5本）`);
+  if (values.dur   != null) L.push(`- 尺の中央値：${Math.round(values.dur)}秒（目安15〜35秒）`);
+  if (values.title != null) L.push(`- タイトルの種類：${dec(values.title,0)}%（100%＝全部ちがう。低いほど不利です）`);
+  L.push('');
+
+  /* ── 効いている型 ── */
+  const dims = [
+    ['投稿した時間帯', s => hourBucket(s.postedAt)],
+    ['投稿した曜日',   s => s.postedAt ? WEEKDAYS[new Date(s.postedAt).getDay()] + '曜' : null],
+    ['テーマ',         s => s.v.theme],
+    ['冒頭の掴み',     s => s.v.hook_type],
+    ['形式',           s => s.v.format],
+    ['尺',             s => durationBucket(s.v.duration_sec)],
+    ['締めの誘導',     s => s.v.cta_type],
+  ];
+  const dimLines = dims.map(([name, fn]) => {
+    const g = groupBy(scored, fn).slice(0, 4);
+    if (!g.length) return null;
+    return `- ${name}：` + g.map(x =>
+      `${x.key} ${dec(x.avg)}倍（${x.n}本${x.n < MIN_SAMPLE ? '・参考' : ''}）`).join(' ／ ');
+  }).filter(Boolean);
+  if (dimLines.length){
+    L.push('## 何が効いているか');
+    L.push(`再生数を、このチャンネルの中央値で割った「倍率」です。1.0倍がふつう。`);
+    L.push(`${MIN_SAMPLE}本に満たないものは「参考」と書いてあります。まだ言い切れない数字として扱ってください。`);
+    L.push(...dimLines);
+    L.push('');
+  }
+
+  /* ── 個々の動画 ── */
+  if (scored.length){
+    L.push('## 伸びた動画');
+    L.push(...scored.slice(0, 5).map(promptLineOf));
+    L.push('');
+    if (scored.length >= 6){
+      L.push('## 伸びなかった動画（この形は避けたい）');
+      L.push(...scored.slice(-3).map(promptLineOf));
+      L.push('');
+    }
+  }
+  const subBest = withViews.filter(s => s.subs > 0).sort((a,b) => b.subRate - a.subRate).slice(0,3);
+  if (subBest.length){
+    L.push('## 登録につながった動画（このチャンネルでいちばん大事な順番）');
+    L.push(...subBest.map(promptLineOf));
+    L.push('');
+  }
+
+  /* ── すでに使ったタイトル ── */
+  const titles = [...new Set(state.videos.map(v => v.title).filter(Boolean))];
+  if (titles.length){
+    L.push('## すでに使ったタイトル（重複させないでください）');
+    L.push(...titles.slice(0, 30).map(t => `- ${t}`));
+    L.push('');
+  }
+
+  /* ── 作り方の制約 ── */
+  L.push('## 動画の作り方（この形は変えないでください）');
+  L.push('- 縦1080×1920 ／ 20秒 ／ テロップ5枚（1枚4秒）');
+  L.push('- 読み上げ音声なし。音楽のみ（星と海の曲を使います）');
+  L.push('- 1枚目のテロップから本題に入る。「今日は◯◯について話します」のような前置きは書かない');
+  L.push('- テロップ1枚は20〜30字まで。スマホで一目で読める長さにする');
+  L.push('');
+
+  /* ── 出してほしいもの ── */
+  L.push('## 出してほしいもの');
+  L.push('');
+  L.push('### 1. 動画の構成');
+  L.push('テロップ5枚を、画面にそのまま出す文字だけで書いてください。説明や指示は混ぜないでください。');
+  L.push('1枚目は、上の「効いている掴み」を踏まえて、1秒で「自分のことだ」と思わせる一言にしてください。');
+  L.push('5枚目は、上の「効いている締め」を踏まえた締めにしてください。');
+  L.push('');
+  L.push('### 2. 題名（3案）');
+  L.push('上の「すでに使ったタイトル」と重ならないこと。');
+  L.push('検索される言葉（不眠・パニック・障害年金・休職 など、中身に合うもの）を1つ入れてください。');
+  L.push('全角30字以内。煽らないこと。');
+  L.push('');
+  L.push('### 3. 説明文');
+  L.push('3〜4行。動画の中身がそのまま伝わる言葉で。最後にハッシュタグを5つまで。');
+  L.push('');
+  L.push('### 4. 固定コメント');
+  L.push('ショート動画では概要欄はほとんど開かれないので、固定コメントに置きます。');
+  L.push('2〜3行の短い文と、下のリンクを組み合わせてください。');
+  L.push('');
+  L.push(`計測リンク（このまま貼ってください。作り変えないでください）：`);
+  L.push(url);
+  L.push('');
+  L.push(`この末尾の \`utm_content=${slug}\` が、あとで「どの動画から相談ページに来たか」を数える印になります。`);
+  L.push('短縮したり、パラメータを足し引きすると数えられなくなります。');
+  L.push('');
+  L.push('### 5. 記録用の1行');
+  L.push('作ったものを分析ページに登録するので、最後にこの形で出してください。');
+  L.push(`識別子: ${slug} ／ テーマ: ___ ／ 冒頭の掴み: ___ ／ 形式: 音楽メイン ／ 尺: 20 ／ 締め: ___`);
+  L.push('（掴みは 問いかけ・共感・断言・数字・体験談・場面描写 から、締めは リンクへ・コメント促し・登録の約束・なし から選んでください）');
+
+  return { text: L.join('\n'), slug };
+}
+
+function showPrompt(){
+  if (!state.videos.length){
+    $('#prompt-box').classList.remove('hidden');
+    $('#prompt-out').value = 'まだ動画が1本も登録されていません。右上の「取り込む」から始めてください。';
+    $('#prompt-slug').textContent = '—';
+    return;
+  }
+  const { text, slug } = buildPrompt();
+  $('#prompt-box').classList.remove('hidden');
+  $('#prompt-out').value = text;
+  $('#prompt-slug').textContent = slug;
+  $('#prompt-msg').textContent = '';
+}
+$('#prompt-build').addEventListener('click', showPrompt);
+$('#prompt-build2').addEventListener('click', showPrompt);
+
+$('#prompt-copy').addEventListener('click', async () => {
+  const msg = $('#prompt-msg');
+  const text = $('#prompt-out').value;
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    msg.className = 'text-[11px] mt-2'; msg.style.color = '#2b7f8c';
+    msg.textContent = 'コピーしました。Claude に貼ってください。';
+  } catch {
+    // ファイルから直接開いたときなど、コピーが許されないことがあります
+    $('#prompt-out').select();
+    msg.className = 'text-[11px] mt-2 text-amber-400'; msg.style.color = '';
+    msg.textContent = '選択しました。⌘C を押してください。';
+  }
+  setTimeout(() => { msg.textContent = ''; }, 5000);
 });
 
 /* ========================= リンク ========================= */
