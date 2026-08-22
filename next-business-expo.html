@@ -6,6 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>NEXT BUSINESS EXPO 2026 日程表</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html { font-size: 16px; }
@@ -270,9 +273,138 @@
     line-height: 1.8;
   }
   .footer a { color: #2e90ff; text-decoration: none; }
+
+  /* ══════════════════════════════════════════════════════════
+     星と海 共通の見た目
+     ── 分析・展示会・カフェ一覧の3ページで同じものを使っています。
+        色や形はここだけを直せば3ページとも変わります。
+     ══════════════════════════════════════════════════════════ */
+  :root{
+    --sumi:#2b2f33;      /* 墨 … 本文 */
+    --usuzumi:#6f757b;   /* 薄墨 … 補足 */
+    --ai:#17456b;        /* 藍 */
+    --asagi:#2b7f8c;     /* 浅葱 */
+    --fuji:#6b6ba3;      /* 藤 */
+    --shu:#b7472a;       /* 朱 … 注意 */
+    --washi:#fbf9f4;     /* 和紙 … カード */
+    --kinari:#f2efe7;    /* 生成り … 地 */
+    --keisen:rgba(43,47,51,.13);
+  }
+  html, body{
+    background:
+      radial-gradient(900px 520px at 10% -10%, rgba(23,69,107,.07), transparent 62%),
+      radial-gradient(820px 520px at 92% -4%, rgba(43,127,140,.06), transparent 62%),
+      var(--kinari) !important;
+    color: var(--sumi) !important;
+    font-family:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif !important;
+    letter-spacing:.03em;
+  }
+  h1, h2, h3, .mincho{
+    font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif !important;
+    font-weight:500 !important;
+    letter-spacing:.09em;
+  }
+  /* 上の帯。3ページとも同じ形にしています */
+  .site-bar{
+    display:flex; align-items:center; gap:.9rem;
+    padding:.85rem 1rem;
+    background:rgba(251,249,244,.88);
+    border-bottom:1px solid var(--keisen);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    position:sticky; top:0; z-index:60;
+  }
+  .site-bar a.home{
+    font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
+    color:var(--ai); text-decoration:none; letter-spacing:.3em; font-size:.9rem; white-space:nowrap;
+  }
+  .site-bar .sep{ width:1px; height:1rem; background:var(--keisen); }
+  .site-bar .here{ font-size:.75rem; letter-spacing:.22em; color:var(--usuzumi); white-space:nowrap; }
+
+  /* ── 展示会ページ ───────────────────────── */
+  .header{
+    background:rgba(251,249,244,.9) !important;
+    color:var(--sumi) !important;
+    border-bottom:1px solid var(--keisen);
+    padding:26px 20px 22px !important;
+  }
+  .header-label{ color:var(--asagi) !important; opacity:1 !important; letter-spacing:.28em !important; }
+  .header h1{ font-size:1.35rem !important; line-height:1.6 !important; color:var(--sumi) !important; }
+  .header-sub{ color:var(--usuzumi) !important; opacity:1 !important; font-size:12px !important; line-height:2 !important; }
+  .badge{
+    background:transparent !important; border:1px solid var(--keisen) !important;
+    border-radius:2px !important; color:var(--usuzumi) !important; font-weight:400 !important;
+    letter-spacing:.08em;
+  }
+  .notice{
+    background:rgba(183,71,42,.06) !important; border:1px solid rgba(183,71,42,.30) !important;
+    border-radius:2px !important; color:var(--shu) !important;
+  }
+  .tab-bar{
+    background:rgba(251,249,244,.9) !important; border:1px solid var(--keisen);
+    border-radius:2px !important; box-shadow:none !important; padding:3px !important;
+  }
+  .tab-btn{ border-radius:1px !important; color:var(--usuzumi) !important; font-weight:400 !important; letter-spacing:.1em; }
+  .tab-btn.active{
+    background:var(--ai) !important; color:var(--washi) !important;
+    box-shadow:none !important; font-weight:500 !important;
+  }
+  .tab-btn .tab-day{ letter-spacing:.2em; }
+  .section-title{ color:var(--usuzumi) !important; font-weight:400 !important; letter-spacing:.2em !important; }
+  .section-dot{ border-radius:0 !important; width:14px !important; height:1px !important; }
+  .section-dot.blue  { background:var(--ai) !important; }
+  .section-dot.green { background:var(--asagi) !important; }
+  .section-dot.red   { background:var(--shu) !important; }
+  .section-dot.purple{ background:var(--fuji) !important; }
+  .section-dot.gray  { background:var(--usuzumi) !important; }
+  .card{
+    background:var(--washi) !important; border:1px solid var(--keisen) !important;
+    border-radius:2px !important; box-shadow:none !important;
+  }
+  .card.transit-card{ border-left:2px solid var(--ai) !important; }
+  .card.event-card  { border-left:2px solid var(--asagi) !important; }
+  .card.session-card{ border:1px solid rgba(183,71,42,.32) !important; border-left:2px solid var(--shu) !important; background:rgba(183,71,42,.035) !important; }
+  .card.session-card.session2{ border:1px solid rgba(107,107,163,.32) !important; border-left:2px solid var(--fuji) !important; background:rgba(107,107,163,.04) !important; }
+  .card-time{
+    font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
+    font-weight:500 !important; color:var(--ai) !important; letter-spacing:.06em;
+  }
+  .card.session-card .card-time{ color:var(--shu) !important; }
+  .card.session-card.session2 .card-time{ color:var(--fuji) !important; }
+  .card-title{
+    font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
+    font-weight:500 !important; color:var(--sumi) !important; letter-spacing:.06em;
+  }
+  .card-sub{ color:var(--usuzumi) !important; line-height:1.9 !important; }
+  .speaker-chip{
+    background:transparent !important; border:1px solid var(--keisen) !important;
+    border-radius:2px !important; color:var(--usuzumi) !important; font-weight:400 !important;
+  }
+  .paid-tag{ background:var(--shu) !important; border-radius:1px !important; font-weight:500 !important; }
+  .stay-box{
+    background:rgba(43,127,140,.06) !important; border:1px dashed rgba(43,127,140,.4) !important;
+    border-radius:2px !important; color:var(--asagi) !important; line-height:1.95 !important;
+  }
+  .stay-box strong{ color:var(--asagi) !important; font-family:"Shippori Mincho B1",serif; font-weight:500 !important; }
+  .or-divider{ color:var(--usuzumi) !important; font-weight:400 !important; letter-spacing:.2em; }
+  .plan-box{ border-radius:2px !important; line-height:1.95 !important; }
+  .plan-box.plan-a{ background:rgba(23,69,107,.05) !important; border:1px solid rgba(23,69,107,.28) !important; color:var(--ai) !important; }
+  .plan-box.plan-b{ background:rgba(107,107,163,.05) !important; border:1px solid rgba(107,107,163,.30) !important; color:var(--fuji) !important; }
+  .plan-box strong{ font-family:"Shippori Mincho B1",serif; font-weight:500 !important; }
+  .tips-title{ font-family:"Shippori Mincho B1",serif; font-weight:500 !important; letter-spacing:.1em; }
+  .tip-row{
+    background:var(--washi) !important; border:1px solid var(--keisen) !important;
+    border-radius:2px !important; box-shadow:none !important; color:var(--usuzumi) !important;
+    line-height:1.9 !important;
+  }
+  .footer{ color:var(--usuzumi) !important; }
+  .footer a{ color:var(--ai) !important; }
 </style>
 </head>
 <body>
+
+<div class="site-bar">
+  <a class="home" href="./">星と海</a><span class="sep"></span><span class="here">展示会の日程表</span>
+</div>
 
 <!-- HEADER -->
 <div class="header">

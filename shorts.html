@@ -23,89 +23,127 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>星と海 ｜ YouTube 分析</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49/dist/umd/supabase.min.js"></script>
 <style>
   /* 夜空から深海へ。星と海のサイトと同じ世界観にそろえています。 */
   :root{
-    --ink:#e2e8f0; --muted:#94a3b8; --dim:#64748b;
-    --line:rgba(148,163,184,.18);
-    --glass:rgba(148,163,184,.07);
-    --accent:#38bdf8; --accent2:#a78bfa; --good:#34d399; --warn:#fbbf24; --yt:#ff5a5a;
+    --sumi:#2b2f33;      /* 墨 … 本文 */
+    --usuzumi:#6f757b;   /* 薄墨 … 補足 */
+    --ai:#17456b;        /* 藍 */
+    --asagi:#2b7f8c;     /* 浅葱 */
+    --fuji:#6b6ba3;      /* 藤 */
+    --shu:#b7472a;       /* 朱 */
+    --yamabuki:#9a7420;  /* 山吹 … 注意 */
+    --washi:#fbf9f4;     /* 和紙 … カード */
+    --kinari:#f2efe7;    /* 生成り … 地 */
+    --keisen:rgba(43,47,51,.13);
+    /* 以下は元からある名前。中身だけ和の色に入れ替えています */
+    --ink:#2b2f33; --muted:#6f757b; --dim:#8b9096;
+    --line:rgba(43,47,51,.13);
+    --glass:rgba(251,249,244,.86);
+    --accent:#17456b; --accent2:#6b6ba3; --good:#2b7f8c; --warn:#9a7420;
   }
-  html,body{background:#070d18;}
+  html,body{ background:var(--kinari); }
   body{
     color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    font-family:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;
     -webkit-text-size-adjust:100%;
     min-height:100vh;
+    letter-spacing:.03em;
     background:
-      radial-gradient(1200px 700px at 15% -5%, rgba(56,189,248,.16), transparent 60%),
-      radial-gradient(900px 600px at 85% 5%, rgba(255,90,90,.10), transparent 60%),
-      radial-gradient(1000px 800px at 50% 105%, rgba(13,148,136,.13), transparent 60%),
-      #070d18;
+      radial-gradient(900px 520px at 10% -10%, rgba(23,69,107,.07), transparent 62%),
+      radial-gradient(820px 520px at 92% -4%, rgba(43,127,140,.06), transparent 62%),
+      var(--kinari);
     background-attachment:fixed;
   }
-  /* 星をうっすら散らす */
-  body::before{
-    content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
-    background-image:
-      radial-gradient(1.4px 1.4px at 12% 18%, #fff, transparent),
-      radial-gradient(1.2px 1.2px at 62% 12%, #dbeafe, transparent),
-      radial-gradient(1px 1px at 82% 32%, #fff, transparent),
-      radial-gradient(1.3px 1.3px at 28% 46%, #e0f2fe, transparent),
-      radial-gradient(1px 1px at 72% 62%, #fff, transparent),
-      radial-gradient(1.2px 1.2px at 42% 76%, #ddd6fe, transparent),
-      radial-gradient(1px 1px at 8% 68%, #fff, transparent),
-      radial-gradient(1.1px 1.1px at 92% 84%, #fff, transparent);
+  h1,h2,h3,.mincho{
+    font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
+    font-weight:500; letter-spacing:.09em;
   }
   #shell{position:relative;z-index:1;}
+  /* 3ページ共通の上の帯 */
+  .site-bar{
+    display:flex; align-items:center; gap:.9rem;
+    padding:.85rem 1rem;
+    background:rgba(251,249,244,.88);
+    border-bottom:1px solid var(--keisen);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    position:sticky; top:0; z-index:60;
+  }
+  .site-bar a.home{
+    font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
+    color:var(--ai); text-decoration:none; letter-spacing:.3em; font-size:.9rem; white-space:nowrap;
+  }
+  .site-bar .sep{ width:1px; height:1rem; background:var(--keisen); }
+  .site-bar .here{ font-size:.75rem; letter-spacing:.22em; color:var(--usuzumi); white-space:nowrap; }
   input,select,textarea{font-size:16px;} /* スマホで勝手に拡大されないように */
-  .glass{background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(14px);}
+  .glass{background:var(--washi);border:1px solid var(--line);border-radius:2px;
+         backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
   .scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch;}
   .scroll-x::-webkit-scrollbar{height:5px}
-  .scroll-x::-webkit-scrollbar-thumb{background:rgba(148,163,184,.3);border-radius:99px}
-  .fld{background:rgba(2,6,23,.55);border:1px solid var(--line);color:var(--ink);border-radius:.6rem;padding:.5rem .7rem;width:100%;}
-  .fld:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(56,189,248,.15);}
-  .fld::placeholder{color:#475569}
-  option{background:#0f172a}
+  .scroll-x::-webkit-scrollbar-thumb{background:rgba(43,47,51,.22);border-radius:99px}
+  .fld{background:rgba(255,255,255,.72);border:1px solid var(--line);color:var(--ink);border-radius:2px;padding:.55rem .7rem;width:100%;}
+  .fld:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(23,69,107,.12);}
+  .fld::placeholder{color:#a9a396}
+  option{background:#fbf9f4}
   .num{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
   @keyframes spin{to{transform:rotate(360deg)}}
   .spinning{animation:spin .9s linear infinite}
   .rise{animation:rise .5s cubic-bezier(.2,.7,.3,1) both}
+  /* Tailwind の色名はそのまま使い、中身だけ和の色に読み替えています */
+  .text-slate-200,.text-slate-300{ color:var(--sumi) !important; }
+  .text-slate-400,.text-slate-500{ color:var(--usuzumi) !important; }
+  .text-slate-600,.text-slate-700{ color:#8b9096 !important; }
+  .text-slate-900{ color:var(--washi) !important; }
+  .text-sky-200,.text-sky-300{ color:var(--ai) !important; }
+  .text-emerald-300,.text-emerald-400{ color:var(--asagi) !important; }
+  .text-amber-300,.text-amber-400{ color:var(--yamabuki) !important; }
+  .text-rose-300,.text-rose-400{ color:var(--shu) !important; }
+  .border-amber-400\\/40{ border-color:rgba(154,116,32,.4) !important; }
+  .hover\\:border-sky-400\\/50:hover,.hover\\:border-sky-400\\/40:hover{ border-color:rgba(23,69,107,.45) !important; }
+  .hover\\:border-rose-400\\/50:hover{ border-color:rgba(183,71,42,.45) !important; }
+  .hover\\:border-emerald-400\\/50:hover{ border-color:rgba(43,127,140,.45) !important; }
   @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
   /* ── 棒グラフ ────────────────────────────────
      数字が読めることを最優先にしています。
      棒は目安、判断するのは数字。 */
-  .track{height:.5rem;border-radius:99px;background:rgba(148,163,184,.12);overflow:hidden;position:relative}
-  .fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#38bdf8,#a78bfa)}
-  .fill-good{background:linear-gradient(90deg,#34d399,#7dd3fc)}
-  .fill-warn{background:linear-gradient(90deg,#fbbf24,#f97316)}
-  .fill-flat{background:rgba(148,163,184,.35)}
-  .fill-yt{background:linear-gradient(90deg,#ff5a5a,#f9a8d4)}
-  .goal{position:absolute;top:-3px;bottom:-3px;width:2px;background:rgba(226,232,240,.75);border-radius:2px}
-  .vbar{border-radius:.35rem .35rem 0 0;background:linear-gradient(180deg,#7dd3fc,#38bdf8,rgba(56,189,248,.3));width:100%}
-  .vbar-good{background:linear-gradient(180deg,#6ee7b7,#34d399,rgba(52,211,153,.3))}
-  .thumb{width:100%;height:100%;object-fit:cover;background:#0f172a}
+  .track{height:.5rem;border-radius:1px;background:rgba(43,47,51,.09);overflow:hidden;position:relative}
+  .fill{height:100%;border-radius:1px;background:linear-gradient(90deg,rgba(23,69,107,.82),rgba(23,69,107,.55))}
+  .fill-good{background:linear-gradient(90deg,rgba(43,127,140,.85),rgba(43,127,140,.5))}
+  .fill-warn{background:linear-gradient(90deg,rgba(154,116,32,.8),rgba(154,116,32,.45))}
+  .fill-flat{background:rgba(43,47,51,.18)}
+  .fill-yt{background:linear-gradient(90deg,#b7472a,#c98070)}
+  .goal{position:absolute;top:-3px;bottom:-3px;width:2px;background:rgba(43,47,51,.45);border-radius:0}
+  .vbar{border-radius:1px 1px 0 0;background:linear-gradient(180deg,rgba(23,69,107,.78),rgba(23,69,107,.42));width:100%}
+  .vbar-good{background:linear-gradient(180deg,rgba(43,127,140,.8),rgba(43,127,140,.42))}
+  .thumb{width:100%;height:100%;object-fit:cover;background:#e8e3d8}
   .ratio916{aspect-ratio:9/16}
   .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .chip{font-size:10px;border-radius:99px;padding:.1rem .45rem;background:rgba(148,163,184,.14);color:var(--muted)}
+  .chip{font-size:10px;border-radius:1px;padding:.1rem .45rem;background:rgba(43,47,51,.07);color:var(--muted)}
 </style>
 </head>
 <body>
 <div id="shell">
 
+<div class="site-bar">
+  <a class="home" href="./">星と海</a><span class="sep"></span><span class="here">YouTube 分析</span>
+  <a id="back-site" href="./" class="hidden"></a>
+</div>
+
 <!-- ══════════ ログイン ══════════ -->
 <div id="login-view" class="hidden min-h-screen flex items-center justify-center p-6">
-  <div class="w-full max-w-sm glass rounded-3xl p-7 rise">
-    <div class="text-3xl mb-3">🌊</div>
+  <div class="w-full max-w-sm glass p-8 rise">
     <h1 class="text-xl font-bold mb-1">星と海 ｜ YouTube 分析</h1>
     <p class="text-xs text-slate-400 mb-6">サイトと同じアカウントでログインしてください。</p>
     <input id="login-email" type="email" placeholder="メールアドレス" autocomplete="username" class="fld mb-2">
     <input id="login-pw" type="password" placeholder="パスワード" autocomplete="current-password" class="fld mb-4">
     <button id="login-btn" class="w-full rounded-xl py-2.5 font-medium text-slate-900"
-      style="background:linear-gradient(135deg,#38bdf8,#a78bfa)">ログイン</button>
+      style="background:#17456b">ログイン</button>
     <p id="login-msg" class="text-xs text-rose-400 mt-3"></p>
   </div>
 </div>
@@ -113,14 +151,12 @@
 <!-- ══════════ 本体 ══════════ -->
 <div id="app-view" class="hidden max-w-5xl mx-auto px-4 pt-5 pb-28">
 
-  <header class="flex items-center gap-3 mb-5">
-    <div class="text-2xl">▶︎</div>
+  <header class="flex items-center gap-3 mb-6 pb-4" style="border-bottom:1px solid var(--keisen);">
     <div class="min-w-0">
-      <h1 class="font-bold leading-tight">YouTube 分析</h1>
-      <p class="text-[11px] text-slate-500 truncate">星と海 ・ @jenjenjenjun</p>
+      <h1 class="text-lg leading-tight" style="color:var(--sumi);">YouTube 分析</h1>
+      <p class="text-[11px] text-slate-500 truncate mt-1">星と海 ・ @jenjenjenjun</p>
     </div>
-    <a id="back-site" href="./" class="hidden ml-auto text-[11px] text-slate-500 hover:text-slate-300">← サイト</a>
-    <button id="sync-btn" class="ml-auto glass rounded-xl px-3 py-2 text-xs flex items-center gap-1.5 hover:border-sky-400/50">
+    <button id="sync-btn" class="ml-auto glass px-3 py-2 text-xs flex items-center gap-1.5 hover:border-sky-400/50">
       <span id="sync-icon">⟳</span><span id="sync-label">取り込む</span>
     </button>
     <button id="logout-btn" class="text-[11px] text-slate-500 hover:text-slate-300">出る</button>
@@ -128,17 +164,17 @@
 
   <p id="sync-msg" class="hidden text-xs mb-3 rounded-lg px-3 py-2"></p>
 
-  <div id="setup-warn" class="hidden glass rounded-2xl p-4 mb-4 text-sm border-amber-400/40" style="background:rgba(251,191,36,.08)"></div>
+  <div id="setup-warn" class="hidden glass rounded-2xl p-4 mb-4 text-sm border-amber-400/40" style="background:rgba(154,116,32,.08)"></div>
 
   <!-- タブ -->
   <nav class="scroll-x mb-5">
-    <div id="tabbar" class="flex gap-1.5 min-w-max glass rounded-2xl p-1.5">
-      <button data-tab="home"    class="tab whitespace-nowrap px-4 py-2 rounded-xl text-sm">ダッシュボード</button>
-      <button data-tab="advice"  class="tab whitespace-nowrap px-4 py-2 rounded-xl text-sm">次に作る動画</button>
-      <button data-tab="grow"    class="tab whitespace-nowrap px-4 py-2 rounded-xl text-sm">伸ばし方</button>
-      <button data-tab="videos"  class="tab whitespace-nowrap px-4 py-2 rounded-xl text-sm">動画</button>
-      <button data-tab="entry"   class="tab whitespace-nowrap px-4 py-2 rounded-xl text-sm">数字を入力</button>
-      <button data-tab="link"    class="tab whitespace-nowrap px-4 py-2 rounded-xl text-sm">リンク</button>
+    <div id="tabbar" class="flex gap-1 min-w-max glass p-1" style="border-radius:2px;">
+      <button data-tab="home"    class="tab whitespace-nowrap px-4 py-2 text-sm" style="border-radius:1px;">ダッシュボード</button>
+      <button data-tab="advice"  class="tab whitespace-nowrap px-4 py-2 text-sm" style="border-radius:1px;">次に作る動画</button>
+      <button data-tab="grow"    class="tab whitespace-nowrap px-4 py-2 text-sm" style="border-radius:1px;">伸ばし方</button>
+      <button data-tab="videos"  class="tab whitespace-nowrap px-4 py-2 text-sm" style="border-radius:1px;">動画</button>
+      <button data-tab="entry"   class="tab whitespace-nowrap px-4 py-2 text-sm" style="border-radius:1px;">数字を入力</button>
+      <button data-tab="link"    class="tab whitespace-nowrap px-4 py-2 text-sm" style="border-radius:1px;">リンク</button>
     </div>
   </nav>
 
@@ -146,11 +182,11 @@
   <section id="tab-home" class="tabpanel hidden space-y-4">
 
     <div class="glass rounded-3xl p-6 relative overflow-hidden">
-      <div class="absolute -right-10 -top-10 w-48 h-48 rounded-full blur-3xl" style="background:radial-gradient(circle,rgba(255,90,90,.22),transparent 70%)"></div>
+      <div class="absolute -right-10 -top-10 w-48 h-48 rounded-full blur-3xl" style="background:radial-gradient(circle,rgba(183,71,42,.22),transparent 70%)"></div>
       <div class="flex items-start gap-6">
         <div>
           <p class="text-[11px] text-slate-400 mb-1">チャンネル登録者</p>
-          <div id="hero-subs" class="num text-5xl font-bold" style="background:linear-gradient(135deg,#fecdd3,#ff8a8a,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent">—</div>
+          <div id="hero-subs" class="num text-5xl font-bold" style="color:var(--shu)">—</div>
           <div id="hero-subs-sub" class="text-xs text-slate-400 mt-2"></div>
         </div>
         <div class="ml-auto text-right">
@@ -299,7 +335,7 @@
           <h2 class="font-semibold text-sm">動画</h2>
           <p class="text-[11px] text-slate-500 mt-0.5">押すとその場で再生できます。テーマと掴みを入れるほど提案が鋭くなります。</p>
         </div>
-        <button id="video-new" class="rounded-xl px-3 py-2 text-xs font-medium text-slate-900 whitespace-nowrap" style="background:linear-gradient(135deg,#38bdf8,#a78bfa)">＋ 追加</button>
+        <button id="video-new" class="rounded-xl px-3 py-2 text-xs font-medium text-slate-900 whitespace-nowrap" style="background:#17456b">＋ 追加</button>
       </div>
       <div class="flex items-center gap-2">
         <label class="text-xs flex-1">
@@ -343,7 +379,7 @@
     </div>
     <div id="entry-list" class="space-y-2.5"></div>
     <div class="sticky bottom-4">
-      <button id="entry-save" class="w-full rounded-2xl py-3.5 font-medium text-slate-900 shadow-2xl" style="background:linear-gradient(135deg,#38bdf8,#a78bfa)">保存する</button>
+      <button id="entry-save" class="w-full rounded-2xl py-3.5 font-medium text-slate-900 shadow-2xl" style="background:#17456b">保存する</button>
       <p id="entry-msg" class="text-center text-xs mt-2"></p>
     </div>
   </section>
@@ -357,7 +393,7 @@
         <select id="link-video" class="fld"></select></label>
       <div class="flex gap-2">
         <input id="link-out" readonly class="fld text-xs">
-        <button id="link-copy" class="rounded-xl px-4 text-xs whitespace-nowrap text-slate-900 font-medium" style="background:linear-gradient(135deg,#38bdf8,#a78bfa)">コピー</button>
+        <button id="link-copy" class="rounded-xl px-4 text-xs whitespace-nowrap text-slate-900 font-medium" style="background:#17456b">コピー</button>
       </div>
       <p id="link-msg" class="text-[11px] text-emerald-400 mt-2"></p>
     </div>
@@ -374,7 +410,7 @@
 
     <div class="glass rounded-2xl p-5">
       <div class="flex items-center gap-2 mb-2">
-        <span class="text-[10px] rounded-full px-2 py-0.5" style="background:rgba(52,211,153,.15);color:#6ee7b7">設定済み</span>
+        <span class="text-[10px] rounded-full px-2 py-0.5" style="background:rgba(43,127,140,.15);color:#2b7f8c">設定済み</span>
         <h2 class="font-semibold text-sm">ホームページ側の計測</h2>
       </div>
       <p class="text-[11px] text-slate-500">
@@ -386,8 +422,8 @@
 </div>
 
 <!-- ══════════ 動画のプレビューと編集 ══════════ -->
-<div id="video-modal" class="hidden fixed inset-0 z-50 overflow-y-auto p-4" style="background:rgba(2,6,23,.8);backdrop-filter:blur(6px)">
-  <div class="glass rounded-3xl max-w-lg mx-auto my-4 p-5" style="background:rgba(15,23,42,.94)">
+<div id="video-modal" class="hidden fixed inset-0 z-50 overflow-y-auto p-4" style="background:rgba(43,47,51,.42);backdrop-filter:blur(6px)">
+  <div class="glass rounded-3xl max-w-lg mx-auto my-4 p-5" style="background:rgba(251,249,244,.98)">
     <div class="flex items-center justify-between mb-4">
       <h3 id="vm-title" class="font-bold text-sm">動画</h3>
       <button id="vm-close" class="text-slate-500 text-2xl leading-none px-2 hover:text-slate-300">&times;</button>
@@ -440,7 +476,7 @@
     </details>
 
     <div class="flex gap-2 mt-4">
-      <button id="vm-save" class="flex-1 rounded-xl py-2.5 font-medium text-slate-900 text-sm" style="background:linear-gradient(135deg,#38bdf8,#a78bfa)">保存</button>
+      <button id="vm-save" class="flex-1 rounded-xl py-2.5 font-medium text-slate-900 text-sm" style="background:#17456b">保存</button>
       <button id="vm-delete" class="text-rose-400 text-xs px-3 hover:text-rose-300">削除</button>
     </div>
     <p id="vm-msg" class="text-xs mt-2"></p>
@@ -619,14 +655,14 @@ $('#sync-btn').addEventListener('click', async () => {
   msg.classList.remove('hidden');
 
   if (error) {
-    msg.style.cssText = 'background:rgba(244,63,94,.12);color:#fda4af';
+    msg.style.cssText = 'background:rgba(183,71,42,.12);color:#b7472a';
     msg.textContent = /function .* does not exist/i.test(error.message)
       ? 'まだ取り込みの準備ができていません。Supabase の SQL Editor で sync-youtube.sql を実行してください。'
       : '取り込めませんでした：' + error.message;
     return;
   }
   const r = Array.isArray(data) ? data[0] : data;
-  msg.style.cssText = 'background:rgba(52,211,153,.12);color:#6ee7b7';
+  msg.style.cssText = 'background:rgba(43,127,140,.12);color:#2b7f8c';
   msg.textContent = `YouTube から取り込みました。新しい動画 ${r?.new_videos ?? 0} 本、再生数 ${r?.metrics_written ?? 0} 件を更新。`;
   await loadAll();
   setTimeout(() => msg.classList.add('hidden'), 8000);
@@ -642,8 +678,8 @@ function showTab(name){
   panel.classList.remove('rise'); void panel.offsetWidth; panel.classList.add('rise');
   $$('.tab').forEach(b => {
     const on = b.dataset.tab === name;
-    b.style.background = on ? 'linear-gradient(135deg,#38bdf8,#a78bfa)' : 'transparent';
-    b.style.color      = on ? '#0f172a' : 'var(--muted)';
+    b.style.background = on ? '#17456b' : 'transparent';
+    b.style.color      = on ? '#fbf9f4' : 'var(--muted)';
     b.style.fontWeight = on ? '600' : '400';
   });
   window.scrollTo(0,0);
@@ -795,7 +831,7 @@ function goalBar(g, val, opt = {}){
   const w = val == null ? 0 : Math.min(val / max * 100, 100);
   const tone = ok ? 'fill-good' : near ? 'fill-warn' : 'fill-flat';
   const mark = isRange
-    ? `<div style="position:absolute;left:${lo/max*100}%;width:${(hi-lo)/max*100}%;top:0;bottom:0;background:rgba(226,232,240,.14)"></div>`
+    ? `<div style="position:absolute;left:${lo/max*100}%;width:${(hi-lo)/max*100}%;top:0;bottom:0;background:rgba(43,47,51,.14)"></div>`
     : `<div class="goal" style="left:${Math.min(g.goal/max*100,99)}%"></div>`;
   const shown = val == null ? '—'
     : (g.unit === '本' || g.unit === '秒' ? num(Math.round(val)) : dec(val, val < 10 ? 1 : 0)) + g.unit;
@@ -816,7 +852,7 @@ function goalBar(g, val, opt = {}){
     ${val == null && opt.why !== false
       ? `<p class="text-[10px] text-slate-600 mt-1">${esc(g.need)}を入れると出ます。</p>` : ''}
     ${opt.detail ? `<p class="text-[11px] text-slate-400 mt-2 leading-relaxed">${esc(g.why)}</p>
-       <p class="text-[11px] mt-1 leading-relaxed" style="color:#7dd3fc">直し方：${esc(g.fix)}</p>` : ''}
+       <p class="text-[11px] mt-1 leading-relaxed" style="color:#17456b">直し方：${esc(g.fix)}</p>` : ''}
   </div>`;
 }
 
@@ -883,10 +919,10 @@ function renderHome(){
   // 小さな数字カード
   const maxV = withViews.length ? Math.max(...withViews.map(s=>s.views)) : null;
   const cards = [
-    ['動画',           num(state.videos.length) + '<span class="text-xs">本</span>', '#7dd3fc'],
-    ['再生の中央値',   num(Math.round(med)),                                          '#7dd3fc'],
-    ['いちばん伸びた1本', num(maxV),                                                  '#c4b5fd'],
-    ['この7日の投稿',  num(cur.values.pace) + '<span class="text-xs">本</span>',       cur.values.pace >= 5 ? '#6ee7b7' : '#fcd34d'],
+    ['動画',           num(state.videos.length) + '<span class="text-xs">本</span>', '#17456b'],
+    ['再生の中央値',   num(Math.round(med)),                                          '#17456b'],
+    ['いちばん伸びた1本', num(maxV),                                                  '#6b6ba3'],
+    ['この7日の投稿',  num(cur.values.pace) + '<span class="text-xs">本</span>',       cur.values.pace >= 5 ? '#2b7f8c' : '#9a7420'],
   ];
   $('#home-cards').innerHTML = cards.map(([l,v,c]) => `<div class="glass rounded-2xl p-3.5">
       <div class="text-[11px] text-slate-400 mb-1">${l}</div>
@@ -935,7 +971,7 @@ function renderHome(){
   $('#home-visits').innerHTML = state.visits.length
     ? `<div class="flex gap-6">
         ${[[c7,'この7日'],[c30,'この30日'],[state.visits.length,'累計']].map(([n,l])=>
-          `<div><div class="num text-3xl font-bold" style="color:#6ee7b7">${num(n)}</div>
+          `<div><div class="num text-3xl font-bold" style="color:#2b7f8c">${num(n)}</div>
            <div class="text-[10px] text-slate-500">${l}</div></div>`).join('')}
        </div>`
     : emptyNote('まだ記録がありません。「リンク」タブで作ったURLを固定コメントに貼ると、ここに出ます。');
@@ -961,11 +997,11 @@ function calendarHtml(){
     (weeks[w] = weeks[w] || []).push({ key, n: counts[key]||0, dow: d.getDay(), label: d.getDate() });
   }
   const cell = c => {
-    const bg = c.n === 0 ? 'rgba(148,163,184,.09)'
-             : c.n === 1 ? 'rgba(56,189,248,.55)' : 'rgba(52,211,153,.75)';
+    const bg = c.n === 0 ? 'rgba(43,47,51,.09)'
+             : c.n === 1 ? 'rgba(23,69,107,.55)' : 'rgba(43,127,140,.75)';
     return `<div class="rounded" title="${c.key} ${c.n}本"
       style="width:100%;aspect-ratio:1;background:${bg};display:flex;align-items:center;justify-content:center;
-             font-size:9px;color:${c.n?'#04121f':'#475569'};font-weight:${c.n?'700':'400'}">${c.n||''}</div>`;
+             font-size:9px;color:${c.n?'#fbf9f4':'#8b9096'};font-weight:${c.n?'700':'400'}">${c.n||''}</div>`;
   };
   const total = Object.values(counts).reduce((a,b)=>a+b,0);
   return `<div class="scroll-x"><div class="flex gap-1" style="min-width:${weeks.length*26}px">
@@ -976,8 +1012,8 @@ function calendarHtml(){
 
 /* ========================= 次に作る動画 ========================= */
 function card(tone, icon, title, body){
-  const c = { good:'#6ee7b7', warn:'#fcd34d', info:'#7dd3fc', flat:'#94a3b8' }[tone];
-  return `<div class="rounded-2xl p-4" style="background:rgba(148,163,184,.06);border-left:3px solid ${c}">
+  const c = { good:'#2b7f8c', warn:'#9a7420', info:'#17456b', flat:'#6f757b' }[tone];
+  return `<div class="rounded-2xl p-4" style="background:rgba(43,47,51,.06);border-left:3px solid ${c}">
     <div class="flex items-center gap-2 mb-1.5"><span>${icon}</span>
       <b class="text-sm" style="color:${c}">${title}</b></div>
     <div class="text-xs text-slate-300 leading-relaxed">${body}</div></div>`;
@@ -1207,7 +1243,7 @@ function renderAdvice(){
         <tbody>${funnel.map(r=>`<tr style="border-bottom:1px solid var(--line)">
           <td class="py-2 truncate max-w-[180px]">${esc(r.v.title)}</td>
           <td class="py-2 text-right num">${num(r.views)}</td>
-          <td class="py-2 text-right num ${r.visits?'':'text-slate-700'}" ${r.visits?'style="color:#6ee7b7"':''}>${r.visits||0}</td>
+          <td class="py-2 text-right num ${r.visits?'':'text-slate-700'}" ${r.visits?'style="color:#2b7f8c"':''}>${r.visits||0}</td>
           <td class="py-2 text-right num">${r.visits?dec(r.visitRate)+'人':'—'}</td></tr>`).join('')}</tbody></table>`
     : emptyNote('まだ数字がありません。');
 }
@@ -1258,7 +1294,7 @@ function renderGrow(){
   const cur = currentValues();
 
   $('#grow-score').innerHTML = GOALS.map(g =>
-    `<div class="rounded-2xl p-4" style="background:rgba(148,163,184,.06)">
+    `<div class="rounded-2xl p-4" style="background:rgba(43,47,51,.06)">
        ${goalBar(g, cur.values[g.key], { detail:true })}
      </div>`).join('');
 
@@ -1267,8 +1303,8 @@ function renderGrow(){
     const val = g ? cur.values[g.key] : null;
     const ok = g && val != null && (g.range ? (val >= g.range[0] && val <= g.range[1]) : val >= g.goal);
     const mark = ok ? '✓' : (g && val != null) ? '△' : '・';
-    const col  = ok ? '#6ee7b7' : (g && val != null) ? '#fcd34d' : '#475569';
-    return `<div class="rounded-2xl p-3.5" style="background:rgba(148,163,184,.05)">
+    const col  = ok ? '#2b7f8c' : (g && val != null) ? '#9a7420' : '#8b9096';
+    return `<div class="rounded-2xl p-3.5" style="background:rgba(43,47,51,.05)">
       <div class="flex items-start gap-2.5">
         <span class="num text-sm font-bold shrink-0" style="color:${col}">${mark}</span>
         <div class="min-w-0">
@@ -1304,7 +1340,7 @@ function renderVideos(){
              onerror="this.onerror=null;this.src='${thumbAlt(id)}'">`
       : `<div class="thumb flex items-center justify-center text-2xl text-slate-700">🌊</div>`;
     const badge = s.index ? `<span class="chip absolute top-1.5 left-1.5"
-        style="background:${s.index>=1.5?'rgba(52,211,153,.85)':'rgba(2,6,23,.7)'};color:${s.index>=1.5?'#04121f':'#cbd5e1'}">${dec(s.index)}倍</span>` : '';
+        style="background:${s.index>=1.5?'rgba(43,127,140,.85)':'rgba(2,6,23,.7)'};color:${s.index>=1.5?'#fbf9f4':'#6f757b'}">${dec(s.index)}倍</span>` : '';
     const sub = [
       s.subs != null ? `登録+${num(s.subs)}` : null,
       s.retention != null ? `${dec(s.retention,0)}%` : null,
@@ -1382,7 +1418,7 @@ function openVideo(id){
     ['最後まで', s.retention != null ? dec(s.retention,0)+'%' : '—'],
     ['サイト到達', s.visits ? num(s.visits)+'人' : '—'],
   ] : [];
-  $('#vm-stats').innerHTML = tiles.map(([l,x]) => `<div class="rounded-xl p-2.5 text-center" style="background:rgba(148,163,184,.07)">
+  $('#vm-stats').innerHTML = tiles.map(([l,x]) => `<div class="rounded-xl p-2.5 text-center" style="background:rgba(43,47,51,.07)">
       <div class="text-[9px] text-slate-500 mb-0.5">${l}</div>
       <div class="num text-sm font-bold text-slate-200">${x}</div></div>`).join('');
 
@@ -1488,7 +1524,7 @@ function renderEntry(){
       <div class="flex items-center gap-2 mb-2.5">
         <span class="w-1.5 h-1.5 rounded-full" style="background:var(--yt)"></span>
         <span class="text-xs truncate flex-1">${esc(v.title)}</span>
-        ${ex?'<span class="text-[10px]" style="color:#6ee7b7">入力済</span>':''}
+        ${ex?'<span class="text-[10px]" style="color:#2b7f8c">入力済</span>':''}
       </div>
       <div class="grid grid-cols-3 gap-2">
         ${fields.map(f=>`
@@ -1530,7 +1566,7 @@ $('#entry-save').addEventListener('click', async () => {
       { measured_on: date, subscribers: Number(subsTotal) }, { onConflict:'measured_on' });
   }
   $('#entry-save').disabled = false;
-  msg.className='text-center text-xs mt-2'; msg.style.color='#6ee7b7';
+  msg.className='text-center text-xs mt-2'; msg.style.color='#2b7f8c';
   msg.textContent = `${rows.length}件を保存しました。`;
   await loadAll();
 });
@@ -1545,7 +1581,7 @@ $('#subs-save').addEventListener('click', async () => {
   const { error } = await sb.from('sv_channel_daily').upsert(
     { measured_on: todayStr(), subscribers: Number(val) }, { onConflict:'measured_on' });
   if (error){ msg.className='text-[11px] mt-2 text-rose-400'; msg.textContent='保存できませんでした：'+error.message; return; }
-  msg.className='text-[11px] mt-2'; msg.style.color='#6ee7b7'; msg.textContent='記録しました。';
+  msg.className='text-[11px] mt-2'; msg.style.color='#2b7f8c'; msg.textContent='記録しました。';
   await loadAll();
   setTimeout(()=>{ msg.textContent=''; }, 4000);
 });

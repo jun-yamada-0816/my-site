@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>新潟市 カフェ一覧（西区・中央区）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --accent: #6f4e37;
@@ -133,11 +136,101 @@
     color: var(--muted);
     font-size: 0.9rem;
   }
+
+  /* ══════════════════════════════════════════════════════════
+     星と海 共通の見た目
+     ── 分析・展示会・カフェ一覧の3ページで同じものを使っています。
+        色や形はここだけを直せば3ページとも変わります。
+     ══════════════════════════════════════════════════════════ */
+  :root{
+    --sumi:#2b2f33;      /* 墨 … 本文 */
+    --usuzumi:#6f757b;   /* 薄墨 … 補足 */
+    --ai:#17456b;        /* 藍 */
+    --asagi:#2b7f8c;     /* 浅葱 */
+    --fuji:#6b6ba3;      /* 藤 */
+    --shu:#b7472a;       /* 朱 … 注意 */
+    --washi:#fbf9f4;     /* 和紙 … カード */
+    --kinari:#f2efe7;    /* 生成り … 地 */
+    --keisen:rgba(43,47,51,.13);
+  }
+  html, body{
+    background:
+      radial-gradient(900px 520px at 10% -10%, rgba(23,69,107,.07), transparent 62%),
+      radial-gradient(820px 520px at 92% -4%, rgba(43,127,140,.06), transparent 62%),
+      var(--kinari) !important;
+    color: var(--sumi) !important;
+    font-family:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif !important;
+    letter-spacing:.03em;
+  }
+  h1, h2, h3, .mincho{
+    font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif !important;
+    font-weight:500 !important;
+    letter-spacing:.09em;
+  }
+  /* 上の帯。3ページとも同じ形にしています */
+  .site-bar{
+    display:flex; align-items:center; gap:.9rem;
+    padding:.85rem 1rem;
+    background:rgba(251,249,244,.88);
+    border-bottom:1px solid var(--keisen);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    position:sticky; top:0; z-index:60;
+  }
+  .site-bar a.home{
+    font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
+    color:var(--ai); text-decoration:none; letter-spacing:.3em; font-size:.9rem; white-space:nowrap;
+  }
+  .site-bar .sep{ width:1px; height:1rem; background:var(--keisen); }
+  .site-bar .here{ font-size:.75rem; letter-spacing:.22em; color:var(--usuzumi); white-space:nowrap; }
+
+  /* ── カフェ一覧ページ ───────────────────── */
+  header{
+    background:rgba(251,249,244,.92) !important;
+    color:var(--sumi) !important;
+    border-bottom:1px solid var(--keisen);
+    box-shadow:none !important;
+    padding:14px 16px 12px !important;
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  }
+  header h1{ font-size:1.1rem !important; letter-spacing:.12em; color:var(--sumi) !important; }
+  header p{ color:var(--usuzumi) !important; opacity:1 !important; font-size:.72rem !important; letter-spacing:.06em; }
+  .search-box{
+    background:rgba(255,255,255,.7) !important;
+    border:1px solid var(--keisen) !important; border-radius:2px !important;
+    color:var(--sumi); font-size:16px !important;
+  }
+  .search-box::placeholder{ color:#a9a396; }
+  .search-box:focus{ border-color:var(--ai) !important; box-shadow:0 0 0 3px rgba(23,69,107,.10); }
+  .tabs{ gap:3px !important; background:rgba(255,255,255,.55); border:1px solid var(--keisen); padding:3px; border-radius:2px; }
+  .tab{
+    background:transparent !important; border-radius:1px !important;
+    color:var(--usuzumi) !important; font-weight:400 !important; letter-spacing:.12em;
+    transition:background .25s, color .25s;
+  }
+  .tab.active{ background:var(--ai) !important; color:var(--washi) !important; font-weight:500 !important; }
+  .count-bar{ color:var(--usuzumi) !important; letter-spacing:.08em; }
+  .card{
+    background:var(--washi) !important; border:1px solid var(--keisen) !important;
+    border-radius:2px !important;
+  }
+  .card-name{
+    font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
+    font-weight:500 !important; letter-spacing:.06em; color:var(--sumi);
+  }
+  .card-address{ color:var(--usuzumi) !important; line-height:1.85 !important; }
+  .badge{ border-radius:2px !important; font-weight:500 !important; letter-spacing:.1em; }
+  .badge.nishi{ background:rgba(43,127,140,.10) !important; color:var(--asagi) !important; }
+  .badge.chuo { background:rgba(107,107,163,.12) !important; color:var(--fuji) !important; }
+  .card-link{ color:var(--ai) !important; font-weight:500 !important; letter-spacing:.08em; }
+  .empty{ color:var(--usuzumi) !important; }
 </style>
 </head>
 <body>
+<div class="site-bar">
+  <a class="home" href="./">星と海</a><span class="sep"></span><span class="here">新潟のカフェ一覧</span>
+</div>
 <header>
-  <h1>☕ 新潟市 カフェ一覧</h1>
+  <h1>新潟市 カフェ一覧</h1>
   <p>西区・中央区 全190件 ／ タップでGoogle Mapを開けます</p>
   <input id="search" class="search-box" type="text" placeholder="店名・住所で検索…" />
   <div class="tabs">
@@ -183,7 +276,7 @@ function render() {
           <div class="badge ${badgeClass}">${escapeHtml(c.area)}</div>
         </div>
         <div class="card-address">${escapeHtml(c.address)}</div>
-        <a class="card-link" href="${c.map}" target="_blank" rel="noopener noreferrer">📍 Google Mapで開く →</a>
+        <a class="card-link" href="${c.map}" target="_blank" rel="noopener noreferrer">Google Map で開く →</a>
       </div>
     `;
   }).join("");
