@@ -770,13 +770,13 @@ function postedTime(v){
 }
 
 /* URL からでも動画IDを拾えるようにしておく（手で追加したときのため） */
+const ytIdFromUrl = u =>
+  (String(u || '').match(/(?:shorts\/|watch\?v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{6,})/) || [])[1] || null;
+
 function ytIdOf(v){
   const p = postOf(v.id);
   if (!p) return null;
-  if (p.platform_video_id) return p.platform_video_id;
-  const u = p.url || '';
-  const m = u.match(/(?:shorts\/|watch\?v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{6,})/);
-  return m ? m[1] : null;
+  return p.platform_video_id || ytIdFromUrl(p.url);
 }
 const thumbOf = id => `https://i.ytimg.com/vi/${id}/oardefault.jpg`;
 const thumbAlt = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
@@ -1547,6 +1547,11 @@ $('#vm-save').addEventListener('click', async () => {
   if (url || at || ex){
     const row = { video_id: vid, platform: YT, url: url || null,
                   posted_at: at ? new Date(at).toISOString() : null };
+    // 動画IDを入れておかないと、自動取り込みがこれを「知らない動画」と見なして
+    // 同じ動画をもう1本ぶん登録してしまいます。すると再生数は新しいほうに入り、
+    // 手で入れたテーマや掴み、計測リンクの識別子は取り残されます。
+    const ytId = ytIdFromUrl(url);
+    if (ytId) row.platform_video_id = ytId;
     const r = ex ? await sb.from('sv_posts').update(row).eq('id', ex.id)
                  : await sb.from('sv_posts').insert(row);
     if (r.error) return failVm(r.error);
@@ -1770,12 +1775,8 @@ $('#subs-save').addEventListener('click', async () => {
 
 /* ========================= Claude に渡すプロンプト ========================= */
 
-/* 次の動画の識別子。計測リンクはこの文字列で作ります。 */
-function nextSlug(){
-  const ns = state.videos.map(v => parseInt(String(v.slug || '').replace(/\D/g,''), 10))
-                         .filter(n => isFinite(n));
-  return 'v' + String((ns.length ? Math.max(...ns) : 0) + 1).padStart(3, '0');
-}
+/* 計測リンク。「リンク」タブも同じこれを使うので、必ず同じ文字列になります。
+   識別子は nextSlug()（動画の登録欄と同じ採番）です。 */
 const trackUrl = slug =>
   `${SITE_URL}/?utm_source=youtube&utm_medium=short&utm_content=${encodeURIComponent(slug)}`;
 
@@ -1968,7 +1969,7 @@ function renderLinkOptions(){
 $('#link-video').addEventListener('change', buildLink);
 function buildLink(){
   const slug = $('#link-video').value;
-  const url = slug ? `${SITE_URL}/?utm_source=youtube&utm_medium=short&utm_content=${encodeURIComponent(slug)}` : '';
+  const url = slug ? trackUrl(slug) : '';
   $('#link-out').value = url;
   $('#link-comment').value = url
     ? `眠れない夜のための場所をつくっています。\n話を聞いてほしいとき、ひとりでつらいとき、ここに来てください。\n${url}\n\n毎晩1本、そっと置いていきます。よかったら登録して待っていてください。`
