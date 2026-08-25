@@ -186,6 +186,9 @@
   $$;
   grant execute on function increment_visit_count() to anon, authenticated;
 
+  -- 数え直したいとき（SQL Editor で実行。N は入れたい数）
+  -- update site_visits set count = N where id = 1;
+
   ── ブログ閲覧数・音楽再生数カウンター ──
   alter table blog_posts   add column if not exists view_count bigint not null default 0;
   alter table music_tracks add column if not exists play_count bigint not null default 0;
@@ -3065,13 +3068,32 @@
     }
 
     /* ══ 訪問者カウンター ══ */
+    /* 同じ端末からは 1日に1回だけ数えます。
+       以前はページを開くたびに +1 していたので、
+       自分の再読み込みや、同じ人の何度もの訪問まで数に入っていました。 */
+    const VISIT_DAY_KEY = 'hoshiumi_visit_day';
+
+    function markVisitToday() {
+      // すでに今日ぶんを数えていれば true（＝もう増やさない）を返します
+      try {
+        const today = new Date().toLocaleDateString('sv-SE');   // 端末の時計で YYYY-MM-DD
+        if (localStorage.getItem(VISIT_DAY_KEY) === today) return true;
+        localStorage.setItem(VISIT_DAY_KEY, today);
+        return false;
+      } catch {
+        return true;   // 端末に印を残せないときは、数えすぎないよう増やしません
+      }
+    }
+
     async function updateVisitCounter() {
       const el = document.getElementById('visit-counter');
       if (!el) return;
       if (!sb) { el.textContent = ''; return; }
+      // 管理者のアクセスと、今日すでに数えたぶんは、増やさず今の値だけ見せます
+      const countedToday = markVisitToday();
+      const readOnly = adminUser || countedToday;
       try {
-        if (adminUser) {
-          // 管理者のアクセスはカウントせず、現在の値だけ表示する
+        if (readOnly) {
           const { data, error } = await sb.from('site_visits').select('count').eq('id', 1).single();
           if (error) throw error;
           el.textContent = `訪問者数：${(data?.count ?? 0).toLocaleString()}`;
