@@ -623,7 +623,16 @@
             <input id="vm-cta" list="dl-cta" class="fld" placeholder="リンクへ">
             <datalist id="dl-cta"><option value="リンクへ"><option value="コメント促し"><option value="登録の約束"><option value="なし"></datalist></label>
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-3">
+          <label><span class="block text-[11px] text-slate-500 mb-1">音</span>
+            <select id="vm-audio" class="fld">
+              <option value="">—</option>
+              <option value="BGM＋効果音">BGM＋効果音</option>
+              <option value="BGMのみ">BGMのみ</option>
+              <option value="効果音のみ">効果音のみ</option>
+              <option value="語り＋BGM">語り＋BGM</option>
+              <option value="無音">無音</option>
+            </select></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">役割</span>
             <select id="vm-role" class="fld">
               <option value="">—</option>
@@ -643,7 +652,7 @@
             </select></label>
         </div>
         <p id="vm-strategy-note" class="hidden text-[11px] text-amber-400 leading-relaxed">
-          「役割」と「変えたもの」を残すには、Supabase の SQL Editor で <code>youtube-strategy.sql</code> を実行してください。
+          「音」「役割」「変えたもの」を残すには、Supabase の SQL Editor で <code>youtube-strategy.sql</code> を実行してください。
         </p>
         <div class="grid grid-cols-2 gap-3">
           <label><span class="block text-[11px] text-slate-500 mb-1">YouTubeのURL</span><input id="vm-url" class="fld" placeholder="https://www.youtube.com/shorts/..."></label>
@@ -755,6 +764,7 @@ const rivalSubsMax = st => {
    order は、ショート動画で結果に効きやすい順です。 */
 const AXES = [
   { key:'hook',    name:'冒頭の掴み',     of: s => s.v.hook_type },
+  { key:'audio',   name:'音',             of: s => s.v.audio_type },
   { key:'theme',   name:'テーマ',         of: s => s.v.theme },
   { key:'dur',     name:'尺',             of: s => durationBucket(s.v.duration_sec) },
   { key:'format',  name:'形式',           of: s => s.v.format },
@@ -834,7 +844,7 @@ async function loadAll(){
     sb.from('sv_channel_daily').select('*').order('measured_on', { ascending:true }).limit(2000),
     sb.from('sv_metrics').select('subs_gained').limit(1),
     sb.from('sv_metrics_log').select('id').limit(1),
-    sb.from('sv_videos').select('role').limit(1),
+    sb.from('sv_videos').select('role,audio_type').limit(1),
   ]);
 
   if ([v,p,m,s].some(r => r.error && missing.test(r.error.message||''))) {
@@ -879,7 +889,7 @@ async function loadAll(){
   if (!state.hasLog)
     todo.push('<b>入力した数字の控えがまだ作られていません。</b>Supabase の SQL Editor で <code>保存を守る.sql</code> を実行してください。実行すると、保存した数字が別の場所にも残り、消えても戻せるようになります。');
   if (!state.hasStrategy)
-    todo.push('1本ごとの「役割（間口・奥座敷）」と「今回変えたもの」を残すには、Supabase の SQL Editor で <code>youtube-strategy.sql</code> を実行してください。（実行しなくても、ほかの機能はそのまま使えます）');
+    todo.push('1本ごとの「音」「役割（間口・奥座敷）」「今回変えたもの」を残すには、Supabase の SQL Editor で <code>youtube-strategy.sql</code> を実行してください。<b>一度実行した方も、もう一度実行してください</b>（音を記録する列が増えています。同じSQLを何度実行しても壊れません）。');
   if (todo.length){
     $('#setup-warn').classList.remove('hidden');
     $('#setup-warn').innerHTML = todo.join('<br>');
@@ -1024,10 +1034,19 @@ function groupBy(list, keyFn){
     if (!m.has(k)) m.set(k, []);
     m.get(k).push(s);
   });
+  // 再生の倍率だけを見ていると、「よく回ったが誰も残らなかった型」を勝ちだと勘違いします。
+  // 最後まで見られた割合・登録・サイト到達も、同じ粒度で並べて出します。
+  const midOf = (arr, key) => {
+    const xs = arr.map(x => x[key]).filter(n => n != null && isFinite(n));
+    return xs.length ? median(xs) : null;
+  };
   return [...m.entries()].map(([key, arr]) => ({
     key, n: arr.length,
     avg: arr.reduce((a,b)=>a+b.index,0)/arr.length,
     med: median(arr.map(x=>x.views)),
+    ret:   midOf(arr, 'retention'),
+    sub:   midOf(arr, 'subRate'),
+    visit: midOf(arr, 'visitRate'),
   })).sort((a,b) => b.avg - a.avg);
 }
 
@@ -1430,13 +1449,39 @@ function axisStates(scored){
   });
 }
 
+/* その変数の差が、どれくらい信じられるか。
+   再生の倍率だけで決めると「回ったが誰も残らなかった型」を勝ちだと勘違いします。
+   最後まで見られた割合・登録・サイト到達も見て、
+   2つ以上の指標で差が出ているものだけを「確実」と呼びます。 */
+function evidenceOf(x){
+  if (x.solid.length < 2) return { level:'まだ推測', reasons:[], best:x.best||null, worst:null };
+  const b = x.solid[0], w = x.solid[x.solid.length-1];
+  const reasons = [];
+  if (b.avg >= w.avg * 1.3)
+    reasons.push(`再生 ${dec(b.avg)}倍 対 ${dec(w.avg)}倍`);
+  if (b.ret != null && w.ret != null && b.ret >= w.ret + 5)
+    reasons.push(`最後まで ${dec(b.ret,0)}% 対 ${dec(w.ret,0)}%`);
+  // どちらも 0 のときに「0 >= 0」で差が出たことにしないよう、良いほうが 0 より大きいことを条件にします
+  if (b.sub > 0 && w.sub != null && b.sub >= w.sub * 1.3)
+    reasons.push(`1000再生あたりの登録 ${dec(b.sub)}人 対 ${dec(w.sub)}人`);
+  if (b.visit > 0 && w.visit != null && b.visit >= w.visit * 1.3)
+    reasons.push(`サイト到達 ${dec(b.visit)}人 対 ${dec(w.visit)}人`);
+  const level = reasons.length >= 2 ? '確実' : reasons.length === 1 ? 'たぶん' : '差がない';
+  return { level, reasons, best:b, worst:w };
+}
+
 /* 固定する型＝すでに確定している「いちばん良かった値」だけ */
 function fixedCombo(states){
-  return states.filter(x => x.best).map(x => ({
-    name: x.axis.name, value: x.best.key, avg: x.best.avg, n: x.best.n,
-    // 値が1種類しかないものは「いつもそうしている」だけで、比べた結果ではありません
-    compared: x.solid.length >= 2,
-  }));
+  return states.filter(x => x.best).map(x => {
+    const ev = evidenceOf(x);
+    return {
+      name: x.axis.name, value: x.best.key, avg: x.best.avg, n: x.best.n,
+      ret: x.best.ret, sub: x.best.sub,
+      // 値が1種類しかないものは「いつもそうしている」だけで、比べた結果ではありません
+      compared: x.solid.length >= 2,
+      level: ev.level, reasons: ev.reasons,
+    };
+  });
 }
 
 /* 今回変える1つ。AXES は効きやすい順に並べてあるので、
@@ -1451,6 +1496,7 @@ function nextAxis(states){
 function axisCandidates(x){
   const known = {
     hook:    ['問いかけ','共感','断言','数字','体験談','場面描写'],
+    audio:   ['BGM＋効果音','BGMのみ','効果音のみ','語り＋BGM','無音'],
     format:  ['語り','テロップのみ','音楽メイン','対話'],
     cta:     ['リンクへ','コメント促し','登録の約束','なし'],
     dur:     ['〜15秒','16〜30秒','31〜45秒','46〜60秒'],
@@ -1478,7 +1524,7 @@ function renderTestPlan(){
     <div class="text-xs font-semibold mb-2" style="color:#2b7f8c">固定するもの（変えない）</div>
     ${fixed.length
       ? `<div class="flex flex-wrap gap-1.5">${fixed.map(f =>
-          `<span class="chip" style="background:${f.compared?'rgba(43,127,140,.12)':'rgba(43,47,51,.07)'};color:${f.compared?'#2b7f8c':'#6f757b'}">${esc(f.name)}：${esc(f.value)} ${dec(f.avg)}倍${f.compared?'':'・比較まだ'}</span>`).join('')}</div>`
+          `<span class="chip" style="background:${f.level==='確実'?'rgba(43,127,140,.14)':f.compared?'rgba(154,116,32,.11)':'rgba(43,47,51,.07)'};color:${f.level==='確実'?'#2b7f8c':f.compared?'#9a7420':'#6f757b'}">${esc(f.name)}：${esc(f.value)} ${dec(f.avg)}倍・${f.compared?esc(f.level):'比較まだ'}</span>`).join('')}</div>`
       : `<p class="text-[11px] text-slate-400 leading-relaxed">まだ確定した型がありません。
           いまは固定するものを決める段階です。${MIN_SAMPLE}本ずつ同じ条件でそろえると、そこから型が見えてきます。</p>`}
   </div>`);
@@ -1780,26 +1826,33 @@ function renderAdvice(){
 
   renderTestPlan();
 
-  /* 属性ごとの比較（倍率と、実際の中央値を並べて出す） */
-  const dims = [
-    { name:'投稿した時間帯', fn: s => hourBucket(s.postedAt) },
-    { name:'投稿した曜日',   fn: s => s.postedAt ? WEEKDAYS[new Date(s.postedAt).getDay()]+'曜' : null },
-    { name:'テーマ',         fn: s => s.v.theme },
-    { name:'冒頭の掴み',     fn: s => s.v.hook_type },
-    { name:'形式',           fn: s => s.v.format },
-    { name:'尺',             fn: s => durationBucket(s.v.duration_sec) },
-    { name:'締めの誘導',     fn: s => s.v.cta_type },
-  ];
-  const groupsHtml = dims.map(d => {
-    const g = groupBy(scored, d.fn);
+  /* 属性ごとの比較。
+     再生の倍率だけでなく、最後まで見られた割合と登録も同じ行に並べます。
+     「よく回ったのに誰も残らなかった型」を勝ちだと勘違いしないためです。 */
+  const groupsHtml = AXES.map(a => {
+    const g = groupBy(scored, a.of);
     if (!g.length) return '';
-    return `<div><h3 class="text-[11px] font-semibold text-slate-400 mb-2">${d.name}</h3>` +
-      hbars(g.map(x => ({
-        label: x.key, sub: `（${x.n}本${x.n<MIN_SAMPLE?'・参考':''}）`,
-        value: x.avg, dim: x.n < MIN_SAMPLE,
-        tone: x.n < MIN_SAMPLE ? 'flat' : x.avg >= 1.3 ? 'good' : null,
-        text: `${dec(x.avg)}倍 ・ 中央値 ${num(Math.round(x.med))}回`,
-      })), { max: 2 }) + `</div>`;
+    const st = { axis:a, groups:g, solid:g.filter(x=>x.n>=MIN_SAMPLE), thin:g.filter(x=>x.n<MIN_SAMPLE), best:g.filter(x=>x.n>=MIN_SAMPLE)[0]||null };
+    const ev = evidenceOf(st);
+    const badge = ev.level === '確実'   ? `<span class="chip" style="background:rgba(43,127,140,.14);color:#2b7f8c">確実</span>`
+                : ev.level === 'たぶん' ? `<span class="chip" style="background:rgba(154,116,32,.13);color:#9a7420">たぶん</span>`
+                : ev.level === '差がない' ? `<span class="chip">差がない</span>`
+                : `<span class="chip">まだ推測</span>`;
+    return `<div>
+      <h3 class="text-[11px] font-semibold text-slate-400 mb-2 flex items-center gap-2">${a.name} ${badge}</h3>` +
+      hbars(g.map(x => {
+        const extra = [];
+        if (x.ret != null) extra.push(`最後まで ${dec(x.ret,0)}%`);
+        if (x.sub != null) extra.push(`登録 ${dec(x.sub)}人`);
+        return {
+          label: x.key, sub: `（${x.n}本${x.n<MIN_SAMPLE?'・参考':''}）`,
+          value: x.avg, dim: x.n < MIN_SAMPLE,
+          tone: x.n < MIN_SAMPLE ? 'flat' : x.avg >= 1.3 ? 'good' : null,
+          text: `${dec(x.avg)}倍${extra.length ? ' ・ '+extra.join(' ・ ') : ' ・ 中央値 '+num(Math.round(x.med))+'回'}`,
+        };
+      }), { max: 2 }) +
+      (ev.reasons.length ? `<p class="text-[10px] text-slate-600 mt-1.5">${esc(ev.reasons.join(' ／ '))}</p>` : '') +
+      `</div>`;
   }).join('');
   $('#insight-groups').innerHTML = groupsHtml || emptyNote('まだ比べられる材料がありません。');
 
@@ -1840,6 +1893,9 @@ const RULES = [
     key:'retention' },
   { t:'最初の3秒に「なんだろう」を置く',
     d:'見る人は最初の数秒で、指を止めるか流すかを決めています。必要なのは煽りではなく、小さな謎です。「この人は何を見ているんだろう」「この続きはどうなるんだろう」。文字が読めなくても、画だけで「あれ？」と思える状態がいちばん強いです。',
+    key:'retention' },
+  { t:'音のない動画は、最後まで残らない',
+    d:'ショート動画は音のあるものとして見られています。無音だと、それだけで離脱します。静かなBGMを敷き、切り替わりに小さな効果音を置くだけで変わります。煽る音は要りません。波・雨・鈴のような、角のない音を小さく。',
     key:'retention' },
   { t:'1本につき、変えるのは1つだけ',
     d:'掴み・テーマ・尺・形式・時間帯を一度に変えると、伸びても伸びなくても理由が残りません。効いた型は固定して、1つだけ変える。それを3本ずつ積むと、消去法で勝ち筋が出ます。',
@@ -2038,10 +2094,12 @@ function openVideo(id){
   $('#vm-date').value = v?.produced_on || todayStr();
   $('#vm-note').value = v?.note || '';
   // 役割と「今回変えたもの」は列がある時だけ。無いまま入れさせると、保存で消えたように見えます。
-  $('#vm-role').value = v?.role || '';
-  $('#vm-axis').value = v?.test_axis || '';
-  $('#vm-role').disabled = !state.hasStrategy;
-  $('#vm-axis').disabled = !state.hasStrategy;
+  $('#vm-role').value  = v?.role || '';
+  $('#vm-axis').value  = v?.test_axis || '';
+  $('#vm-audio').value = v?.audio_type || '';
+  $('#vm-role').disabled  = !state.hasStrategy;
+  $('#vm-axis').disabled  = !state.hasStrategy;
+  $('#vm-audio').disabled = !state.hasStrategy;
   $('#vm-strategy-note').classList.toggle('hidden', state.hasStrategy);
   $('#vm-url').value = p?.url || '';
   $('#vm-at').value = p?.posted_at ? toLocalInput(p.posted_at) : '';
@@ -2060,8 +2118,9 @@ $('#vm-save').addEventListener('click', async () => {
     cta_type: $('#vm-cta').value.trim()||null, produced_on: $('#vm-date').value||null,
     note: $('#vm-note').value.trim()||null };
   if (state.hasStrategy){
-    payload.role      = $('#vm-role').value || null;
-    payload.test_axis = $('#vm-axis').value || null;
+    payload.role       = $('#vm-role').value || null;
+    payload.test_axis  = $('#vm-axis').value || null;
+    payload.audio_type = $('#vm-audio').value || null;
   }
 
   $('#vm-save').disabled = true;
@@ -2325,6 +2384,7 @@ function promptLineOf(s){
   if (s.v.theme)     bits.push(`テーマ:${s.v.theme}`);
   if (s.v.hook_type) bits.push(`掴み:${s.v.hook_type}`);
   if (s.v.cta_type)  bits.push(`締め:${s.v.cta_type}`);
+  if (s.v.audio_type) bits.push(`音:${s.v.audio_type}`);
   if (s.v.role)      bits.push(`役割:${s.v.role}`);
   if (s.v.test_axis) bits.push(`変えた点:${s.v.test_axis}`);
   if (s.postedAt){
@@ -2356,6 +2416,10 @@ function buildPrompt(){
   const fixed  = fixedCombo(states);
   const nx     = nextAxis(states);
   const role   = roleForNext(st);
+  /* 音。ショート動画でいちばん効くのに、いままで記録すらしていなかった変数です。 */
+  const audioX  = states.find(x => x.axis.key === 'audio');
+  const audioEv = audioX ? evidenceOf(audioX) : null;
+  const audioBest = (audioX && audioX.best) ? audioX.best.key : null;
   const slug   = nextSlug();
   const url    = trackUrl(slug);
   const ch     = state.channel.length ? state.channel[state.channel.length-1] : null;
@@ -2432,14 +2496,39 @@ function buildPrompt(){
   const dimLines = states.map(x => {
     const g = x.groups.slice(0, 4);
     if (!g.length) return null;
-    return `- ${x.axis.name}：` + g.map(y =>
-      `${y.key} ${dec(y.avg)}倍（${y.n}本${y.n < MIN_SAMPLE ? '・参考' : '・確定'}）`).join(' ／ ');
+    const ev = evidenceOf(x);
+    return `- ${x.axis.name}（${ev.level}）：` + g.map(y => {
+      const ex = [];
+      if (y.ret != null) ex.push(`最後まで${dec(y.ret,0)}%`);
+      if (y.sub != null) ex.push(`登録${dec(y.sub)}人`);
+      return `${y.key} ${dec(y.avg)}倍${ex.length ? '・'+ex.join('・') : ''}（${y.n}本${y.n < MIN_SAMPLE ? '・参考' : ''}）`;
+    }).join(' ／ ');
   }).filter(Boolean);
   if (dimLines.length){
     L.push('## 何が効いているか');
     L.push('再生数を、このチャンネルの中央値で割った「倍率」です。1.0倍がふつう。');
+    L.push('あわせて「最後まで見られた割合」と「1000再生あたりの登録」も並べてあります。');
+    L.push('**再生の倍率だけを見ないでください。** よく回ったのに誰も残らなかった型は、このチャンネルでは負けです。');
     L.push(`${MIN_SAMPLE}本に満たないものは「参考」です。まだ言い切れない数字として扱ってください。`);
+    L.push('見出しの（確実／たぶん／差がない／まだ推測）は、指標がいくつ同じ向きに出たかです。');
+    L.push('確実＝2つ以上の指標で差が出ている。たぶん＝1つだけ。差がない＝比べたが差が出ていない（好きに選んでよい）。');
     L.push(...dimLines);
+    L.push('');
+  }
+
+  /* 確実なものと、まだ確かめていないものを、はっきり分けて渡す */
+  const sure = states.map(x => ({ x, ev: evidenceOf(x) })).filter(o => o.ev.level === '確実');
+  if (sure.length){
+    L.push('## いちばん確実に効いている条件（ここは動かさないでください）');
+    sure.forEach(o => L.push(
+      `- ${o.x.axis.name}は「${o.ev.best.key}」（${o.ev.best.n}本）。「${o.ev.worst.key}」と比べて ${o.ev.reasons.join(' ／ ')}`));
+    L.push('');
+  }
+  const unsure = states.filter(x => x.solid.length < 2).map(x => x.axis.name);
+  if (unsure.length){
+    L.push('## まだ確かめられていないこと（推測で断言しないでください）');
+    L.push(`- ${unsure.join(' ／ ')}`);
+    L.push(`  それぞれ、まだ${MIN_SAMPLE}本ずつの比較ができていません。ここについては「こうだ」と言い切らず、試す案として出してください。`);
     L.push('');
   }
 
@@ -2531,10 +2620,63 @@ function buildPrompt(){
   L.push('- どちらの回でも、**間口 → 奥座敷 → 相談ページ**という順路のどこにこの1本が置かれるのかを意識してください。');
   L.push('');
 
+  /* ── 9.5 音。無音のまま出し続けていたのを、ここで止めます ── */
+  L.push('## 音（今回いちばん大事な変更点です）');
+  L.push('**無音の mp4 は不可です。必ず音声トラックの入った mp4 を書き出してください。**');
+  L.push('これまでの指示文が「音はあとで載せる」と書いていたせいで、文字だけの静かな動画が続いていました。');
+  L.push('ショート動画は音のあるものとして見られています。音がないと、それだけで最後まで残りません。');
+  L.push('');
+  if (audioBest && audioEv && audioEv.level !== 'まだ推測'){
+    L.push(`このチャンネルの記録では、音は「${audioBest}」がいちばん良い結果です（${audioEv.level}）。`);
+    if (audioEv.reasons.length) L.push(`根拠：「${audioEv.worst.key}」と比べて ${audioEv.reasons.join(' ／ ')}`);
+    L.push(`今回も **${audioBest}** で作ってください。`);
+  } else if (audioBest){
+    L.push(`いまのところ音は「${audioBest}」で作った回が最も良い数字ですが、まだ比べられるだけの本数がありません。`);
+    L.push(`今回も **${audioBest}** で作って、本数を積んでください。`);
+  } else {
+    L.push('音についての記録はまだ1本もありません。だからこそ、ここを今日から固定します。');
+    L.push('今回は **BGM＋効果音** で作ってください。');
+  }
+  L.push('');
+  L.push('### BGM');
+  L.push('- 星と海の曲（Suno で作ったもの）は、あとでこちらで差し替えます。');
+  L.push('  ですので今回は、**差し替えを前提にした仮のBGM**を、あなたのほうで作って敷いてください。無音にはしないこと。');
+  L.push('- 静かなアンビエントにしてください。波の音、遠い雨、低い持続音（ドローン）、ゆっくりした心音のような脈。');
+  L.push('- 20秒を通して鳴らし、最後の2秒はゆっくり小さくして終わる。');
+  L.push('- 音量は -20〜-24dBFS 程度。テロップを読む邪魔をしない、部屋の空気のような音量にしてください。');
+  L.push('');
+  L.push('### 効果音');
+  L.push('- 冒頭0.3秒に1つ。「なんだろう」と顔を上げさせる音です。ここだけは少し輪郭のある音にしてかまいません。');
+  L.push('- テロップの切り替わり（4秒ごと）に、ごく小さく1つずつ。');
+  L.push('- 最後のテロップが消えるところに、余韻の残る音を1つ。');
+  L.push('- 合計7つまで。これ以上は入れないでください。うるさい動画は、このチャンネルでは逆効果です。');
+  L.push('');
+  L.push('### 音の方向（ここを外すとチャンネルごと壊れます）');
+  L.push('- 使わない音：通知音、ポップ、キラキラ、ドゥン系の重い衝撃音、テレビのような効果音。');
+  L.push('  煽る音は、しんどい夜に見ている人をそのまま追い出します。');
+  L.push('- 使う音：波、雨、紙、鈴、遠い雷、風、低く短い余韻。減衰の長い、角のない音。');
+  L.push('- 目安は「夜、イヤホンで聞いても痛くないか」。痛ければ音量か音色が間違っています。');
+  L.push('- 効果音は -18〜-24dBFS。全体は -14 LUFS にそろえてください（SNS標準）。');
+  L.push('');
+  L.push('### 音の作り方');
+  L.push('- 音源をどこかからダウンロードしてこないでください。権利の分からない音は使えません。');
+  L.push('- コードで合成してください（例：numpy で正弦波・ノイズを作り、包絡線をかけて wav に書き出し、ffmpeg で映像と合わせる）。');
+  L.push('  雨や波はホワイトノイズにフィルタをかければ作れます。鈴や余韻は減衰する正弦波の重ね合わせで作れます。');
+  L.push('- 書き出したら、**音が本当に入っているか確認してください**（ffprobe でストリームを見る、長さと音量を測るなど）。');
+  L.push('  無音のまま「できました」と返さないこと。ここが今回いちばん守ってほしいところです。');
+  L.push('');
+  L.push('### 渡してほしい音のファイル');
+  L.push('1. 音入りの mp4（本命。これがないと今回は未完成です）');
+  L.push('2. 音なしの mp4（あとで星と海の曲に差し替えるとき用）');
+  L.push('3. BGM だけの wav と、効果音だけの wav（あとで音量を調整できるように、別々で）');
+  L.push('');
+  L.push('あわせて、**どの秒に何の音を置いたか**を表で書いてください（例：0.0秒 ざらついた波 ／ 4.0秒 紙のすれる音 …）。');
+  L.push('');
+
   /* ── 10. 作り方（仕組み化） ── */
   L.push('## 動画の作り方（この形は変えないでください）');
   L.push('- 縦1080×1920 ／ 20秒 ／ テロップ5枚（1枚4秒）');
-  L.push('- 読み上げ音声なし。音楽のみ（星と海の曲は、あとでこちらで載せます）');
+  L.push('- 読み上げ音声（ナレーション）は入れません。音は BGM と効果音だけです（次の章で詳しく指定します）');
   L.push('- 1枚目のテロップから本題に入る。「今日は◯◯について話します」のような前置きは書かない');
   L.push('- テロップ1枚は20〜30字まで。スマホで一目で読める長さにする');
   L.push(`- この型は、しんどい日でも${st.minutes}分あれば出せるように決めたものです。凝った演出で作業を増やさないでください。`);
@@ -2542,7 +2684,7 @@ function buildPrompt(){
   L.push('');
   L.push('## mp4 の書き出し方');
   L.push('- 形式は mp4（H.264）／ 1080×1920 ／ 30fps ／ 20秒ちょうど');
-  L.push('- 音声トラックはなしでかまいません。音楽はこちらで載せます');
+  L.push('- **音声トラックは必須**（AAC 48kHz ステレオ）。上の「音」の章のとおりに作ってください');
   L.push('- 背景は濃い夜の色（深い紺〜黒）。文字は白。夜にスマホで見てまぶしくない明るさにする');
   L.push('- テロップは画面の中央に、大きく、余白をとって置く。上下は端から200px以上あける');
   L.push('- 日本語が豆腐（□）にならないよう、日本語が入ったフォントを指定してください。');
@@ -2555,8 +2697,9 @@ function buildPrompt(){
   /* ── 11. 出してほしいもの ── */
   L.push('## 出してほしいもの');
   L.push('');
-  L.push('### 1. mp4 の動画ファイル');
-  L.push('上の「mp4 の書き出し方」のとおりに書き出した、20秒の縦動画を渡してください。');
+  L.push('### 1. mp4 の動画ファイル（音入り）');
+  L.push('上の「音」と「mp4 の書き出し方」のとおりに書き出した、20秒の縦動画を渡してください。');
+  L.push('**音が入っていない mp4 は、今回は未完成として扱います。**');
   L.push('これが今回いちばん大事な成果物です。ここまで来て、はじめて終わりです。');
   L.push('');
   L.push('### 2. 動画の構成'
@@ -2597,8 +2740,10 @@ function buildPrompt(){
   L.push('');
   L.push('### 6. 記録用の1行');
   L.push('作ったものを分析ページに登録するので、最後にこの形で出してください。');
-  L.push(`識別子: ${slug} ／ テーマ: ___ ／ 冒頭の掴み: ___ ／ 形式: 音楽メイン ／ 尺: 20 ／ 締め: ___ ／ 役割: ${role.role} ／ 今回変えたもの: ${nx ? nx.axis.name : '変えていない'}`);
-  L.push('（掴みは 問いかけ・共感・断言・数字・体験談・場面描写 から、締めは リンクへ・コメント促し・登録の約束・なし から選んでください）');
+  L.push(`識別子: ${slug} ／ テーマ: ___ ／ 冒頭の掴み: ___ ／ 音: ${audioBest || 'BGM＋効果音'} ／ 形式: 音楽メイン ／ 尺: 20 ／ 締め: ___ ／ 役割: ${role.role} ／ 今回変えたもの: ${nx ? nx.axis.name : '変えていない'}`);
+  L.push('（掴みは 問いかけ・共感・断言・数字・体験談・場面描写 から、');
+  L.push('　音は BGM＋効果音・BGMのみ・効果音のみ・語り＋BGM・無音 から、');
+  L.push('　締めは リンクへ・コメント促し・登録の約束・なし から選んでください）');
   L.push('');
   L.push('### 7. 次の2本の設計（作らなくていいです。設計だけ）');
   L.push(`今回の1本と合わせて3本で1つの検証にします。${nx ? `**${nx.axis.name}だけ**を変えた案` : '1つだけ変えた案'}を、あと2本ぶん出してください。`);
