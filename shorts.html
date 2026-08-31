@@ -11,7 +11,8 @@
      1. Supabase の SQL Editor で schema.sql を実行
      2. 同じく sync-youtube.sql を実行（YouTubeの自動取り込み）
      3. 同じく youtube-upgrade.sql を実行（登録者数の記録・任意）
-     4. このファイルをブラウザで開いてログイン
+     4. 同じく youtube-strategy.sql を実行（1本ごとの役割と検証した変数・任意）
+     5. このファイルをブラウザで開いてログイン
 
    スマホから使う
      cd ~/claude/shorts-analytics && npx vercel --prod
@@ -170,6 +171,7 @@
   <nav class="scroll-x mb-5">
     <div id="tabbar" class="flex gap-1 min-w-max glass p-1" style="border-radius:2px;">
       <button data-tab="home"    class="tab whitespace-nowrap px-4 py-2 text-sm" style="border-radius:1px;">ダッシュボード</button>
+      <button data-tab="base"    class="tab whitespace-nowrap px-4 py-2 text-sm" style="border-radius:1px;">土台</button>
       <button data-tab="advice"  class="tab whitespace-nowrap px-4 py-2 text-sm" style="border-radius:1px;">次に作る動画</button>
       <button data-tab="grow"    class="tab whitespace-nowrap px-4 py-2 text-sm" style="border-radius:1px;">伸ばし方</button>
       <button data-tab="videos"  class="tab whitespace-nowrap px-4 py-2 text-sm" style="border-radius:1px;">動画</button>
@@ -248,6 +250,95 @@
     </div>
   </section>
 
+  <!-- ────── 土台 ────── -->
+  <!-- 数字からは絶対に出てこないもの（なぜやるのか・どこまで行けるのか）を置く場所です。
+       ここに入れた言葉は、そのまま「次の1本を Claude に頼む」指示文の先頭に入ります。 -->
+  <section id="tab-base" class="tabpanel hidden space-y-4">
+
+    <div class="glass rounded-3xl p-6">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-lg">⛩</span>
+        <h2 class="font-bold">なぜ、これをやるのか</h2>
+      </div>
+      <p class="text-[11px] text-slate-500 mb-5 leading-relaxed">
+        再生数だけを追いかけると、途中で息が切れます。
+        <b class="text-slate-300">数字が伸びなかった週に、それでも続けられる理由</b>をここに置いてください。
+        ここに書いた言葉は、次の1本を頼む指示文の先頭にそのまま入ります。
+      </p>
+      <div class="space-y-3 text-xs">
+        <label class="block"><span class="block text-[11px] text-slate-500 mb-1">何のために発信するのか（本当の目的）</span>
+          <textarea id="base-purpose" rows="2" class="fld text-xs leading-relaxed"
+            placeholder="眠れない夜に、ひとりで抱えている人に「自分だけじゃない」と思ってもらう。"></textarea></label>
+        <label class="block"><span class="block text-[11px] text-slate-500 mb-1">最後にたどり着きたいところ（ゴール）</span>
+          <textarea id="base-goal" rows="2" class="fld text-xs leading-relaxed"
+            placeholder="星と海の相談ページまで来てもらって、実際に話せる場所につなぐ。"></textarea></label>
+        <label class="block"><span class="block text-[11px] text-slate-500 mb-1">自分が楽しめる・続けられる部分</span>
+          <textarea id="base-keep" rows="2" class="fld text-xs leading-relaxed"
+            placeholder="夜に浮かんだ言葉を、そのまま短く書き留めること。作曲した曲を使えること。"></textarea></label>
+      </div>
+    </div>
+
+    <div class="glass rounded-3xl p-6">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-lg">📐</span>
+        <h2 class="font-bold">この分野の上限と、いまの現在地</h2>
+      </div>
+      <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">
+        同じジャンルでいちばん伸びているアカウントを調べて、
+        その<b class="text-slate-300">最大値</b>を入れてください。
+        「自分が伸びていない」のか「この分野がそもそもそこまでなのか」は、これがないと区別できません。
+      </p>
+      <div id="base-rivals" class="space-y-2.5"></div>
+      <button id="base-rival-add" class="mt-2 glass px-3 py-2 text-xs hover:border-sky-400/50" style="border-radius:2px">＋ 1つ足す</button>
+      <div id="base-gap" class="mt-5"></div>
+    </div>
+
+    <div class="glass rounded-3xl p-6">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-lg">🚪</span>
+        <h2 class="font-bold">間口と奥座敷</h2>
+      </div>
+      <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">
+        <b class="text-slate-300">間口</b>は、まだ知らない人に届くための動画です。ニッチに寄せすぎず、もっと多くの人が「これは分かる」と思える切り口にします。<br>
+        <b class="text-slate-300">奥座敷</b>は、すでに見てくれている人を深いところへ連れていく動画です。
+        登録・相談ページ・長い話は、こちら側にあります。<br>
+        間口ばかりだと通り過ぎられ、奥座敷ばかりだと新しい人が来ません。
+      </p>
+      <div class="flex flex-wrap items-end gap-3 mb-4">
+        <label class="text-xs">
+          <span class="block text-[11px] text-slate-500 mb-1">間口にしたい割合</span>
+          <select id="base-mix" class="fld py-1.5 text-sm" style="width:10rem">
+            <option value="80">8割（広げたい時期）</option>
+            <option value="70">7割（ふつう）</option>
+            <option value="60">6割</option>
+            <option value="50">半々（深めたい時期）</option>
+          </select>
+        </label>
+        <label class="text-xs">
+          <span class="block text-[11px] text-slate-500 mb-1">1本にかける時間の上限</span>
+          <select id="base-minutes" class="fld py-1.5 text-sm" style="width:10rem">
+            <option value="15">15分</option>
+            <option value="30">30分</option>
+            <option value="45">45分</option>
+            <option value="60">60分</option>
+          </select>
+        </label>
+      </div>
+      <div id="base-mixnow"></div>
+    </div>
+
+    <div class="glass rounded-2xl p-5">
+      <div class="flex items-center justify-between gap-3">
+        <p class="text-[11px] text-slate-500 leading-relaxed">
+          ここに書いたことは<b class="text-slate-400">この端末の中だけ</b>に残ります。
+          数字とちがって、他の人に見せるものではないからです。
+        </p>
+        <button id="base-save" class="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-900 whitespace-nowrap" style="background:#17456b">保存する</button>
+      </div>
+      <p id="base-msg" class="text-[11px] mt-2"></p>
+    </div>
+  </section>
+
   <!-- ────── 次に作る動画 ────── -->
   <section id="tab-advice" class="tabpanel hidden space-y-4">
     <div class="glass rounded-3xl p-6">
@@ -255,11 +346,18 @@
         <span class="text-lg">📝</span>
         <h2 class="font-bold">次の1本を Claude に頼む</h2>
       </div>
-      <p class="text-[11px] text-slate-500 mb-4">
-        入力した数字と、いま効いている型をまとめて、指示文にします。
+      <p class="text-[11px] text-slate-500 mb-3 leading-relaxed">
+        「土台」タブに書いた目的、入力した数字、いま効いている型、そして
+        <b class="text-slate-300">今回どの変数を1つだけ変えるか</b>までをまとめて、指示文にします。
         いつも動画を作ってもらっている Claude に、そのまま貼ってください。
-        <b class="text-slate-300">mp4 の動画ファイルそのもの</b>と、題名・説明文・固定コメント用の計測リンクまで返ってきます。
+        <b class="text-slate-300">mp4 の動画ファイルそのもの</b>と、題名・説明文・固定コメント用の計測リンク、
+        さらに<b class="text-slate-300">次の2本の検証案</b>まで返ってきます。
         「提案だけで終わらせず mp4 にしてください」と指示文の先頭で言い切っています。
+      </p>
+      <p id="prompt-base-hint" class="hidden text-[11px] mb-3 rounded-lg px-3 py-2 leading-relaxed cursor-pointer"
+         style="background:rgba(154,116,32,.09);color:#9a7420">
+        「土台」タブがまだ空です。<b>なぜやるのか</b>と<b>この分野の上限</b>を入れておくと、
+        指示文が「数字を追うだけの提案」にならずに済みます。
       </p>
       <button id="prompt-build" class="w-full rounded-2xl py-3.5 font-medium text-slate-900 shadow-2xl"
               style="background:#17456b">分析してプロンプトを作る</button>
@@ -279,6 +377,27 @@
           そろえておかないと、固定コメントのリンクから来た人がどの動画のぶんか分からなくなります。
         </p>
       </div>
+    </div>
+
+    <div class="glass rounded-3xl p-6">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-lg">🧪</span>
+        <h2 class="font-bold">今回の検証設計</h2>
+      </div>
+      <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">
+        1本ごとに何もかも変えると、伸びても伸びなくても<b class="text-slate-300">理由が分かりません</b>。
+        効いた型は固定して、<b class="text-slate-300">1本につき1つだけ</b>変えます。
+        上の指示文にも、この設計がそのまま入ります。
+      </p>
+      <div id="test-design" class="space-y-3"></div>
+    </div>
+
+    <div class="glass rounded-2xl p-5">
+      <h2 class="font-semibold text-sm mb-1">どこまで試したか</h2>
+      <p class="text-[11px] text-slate-500 mb-4">
+        3本たまると「確定」、それ未満は「まだ分からない」です。灰色のところが、これから試す余地です。
+      </p>
+      <div id="test-matrix" class="space-y-4"></div>
     </div>
 
     <div class="glass rounded-3xl p-6">
@@ -505,6 +624,28 @@
             <datalist id="dl-cta"><option value="リンクへ"><option value="コメント促し"><option value="登録の約束"><option value="なし"></datalist></label>
         </div>
         <div class="grid grid-cols-2 gap-3">
+          <label><span class="block text-[11px] text-slate-500 mb-1">役割</span>
+            <select id="vm-role" class="fld">
+              <option value="">—</option>
+              <option value="間口">間口（新しい人に届ける）</option>
+              <option value="奥座敷">奥座敷（深く連れていく）</option>
+            </select></label>
+          <label><span class="block text-[11px] text-slate-500 mb-1">この回で変えたもの</span>
+            <select id="vm-axis" class="fld">
+              <option value="">—</option>
+              <option value="テーマ">テーマ</option>
+              <option value="冒頭の掴み">冒頭の掴み</option>
+              <option value="形式">形式</option>
+              <option value="尺">尺</option>
+              <option value="投稿した時間帯">投稿した時間帯</option>
+              <option value="締めの誘導">締めの誘導</option>
+              <option value="変えていない">変えていない（型の再現）</option>
+            </select></label>
+        </div>
+        <p id="vm-strategy-note" class="hidden text-[11px] text-amber-400 leading-relaxed">
+          「役割」と「変えたもの」を残すには、Supabase の SQL Editor で <code>youtube-strategy.sql</code> を実行してください。
+        </p>
+        <div class="grid grid-cols-2 gap-3">
           <label><span class="block text-[11px] text-slate-500 mb-1">YouTubeのURL</span><input id="vm-url" class="fld" placeholder="https://www.youtube.com/shorts/..."></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">投稿した日時</span><input id="vm-at" type="datetime-local" class="fld"></label>
         </div>
@@ -578,11 +719,55 @@ const GOALS = [
     need:'計測リンク（リンクタブ）' },
 ];
 
+/* ── 土台（なぜやるのか・どこまで行けるのか） ──────────────
+   数字からは出てこないので、ここだけは自分の言葉で置いておきます。
+   この端末の中にだけ残します（他人に見せる種類のものではないため）。 */
+const STRATEGY_KEY = 'sv-strategy-v1';
+const STRATEGY_DEFAULT = {
+  purpose:'', goal:'', keep:'',
+  rivals:[{name:'',url:'',views:'',subs:''}],
+  mix:70,        // 間口にしたい割合(%)
+  minutes:30,    // 1本にかける時間の上限(分)
+};
+function readStrategy(){
+  try {
+    const o = JSON.parse(localStorage.getItem(STRATEGY_KEY) || '{}');
+    const st = Object.assign({}, STRATEGY_DEFAULT, o);
+    if (!Array.isArray(st.rivals) || !st.rivals.length) st.rivals = [{name:'',url:'',views:'',subs:''}];
+    return st;
+  } catch { return Object.assign({}, STRATEGY_DEFAULT); }
+}
+function writeStrategy(st){
+  try { localStorage.setItem(STRATEGY_KEY, JSON.stringify(st)); } catch {}
+}
+const rivalMax = st => {
+  const ns = (st.rivals||[]).map(r => Number(r.views)).filter(n => isFinite(n) && n > 0);
+  return ns.length ? Math.max(...ns) : null;
+};
+const rivalSubsMax = st => {
+  const ns = (st.rivals||[]).map(r => Number(r.subs)).filter(n => isFinite(n) && n > 0);
+  return ns.length ? Math.max(...ns) : null;
+};
+
+/* ── 変数（この7つの掛け合わせで1本が決まる） ──────────────
+   1本ごとに全部を変えると、何が効いたのか永久に分かりません。
+   だから「固定するもの」と「今回だけ変えるもの」を分けて扱います。
+   order は、ショート動画で結果に効きやすい順です。 */
+const AXES = [
+  { key:'hook',    name:'冒頭の掴み',     of: s => s.v.hook_type },
+  { key:'theme',   name:'テーマ',         of: s => s.v.theme },
+  { key:'dur',     name:'尺',             of: s => durationBucket(s.v.duration_sec) },
+  { key:'format',  name:'形式',           of: s => s.v.format },
+  { key:'cta',     name:'締めの誘導',     of: s => s.v.cta_type },
+  { key:'hour',    name:'投稿した時間帯', of: s => hourBucket(s.postedAt) },
+  { key:'weekday', name:'投稿した曜日',   of: s => s.postedAt ? WEEKDAYS[new Date(s.postedAt).getDay()]+'曜' : null },
+];
+
 /* ========================= 状態 ========================= */
 let sb = null;
 let state = {
   videos: [], posts: [], metrics: [], latest: {}, visits: [], channel: [],
-  hasSubs: false, hasChannel: false, hasLog: false, ready: false,
+  hasSubs: false, hasChannel: false, hasLog: false, hasStrategy: false, ready: false,
 };
 
 /* 打ち込んだ数字は、まずこの端末に残します。
@@ -639,7 +824,7 @@ async function enterApp(){
 
 /* ========================= 読み込み ========================= */
 async function loadAll(){
-  const [v, p, m, s, c, probe, logProbe] = await Promise.all([
+  const [v, p, m, s, c, probe, logProbe, roleProbe] = await Promise.all([
     sb.from('sv_videos').select('*'),
     sb.from('sv_posts').select('*').eq('platform', YT),
     // 新しいほうから取って、あとで古い順に並べ替えます
@@ -649,6 +834,7 @@ async function loadAll(){
     sb.from('sv_channel_daily').select('*').order('measured_on', { ascending:true }).limit(2000),
     sb.from('sv_metrics').select('subs_gained').limit(1),
     sb.from('sv_metrics_log').select('id').limit(1),
+    sb.from('sv_videos').select('role').limit(1),
   ]);
 
   if ([v,p,m,s].some(r => r.error && missing.test(r.error.message||''))) {
@@ -662,6 +848,7 @@ async function loadAll(){
   state.hasSubs    = !probe.error;
   state.hasChannel = !c.error;
   state.hasLog     = !logProbe.error;
+  state.hasStrategy = !roleProbe.error;
   state.videos  = v.data || [];
   state.posts   = p.data || [];
   state.metrics = (m.data || []).slice().sort((a,b) => a.measured_on < b.measured_on ? -1 : a.measured_on > b.measured_on ? 1 : 0);
@@ -691,6 +878,8 @@ async function loadAll(){
     todo.push('登録者の記録を使うには、Supabase の SQL Editor で <code>youtube-upgrade.sql</code> を実行してください。（実行しなくても、ほかの機能はそのまま使えます）');
   if (!state.hasLog)
     todo.push('<b>入力した数字の控えがまだ作られていません。</b>Supabase の SQL Editor で <code>保存を守る.sql</code> を実行してください。実行すると、保存した数字が別の場所にも残り、消えても戻せるようになります。');
+  if (!state.hasStrategy)
+    todo.push('1本ごとの「役割（間口・奥座敷）」と「今回変えたもの」を残すには、Supabase の SQL Editor で <code>youtube-strategy.sql</code> を実行してください。（実行しなくても、ほかの機能はそのまま使えます）');
   if (todo.length){
     $('#setup-warn').classList.remove('hidden');
     $('#setup-warn').innerHTML = todo.join('<br>');
@@ -702,7 +891,7 @@ async function loadAll(){
   $('#subs-input').value = '';
   $('#subs-input').placeholder = lastSubs ? '例 ' + lastSubs.subscribers : '例 128';
 
-  renderHome(); renderAdvice(); renderGrow(); renderVideos(); renderEntry(); renderLinkOptions();
+  renderHome(); renderBase(); renderAdvice(); renderGrow(); renderVideos(); renderEntry(); renderLinkOptions();
 }
 
 /* ========================= 取り込み ========================= */
@@ -1084,7 +1273,271 @@ function calendarHtml(){
     <p class="text-[10px] text-slate-600 mt-2">左が8週間前、右が今日。数字はその日に出した本数です（記録がある分：${num(total)}本）。</p>`;
 }
 
+/* ========================= 土台 =========================
+   ここは数字が出してくれない部分です。
+   「なぜやるのか」と「この分野はどこまで行けるのか」の2つだけを扱います。 */
+
+function rivalRowHtml(r, i){
+  return `<div class="rival grid grid-cols-2 sm:grid-cols-4 gap-2" data-i="${i}">
+    <input class="rv-name fld py-1.5 text-xs" placeholder="チャンネル名" value="${esc(r.name)}">
+    <input class="rv-url  fld py-1.5 text-xs" placeholder="URL（任意）" value="${esc(r.url)}">
+    <input class="rv-views fld py-1.5 text-xs num" inputmode="numeric" placeholder="最高再生数" value="${esc(r.views)}">
+    <input class="rv-subs  fld py-1.5 text-xs num" inputmode="numeric" placeholder="登録者数" value="${esc(r.subs)}">
+  </div>`;
+}
+
+function collectStrategy(){
+  const rivals = $$('#base-rivals .rival').map(el => ({
+    name:  el.querySelector('.rv-name').value.trim(),
+    url:   el.querySelector('.rv-url').value.trim(),
+    views: el.querySelector('.rv-views').value.trim(),
+    subs:  el.querySelector('.rv-subs').value.trim(),
+  }));
+  return {
+    purpose: $('#base-purpose').value.trim(),
+    goal:    $('#base-goal').value.trim(),
+    keep:    $('#base-keep').value.trim(),
+    rivals:  rivals.length ? rivals : [{name:'',url:'',views:'',subs:''}],
+    mix:     Number($('#base-mix').value) || 70,
+    minutes: Number($('#base-minutes').value) || 30,
+  };
+}
+
+function renderBase(){
+  const st = readStrategy();
+  $('#base-purpose').value = st.purpose;
+  $('#base-goal').value    = st.goal;
+  $('#base-keep').value    = st.keep;
+  $('#base-mix').value     = String(st.mix);
+  $('#base-minutes').value = String(st.minutes);
+  $('#base-rivals').innerHTML = st.rivals.map(rivalRowHtml).join('');
+  renderGap(st);
+  renderMix(st);
+  // 土台が空のままだと、指示文が「数字を追うだけ」になります。そのときだけ知らせます。
+  const empty = !st.purpose && !st.goal && !st.keep && rivalMax(st) == null;
+  $('#prompt-base-hint').classList.toggle('hidden', !empty);
+}
+$('#prompt-base-hint').addEventListener('click', () => showTab('base'));
+
+/* いまの自分と、この分野の上限との差 */
+function renderGap(st){
+  const cur = currentValues();
+  const box = $('#base-gap');
+  const rMax = rivalMax(st), rSubs = rivalSubsMax(st);
+  if (rMax == null && rSubs == null){
+    box.innerHTML = emptyNote('同ジャンルで伸びているアカウントの数字を1つ入れると、いまの現在地が出ます。');
+    return;
+  }
+  const myMax  = cur.withViews.length ? Math.max(...cur.withViews.map(s => s.views)) : null;
+  const ch     = state.channel.length ? state.channel[state.channel.length-1] : null;
+  const mySubs = ch ? ch.subscribers : null;
+  const rows = [];
+  if (rMax != null)  rows.push({ label:'いちばん伸びた1本', mine:myMax,  top:rMax  });
+  if (rSubs != null) rows.push({ label:'チャンネル登録者', mine:mySubs, top:rSubs });
+
+  const html = rows.map(r => {
+    const pct = (r.mine != null && r.top > 0) ? Math.min(r.mine / r.top * 100, 100) : 0;
+    return `<div class="mb-4">
+      <div class="flex justify-between items-baseline gap-3 mb-1">
+        <span class="text-xs text-slate-300">${esc(r.label)}</span>
+        <span class="text-[11px] num">
+          <span class="font-bold text-slate-300">${num(r.mine)}</span>
+          <span class="text-slate-600"> ／ この分野の上限 ${num(r.top)}</span>
+        </span>
+      </div>
+      <div class="track"><div class="fill ${pct>=30?'fill-good':''}" style="width:${pct}%"></div></div>
+      <p class="text-[10px] text-slate-600 mt-1 num">上限の ${dec(pct,0)}% まで来ています</p>
+    </div>`;
+  }).join('');
+
+  const pct = (myMax != null && rMax) ? myMax / rMax * 100 : null;
+  let note = '';
+  if (pct == null){
+    note = '再生数が入ると、上限までの距離が出ます。';
+  } else if (pct < 5){
+    note = 'まだ入口です。ここで問うべきは「なぜ伸びないのか」ではなく「まだ何を試していないか」です。'
+         + '同じ分野で上限まで行った人がいる以上、届く相手は確実にいます。';
+  } else if (pct < 30){
+    note = '型が見つかりかけています。当たった1本を偶然で終わらせず、同じ型でもう2本作ってください。';
+  } else {
+    note = 'この分野の上のほうにいます。ここから先は、間口をもう一段広げる（もっと多くの人が「自分のことだ」と思える切り口にする）か、'
+         + '奥座敷を厚くするかの選択になります。';
+  }
+  box.innerHTML = html + `<p class="text-[11px] text-slate-400 leading-relaxed">${esc(note)}</p>`;
+}
+
+/* 間口と奥座敷のいまの比率 */
+function renderMix(st){
+  const box = $('#base-mixnow');
+  if (!state.hasStrategy){
+    box.innerHTML = emptyNote('youtube-strategy.sql を実行すると、1本ごとに「間口」「奥座敷」を残せるようになります。');
+    return;
+  }
+  const roled = state.videos.filter(v => v.role);
+  if (!roled.length){
+    box.innerHTML = emptyNote('「動画」タブで、1本ずつ役割（間口・奥座敷）を入れると、いまの比率が出ます。');
+    return;
+  }
+  const front = roled.filter(v => v.role === '間口').length;
+  const pct = front / roled.length * 100;
+  const diff = pct - st.mix;
+  const msg = Math.abs(diff) <= 12
+    ? '決めた比率どおりです。'
+    : diff > 0
+      ? `間口に寄りすぎています。見てくれた人を深いところへ連れていく1本（奥座敷）を挟んでください。`
+      : `奥座敷に寄りすぎています。新しい人が入ってくる入口（間口）が足りません。`;
+  box.innerHTML = `
+    <div class="flex justify-between items-baseline gap-3 mb-1">
+      <span class="text-xs text-slate-300">いまの間口の割合</span>
+      <span class="text-[11px] num"><span class="font-bold text-slate-300">${dec(pct,0)}%</span>
+        <span class="text-slate-600"> ／ 決めた割合 ${st.mix}%</span></span>
+    </div>
+    <div class="track"><div class="fill ${Math.abs(diff)<=12?'fill-good':'fill-warn'}" style="width:${Math.min(pct,100)}%"></div></div>
+    <p class="text-[11px] text-slate-400 mt-2 leading-relaxed">
+      間口 ${front}本 ／ 奥座敷 ${roled.length-front}本（役割を入れた ${roled.length}本ぶん）。${esc(msg)}</p>`;
+}
+
+$('#base-save').addEventListener('click', () => {
+  writeStrategy(collectStrategy());
+  const msg = $('#base-msg');
+  msg.className = 'text-[11px] mt-2'; msg.style.color = '#2b7f8c';
+  msg.textContent = '保存しました。次の1本を頼む指示文に、そのまま入ります。';
+  renderBase(); renderAdvice();
+  setTimeout(()=>{ msg.textContent=''; }, 4000);
+});
+$('#base-rival-add').addEventListener('click', () => {
+  const st = collectStrategy();
+  st.rivals.push({name:'',url:'',views:'',subs:''});
+  writeStrategy(st);
+  renderBase();
+});
+
+/* ========================= 検証設計（変数を1つだけ変える） =========================
+   演者・題材・フォーマット…と要素を分けて、組み合わせで試します。
+   ここで大事なのは「1本で1つしか変えない」ことです。
+   まとめて変えると、伸びても伸びなくても理由が分かりません。 */
+
+function axisStates(scored){
+  return AXES.map(a => {
+    const groups = groupBy(scored, a.of);
+    const solid  = groups.filter(x => x.n >= MIN_SAMPLE);
+    const thin   = groups.filter(x => x.n <  MIN_SAMPLE);
+    return {
+      axis: a, groups, solid, thin,
+      best: solid[0] || null,
+      spread: solid.length >= 2 ? solid[0].avg / Math.max(solid[solid.length-1].avg, 0.01) : null,
+    };
+  });
+}
+
+/* 固定する型＝すでに確定している「いちばん良かった値」だけ */
+function fixedCombo(states){
+  return states.filter(x => x.best).map(x => ({
+    name: x.axis.name, value: x.best.key, avg: x.best.avg, n: x.best.n,
+    // 値が1種類しかないものは「いつもそうしている」だけで、比べた結果ではありません
+    compared: x.solid.length >= 2,
+  }));
+}
+
+/* 今回変える1つ。AXES は効きやすい順に並べてあるので、
+   まだ確定していないもののうち、いちばん上のものを選びます。 */
+function nextAxis(states){
+  const undecided = states.filter(x => x.solid.length < 2);
+  if (undecided.length) return undecided[0];
+  return states.slice().sort((a,b) => (b.spread||0) - (a.spread||0))[0];
+}
+
+/* その変数で、まだ試せていない／本数が足りない値 */
+function axisCandidates(x){
+  const known = {
+    hook:    ['問いかけ','共感','断言','数字','体験談','場面描写'],
+    format:  ['語り','テロップのみ','音楽メイン','対話'],
+    cta:     ['リンクへ','コメント促し','登録の約束','なし'],
+    dur:     ['〜15秒','16〜30秒','31〜45秒','46〜60秒'],
+    hour:    ['深夜 0〜6時','朝 6〜11時','昼 11〜15時','夕方 15〜19時','夜 19〜24時'],
+    weekday: WEEKDAYS.map(d => d+'曜'),
+  }[x.axis.key] || [];
+  const tried = new Set(x.groups.map(g => g.key));   // 1本でも出していれば「未検証」ではない
+  const untried = known.filter(k => !tried.has(k));
+  const thin = x.thin.map(g => `${g.key}（あと${MIN_SAMPLE - g.n}本）`);
+  return { untried, thin };
+}
+
+function renderTestPlan(){
+  const cur = currentValues();
+  const scored = scoredOnly(cur.list);
+  const states = axisStates(scored);
+  const fixed = fixedCombo(states);
+  const nx = nextAxis(states);
+
+  /* ① 今回の設計 */
+  const chip = t => `<span class="chip">${esc(t)}</span>`;
+  const design = [];
+
+  design.push(`<div class="rounded-2xl p-4" style="background:rgba(43,47,51,.06);border-left:3px solid #2b7f8c">
+    <div class="text-xs font-semibold mb-2" style="color:#2b7f8c">固定するもの（変えない）</div>
+    ${fixed.length
+      ? `<div class="flex flex-wrap gap-1.5">${fixed.map(f =>
+          `<span class="chip" style="background:${f.compared?'rgba(43,127,140,.12)':'rgba(43,47,51,.07)'};color:${f.compared?'#2b7f8c':'#6f757b'}">${esc(f.name)}：${esc(f.value)} ${dec(f.avg)}倍${f.compared?'':'・比較まだ'}</span>`).join('')}</div>`
+      : `<p class="text-[11px] text-slate-400 leading-relaxed">まだ確定した型がありません。
+          いまは固定するものを決める段階です。${MIN_SAMPLE}本ずつ同じ条件でそろえると、そこから型が見えてきます。</p>`}
+  </div>`);
+
+  if (nx){
+    const c = axisCandidates(nx);
+    const list = [...c.untried, ...c.thin].slice(0, 6);
+    design.push(`<div class="rounded-2xl p-4" style="background:rgba(43,47,51,.06);border-left:3px solid #9a7420">
+      <div class="text-xs font-semibold mb-2" style="color:#9a7420">今回だけ変えるもの</div>
+      <p class="text-xs text-slate-300 mb-2"><b>${esc(nx.axis.name)}</b></p>
+      ${list.length
+        ? `<div class="flex flex-wrap gap-1.5 mb-2">${list.map(chip).join('')}</div>`
+        : ''}
+      <p class="text-[11px] text-slate-400 leading-relaxed">
+        ${nx.solid.length < 2
+          ? `${nx.axis.name}は、まだ比べられるだけの本数がありません。ここを${MIN_SAMPLE}本ずつそろえるのが、いちばん早い近道です。`
+          : `${nx.axis.name}は、いちばん良い値といちばん悪い値で${dec(nx.spread)}倍の差が出ています。差が大きいところほど、寄せるだけで結果が変わります。`}
+      </p>
+    </div>`);
+  }
+
+  $('#test-design').innerHTML = design.join('');
+
+  /* ② どこまで試したか */
+  $('#test-matrix').innerHTML = states.map(x => {
+    const cands = axisCandidates(x);
+    const cells = x.groups.map(g => {
+      const solid = g.n >= MIN_SAMPLE;
+      const good  = solid && g.avg >= 1.3;
+      const bg = good ? 'rgba(43,127,140,.14)' : solid ? 'rgba(43,47,51,.09)' : 'rgba(43,47,51,.045)';
+      const co = good ? '#2b7f8c' : solid ? 'var(--sumi)' : '#8b9096';
+      return `<span class="chip" style="background:${bg};color:${co}">${esc(g.key)} ${dec(g.avg)}倍・${g.n}本${solid?'':'?'}</span>`;
+    }).join('');
+    const rest = cands.untried.slice(0,5).map(k =>
+      `<span class="chip" style="background:transparent;border:1px dashed var(--line);color:#8b9096">${esc(k)} 未検証</span>`).join('');
+    return `<div>
+      <h3 class="text-[11px] font-semibold text-slate-400 mb-2">${esc(x.axis.name)}</h3>
+      <div class="flex flex-wrap gap-1.5">${cells || '<span class="text-[11px] text-slate-600">まだ記録がありません</span>'}${rest}</div>
+    </div>`;
+  }).join('');
+}
+
 /* ========================= 次に作る動画 ========================= */
+/* いちばん足りていない目安を1つだけ返す。
+   同時に全部を直そうとすると、どれも中途半端になります。 */
+function bottleneck(values){
+  const scored = GOALS.map(g => {
+    const v = values[g.key];
+    if (v == null) return null;
+    if (g.range) {
+      if (v >= g.range[0] && v <= g.range[1]) return { g, v, r:1 };
+      const d = v < g.range[0] ? g.range[0]/v : v/g.range[1];
+      return { g, v, r: 1/d };
+    }
+    return { g, v, r: g.goal > 0 ? v/g.goal : 1 };
+  }).filter(Boolean).filter(x => x.r < 0.8);
+  return scored.sort((a,b) => a.r - b.r)[0] || null;
+}
+
 function card(tone, icon, title, body){
   const c = { good:'#2b7f8c', warn:'#9a7420', info:'#17456b', flat:'#6f757b' }[tone];
   return `<div class="rounded-2xl p-4" style="background:rgba(43,47,51,.06);border-left:3px solid ${c}">
@@ -1098,6 +1551,20 @@ function renderAdvice(){
   const { list, withViews, med } = cur;
   const scored = scoredOnly(list);
   const out = [];
+
+  /* ⓪ 詰まっているところを1つだけ名指しする。
+     ショート動画は、いちばん低い段が全体の天井になります。
+     そこを直さないまま本数だけ増やしても、同じところで止まります。 */
+  const bn = bottleneck(cur.values);
+  if (bn){
+    const shown = bn.g.range ? num(Math.round(bn.v)) + bn.g.unit : dec(bn.v, bn.v < 10 ? 1 : 0) + bn.g.unit;
+    const goalTxt = bn.g.range ? `${bn.g.range[0]}〜${bn.g.range[1]}${bn.g.unit}` : `${bn.g.goal}${bn.g.unit}`;
+    out.push({ p:99, html: card('warn','🧱','いま詰まっているのは、ここ1つです',
+      `<b>${esc(bn.g.name)}</b>が<b class="num">${shown}</b>（目安 ${goalTxt}）。
+       いくつも目安を並べていますが、今週直すのはここだけで十分です。<br>
+       <span class="text-slate-400">${esc(bn.g.why)}<br>
+       直し方：${esc(bn.g.fix)}</span>`) });
+  }
 
   /* ① タイトルの使い回し。本数が少なくても言い切れるので最優先。 */
   const titles = state.videos.map(v=>v.title).filter(Boolean);
@@ -1264,12 +1731,54 @@ function renderAdvice(){
        出したあとしばらくは、コメントに返事をすると伸びやすくなります。</span>`) });
   }
 
+  /* ⑬ 間口と奥座敷のバランス。
+     新しい人が入ってくる動画と、深いところへ連れていく動画は、役割がちがいます。 */
+  if (state.hasStrategy){
+    const st = readStrategy();
+    const roled = state.videos.filter(v => v.role);
+    if (roled.length >= 4){
+      const front = roled.filter(v => v.role === '間口').length;
+      const pct = front / roled.length * 100;
+      if (pct - st.mix > 12){
+        out.push({ p:72, html: card('info','🚪','奥座敷の1本を挟む',
+          `役割を入れた${roled.length}本のうち<b class="num">${dec(pct,0)}%</b>が間口です（決めた割合は${st.mix}%）。
+           新しい人には届いていますが、その人たちが次に行く場所がありません。<br>
+           <span class="text-slate-400">長めに1本、あるいは「相談ページで待っています」まで踏み込む1本を入れてください。
+           登録とサイト到達は、こちら側の動画から生まれます。</span>`) });
+      } else if (st.mix - pct > 12){
+        out.push({ p:72, html: card('info','🚪','間口の1本を足す',
+          `間口が<b class="num">${dec(pct,0)}%</b>しかありません（決めた割合は${st.mix}%）。
+           いま見てくれている人には届いていますが、新しい人が入ってくる入口が細くなっています。<br>
+           <span class="text-slate-400">同じ話でも「精神障害の方へ」ではなく「眠れない夜がある人へ」のように、
+           一段だけ広い言い方にすると間口になります。</span>`) });
+      }
+    } else if (state.videos.length >= 5){
+      out.push({ p:48, html: card('info','🚪','1本ずつ役割を決める',
+        `「動画」タブで、1本ごとに<b>間口</b>（新しい人に届ける）か<b>奥座敷</b>（深く連れていく）かを入れてください。<br>
+         <span class="text-slate-400">再生数が伸びているのに登録が増えないときは、たいてい間口ばかりになっています。</span>`) });
+    }
+  }
+
+  /* ⑭ 変数を1つずつ変えているか */
+  if (state.hasStrategy){
+    const axed = state.videos.filter(v => v.test_axis).length;
+    if (state.videos.length >= 6 && axed < state.videos.length * 0.4){
+      out.push({ p:46, html: card('info','🧪','「今回変えたもの」を残す',
+        `${state.videos.length}本のうち、変えた点を書き残しているのは${axed}本です。
+         1本ごとに全部を変えると、伸びても伸びなくても理由が分かりません。<br>
+         <span class="text-slate-400">効いた型は固定して、1本につき1つだけ変える。それを書き残しておくと、
+         このページが「何が効いたか」を代わりに覚えていてくれます。</span>`) });
+    }
+  }
+
   if (!out.length){
     out.push({ p:0, html: card('flat','🌙','まだ判断できる材料がありません',
       `右上の「取り込む」で YouTube の数字を取り込むところから始めてください。`) });
   }
 
   $('#advice-list').innerHTML = out.sort((a,b)=>b.p-a.p).map(x=>x.html).join('');
+
+  renderTestPlan();
 
   /* 属性ごとの比較（倍率と、実際の中央値を並べて出す） */
   const dims = [
@@ -1329,6 +1838,15 @@ const RULES = [
   { t:'最初の1秒で「自分のことだ」と思わせる',
     d:'説明から入らない。「23時、天井を見ているとき」のように、いきなり相手のいる場面から始めます。驚かせる必要はありません。',
     key:'retention' },
+  { t:'最初の3秒に「なんだろう」を置く',
+    d:'見る人は最初の数秒で、指を止めるか流すかを決めています。必要なのは煽りではなく、小さな謎です。「この人は何を見ているんだろう」「この続きはどうなるんだろう」。文字が読めなくても、画だけで「あれ？」と思える状態がいちばん強いです。',
+    key:'retention' },
+  { t:'1本につき、変えるのは1つだけ',
+    d:'掴み・テーマ・尺・形式・時間帯を一度に変えると、伸びても伸びなくても理由が残りません。効いた型は固定して、1つだけ変える。それを3本ずつ積むと、消去法で勝ち筋が出ます。',
+    key:null },
+  { t:'間口で出会い、奥座敷で深める',
+    d:'広く届く動画（間口）と、深く連れていく動画（奥座敷）は別物です。間口ばかりだと通り過ぎられ、奥座敷ばかりだと新しい人が来ません。間口で出会って、奥座敷で登録と相談につなげます。',
+    key:'visit' },
   { t:'20〜35秒に収める',
     d:'長いほど最後まで見られません。言いたいことが1つに絞れていれば、自然とこの長さになります。',
     key:'dur' },
@@ -1362,6 +1880,12 @@ const RULES = [
   { t:'伸びた1本を型として、もう2本作る',
     d:'当たりを引いたら、そこで満足せずに繰り返します。2本目も伸びたら、それがこのチャンネルの型です。',
     key:'like' },
+  { t:'1本にかける時間を決めて、その中で作る',
+    d:'気合いで続くのは最初の2週間だけです。テロップ5枚・20秒のように型を決めておけば、しんどい日でも出せます。手をかけるところは、型そのものを見直すときだけに絞ります。',
+    key:'pace' },
+  { t:'自分の目だけで見ない',
+    d:'自分のチャンネルは、どうしても好きなところから見てしまいます。月に一度は、このページの数字をそのまま持っていって、外から見てもらってください。「次に作る動画」タブの指示文が、その役目を兼ねています。',
+    key:null },
 ];
 
 function renderGrow(){
@@ -1513,6 +2037,12 @@ function openVideo(id){
   $('#vm-cta').value = v?.cta_type || '';
   $('#vm-date').value = v?.produced_on || todayStr();
   $('#vm-note').value = v?.note || '';
+  // 役割と「今回変えたもの」は列がある時だけ。無いまま入れさせると、保存で消えたように見えます。
+  $('#vm-role').value = v?.role || '';
+  $('#vm-axis').value = v?.test_axis || '';
+  $('#vm-role').disabled = !state.hasStrategy;
+  $('#vm-axis').disabled = !state.hasStrategy;
+  $('#vm-strategy-note').classList.toggle('hidden', state.hasStrategy);
   $('#vm-url').value = p?.url || '';
   $('#vm-at').value = p?.posted_at ? toLocalInput(p.posted_at) : '';
   $('#vm-msg').textContent = '';
@@ -1529,6 +2059,10 @@ $('#vm-save').addEventListener('click', async () => {
     duration_sec: $('#vm-dur').value ? Number($('#vm-dur').value) : null,
     cta_type: $('#vm-cta').value.trim()||null, produced_on: $('#vm-date').value||null,
     note: $('#vm-note').value.trim()||null };
+  if (state.hasStrategy){
+    payload.role      = $('#vm-role').value || null;
+    payload.test_axis = $('#vm-axis').value || null;
+  }
 
   $('#vm-save').disabled = true;
   let vid = editingId;
@@ -1791,6 +2325,8 @@ function promptLineOf(s){
   if (s.v.theme)     bits.push(`テーマ:${s.v.theme}`);
   if (s.v.hook_type) bits.push(`掴み:${s.v.hook_type}`);
   if (s.v.cta_type)  bits.push(`締め:${s.v.cta_type}`);
+  if (s.v.role)      bits.push(`役割:${s.v.role}`);
+  if (s.v.test_axis) bits.push(`変えた点:${s.v.test_axis}`);
   if (s.postedAt){
     const d = new Date(s.postedAt);
     bits.push(`${d.getMonth()+1}/${d.getDate()}(${WEEKDAYS[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}時`);
@@ -1798,13 +2334,31 @@ function promptLineOf(s){
   return `- 「${s.v.title}」 ${bits.join(' ・ ')}`;
 }
 
+/* この1本を「間口」にするか「奥座敷」にするか。
+   決めた比率と、いまの実際の比率を突き合わせて、足りないほうを選びます。 */
+function roleForNext(st){
+  if (!state.hasStrategy) return { role:'間口', why:'まだ役割を記録していないので、まずは新しい人に届く間口から作ります。' };
+  const roled = state.videos.filter(v => v.role);
+  if (roled.length < 3) return { role:'間口', why:'記録がまだ少ないので、まずは新しい人に届く間口から作ります。' };
+  const pct = roled.filter(v => v.role === '間口').length / roled.length * 100;
+  return pct >= st.mix
+    ? { role:'奥座敷', why:`いま間口が${dec(pct,0)}%（決めた割合は${st.mix}%）で、広げるほうに寄っています。今回は、見てくれている人を深いところへ連れていく1本にします。` }
+    : { role:'間口',   why:`いま間口が${dec(pct,0)}%（決めた割合は${st.mix}%）で、新しい人が入ってくる入口が細くなっています。今回は広く届く1本にします。` };
+}
+
 function buildPrompt(){
   const cur = currentValues();
   const { withViews, values } = cur;
-  const scored = scoredOnly(cur.list).slice().sort((a,b) => b.index - a.index);
-  const slug = nextSlug();
-  const url  = trackUrl(slug);
-  const ch   = state.channel.length ? state.channel[state.channel.length-1] : null;
+  const all    = scoredOnly(cur.list);
+  const scored = all.slice().sort((a,b) => b.index - a.index);
+  const st     = readStrategy();
+  const states = axisStates(all);
+  const fixed  = fixedCombo(states);
+  const nx     = nextAxis(states);
+  const role   = roleForNext(st);
+  const slug   = nextSlug();
+  const url    = trackUrl(slug);
+  const ch     = state.channel.length ? state.channel[state.channel.length-1] : null;
   const L = [];
 
   L.push('あなたは YouTube ショート動画の構成作家であり、動画そのものを書き出す担当でもあります。');
@@ -1816,13 +2370,19 @@ function buildPrompt(){
   L.push('ダウンロードできる形で渡すところまでを、ひとつづきの仕事としてやってください。');
   L.push('（作業の途中で確認を挟まなくてかまいません。最後まで進めてください）');
   L.push('');
-  L.push('## このチャンネルについて');
+
+  /* ── 1. 土台。数字より先に、これを外さないこと ── */
+  L.push('## この発信の土台（数字より先に、ここを外さないでください）');
+  if (st.purpose) L.push(`- 何のためにやっているか：${st.purpose}`);
+  if (st.goal)    L.push(`- 最後にたどり着きたいところ：${st.goal}`);
+  if (st.keep)    L.push(`- 続けられる理由（ここを削らないでください）：${st.keep}`);
   L.push('- 精神障害の当事者に向けた発信です。見る人の多くは、しんどい夜に「自分だけじゃない」と思いたくて開きます。');
   L.push('- 励ましません。教えません。同じところに立って、同じ景色を言葉にします。');
   L.push('- ゴールは再生数ではなく、チャンネル登録と、相談ページ（星と海）まで来てもらうことです。');
+  L.push('- 再生数が伸びる案と、この土台からずれる案が両立しないときは、**土台のほうを選んでください**。');
   L.push('');
 
-  /* ── いまの数字 ── */
+  /* ── 2. いまの数字 ── */
   L.push(`## いまの数字（${todayStr()} 時点・${state.videos.length}本ぶん）`);
   if (ch) L.push(`- チャンネル登録者：${num(ch.subscribers)}人（${ch.measured_on} 時点）`);
   L.push(`- 総再生数：${num(cur.totalViews)}回 ／ 1本あたりの中央値：${num(Math.round(cur.med))}回`);
@@ -1834,33 +2394,85 @@ function buildPrompt(){
   L.push(`- この7日で出した本数：${values.pace}本（目安は週5本）`);
   if (values.dur   != null) L.push(`- 尺の中央値：${Math.round(values.dur)}秒（目安15〜35秒）`);
   if (values.title != null) L.push(`- タイトルの種類：${dec(values.title,0)}%（100%＝全部ちがう。低いほど不利です）`);
+  const bn = bottleneck(values);
+  if (bn){
+    const shown = bn.g.range ? `${num(Math.round(bn.v))}${bn.g.unit}` : `${dec(bn.v, bn.v < 10 ? 1 : 0)}${bn.g.unit}`;
+    L.push('');
+    L.push(`**いま一番詰まっているのは「${bn.g.name}」です（${shown}）。今回の1本は、まずここを動かすことを狙ってください。**`);
+    L.push(`（${bn.g.why} 直し方の定石：${bn.g.fix}）`);
+  }
   L.push('');
 
-  /* ── 効いている型 ── */
-  const dims = [
-    ['投稿した時間帯', s => hourBucket(s.postedAt)],
-    ['投稿した曜日',   s => s.postedAt ? WEEKDAYS[new Date(s.postedAt).getDay()] + '曜' : null],
-    ['テーマ',         s => s.v.theme],
-    ['冒頭の掴み',     s => s.v.hook_type],
-    ['形式',           s => s.v.format],
-    ['尺',             s => durationBucket(s.v.duration_sec)],
-    ['締めの誘導',     s => s.v.cta_type],
-  ];
-  const dimLines = dims.map(([name, fn]) => {
-    const g = groupBy(scored, fn).slice(0, 4);
+  /* ── 3. この分野の上限と現在地 ── */
+  const rMax = rivalMax(st), rSubs = rivalSubsMax(st);
+  if (rMax != null || rSubs != null){
+    const myMax = withViews.length ? Math.max(...withViews.map(s => s.views)) : null;
+    L.push('## この分野の上限と、いまの現在地');
+    if (rMax != null){
+      L.push(`- 同じジャンルで伸びているアカウントの最高再生数：${num(rMax)}回`);
+      if (myMax != null) L.push(`- こちらの最高再生数：${num(myMax)}回（上限の ${dec(myMax/rMax*100,0)}%）`);
+    }
+    if (rSubs != null){
+      L.push(`- 同ジャンルの登録者数（最大）：${num(rSubs)}人`);
+      if (ch) L.push(`- こちらの登録者数：${num(ch.subscribers)}人（${dec(ch.subscribers/rSubs*100,0)}%）`);
+    }
+    const names = (st.rivals||[]).filter(r => r.name).map(r => r.name);
+    if (names.length) L.push(`- 参考にしているアカウント：${names.join(' ／ ')}`);
+    L.push('- この差は「この分野に人がいない」からではありません。同じ場所で上限まで行った人がいる以上、届く相手は確実にいます。');
+    L.push('- ですので提案するときは、「ニッチすぎて伸びない切り口」ではなく、**同じ内容のまま、もう一段多くの人が「自分のことだ」と思える言い方**を探してください。');
+    L.push('');
+  } else {
+    L.push('## この分野の上限');
+    L.push('- 同ジャンルの最大値がまだ分かっていません。');
+    L.push('- 提案の最後に、**同じジャンルで伸びているチャンネルを2〜3つ挙げて、その最高再生数の目安**も書いてください。次からの目標値に使います。');
+    L.push('');
+  }
+
+  /* ── 4. 何が効いているか（確定と、まだ参考） ── */
+  const dimLines = states.map(x => {
+    const g = x.groups.slice(0, 4);
     if (!g.length) return null;
-    return `- ${name}：` + g.map(x =>
-      `${x.key} ${dec(x.avg)}倍（${x.n}本${x.n < MIN_SAMPLE ? '・参考' : ''}）`).join(' ／ ');
+    return `- ${x.axis.name}：` + g.map(y =>
+      `${y.key} ${dec(y.avg)}倍（${y.n}本${y.n < MIN_SAMPLE ? '・参考' : '・確定'}）`).join(' ／ ');
   }).filter(Boolean);
   if (dimLines.length){
     L.push('## 何が効いているか');
-    L.push(`再生数を、このチャンネルの中央値で割った「倍率」です。1.0倍がふつう。`);
-    L.push(`${MIN_SAMPLE}本に満たないものは「参考」と書いてあります。まだ言い切れない数字として扱ってください。`);
+    L.push('再生数を、このチャンネルの中央値で割った「倍率」です。1.0倍がふつう。');
+    L.push(`${MIN_SAMPLE}本に満たないものは「参考」です。まだ言い切れない数字として扱ってください。`);
     L.push(...dimLines);
     L.push('');
   }
 
-  /* ── 個々の動画 ── */
+  /* ── 5. 今回の検証設計。ここがこの指示文の背骨です ── */
+  L.push('## 今回の検証設計（ここが今回いちばん大事な決まりです）');
+  L.push('1本ごとに何もかも変えると、伸びても伸びなくても理由が残りません。');
+  L.push('**効いている型は固定し、変えるのは1つだけ**にしてください。');
+  L.push('');
+  if (fixed.length){
+    L.push('### 固定するもの（変えないでください）');
+    fixed.forEach(f => L.push(f.compared
+      ? `- ${f.name}：${f.value}（${dec(f.avg)}倍・${f.n}本で確定）`
+      : `- ${f.name}：${f.value}（${f.n}本・ただし他の値と比べたことはまだありません）`));
+  } else {
+    L.push('### 固定するもの');
+    L.push(`- まだ確定した型がありません。いまは型を決める段階です。${MIN_SAMPLE}本ずつ同じ条件でそろえられるよう、今回の条件をはっきり決めてください。`);
+  }
+  L.push('');
+  if (nx){
+    const c = axisCandidates(nx);
+    L.push('### 今回だけ変えるもの');
+    L.push(`- **${nx.axis.name}**`);
+    if (c.untried.length) L.push(`- まだ試していない値：${c.untried.slice(0,6).join(' ／ ')}`);
+    if (c.thin.length)    L.push(`- あと少しで確定する値：${c.thin.slice(0,4).join(' ／ ')}`);
+    L.push(nx.solid.length < 2
+      ? `- ${nx.axis.name}は、まだ比べられるだけの本数がありません。ここを${MIN_SAMPLE}本ずつそろえるのが近道です。`
+      : `- ${nx.axis.name}は、いちばん良い値と悪い値で${dec(nx.spread)}倍の差が出ています。差が大きいところほど、寄せるだけで結果が変わります。`);
+    L.push(`- この1本では、${nx.axis.name}の値を1つ選んで、**それ以外は上の「固定するもの」から変えないでください**。`);
+    L.push(`- 最後に「今回は ${nx.axis.name} を ○○ にして試した」と、一行で書いてください。`);
+    L.push('');
+  }
+
+  /* ── 6. 実際の動画 ── */
   if (scored.length){
     L.push('## 伸びた動画');
     L.push(...scored.slice(0, 5).map(promptLineOf));
@@ -1877,8 +2489,14 @@ function buildPrompt(){
     L.push(...subBest.map(promptLineOf));
     L.push('');
   }
+  const visitBest = withViews.filter(s => s.visits > 0).sort((a,b) => b.visitRate - a.visitRate).slice(0,3);
+  if (visitBest.length){
+    L.push('## 相談ページまで人を連れてきた動画（最終ゴールに直結した型）');
+    L.push(...visitBest.map(promptLineOf));
+    L.push('');
+  }
 
-  /* ── すでに使ったタイトル ── */
+  /* ── 7. すでに使ったタイトル ── */
   const titles = [...new Set(state.videos.map(v => v.title).filter(Boolean))];
   if (titles.length){
     L.push('## すでに使ったタイトル（重複させないでください）');
@@ -1886,12 +2504,41 @@ function buildPrompt(){
     L.push('');
   }
 
-  /* ── 作り方の制約 ── */
+  /* ── 8. 冒頭3秒 ── */
+  L.push('## 冒頭3秒（ここで全部決まります）');
+  L.push('見る人は最初の数秒で、指を止めるか流すかを決めています。');
+  L.push('必要なのは煽りではなく、**小さな謎**です。「なんだろう」「この続きはどうなるんだろう」と思わせてください。');
+  L.push('- 1枚目のテロップは、説明でも挨拶でもなく、いきなり相手のいる場面から始める。');
+  L.push('  例：「23時。天井のシミの数を、また数えている。」');
+  L.push('- **文字が読めなくても、画だけで「あれ？」と思える状態**をつくる。色・余白・動きだけで違和感を出せると、いちばん強いです。');
+  L.push('- ただし、このチャンネルでは驚かせ方が普通と逆です。効果音・大きな文字・煽りは合いません。');
+  L.push('  効くのは静けさ・間・具体的な場面です。「不安なとき」より「23時、天井を見ているとき」のほうが届きます。');
+  L.push('- 3秒の時点で、見ている人が「これは自分のことだ」と分かっていること。分からせるのは、そのあとで十分です。');
+  L.push('');
+
+  /* ── 9. この1本の役割 ── */
+  L.push('## この1本の役割');
+  L.push(`**${role.role}** として作ってください。`);
+  L.push(`（${role.why}）`);
+  L.push('');
+  L.push('- **間口**：まだこのチャンネルを知らない人に届けるための1本です。');
+  L.push('  内側の言葉（診断名・制度の名前・当事者どうしにしか通じない言い方）を入り口に置かない。');
+  L.push('  「精神障害の方へ」ではなく「眠れない夜がある人へ」のように、一段だけ広い入口にします。');
+  L.push('  ここでは登録も相談ページも急がず、最後に「毎晩1本置いています」とだけ伝えます。');
+  L.push('- **奥座敷**：すでに見てくれている人を、深いところへ連れていく1本です。');
+  L.push('  ここでは踏み込んでいい。具体的な体験、名前のついた制度、長めの間。');
+  L.push('  そして最後に、次の一歩（相談ページ・登録）へはっきり誘導します。');
+  L.push('- どちらの回でも、**間口 → 奥座敷 → 相談ページ**という順路のどこにこの1本が置かれるのかを意識してください。');
+  L.push('');
+
+  /* ── 10. 作り方（仕組み化） ── */
   L.push('## 動画の作り方（この形は変えないでください）');
   L.push('- 縦1080×1920 ／ 20秒 ／ テロップ5枚（1枚4秒）');
   L.push('- 読み上げ音声なし。音楽のみ（星と海の曲は、あとでこちらで載せます）');
   L.push('- 1枚目のテロップから本題に入る。「今日は◯◯について話します」のような前置きは書かない');
   L.push('- テロップ1枚は20〜30字まで。スマホで一目で読める長さにする');
+  L.push(`- この型は、しんどい日でも${st.minutes}分あれば出せるように決めたものです。凝った演出で作業を増やさないでください。`);
+  L.push('  気合いが要る形にした時点で、続かなくなります。続かないほうが、質が低いことよりずっと痛いです。');
   L.push('');
   L.push('## mp4 の書き出し方');
   L.push('- 形式は mp4（H.264）／ 1080×1920 ／ 30fps ／ 20秒ちょうど');
@@ -1905,7 +2552,7 @@ function buildPrompt(){
   L.push('  作れなかったときは、黙って構成案だけ返さずに、どこで詰まったかを書いてください');
   L.push('');
 
-  /* ── 出してほしいもの ── */
+  /* ── 11. 出してほしいもの ── */
   L.push('## 出してほしいもの');
   L.push('');
   L.push('### 1. mp4 の動画ファイル');
@@ -1915,8 +2562,8 @@ function buildPrompt(){
   L.push('### 2. 動画の構成'
     + '（mp4 に入れたテロップを、そのまま書き出してください）');
   L.push('テロップ5枚を、画面にそのまま出す文字だけで書いてください。説明や指示は混ぜないでください。');
-  L.push('1枚目は、上の「効いている掴み」を踏まえて、1秒で「自分のことだ」と思わせる一言にしてください。');
-  L.push('5枚目は、上の「効いている締め」を踏まえた締めにしてください。');
+  L.push('1枚目は、上の「冒頭3秒」のとおり、小さな謎と場面から始めてください。');
+  L.push('5枚目は、上の「この1本の役割」に合わせた締めにしてください。');
   L.push('');
   L.push('### 3. 題名（3案）');
   L.push('題名とハッシュタグをひと続きにした形で、3案出してください。');
@@ -1942,7 +2589,7 @@ function buildPrompt(){
   L.push('ショート動画では概要欄はほとんど開かれないので、固定コメントに置きます。');
   L.push('2〜3行の短い文と、下のリンクを組み合わせてください。');
   L.push('');
-  L.push(`計測リンク（このまま貼ってください。作り変えないでください）：`);
+  L.push('計測リンク（このまま貼ってください。作り変えないでください）：');
   L.push(url);
   L.push('');
   L.push(`この末尾の \`utm_content=${slug}\` が、あとで「どの動画から相談ページに来たか」を数える印になります。`);
@@ -1950,8 +2597,14 @@ function buildPrompt(){
   L.push('');
   L.push('### 6. 記録用の1行');
   L.push('作ったものを分析ページに登録するので、最後にこの形で出してください。');
-  L.push(`識別子: ${slug} ／ テーマ: ___ ／ 冒頭の掴み: ___ ／ 形式: 音楽メイン ／ 尺: 20 ／ 締め: ___`);
+  L.push(`識別子: ${slug} ／ テーマ: ___ ／ 冒頭の掴み: ___ ／ 形式: 音楽メイン ／ 尺: 20 ／ 締め: ___ ／ 役割: ${role.role} ／ 今回変えたもの: ${nx ? nx.axis.name : '変えていない'}`);
   L.push('（掴みは 問いかけ・共感・断言・数字・体験談・場面描写 から、締めは リンクへ・コメント促し・登録の約束・なし から選んでください）');
+  L.push('');
+  L.push('### 7. 次の2本の設計（作らなくていいです。設計だけ）');
+  L.push(`今回の1本と合わせて3本で1つの検証にします。${nx ? `**${nx.axis.name}だけ**を変えた案` : '1つだけ変えた案'}を、あと2本ぶん出してください。`);
+  L.push('- それぞれ「変えた点はここだけ」と分かる形で、1〜2行ずつ');
+  L.push('- 3本出したあとに何が分かるのか（何を確かめる3本なのか）を、最後に一行で');
+  L.push('- ここで他の条件まで一緒に変えると、3本試しても何も分かりません。守ってください。');
 
   return { text: L.join('\n'), slug };
 }
