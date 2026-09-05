@@ -21,7 +21,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>星と海 ｜ YouTube 分析</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -81,7 +81,9 @@
   }
   .site-bar .sep{ width:1px; height:1rem; background:var(--keisen); }
   .site-bar .here{ font-size:.75rem; letter-spacing:.22em; color:var(--usuzumi); white-space:nowrap; }
-  input,select,textarea{font-size:16px;} /* スマホで勝手に拡大されないように */
+  /* スマホで勝手に拡大されないように。Tailwind の text-xs より強く効かせる */
+  input,select,textarea{font-size:16px;}
+  @media (max-width:639px){ input,select,textarea{font-size:16px !important;} }
   .glass{background:var(--washi);border:1px solid var(--line);border-radius:2px;
          backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
   .scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch;}
@@ -126,6 +128,62 @@
   .ratio916{aspect-ratio:9/16}
   .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .chip{font-size:10px;border-radius:1px;padding:.1rem .45rem;background:rgba(43,47,51,.07);color:var(--muted)}
+
+  /* ══════════════════════════════════════════════════════════
+     モバイルファーストのレスポンシブ
+     ── ここまでの指定が「スマホで見たときの姿」です。
+        画面が広くなったぶんだけ、下の min-width で足していきます。
+        このページは外で数字を入れることが多いので、片手で使えることを優先しています。
+     ══════════════════════════════════════════════════════════ */
+
+  /* ── スマホ（基本）──────────────────────── */
+  html{ -webkit-text-size-adjust:100%; }
+  body{ overflow-x:hidden; }
+  img, iframe, svg, table{ max-width:100%; }
+  /* ノッチや、iPhone のホームバーを避ける */
+  .site-bar{
+    padding-left:max(1rem, env(safe-area-inset-left));
+    padding-right:max(1rem, env(safe-area-inset-right));
+  }
+  #app-view{ padding-bottom:calc(7rem + env(safe-area-inset-bottom)); }
+  /* 指で押すものは 44px 以上 */
+  .tab, button, .fld, select{ min-height:44px; }
+  .tab{ display:inline-flex; align-items:center; }
+  /* 例外：文字だけの小さなリンクふう操作は、押せる範囲だけ余白で広げる */
+  button.text-\[11px\], button.text-xs{ min-height:0; padding-top:.4rem; padding-bottom:.4rem; }
+  /* 長い識別子やURLで横スクロールが出ないように */
+  .fld, td, th, p, h1, h2, h3{ overflow-wrap:anywhere; }
+  /* 横スクロールするものは、指で払える手ざわりにする */
+  .scroll-x{ scroll-snap-type:x proximity; overscroll-behavior-x:contain; }
+  /* 生成したプロンプトなど、長い文章の箱 */
+  pre, code{ white-space:pre-wrap; word-break:break-word; }
+
+  /* ── 大きめのスマホ・タブレット縦 ────────── */
+  @media (min-width:640px){
+    .site-bar{ padding-left:max(1.25rem, env(safe-area-inset-left)); padding-right:max(1.25rem, env(safe-area-inset-right)); }
+  }
+
+  /* ── タブレット・PC ─────────────────────── */
+  @media (min-width:1024px){
+    /* マウスで押すので、44px の下限は外して元の詰まった見た目に戻す */
+    .tab, button, .fld, select{ min-height:0; }
+    .tab{ padding-top:.5rem; padding-bottom:.5rem; }
+    #app-view{ padding-bottom:5rem; }
+  }
+
+  /* ── マウスのない端末では hover の見た目を出さない ── */
+  @media (hover:none){
+    .glass:hover{ border-color:var(--line); }
+  }
+
+  /* ── 印刷／横向き ─────────────────────── */
+  @media (orientation:landscape) and (max-height:480px){
+    /* 横向きの iPhone。上の帯が画面の多くを占めないように追従をやめる */
+    .site-bar{ position:static; }
+  }
+
+  /* 上の帯の「星と海」は、スマホでも指で押せる高さにする */
+  .site-bar a.home{ display:inline-flex; align-items:center; min-height:44px; }
 </style>
 </head>
 <body>
@@ -150,7 +208,7 @@
 </div>
 
 <!-- ══════════ 本体 ══════════ -->
-<div id="app-view" class="hidden max-w-5xl mx-auto px-4 pt-5 pb-28">
+<div id="app-view" class="hidden max-w-5xl mx-auto px-3 sm:px-4 md:px-6 pt-4 sm:pt-5 pb-28">
 
   <header class="flex items-center gap-3 mb-6 pb-4" style="border-bottom:1px solid var(--keisen);">
     <div class="min-w-0">
@@ -185,10 +243,10 @@
 
     <div class="glass rounded-3xl p-6 relative overflow-hidden">
       <div class="absolute -right-10 -top-10 w-48 h-48 rounded-full blur-3xl" style="background:radial-gradient(circle,rgba(183,71,42,.22),transparent 70%)"></div>
-      <div class="flex items-start gap-6">
+      <div class="flex flex-wrap items-start gap-x-6 gap-y-4">
         <div>
           <p class="text-[11px] text-slate-400 mb-1">チャンネル登録者</p>
-          <div id="hero-subs" class="num text-5xl font-bold" style="color:var(--shu)">—</div>
+          <div id="hero-subs" class="num text-4xl sm:text-5xl font-bold" style="color:var(--shu)">—</div>
           <div id="hero-subs-sub" class="text-xs text-slate-400 mt-2"></div>
         </div>
         <div class="ml-auto text-right">
@@ -211,7 +269,7 @@
       <p id="subs-msg" class="text-[11px] mt-2"></p>
     </div>
 
-    <div id="home-cards" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5"></div>
+    <div id="home-cards" class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5"></div>
 
     <div class="glass rounded-2xl p-5">
       <h2 class="font-semibold text-sm mb-1">いまの健康診断</h2>
@@ -500,7 +558,7 @@
         </label>
       </div>
     </div>
-    <div id="video-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5"></div>
+    <div id="video-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-2.5"></div>
   </section>
 
   <!-- ────── 数字を入力 ────── -->
@@ -578,8 +636,8 @@
 </div>
 
 <!-- ══════════ 動画のプレビューと編集 ══════════ -->
-<div id="video-modal" class="hidden fixed inset-0 z-50 overflow-y-auto p-4" style="background:rgba(43,47,51,.42);backdrop-filter:blur(6px)">
-  <div class="glass rounded-3xl max-w-lg mx-auto my-4 p-5" style="background:rgba(251,249,244,.98)">
+<div id="video-modal" class="hidden fixed inset-0 z-50 overflow-y-auto p-3 sm:p-4" style="background:rgba(43,47,51,.42);backdrop-filter:blur(6px)">
+  <div class="glass rounded-2xl sm:rounded-3xl max-w-lg mx-auto my-2 sm:my-4 p-4 sm:p-5" style="background:rgba(251,249,244,.98)">
     <div class="flex items-center justify-between mb-4">
       <h3 id="vm-title" class="font-bold text-sm">動画</h3>
       <button id="vm-close" class="text-slate-500 text-2xl leading-none px-2 hover:text-slate-300">&times;</button>
@@ -596,25 +654,25 @@
     </div>
 
     <!-- この動画の数字 -->
-    <div id="vm-stats" class="grid grid-cols-3 gap-2 mb-4"></div>
+    <div id="vm-stats" class="grid grid-cols-3 gap-1.5 sm:gap-2 mb-4"></div>
     <div id="vm-curve" class="mb-4"></div>
 
     <details class="mb-2">
       <summary class="text-[11px] text-slate-400 cursor-pointer select-none py-1">この動画の記録を編集する</summary>
       <div class="space-y-3 text-xs mt-3">
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label><span class="block text-[11px] text-slate-500 mb-1">識別子</span><input id="vm-slug" class="fld"></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">作った日</span><input id="vm-date" type="date" class="fld"></label>
         </div>
         <label class="block"><span class="block text-[11px] text-slate-500 mb-1">タイトル</span><input id="vm-title-in" class="fld"></label>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label><span class="block text-[11px] text-slate-500 mb-1">テーマ</span>
             <input id="vm-theme" list="dl-theme" class="fld" placeholder="眠れない夜"><datalist id="dl-theme"></datalist></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">冒頭の掴み</span>
             <input id="vm-hook" list="dl-hook" class="fld" placeholder="問いかけ">
             <datalist id="dl-hook"><option value="問いかけ"><option value="共感"><option value="断言"><option value="数字"><option value="体験談"><option value="場面描写"></datalist></label>
         </div>
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <label><span class="block text-[11px] text-slate-500 mb-1">形式</span>
             <input id="vm-format" list="dl-format" class="fld" placeholder="音楽メイン">
             <datalist id="dl-format"><option value="語り"><option value="テロップのみ"><option value="音楽メイン"><option value="対話"></datalist></label>
@@ -623,7 +681,7 @@
             <input id="vm-cta" list="dl-cta" class="fld" placeholder="リンクへ">
             <datalist id="dl-cta"><option value="リンクへ"><option value="コメント促し"><option value="登録の約束"><option value="なし"></datalist></label>
         </div>
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <label><span class="block text-[11px] text-slate-500 mb-1">音</span>
             <select id="vm-audio" class="fld">
               <option value="">—</option>
@@ -654,7 +712,7 @@
         <p id="vm-strategy-note" class="hidden text-[11px] text-amber-400 leading-relaxed">
           「音」「役割」「変えたもの」を残すには、Supabase の SQL Editor で <code>youtube-strategy.sql</code> を実行してください。
         </p>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label><span class="block text-[11px] text-slate-500 mb-1">YouTubeのURL</span><input id="vm-url" class="fld" placeholder="https://www.youtube.com/shorts/..."></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">投稿した日時</span><input id="vm-at" type="datetime-local" class="fld"></label>
         </div>

@@ -21,7 +21,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -84,7 +84,7 @@
   .site-bar .sep{ width:1px; height:1rem; background:var(--keisen); }
   .site-bar .here{ font-size:.75rem; letter-spacing:.22em; color:var(--usuzumi); white-space:nowrap; }
 
-  .wrap{max-width:56rem;margin:0 auto;padding:1.25rem 1rem 0;}
+  .wrap{max-width:56rem;margin:0 auto;padding:1rem .85rem 0;}
   .glass{background:var(--washi);border:1px solid var(--keisen);border-radius:2px;}
   .hidden{display:none !important;}
   .muted{color:var(--usuzumi);}
@@ -193,14 +193,75 @@
   .bar{height:2px;background:rgba(23,69,107,.12);overflow:hidden;}
   .bar > span{display:block;height:100%;background:var(--ai);width:0;transition:width .3s;}
 
-  @media (max-width:640px){
+  /* ══════════════════════════════════════════════════════════
+     モバイルファーストのレスポンシブ
+     ── ここまでの指定が「スマホで見たときの姿」です。
+        画面が広くなったぶんだけ、下の min-width で足していきます。
+     ══════════════════════════════════════════════════════════ */
+
+  /* ── スマホ（基本）──────────────────────── */
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    overflow-x:hidden;
     /* 下に固定した更新ボタンで最後の記事が隠れないように */
-    body{padding-bottom:6.5rem;}
+    padding-bottom:calc(6.5rem + env(safe-area-inset-bottom));
   }
-  @media (max-width:480px){
-    .sec-head h2{white-space:normal;}
-    .item a.title{font-size:.9rem;}
+  img{ max-width:100%; }
+  /* iOS で入力欄に触れたときに勝手に拡大されないよう 16px 以上 */
+  .fld{ font-size:16px; }
+  /* 指で押すものは 44px 以上 */
+  .btn, .tab, .chip{ min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
+  /* 押せる範囲だけを広げる（余白を外にはみ出させるので、並びはずれない） */
+  .star{ padding:.55rem .5rem; margin:-.55rem -.35rem; }
+  /* ノッチのある端末で、帯や本文が切り欠きに潜らないように */
+  .site-bar{
+    padding-left:max(1rem, env(safe-area-inset-left));
+    padding-right:max(1rem, env(safe-area-inset-right));
   }
+  .wrap{
+    padding-left:max(.85rem, env(safe-area-inset-left));
+    padding-right:max(.85rem, env(safe-area-inset-right));
+  }
+  /* せまい画面では見出しを折り返し、記事タイトルを一段小さく */
+  .sec-head{ flex-wrap:wrap; gap:.5rem .8rem; }
+  .sec-head h2{ white-space:normal; }
+  .item a.title{ font-size:.9rem; }
+  .summary{ -webkit-line-clamp:3; }
+  #fab{ bottom:calc(1rem + env(safe-area-inset-bottom)); }
+
+  /* ── 大きめのスマホ以上 ─────────────────── */
+  @media (min-width:481px){
+    .sec-head h2{ white-space:nowrap; }
+    .item a.title{ font-size:.95rem; }
+  }
+
+  /* ── タブレット・PC ─────────────────────── */
+  @media (min-width:641px){
+    /* 画面の下に指を伸ばす必要がないので、丸い更新ボタンは出さない */
+    #fab.on{ display:none; }
+    body{ padding-bottom:2.5rem; }
+    .wrap{ padding:1.25rem 1rem 0; }
+    .summary{ -webkit-line-clamp:2; }
+    /* マウスで押すので、ボタンは元の高さに戻す */
+    .btn, .tab, .chip{ min-height:0; }
+    .star{ padding:0 .1rem; margin:0; }
+  }
+
+  /* ── 広い画面：記事を2列に並べて、縦の移動を減らす ── */
+  @media (min-width:1100px){
+    .wrap{ max-width:68rem; }
+    #list{ column-count:2; column-gap:2.2rem; }
+    #list .day{ break-after:avoid; margin-top:0; }
+    #list .item{ break-inside:avoid; }
+  }
+
+  /* ── マウスのない端末では hover の見た目を出さない ── */
+  @media (hover:none){
+    .btn:hover, .chip:hover, .item a.title:hover{ border-color:var(--keisen); }
+  }
+
+  /* 上の帯の「星と海」は、スマホでも指で押せる高さにする */
+  .site-bar a.home{ display:inline-flex; align-items:center; min-height:44px; }
 </style>
 </head>
 <body>

@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>NEXT BUSINESS EXPO 2026 日程表</title>
@@ -398,6 +398,70 @@
   }
   .footer{ color:var(--usuzumi) !important; }
   .footer a{ color:var(--ai) !important; }
+
+  /* ══════════════════════════════════════════════════════════
+     モバイルファーストのレスポンシブ
+     ── ここから上は「スマホで見たときの姿」がそのまま基本形です。
+        画面が広くなったときだけ、下の min-width で足していきます。
+        max-width で削っていく書き方はしていません。
+     ══════════════════════════════════════════════════════════ */
+
+  /* ── スマホ（基本）──────────────────────── */
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    overflow-x:hidden;
+    /* iPhone のホームバーに最後のカードが隠れないように */
+    padding-bottom:calc(40px + env(safe-area-inset-bottom));
+  }
+  img, iframe, table{ max-width:100%; }
+  /* ノッチのある端末で、帯の文字が切り欠きに潜らないように */
+  .site-bar{
+    padding-left:max(1rem, env(safe-area-inset-left));
+    padding-right:max(1rem, env(safe-area-inset-right));
+  }
+  /* 指で押すものは 44px 以上。タブは画面幅に合わせて詰める */
+  .tab-btn{ min-height:44px; }
+  .header-badges{ flex-wrap:wrap; }
+  /* 長い予約番号や駅名で横スクロールが出ないように */
+  .card-title, .card-sub, .notice, .stay-box, .plan-box, .tip-row{
+    overflow-wrap:anywhere; word-break:normal;
+  }
+
+  /* ── 大きめのスマホ・小さいタブレット ────── */
+  @media (min-width:600px){
+    .header, .tab-bar, .tab-content, .tips-section, .footer{
+      max-width:600px; margin-left:auto; margin-right:auto;
+    }
+    .header h1{ font-size:1.5rem !important; }
+    .card{ padding:18px 20px; }
+    .card-title{ font-size:16px; }
+  }
+
+  /* ── タブレット・PC ─────────────────────── */
+  @media (min-width:900px){
+    body{ padding-bottom:64px; }
+    .header, .tab-bar, .tab-content, .tips-section, .footer{ max-width:760px; }
+    .header{ padding:40px 24px 30px !important; }
+    .header h1{ font-size:1.7rem !important; }
+    /* ヒントだけは横に2つ並べる。時系列のカードは1列のまま（順番が読めなくなるので） */
+    .tips-section{ display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:start; }
+    .tips-title{ grid-column:1 / -1; margin-bottom:0; }
+  }
+
+  /* ── 大きな画面 ─────────────────────────── */
+  @media (min-width:1280px){
+    .header, .tab-bar, .tab-content, .tips-section, .footer{ max-width:860px; }
+  }
+
+  /* ── マウスのない端末では hover の見た目を出さない ── */
+  @media (hover:none){
+    .card:hover, .tab-btn:hover{ transform:none; }
+  }
+
+  /* 上の帯の「星と海」は、スマホでも指で押せる高さにする */
+  .site-bar a.home{ display:inline-flex; align-items:center; min-height:44px; }
+  /* 一番下の外部リンクも、指で押せる高さに */
+  .footer a{ display:inline-block; padding:.75rem 0; }
 </style>
 </head>
 <body>

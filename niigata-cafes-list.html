@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>新潟市 カフェ一覧（西区・中央区）</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -223,6 +223,66 @@
   .badge.chuo { background:rgba(107,107,163,.12) !important; color:var(--fuji) !important; }
   .card-link{ color:var(--ai) !important; font-weight:500 !important; letter-spacing:.08em; }
   .empty{ color:var(--usuzumi) !important; }
+
+  /* ══════════════════════════════════════════════════════════
+     モバイルファーストのレスポンシブ
+     ── ここから上の見た目が「スマホで見たときの基本形」です。
+        画面が広くなったときだけ、下の min-width で足しています。
+     ══════════════════════════════════════════════════════════ */
+
+  /* ── スマホ（基本）──────────────────────── */
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    overflow-x:hidden;
+    padding-bottom:calc(40px + env(safe-area-inset-bottom));
+  }
+  /* iOS で入力欄に触れたときに画面が勝手に拡大されないよう 16px 以上にする */
+  .search-box{ font-size:16px; }
+  /* 指で押すものは 44px 以上 */
+  .tab{ min-height:44px; display:flex; align-items:center; justify-content:center; }
+  .card-link{ min-height:44px; align-items:center; }
+  /* ノッチのある端末で、見出しや帯が切り欠きに潜らないように */
+  .site-bar{
+    padding-left:max(1rem, env(safe-area-inset-left));
+    padding-right:max(1rem, env(safe-area-inset-right));
+  }
+  /* header 側は上の共通指定が padding を !important で持っているので、こちらも合わせる */
+  header, .count-bar, .list{
+    padding-left:max(12px, env(safe-area-inset-left)) !important;
+    padding-right:max(12px, env(safe-area-inset-right)) !important;
+  }
+  /* 長い店名や住所で横スクロールが出ないように */
+  .card-name, .card-address{ overflow-wrap:anywhere; }
+
+  /* ── 大きめのスマホ・タブレット縦 ────────── */
+  @media (min-width:640px){
+    /* 中身は真ん中に寄せる。画面いっぱいに伸ばすと住所が読みにくい */
+    header, .count-bar, .list{
+      padding-left:max(16px, calc((100% - 900px) / 2)) !important;
+      padding-right:max(16px, calc((100% - 900px) / 2)) !important;
+    }
+    /* カードを2枚ずつ並べる */
+    .list{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
+    /* 高さをそろえて、リンクは下端に落とす */
+    .card-link{ margin-top:auto; }
+    /* 「見つかりませんでした」は列をまたいで真ん中に */
+    .empty{ grid-column:1 / -1; }
+    header h1{ font-size:1.3rem !important; }
+  }
+
+  /* ── PC ─────────────────────────────────── */
+  @media (min-width:1024px){
+    .list{ grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; }
+    .card{ padding:14px 16px; }
+  }
+
+  /* ── マウスのない端末では hover の見た目を出さない ── */
+  @media (hover:none){
+    .card:hover{ transform:none; box-shadow:none; }
+  }
+
+  /* 上の帯の「星と海」は、スマホでも指で押せる高さにする */
+  .site-bar a.home{ display:inline-flex; align-items:center; min-height:44px; }
 </style>
 </head>
 <body>
