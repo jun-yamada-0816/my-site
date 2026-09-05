@@ -184,6 +184,30 @@
 
   /* 上の帯の「星と海」は、スマホでも指で押せる高さにする */
   .site-bar a.home{ display:inline-flex; align-items:center; min-height:44px; }
+
+  /* 制作の入口は、和紙と藍のトーンで読みやすく。 */
+  :focus-visible{outline:3px solid var(--asagi);outline-offset:4px;}
+  .prompt-studio{border-top:3px solid var(--ai);background:linear-gradient(145deg,#fffdf8,var(--washi));box-shadow:0 12px 40px rgba(23,69,107,.06);}
+  .prompt-studio h2{font-size:clamp(1.2rem,3vw,1.65rem);line-height:1.6;}
+  .prompt-badges{display:flex;flex-wrap:wrap;gap:.45rem;margin:.85rem 0 1rem;}
+  .prompt-badges span{font-size:.75rem;color:var(--ai);background:rgba(23,69,107,.07);border:1px solid rgba(23,69,107,.12);border-radius:999px;padding:.3rem .7rem;}
+  .prompt-intro{font-size:.9rem;line-height:1.9;max-width:48rem;}
+  .prompt-steps{display:grid;gap:.75rem;margin:1.25rem 0;padding:0;list-style:none;}
+  .prompt-steps li{display:flex;align-items:center;gap:.65rem;font-size:.8rem;}
+  .prompt-steps span{color:var(--asagi);font-variant-numeric:tabular-nums;font-weight:600;}
+  .prompt-note{font-size:.8rem;color:var(--usuzumi);line-height:1.8;margin-bottom:1.25rem;}
+  .prompt-output-label{display:block;font-size:.85rem;font-weight:500;margin-bottom:.65rem;}
+  #prompt-out{min-height:20rem;max-height:65vh;resize:vertical;line-height:1.9;border-radius:12px;padding:1rem;background:#fffdf9;}
+  #prompt-base-hint{text-align:left;width:100%;}
+  #prompt-build{box-shadow:0 5px 16px rgba(23,69,107,.15);}
+  #prompt-copy:disabled{opacity:.45;cursor:not-allowed;}
+  @media(max-width:639px){
+    #app-view .tabpanel>.p-6{padding:1.1rem;}
+    #tabbar .tab{min-height:44px;padding-inline:.85rem;}
+    #app-view button{min-height:44px;}
+  }
+  @media(min-width:640px){.prompt-steps{grid-template-columns:repeat(3,minmax(0,1fr));}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;scroll-behavior:auto!important;transition:none!important;}}
 </style>
 </head>
 <body>
@@ -199,8 +223,8 @@
   <div class="w-full max-w-sm glass p-8 rise">
     <h1 class="text-xl font-bold mb-1">星と海 ｜ YouTube 分析</h1>
     <p class="text-xs text-slate-400 mb-6">サイトと同じアカウントでログインしてください。</p>
-    <input id="login-email" type="email" placeholder="メールアドレス" autocomplete="username" class="fld mb-2">
-    <input id="login-pw" type="password" placeholder="パスワード" autocomplete="current-password" class="fld mb-4">
+    <input id="login-email" aria-label="メールアドレス" type="email" placeholder="メールアドレス" autocomplete="username" class="fld mb-2">
+    <input id="login-pw" aria-label="パスワード" type="password" placeholder="パスワード" autocomplete="current-password" class="fld mb-4">
     <button id="login-btn" class="w-full rounded-xl py-2.5 font-medium text-slate-900"
       style="background:#17456b">ログイン</button>
     <p id="login-msg" class="text-xs text-rose-400 mt-3"></p>
@@ -310,7 +334,7 @@
 
   <!-- ────── 土台 ────── -->
   <!-- 数字からは絶対に出てこないもの（なぜやるのか・どこまで行けるのか）を置く場所です。
-       ここに入れた言葉は、そのまま「次の1本を Claude に頼む」指示文の先頭に入ります。 -->
+       ここに入れた言葉は、そのまま「次の1本を、AIとつくる」指示文の先頭に入ります。 -->
   <section id="tab-base" class="tabpanel hidden space-y-4">
 
     <div class="glass rounded-3xl p-6">
@@ -399,28 +423,32 @@
 
   <!-- ────── 次に作る動画 ────── -->
   <section id="tab-advice" class="tabpanel hidden space-y-4">
-    <div class="glass rounded-3xl p-6">
+    <div class="glass rounded-3xl p-6 prompt-studio">
       <div class="flex items-center gap-2 mb-1">
-        <span class="text-lg">📝</span>
-        <h2 class="font-bold">次の1本を Claude に頼む</h2>
+        <span class="text-lg" aria-hidden="true">📝</span>
+        <h2 class="font-bold">次の1本を、AIとつくる</h2>
       </div>
-      <p class="text-[11px] text-slate-500 mb-3 leading-relaxed">
-        「土台」タブに書いた目的、入力した数字、いま効いている型、そして
-        <b class="text-slate-300">今回どの変数を1つだけ変えるか</b>までをまとめて、指示文にします。
-        いつも動画を作ってもらっている Claude に、そのまま貼ってください。
-        <b class="text-slate-300">mp4 の動画ファイルそのもの</b>と、題名・説明文・固定コメント用の計測リンク、
-        さらに<b class="text-slate-300">次の2本の検証案</b>まで返ってきます。
-        「提案だけで終わらせず mp4 にしてください」と指示文の先頭で言い切っています。
+      <div class="prompt-badges" aria-label="対応するAI"><span>Claude</span><span>Codex</span><span>共通プロンプト</span></div>
+      <p class="prompt-intro">
+        あなたの想いと動画の数字から、次の1本の制作指示をまとめます。
+        同じプロンプトを、Claude にも Codex にもそのまま貼り付けられます。
       </p>
-      <p id="prompt-base-hint" class="hidden text-[11px] mb-3 rounded-lg px-3 py-2 leading-relaxed cursor-pointer"
+      <ol class="prompt-steps">
+        <li><span>01</span>数字と土台をまとめる</li>
+        <li><span>02</span>プロンプトをコピー</li>
+        <li><span>03</span>使いたいAIに渡す</li>
+      </ol>
+      <p class="prompt-note">音入り動画・投稿文・次の検証案まで依頼します。動画の書き出しには、コードを実行できる環境が必要です。</p>
+      <button type="button" id="prompt-base-hint" class="hidden text-[11px] mb-3 rounded-lg px-3 py-2 leading-relaxed cursor-pointer"
          style="background:rgba(154,116,32,.09);color:#9a7420">
         「土台」タブがまだ空です。<b>なぜやるのか</b>と<b>この分野の上限</b>を入れておくと、
         指示文が「数字を追うだけの提案」にならずに済みます。
-      </p>
+      </button>
       <button id="prompt-build" class="w-full rounded-2xl py-3.5 font-medium text-slate-900 shadow-2xl"
               style="background:#17456b">分析してプロンプトを作る</button>
 
       <div id="prompt-box" class="hidden mt-4">
+        <label for="prompt-out" class="prompt-output-label">Claude・Codex 共通の制作プロンプト</label>
         <textarea id="prompt-out" rows="14" readonly
                   class="fld text-[11px] leading-relaxed" style="font-family:ui-monospace,monospace"></textarea>
         <div class="flex gap-2 mt-2">
@@ -428,7 +456,7 @@
                   style="background:#2b7f8c">コピーする</button>
           <button id="prompt-build2" class="glass rounded-xl px-4 text-xs whitespace-nowrap">作り直す</button>
         </div>
-        <p id="prompt-msg" class="text-[11px] mt-2"></p>
+        <p id="prompt-msg" role="status" aria-live="polite" class="text-[11px] mt-2"></p>
         <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">
           この動画は <b id="prompt-slug" class="text-slate-300"></b> として数えます。
           できあがったら「動画」タブで<b class="text-slate-300">同じ識別子</b>で登録してください。
@@ -1080,6 +1108,7 @@ function showTab(name){
     const on = b.dataset.tab === name;
     b.style.background = on ? '#17456b' : 'transparent';
     b.style.color      = on ? '#fbf9f4' : 'var(--muted)';
+    b.setAttribute('aria-current', on ? 'page' : 'false');
     b.style.fontWeight = on ? '600' : '400';
   });
   window.scrollTo(0,0);
@@ -2505,7 +2534,7 @@ $('#subs-save').addEventListener('click', async () => {
   setTimeout(()=>{ msg.textContent=''; }, 4000);
 });
 
-/* ========================= Claude に渡すプロンプト ========================= */
+/* ========================= Claude・Codex 共通プロンプト ========================= */
 
 /* 計測リンク。「リンク」タブも同じこれを使うので、必ず同じ文字列になります。
    識別子は nextSlug()（動画の登録欄と同じ採番）です。 */
@@ -2569,8 +2598,16 @@ function buildPrompt(){
   L.push('**いちばん大事なお願い：提案で終わらせず、必ず mp4 の動画ファイルまで作ってください。**');
   L.push('構成案や題名案だけを出して「あとはこれで作ってください」と返すのは、今回はなしです。');
   L.push('この会話の中でコードを書いて動かし、実際に再生できる mp4 を書き出して、');
-  L.push('ダウンロードできる形で渡すところまでを、ひとつづきの仕事としてやってください。');
-  L.push('（作業の途中で確認を挟まなくてかまいません。最後まで進めてください）');
+  L.push('この環境で開けるファイルリンクまたは保存先のパスで渡すところまでを、ひとつづきの仕事としてやってください。');
+  L.push('');
+  L.push('## 実行環境と受け渡し（Claude・Codex 共通）');
+  L.push('- この指示文だけで作業できるように進めてください。過去の会話・専用ツール・特定のフォルダがあることを前提にしないでください。');
+  L.push('- 最初に利用できるコード実行環境、ffmpeg / ffprobe、日本語フォント、出力先を確認し、利用できる道具で制作してください。');
+  L.push('- ローカルで制作する場合は、作業フォルダ内に識別子ごとの出力フォルダを作り、既存ファイルを上書きしないでください。');
+  L.push('- 成果物は、この環境で開けるファイルリンクまたは保存先のパスで渡してください。添付できる環境ではダウンロードリンクも付けてください。');
+  L.push('- 実行環境や権限が足りない場合は、未実行の内容と不足条件を明示し、再現できる制作コードと実行手順を渡してください。未生成の動画や未測定の結果を完成済みと報告しないでください。');
+  L.push('- 通常の制作は最後まで進めてください。有料サービスの利用や外部への公開が必要な場合は、先に確認してください。');
+  L.push('- 下記の実測値と仮説を区別してください。過去の観測や目安は、現在の原因・効果を証明するものではありません。');
   L.push('');
 
   /* ── 1. 土台。数字より先に、これを外さないこと ── */
@@ -2616,13 +2653,13 @@ function buildPrompt(){
   const vlist  = withViews.map(s => s.views).sort((a,b) => a - b);
   const capped = vlist.filter(v => v >= 800 && v <= 1600).length;
   const overV  = vlist.filter(v => v > 1600).length;
-  if (vlist.length >= 8){
+  if (vlist.length >= 8 && capped / vlist.length >= 0.6){
     L.push('## いまぶつかっている壁（今回いちばん壊してほしいところ）');
-    L.push(`- ${vlist.length}本のうち **${capped}本が800〜1600回**でとまっています。いちばん多い回でも${num(vlist[vlist.length-1])}回、1600回を超えたのは${overV}本だけです。`);
-    L.push('- 再生数がこの幅に固まるのは、**最初の試し配信までは通っていて、その先へ押し出されていない**形です。');
-    L.push('  題材が外れているのではありません。届いた人の中で「最後まで見た」「反応した」が足りていないだけです。');
+    L.push(`- ${vlist.length}本のうち **${capped}本が800〜1600回**でとまっています。最高再生数は${num(vlist[vlist.length-1])}回、1600回を超えた動画は${overV}本です。`);
+    L.push('- 再生数がこの幅に集中しています。ただし、再生数だけから配信の仕組みや伸び悩みの原因は断定できません。');
+    L.push('  視聴維持や反応の記録を確認し、原因の候補を仮説として扱ってください。');
     if (values.like != null){
-      L.push(`- いいね率は${dec(values.like)}%です。目安の4%どころか、1%にも届いていません。1000回見られて、いいねが2〜5個という状態です。`);
+      L.push(`- いいね率は${dec(values.like)}%です。1000再生あたり約${dec(values.like * 10)}件に相当します。改善の目安は4%です。`);
     }
     L.push('- ですので今回変えるのは、テーマでも投稿する時間帯でもありません。**動画そのものの作り**です。');
     L.push('  下の「最初の1秒」「最後まで見てもらう作り」「動画の作り方」は、そのために書き直した指示です。ここを最優先してください。');
@@ -2914,7 +2951,7 @@ function buildPrompt(){
   L.push('  見つからないときは、使えるフォントを探してから描いてください。文字化けしたまま書き出さないこと');
   L.push('- テロップの切り替えは0.2秒くらいの短いフェード。切り替わったことが分かるようにする');
   L.push('- **最後のフレームにも文字が残っていること。** 黒画面やロゴで終わらせない（そのまま1周目の頭につながります）');
-  L.push('- 書き出したら、必ず**ダウンロードできるファイルとして渡してください**。');
+  L.push('- 書き出したら、必ず**この環境で開けるファイルリンクまたは保存先のパスを渡してください**。');
   L.push('  作れなかったときは、黙って構成案だけ返さずに、どこで詰まったかを書いてください');
   L.push('');
   L.push('### 書き出したあとの自己点検（ここまでやって完成です）');
@@ -2999,6 +3036,8 @@ function buildPrompt(){
 }
 
 function showPrompt(){
+  $('#prompt-copy').disabled = !state.videos.length;
+  $('#prompt-msg').textContent = '';
   if (!state.videos.length){
     $('#prompt-box').classList.remove('hidden');
     $('#prompt-out').value = 'まだ動画が1本も登録されていません。右上の「取り込む」から始めてください。';
@@ -3021,12 +3060,14 @@ $('#prompt-copy').addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(text);
     msg.className = 'text-[11px] mt-2'; msg.style.color = '#2b7f8c';
-    msg.textContent = 'コピーしました。Claude に貼ってください。';
+    msg.textContent = 'コピーしました。Claude または Codex に貼り付けてください。';
   } catch {
     // ファイルから直接開いたときなど、コピーが許されないことがあります
+    $('#prompt-out').focus();
     $('#prompt-out').select();
+    $('#prompt-out').setSelectionRange(0, text.length);
     msg.className = 'text-[11px] mt-2 text-amber-400'; msg.style.color = '';
-    msg.textContent = '選択しました。⌘C を押してください。';
+    msg.textContent = '自動コピーできませんでした。選択した文章をコピーしてください（スマホは長押し、PCは Ctrl+C / ⌘C）。';
   }
   setTimeout(() => { msg.textContent = ''; }, 5000);
 });

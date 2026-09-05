@@ -600,6 +600,11 @@
     @media (orientation:landscape) and (max-height:480px){
       .hero-full{ min-height:auto; padding-top:5.5rem; padding-bottom:3.5rem; }
     }
+    :focus-visible{outline:3px solid #2b7f8c;outline-offset:4px;}
+    @media(prefers-reduced-motion:reduce){
+      html{scroll-behavior:auto!important;}
+      *,*::before,*::after{animation:none!important;transition:none!important;}
+    }
   </style>
 </head>
 <body style="background:#e7f3fd;" class="text-slate-800 font-sans antialiased overflow-x-hidden">
