@@ -9,9 +9,9 @@
 
    セットアップ
      1. Supabase の SQL Editor で schema.sql を実行
-     2. 同じく sync-youtube.sql を実行（YouTubeの自動取り込み）
-     3. 同じく youtube-upgrade.sql を実行（登録者数の記録・任意）
-     4. 同じく youtube-strategy.sql を実行（1本ごとの役割と検証した変数・任意）
+     2. 同じく sync-youtube.sql を実行
+        （YouTubeの自動取り込み。登録者数の記録もここに入っています）
+     3. 同じく youtube-strategy.sql を実行（1本ごとの役割と検証した変数・任意）
      5. このファイルをブラウザで開いてログイン
 
    スマホから使う
@@ -596,6 +596,32 @@
       <button id="entry-save" class="w-full rounded-2xl py-3.5 font-medium text-slate-900 shadow-2xl" style="background:#17456b">保存する</button>
       <p id="entry-msg" class="text-center text-xs mt-2"></p>
     </div>
+
+    <!-- 取り込みの設定。ふだんは畳んでおきます -->
+    <details class="glass rounded-2xl p-4">
+      <summary class="text-sm cursor-pointer select-none">取り込みの設定（YouTube APIキー）</summary>
+      <p id="apikey-state" class="text-[11px] mt-3"></p>
+      <p class="text-[11px] text-slate-500 mt-2 leading-relaxed">
+        キーを入れると、再生数だけでなく<b>いいね・コメント数・尺・公開日時・登録者数</b>まで自動で入ります。
+        入れないときは、チャンネルのページを読んで<b>再生数と登録者数</b>だけを取り込みます。
+        いいねとコメントは、そのときだけ手入力のままです。
+      </p>
+      <p class="text-[11px] text-slate-500 mt-2 leading-relaxed">
+        取り方：<a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank"
+        rel="noopener" class="underline">Google Cloud コンソール</a> でプロジェクトを作り、
+        「YouTube Data API v3」を有効にして、認証情報からAPIキーを作ります。課金の登録は要りません。
+        できたキーには「YouTube Data API v3 だけ」の制限を付けておくと安心です。
+      </p>
+      <div class="flex flex-wrap items-end gap-2 mt-3">
+        <label class="text-xs grow" style="min-width:14rem">
+          <span class="block text-[11px] text-slate-500 mb-1">APIキー</span>
+          <input id="apikey-input" type="password" autocomplete="off" class="fld" placeholder="AIza…">
+        </label>
+        <button id="apikey-save" class="glass px-3 py-2 text-xs hover:border-sky-400/50" style="border-radius:2px">保存する</button>
+        <button id="apikey-clear" class="text-[11px] text-slate-500 hover:text-slate-300 pb-2">消す</button>
+      </div>
+      <p id="apikey-msg" class="text-[11px] mt-2"></p>
+    </details>
   </section>
 
   <!-- ────── リンク ────── -->
@@ -943,7 +969,7 @@ async function loadAll(){
   // まだ足りない準備があれば、やさしく知らせる
   const todo = [];
   if (!state.hasSubs || !state.hasChannel)
-    todo.push('登録者の記録を使うには、Supabase の SQL Editor で <code>youtube-upgrade.sql</code> を実行してください。（実行しなくても、ほかの機能はそのまま使えます）');
+    todo.push('登録者の記録を使うには、Supabase の SQL Editor で <code>sync-youtube.sql</code> を実行してください。（実行しなくても、ほかの機能はそのまま使えます）');
   if (!state.hasLog)
     todo.push('<b>入力した数字の控えがまだ作られていません。</b>Supabase の SQL Editor で <code>保存を守る.sql</code> を実行してください。実行すると、保存した数字が別の場所にも残り、消えても戻せるようになります。');
   if (!state.hasStrategy)
@@ -960,6 +986,7 @@ async function loadAll(){
   $('#subs-input').placeholder = lastSubs ? '例 ' + lastSubs.subscribers : '例 128';
 
   renderHome(); renderBase(); renderAdvice(); renderGrow(); renderVideos(); renderEntry(); renderLinkOptions();
+  renderApiKey();
 }
 
 /* ========================= 取り込み ========================= */
@@ -982,10 +1009,63 @@ $('#sync-btn').addEventListener('click', async () => {
     return;
   }
   const r = Array.isArray(data) ? data[0] : data;
+  // source は 'api'（APIキーを使った）か 'scrape'（チャンネルページを読んだ）です。
+  const via = r?.source === 'api' ? 'YouTube API から' :
+              r?.source === 'scrape' ? 'チャンネルのページから' : 'YouTube から';
+  const bits = [`新しい動画 ${r?.new_videos ?? 0} 本`, `数字 ${r?.metrics_written ?? 0} 件を更新`];
+  if (r?.subscribers != null) bits.push(`登録者 ${num(r.subscribers)} 人`);
   msg.style.cssText = 'background:rgba(43,127,140,.12);color:#2b7f8c';
-  msg.textContent = `YouTube から取り込みました。新しい動画 ${r?.new_videos ?? 0} 本、再生数 ${r?.metrics_written ?? 0} 件を更新。`;
+  msg.textContent = `${via}取り込みました。` + bits.join('、') + '。'
+    + (r?.source === 'scrape' ? '（いいねとコメント数は、APIキーを入れると自動で入ります）' : '');
   await loadAll();
-  setTimeout(() => msg.classList.add('hidden'), 8000);
+  setTimeout(() => msg.classList.add('hidden'), 10000);
+});
+
+/* ── 取り込みの設定（APIキー） ────────────────────────────
+   キーは sv_config に置きます。ログインしている本人だけが読み書きできる表です。
+   画面には出しません（末尾の4文字だけ、入っていることの確認用に見せます）。 */
+async function renderApiKey(){
+  const st = $('#apikey-state');
+  const { data, error } = await sb.from('sv_config')
+    .select('value').eq('key', 'youtube_api_key').maybeSingle();
+  if (error){
+    st.style.color = '#9a7420';
+    st.textContent = /does not exist|schema cache/i.test(error.message)
+      ? 'まだ準備ができていません。Supabase の SQL Editor で sync-youtube.sql を実行してください。'
+      : '状態を読めませんでした：' + error.message;
+    return;
+  }
+  const v = (data?.value || '').trim();
+  if (v){
+    st.style.color = '#2b7f8c';
+    st.textContent = `登録済みです（末尾 …${esc(v.slice(-4))}）。取り込みは YouTube API を使います。`;
+  } else {
+    st.style.color = '#6b7280';
+    st.textContent = 'まだ登録されていません。いまはチャンネルのページを読んで取り込んでいます。';
+  }
+}
+
+$('#apikey-save').addEventListener('click', async () => {
+  const msg = $('#apikey-msg'), input = $('#apikey-input');
+  const v = (input.value || '').trim();
+  if (!v){ msg.style.color = '#b7472a'; msg.textContent = 'キーが空です。'; return; }
+  const { error } = await sb.from('sv_config')
+    .upsert({ key:'youtube_api_key', value:v, updated_at:new Date().toISOString() },
+            { onConflict:'key' });
+  if (error){ msg.style.color = '#b7472a'; msg.textContent = '保存できませんでした：' + error.message; return; }
+  input.value = '';
+  msg.style.color = '#2b7f8c';
+  msg.textContent = '保存しました。「再生数を取り込む」を押すと、APIから取り込みます。';
+  await renderApiKey();
+});
+
+$('#apikey-clear').addEventListener('click', async () => {
+  const msg = $('#apikey-msg');
+  const { error } = await sb.from('sv_config').delete().eq('key', 'youtube_api_key');
+  if (error){ msg.style.color = '#b7472a'; msg.textContent = '消せませんでした：' + error.message; return; }
+  msg.style.color = '#6b7280';
+  msg.textContent = '消しました。これからはチャンネルのページを読んで取り込みます。';
+  await renderApiKey();
 });
 
 /* ========================= タブ ========================= */
@@ -1250,7 +1330,7 @@ function renderHome(){
   } else {
     $('#hero-subs-sub').textContent = state.hasChannel
       ? 'YouTube Studio の登録者数を、下の欄に入れてください。'
-      : 'youtube-upgrade.sql を実行すると記録できるようになります。';
+      : 'sync-youtube.sql を実行すると記録できるようになります。';
   }
 
   $('#hero-views').textContent = num(totalViews);
@@ -1690,7 +1770,7 @@ function renderAdvice(){
   if (!state.hasSubs || !state.hasChannel){
     out.push({ p:97, html: card('warn','📈','登録者を記録できるようにする',
       `いま見えているのは再生数だけです。
-       <b>Supabase の SQL Editor で youtube-upgrade.sql</b> を実行すると、
+       <b>Supabase の SQL Editor で sync-youtube.sql</b> を実行すると、
        登録者数と「動画ごとの登録の増加」を残せるようになります。<br>
        <span class="text-slate-400">再生数は増えたのに登録が増えない、という状態を早く見つけるための数字です。</span>`) });
   } else if (!withSubs.length && withViews.length){
@@ -1925,7 +2005,7 @@ function renderAdvice(){
       })))
     : emptyNote(state.hasSubs
         ? '「数字を入力」タブで、動画ごとの登録の増加を入れると出ます。'
-        : 'youtube-upgrade.sql を実行すると記録できるようになります。');
+        : 'sync-youtube.sql を実行すると記録できるようになります。');
 
   /* サイト到達 */
   const funnel = withViews.slice().sort((a,b)=> b.visitRate - a.visitRate || b.views - a.views).slice(0,15);
@@ -2416,7 +2496,7 @@ $('#subs-save').addEventListener('click', async () => {
   const val = $('#subs-input').value.trim();
   if (val === ''){ msg.className='text-[11px] mt-2 text-amber-400'; msg.textContent='数字を入れてください。'; return; }
   if (!state.hasChannel){ msg.className='text-[11px] mt-2 text-amber-400';
-    msg.textContent='Supabase の SQL Editor で youtube-upgrade.sql を実行すると記録できるようになります。'; return; }
+    msg.textContent='Supabase の SQL Editor で sync-youtube.sql を実行すると記録できるようになります。'; return; }
   const { error } = await sb.from('sv_channel_daily').upsert(
     { measured_on: todayStr(), subscribers: Number(val) }, { onConflict:'measured_on' });
   if (error){ msg.className='text-[11px] mt-2 text-rose-400'; msg.textContent='保存できませんでした：'+error.message; return; }
