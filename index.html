@@ -239,6 +239,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="description" content="星と海は、精神障害を抱える方が安心して気持ちを話せる、当事者による相互サポートの場です。" />
+  <!-- X や LINE にリンクを貼ったときの見え方。計測用の ?utm_… が付いていても同じページとして扱われるよう canonical を置きます -->
+  <link rel="canonical" href="https://hoshitoumi.vercel.app/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="星と海" />
+  <meta property="og:title" content="星と海 — こころを休める場所" />
+  <meta property="og:description" content="精神障害の当事者がひとりで運営している、相互サポートの場です。読むだけでも、音楽を聴くだけでも。言葉にならない夜も、ここにいていい。" />
+  <meta property="og:url" content="https://hoshitoumi.vercel.app/" />
+  <meta property="og:locale" content="ja_JP" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="theme-color" content="#0b1626" />
   <title>星と海</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -623,6 +633,18 @@
     .hero-primary{background:#eeeadd;color:#163447;border:1px solid #eeeadd;}
     .hero-secondary{color:#d3e3ed;border-bottom:1px solid #718795;}
     .hero-host{font-size:.7rem;line-height:1.8;color:#aebfca;margin-top:1.25rem;}
+    /* ショート動画の固定コメントから来た人にだけ出す、ひとことの出迎え */
+    .hero-from-video{border-left:2px solid #dcc49b;padding:.2rem 0 .2rem 1.1rem;margin:0 0 1.6rem;max-width:30rem;color:#e3ebef;}
+    .hero-from-video-title{font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;font-size:1rem;letter-spacing:.08em;color:#f4f1ea;margin-bottom:.45rem;}
+    .hero-from-video p{font-size:.8rem;line-height:2;}
+    .hero-from-video ul{margin-top:.6rem;display:flex;flex-direction:column;}
+    .hero-from-video a{display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:44px;font-size:.78rem;letter-spacing:.04em;color:#d3e3ed;border-bottom:1px solid rgba(180,206,218,.25);}
+    .hero-from-video a:hover{color:#fffaf0;}
+    /* 相談窓口の行の下に、受付時間をそっと添える */
+    .tel-note{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:.68rem;line-height:1.7;letter-spacing:.02em;color:var(--usuzumi);margin-top:.15rem;}
+    .tel-row{flex-wrap:wrap;}
+    /* せまい画面では、番号を必ず名前の下の行に置いて、並びをそろえる */
+    @media(max-width:539px){.tel-row > .mincho:first-child{flex:1 1 100%;}}
     .hero-footnote{display:none;}
     .welcome-lead{font-size:1rem;line-height:2;color:var(--usuzumi);margin:-.5rem 0 2rem;}
     #welcome .sec-title{white-space:normal;text-wrap:balance;}
@@ -755,6 +777,21 @@
         <p class="hero-subtitle">言葉にならない夜も、<br>ここにいていい。</p>
       </div>
       <div class="hero-letter">
+        <!-- ショート動画の固定コメントのリンク（?utm_source=youtube）から来た人にだけ出します。
+             動画と同じ声のまま、次の一歩を3つだけ置きます。普通に開いた人には何も出ません。 -->
+        <div id="from-video" class="hero-from-video" hidden>
+          <p class="hero-from-video-title">動画から、来てくれたんですね。</p>
+          <p>あの動画も、このサイトも、同じ当事者がひとりで作っています。<br>ここでは、何もしなくて大丈夫です。</p>
+          <ul>
+            <li><a href="#bulletin">掲示板に、ひとことだけ置いていく <span aria-hidden="true">↓</span></a></li>
+            <li><a href="#music">音楽を小さく流して、横になる <span aria-hidden="true">↓</span></a></li>
+            <li><a href="#support">夜中でもつながる窓口を見る <span aria-hidden="true">↓</span></a></li>
+          </ul>
+        </div>
+        <script>
+          // 表示が一瞬遅れて跳ねないよう、読み込みの途中でその場で出します
+          try { if (new URLSearchParams(location.search).get('utm_source') === 'youtube') document.getElementById('from-video').hidden = false; } catch (e) {}
+        </script>
         <p class="hero-description">誰にも言えないこと。<br>うまく説明できない気持ち。<br>そのままのあなたで、ひと息ついていってください。</p>
         <p class="hero-description">読むだけでも、音楽を聴くだけでも。<br>話したくなったら、あなたの言葉で。</p>
         <div class="hero-actions">
@@ -1212,22 +1249,32 @@
           <h2 class="sec-title" style="font-size:1.15rem;">もしも、つらくてたまらないときは</h2>
           <span class="sec-rule" aria-hidden="true"></span>
         </div>
+        <!-- 受付時間は 2026-09-23 に、厚生労働省「まもろうよ こころ」と各窓口の公式サイトで確かめたものです。
+             このサイトは夜に開かれることが多いので、夜中につながる24時間の窓口を上に置いています。 -->
         <ul class="text-sm">
           <li><a href="tel:0120279338" class="tel-row">
-            <span class="mincho">よりそいホットライン</span>
-            <span class="num-mincho ml-auto whitespace-nowrap">0120-279-338<span class="hidden sm:inline">（24時間）</span></span></a></li>
+            <span class="mincho">よりそいホットライン<span class="tel-note">24時間・無料</span></span>
+            <span class="num-mincho ml-auto whitespace-nowrap">0120-279-338</span></a></li>
+          <li><a href="tel:0120061338" class="tel-row">
+            <span class="mincho">#いのちSOS<span class="tel-note">24時間・無料</span></span>
+            <span class="num-mincho ml-auto whitespace-nowrap">0120-061-338</span></a></li>
+          <li><a href="tel:0120783556" class="tel-row">
+            <span class="mincho">いのちの電話<span class="tel-note">毎日16〜21時・無料（毎月10日は朝8時から24時間）</span></span>
+            <span class="num-mincho ml-auto whitespace-nowrap">0120-783-556</span></a></li>
           <li><a href="tel:0570064556" class="tel-row">
-            <span class="mincho">こころの健康相談統一ダイヤル</span>
+            <span class="mincho">こころの健康相談統一ダイヤル<span class="tel-note">受付の時間は、都道府県ごとにちがいます</span></span>
             <span class="num-mincho ml-auto whitespace-nowrap">0570-064-556</span></a></li>
-          <li><a href="tel:0570783556" class="tel-row">
-            <span class="mincho">いのちの電話</span>
-            <span class="num-mincho ml-auto whitespace-nowrap">0570-783-556</span></a></li>
           <li><a href="https://www.mhlw.go.jp/mamorouyokokoro/" target="_blank" rel="noopener" class="tel-row">
-            <span class="mincho">まもろうよ こころ</span>
+            <span class="mincho">まもろうよ こころ<span class="tel-note">LINE・チャットで相談できる窓口の一覧</span></span>
             <span class="num-mincho ml-auto whitespace-nowrap">LINE・チャット</span></a></li>
         </ul>
         <p class="text-[11px] mt-5 leading-[2]" style="color:var(--usuzumi);">
+          夜遅くや明け方につながるのは、24時間の2つ（よりそいホットライン・#いのちSOS）です。
+          話し中でつながらないときは、少し時間をおくか、もう一方にかけてみてください。
           電話が苦手な方は、チャットやSNSでの相談も利用できます。
+        </p>
+        <p class="text-[10px] mt-2 leading-[1.9]" style="color:var(--usuzumi);opacity:.8;">
+          受付の時間は2026年9月に確かめたものです。変わることがあるので、つながらないときは各窓口の案内もご確認ください。
         </p>
       </div>
     </div>
@@ -1238,6 +1285,10 @@
       <span class="block w-px h-10" style="background:linear-gradient(180deg,rgba(148,163,184,.35),rgba(148,163,184,0));" aria-hidden="true"></span>
       <div class="text-center text-[11px] leading-[2.2] px-6" style="color:rgba(148,163,184,.65);">
         <p>このサイトは、精神障害の当事者がひとりで運営している、相互サポートの場です。医療的な診断・治療の代わりにはなりません。</p>
+        <!-- 動画 → サイトの道はあるのに、サイト → 動画の道がなかったので置いています -->
+        <p class="mt-2"><a href="https://www.youtube.com/@jenjenjenjun" target="_blank" rel="noopener"
+             style="display:inline-block;padding:.65rem .4rem;color:rgba(203,213,225,.85);text-decoration:underline;text-underline-offset:5px;text-decoration-color:rgba(148,163,184,.4);">
+          毎晩、短い動画も置いています（YouTube）</a></p>
         <p class="num-mincho mt-2" style="color:rgba(148,163,184,.55);">&copy; 2026 星と海</p>
         <p id="visit-counter" class="num-mincho" style="color:rgba(148,163,184,.55);">読み込み中…</p>
       </div>
@@ -1300,6 +1351,15 @@
           <span class="flex-1 text-left">
             <span class="block text-slate-800 text-sm font-semibold">電話で話す（24時間・無料）</span>
             <span class="block text-slate-500 text-xs mt-0.5">よりそいホットライン 0120-279-338</span>
+          </span>
+        </a>
+        <a href="tel:0120061338"
+           class="flex items-center gap-3 glass rounded-xl px-5 py-4 border border-aurora-indigo/30
+                  hover:border-aurora-indigo hover:bg-aurora-indigo/10 transition-all">
+          <span class="text-xl" aria-hidden="true">📞</span>
+          <span class="flex-1 text-left">
+            <span class="block text-slate-800 text-sm font-semibold">つながらないときは、もうひとつ（24時間・無料）</span>
+            <span class="block text-slate-500 text-xs mt-0.5">#いのちSOS 0120-061-338</span>
           </span>
         </a>
         <a href="https://www.mhlw.go.jp/mamorouyokokoro/" target="_blank" rel="noopener"
