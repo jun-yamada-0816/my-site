@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--
   ==========================================================================
-   星と海 ｜ YouTube 分析
+   星の海 ｜ YouTube 分析
   ==========================================================================
    このページは YouTube ひとつに絞った分析ページです。
    目的は「再生数を伸ばすこと」ではなく、
-   「見てくれた人がチャンネル登録し、星と海に来てくれること」です。
+   「見てくれた人がチャンネル登録し、星の海に来てくれること」です。
 
    セットアップ
      1. Supabase の SQL Editor で schema.sql を実行
@@ -23,14 +23,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>星と海 ｜ YouTube 分析</title>
+<title>星の海 ｜ YouTube 分析</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49/dist/umd/supabase.min.js"></script>
 <style>
-  /* 夜空から深海へ。星と海のサイトと同じ世界観にそろえています。 */
+  /* 夜空から深海へ。星の海のサイトと同じ世界観にそろえています。 */
   :root{
     --sumi:#2b2f33;      /* 墨 … 本文 */
     --usuzumi:#6f757b;   /* 薄墨 … 補足 */
@@ -182,7 +182,7 @@
     .site-bar{ position:static; }
   }
 
-  /* 上の帯の「星と海」は、スマホでも指で押せる高さにする */
+  /* 上の帯の「星の海」は、スマホでも指で押せる高さにする */
   .site-bar a.home{ display:inline-flex; align-items:center; min-height:44px; }
 
   /* 制作の入口は、和紙と藍のトーンで読みやすく。 */
@@ -214,14 +214,14 @@
 <div id="shell">
 
 <div class="site-bar">
-  <a class="home" href="./">星と海</a><span class="sep"></span><span class="here">YouTube 分析</span>
+  <a class="home" href="./">星の海</a><span class="sep"></span><span class="here">YouTube 分析</span>
   <a id="back-site" href="./" class="hidden"></a>
 </div>
 
 <!-- ══════════ ログイン ══════════ -->
 <div id="login-view" class="hidden min-h-screen flex items-center justify-center p-6">
   <div class="w-full max-w-sm glass p-8 rise">
-    <h1 class="text-xl font-bold mb-1">星と海 ｜ YouTube 分析</h1>
+    <h1 class="text-xl font-bold mb-1">星の海 ｜ YouTube 分析</h1>
     <p class="text-xs text-slate-400 mb-6">サイトと同じアカウントでログインしてください。</p>
     <input id="login-email" aria-label="メールアドレス" type="email" placeholder="メールアドレス" autocomplete="username" class="fld mb-2">
     <input id="login-pw" aria-label="パスワード" type="password" placeholder="パスワード" autocomplete="current-password" class="fld mb-4">
@@ -237,7 +237,7 @@
   <header class="flex items-center gap-3 mb-6 pb-4" style="border-bottom:1px solid var(--keisen);">
     <div class="min-w-0">
       <h1 class="text-lg leading-tight" style="color:var(--sumi);">YouTube 分析</h1>
-      <p class="text-[11px] text-slate-500 truncate mt-1">星と海 ・ @jenjenjenjun</p>
+      <p class="text-[11px] text-slate-500 truncate mt-1">星の海 ・ @jenjenjenjun</p>
     </div>
     <button id="sync-btn" class="ml-auto glass px-3 py-2 text-xs flex items-center gap-1.5 hover:border-sky-400/50">
       <span id="sync-icon">⟳</span><span id="sync-label">取り込む</span>
@@ -353,7 +353,7 @@
             placeholder="眠れない夜に、ひとりで抱えている人に「自分だけじゃない」と思ってもらう。"></textarea></label>
         <label class="block"><span class="block text-[11px] text-slate-500 mb-1">最後にたどり着きたいところ（ゴール）</span>
           <textarea id="base-goal" rows="2" class="fld text-xs leading-relaxed"
-            placeholder="星と海の相談ページまで来てもらって、実際に話せる場所につなぐ。"></textarea></label>
+            placeholder="星の海の相談ページまで来てもらって、実際に話せる場所につなぐ。"></textarea></label>
         <label class="block"><span class="block text-[11px] text-slate-500 mb-1">自分が楽しめる・続けられる部分</span>
           <textarea id="base-keep" rows="2" class="fld text-xs leading-relaxed"
             placeholder="夜に浮かんだ言葉を、そのまま短く書き留めること。作曲した曲を使えること。"></textarea></label>
@@ -460,7 +460,7 @@
         <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">
           この動画は <b id="prompt-slug" class="text-slate-300"></b> として数えます。
           できあがったら「動画」タブで<b class="text-slate-300">同じ識別子</b>で登録してください。
-          そろえておかないと、固定コメントのリンクから来た人がどの動画のぶんか分からなくなります。
+          そろえておかないと、説明文のリンクから来た人がどの動画のぶんか分からなくなります。
         </p>
       </div>
     </div>
@@ -549,7 +549,7 @@
     </div>
 
     <div class="glass rounded-2xl p-5">
-      <h2 class="font-semibold text-sm mb-3">星と海の場合の考え方</h2>
+      <h2 class="font-semibold text-sm mb-3">星の海の場合の考え方</h2>
       <div class="text-xs text-slate-300 leading-relaxed space-y-3">
         <p>
           このチャンネルが届けたい相手は、<b>いま眠れずにスマホを見ている人</b>です。
@@ -672,7 +672,7 @@
   <section id="tab-link" class="tabpanel hidden space-y-4">
     <div class="glass rounded-2xl p-5">
       <h2 class="font-semibold text-sm mb-1">計測できるリンクを作る</h2>
-      <p class="text-[11px] text-slate-500 mb-4">概要欄と固定コメントにこのURLを貼ると、動画ごとの流入が記録されます。</p>
+      <p class="text-[11px] text-slate-500 mb-4">説明文にこのURLを入れると、このリンク経由の動画ごとの流入を記録できます。</p>
       <label class="text-xs block mb-3"><span class="block text-[11px] text-slate-500 mb-1">どの動画から</span>
         <select id="link-video" class="fld"></select></label>
       <div class="flex gap-2">
@@ -683,9 +683,9 @@
     </div>
 
     <div class="glass rounded-2xl p-5">
-      <h2 class="font-semibold text-sm mb-1">固定コメントの下書き</h2>
+      <h2 class="font-semibold text-sm mb-1">説明文に入れるサイト案内</h2>
       <p class="text-[11px] text-slate-500 mb-3">
-        ショート動画では概要欄はほとんど読まれません。<b class="text-slate-300">固定コメント</b>が実質の入口です。
+        動画の説明文に、この案内と計測リンクをまとめて入れてください。
       </p>
       <textarea id="link-comment" rows="5" class="fld text-xs leading-relaxed"></textarea>
       <button id="comment-copy" class="mt-2 glass rounded-xl px-3 py-2 text-xs hover:border-sky-400/50">この文をコピー</button>
@@ -856,8 +856,8 @@ const GOALS = [
     fix:'その回のいちばん刺さる一言を、そのままタイトルにする。',
     need:'動画のタイトル' },
   { key:'visit', name:'1000再生あたりのサイト到達', unit:'人', goal:5,
-    why:'星と海にとっての本当の成果です。相談ページに人が来て、はじめて前に進みます。',
-    fix:'固定コメントに計測リンクを置く。概要欄だけでは読まれません。',
+    why:'星の海にとっての本当の成果です。相談ページに人が来て、はじめて前に進みます。',
+    fix:'説明文にサイト案内と計測リンクをまとめて入れる。',
     need:'計測リンク（リンクタブ）' },
 ];
 
@@ -966,7 +966,7 @@ async function enterApp(){
   $('#app-view').classList.remove('hidden');
   $('#yt-channel').href = CHANNEL_URL;
   $('#entry-date').value = todayStr();
-  // 星と海のサイトに置いたときだけ「サイトへ戻る」を出す。
+  // 星の海のサイトに置いたときだけ「サイトへ戻る」を出す。
   if (location.protocol !== 'file:') $('#back-site').classList.remove('hidden');
   await loadAll();
   showTab('home');
@@ -1460,7 +1460,7 @@ function renderHome(){
           `<div><div class="num text-3xl font-bold" style="color:#2b7f8c">${num(n)}</div>
            <div class="text-[10px] text-slate-500">${l}</div></div>`).join('')}
        </div>`
-    : emptyNote('まだ記録がありません。「リンク」タブで作ったURLを固定コメントに貼ると、ここに出ます。');
+    : emptyNote('まだ記録がありません。「リンク」タブで作ったURLを説明文に入れ、そのリンクから訪問があると、ここに出ます。');
 }
 
 /* 8週ぶんの投稿カレンダー。続いているかどうかが目で分かります。 */
@@ -1965,9 +1965,9 @@ function renderAdvice(){
   /* ④ 計測リンク */
   if (!state.visits.length && withViews.length){
     out.push({ p:94, html: card('warn','🎯','まだサイトに届いた人が測れていません',
-      `<b>「リンク」タブで作ったURL</b>を、各動画の<b>固定コメント</b>に貼ってください。
-       ショート動画では概要欄はほとんど開かれません。<br>
-       <span class="text-slate-400">再生数が伸びても相談ページに誰も来なければ、星と海にとっては前に進んでいません。
+      `<b>「リンク」タブで作ったURL</b>を、各動画の<b>説明文</b>に入れてください。
+       サイト案内も説明文にまとめます。<br>
+       <span class="text-slate-400">再生数が伸びても相談ページに誰も来なければ、星の海にとっては前に進んでいません。
        この計測が入って初めて「どの動画が本当に効いたか」が分かります。</span>`) });
   } else {
     const cand = withViews.filter(s => s.visits > 0).sort((a,b)=>b.visitRate-a.visitRate)[0];
@@ -2223,8 +2223,8 @@ const RULES = [
   { t:'シリーズにする（#1、#2…）',
     d:'続きものは、1本見た人がもう1本見てくれます。同じ形・同じ入り方で続けるのがコツです。',
     key:null },
-  { t:'固定コメントに次の一歩を置く',
-    d:'ショート動画では概要欄はほとんど開かれません。相談ページへのリンクは固定コメントに置きます。',
+  { t:'説明文に次の一歩をまとめる',
+    d:'動画の紹介・答えやすい問い・相談ページへの案内と計測リンクを、ひとつの説明文にまとめます。',
     key:'visit' },
   { t:'最後に問いを置いて、返事をする',
     d:'コメントが付くと滞在時間が伸びます。出したあとの30分だけでも返事をすると、伸び方が変わります。',
@@ -2725,7 +2725,7 @@ function buildPrompt(){
   const L = [];
 
   L.push('あなたは YouTube ショート動画の構成作家であり、映像を作って書き出す担当でもあります。');
-  L.push('「星と海」というチャンネルの、次の1本を作ってください。');
+  L.push('「星の海」というチャンネルの、次の1本を作ってください。');
   L.push('');
   L.push('**いちばん大事なお願い：提案で終わらせず、必ず mp4 の動画ファイルまで作ってください。**');
   L.push('構成案や題名案だけを出して「あとはこれで作ってください」と返すのは、今回はなしです。');
@@ -2753,12 +2753,12 @@ function buildPrompt(){
   if (st.goal)    L.push(`- 最後にたどり着きたいところ：${st.goal}`);
   if (st.keep)    L.push(`- 続けられる理由（ここを削らないでください）：${st.keep}`);
   L.push('- 精神障害の当事者に向けた発信です。見る人の多くは、しんどい夜に「自分だけじゃない」と思いたくて開きます。');
-  L.push('- **このチャンネルも、相談ページ「星と海」も、精神障害の当事者本人がひとりで運営しています。**');
+  L.push('- **このチャンネルも、相談ページ「星の海」も、精神障害の当事者本人がひとりで運営しています。**');
   L.push('  支援する側の人が作っているのではありません。見ている人がいちばん知りたがっているのは、そこです。');
   L.push('  （等級や病名は書きません。「当事者が作っている」という事実だけで十分です）');
   L.push('- ですから語り口は「〜の方へ」ではなく「私も」です。一人称で、同じ夜に起きている一人として書いてください。');
   L.push('- 励ましません。教えません。同じところに立って、同じ景色を言葉にします。');
-  L.push('- ゴールは再生数ではなく、チャンネル登録と、相談ページ（星と海）まで来てもらうことです。');
+  L.push('- ゴールは再生数ではなく、チャンネル登録と、相談ページ（星の海）まで来てもらうことです。');
   L.push('- 再生数が伸びる案と、この土台からずれる案が両立しないときは、**土台のほうを選んでください**。');
   L.push('');
 
@@ -2846,7 +2846,7 @@ function buildPrompt(){
   L.push('  → **13秒は失敗でした。今回から15〜20秒に戻します。**');
   L.push('  （2026-09-05に「20秒は長すぎる」と書いて13秒に縮めたのは、こちらの推測でした。実測では逆でした。訂正します）');
   L.push('- **題名**：問いかけの形にした3本は中央285回。言い切りの31本は中央1011回。');
-  L.push('  → 問いは動画の中と固定コメントに置き、**題名は言い切り**にしてください。');
+  L.push('  → 問いは動画の中と説明文に置き、**題名は言い切り**にしてください。');
   L.push('- **題名の長さ**：ハッシュタグを除いた本体13〜18字の16本が中央1044回。19字以上の5本は中央497回。');
   L.push('- **テーマ**：不眠の9本は中央317回（うち5本が連続投稿）。うつの8本は中央1102回。');
   L.push('  同じテーマを続けた後半で落ちています。→ **同じテーマを3本以上続けないでください。**');
@@ -3124,7 +3124,7 @@ function buildPrompt(){
   L.push('- かわりに、**答えが一行で書ける問いを、最後から2枚目に置いてください。**');
   L.push('  例：「今日は、何時に横になりましたか。」「今日、いちばん静かだったのは何時ごろでしたか。」');
   L.push('- 「はい／いいえ」で終わらない問いにする。ただし考えこませない。答えるのに5秒かからないもの。');
-  L.push('- 同じ問いを固定コメントにも置いてください。動画とコメントで同じことを聞かれると、人は答えます。');
+  L.push('- 同じ問いを説明文にも自然に入れてください。答えたい人がコメントできるように、短い一文にします。');
   L.push('- **ただし、その問いを題名にしないでください。** 題名を問いかけの形にした3本は中央285回、言い切りの31本は中央1011回でした。');
   L.push('  問いは中にいる人に向けた言葉です。まだ知らない人には、まず場面を見せてください。');
   L.push('');
@@ -3163,7 +3163,7 @@ function buildPrompt(){
   }
   L.push('');
   L.push('### BGM（出だしがうるさいと、そこで閉じられます）');
-  L.push('- 星と海の曲（Suno で作ったもの）は、あとでこちらで差し替えます。');
+  L.push('- 星の海の曲（Suno で作ったもの）は、あとでこちらで差し替えます。');
   L.push('  ですので今回は、**差し替えを前提にした仮のBGM**を、あなたのほうで作って敷いてください。無音にはしないこと。');
   L.push('- ただし今回から、**音を一段ぶん静かに**します。これまでの出だしは音が大きく、最初の1秒で閉じられていました。');
   L.push('- **冒頭0.8秒でフェードインしてください。** -40dBFS くらいの小さな音から始めて、0.8秒で定常の音量まで上げる。');
@@ -3208,7 +3208,7 @@ function buildPrompt(){
   L.push('');
   L.push('### 渡してほしい音のファイル');
   L.push('1. 音入りの mp4（本命。これがないと今回は未完成です）');
-  L.push('2. 音なしの mp4（あとで星と海の曲に差し替えるとき用）');
+  L.push('2. 音なしの mp4（あとで星の海の曲に差し替えるとき用）');
   L.push('3. BGM だけの wav と、効果音だけの wav（あとで音量を調整できるように、別々で）');
   L.push('');
   L.push('あわせて、**どの秒に何の音を置いたか**を、下の「絵コンテ」の表の「音」の列に書いてください（例：0.0秒 遠い波 ／ 8.6秒 灯りがつく小さな鈴 …）。');
@@ -3338,28 +3338,27 @@ function buildPrompt(){
   L.push('  同じ側にいる人の言葉にしてください。「私も」で始められるかどうかが目安です。');
   L.push('');
   L.push('### 5. 説明文');
-  L.push('3〜4行。動画の中身がそのまま伝わる言葉で。');
-  L.push('- そのうち1行は、**このチャンネルを当事者本人が運営していること**に触れてください。');
-  L.push('  例：「精神障害の当事者が、ひとりで作っています。」');
-  L.push('  肩書きも等級も書かないこと。ひとことで十分です。長く語ると、重心が作り手の側に移ってしまいます。');
-  L.push('説明文にもハッシュタグを5つまで付けてかまいません。');
-  L.push('こちらは説明欄なので、上の100文字には数えません。');
-  L.push('');
-  L.push('### 6. 固定コメント');
-  L.push('ショート動画では概要欄はほとんど開かれないので、固定コメントに置きます。');
-  L.push('2〜3行の短い文と、下のリンクを組み合わせてください。');
-  L.push('- そのうちの1行で、**当事者本人が運営していること**を短く伝えてください。');
-  L.push('  概要欄が開かれない以上、ここを読む人にとっては、これが唯一の手がかりになります。');
-  L.push('  例：「私も同じ側にいます。相談ページも、当事者がひとりで作っています。」');
+  L.push('**説明文は、そのまま概要欄へ一度でコピーできる完成文を1つだけ出してください。**');
+  L.push('これまで固定コメントに分けていた問いかけ・サイト案内・計測リンクも、すべてこの説明文の本文に含めます。');
+  L.push('固定コメントを別項目・別案・別のコピーブロックとして出さず、説明文の中にも「固定コメント」という見出しは付けないでください。');
+  L.push('本文は5〜7行を目安に、次の内容を自然につないでください（リンク・ハッシュタグの行は別に数えます）。');
+  L.push('- 冒頭の1〜2行で、動画の中身がそのまま伝わる言葉を置く。');
+  L.push('- 動画の最後から2枚目に置いた、答えが一行で書ける問いを1つ入れる。');
+  L.push('- **チャンネルと相談ページ「星の海」を当事者本人がひとりで運営していること**を、1行で短く伝える。');
+  L.push('  例：「この動画も、相談ページ『星の海』も、精神障害の当事者がひとりで作っています。」');
+  L.push('  肩書きも等級も書かないこと。ひとことで十分です。');
+  L.push('- 星の海への短い案内と、下の計測リンクを本文に1回入れる。');
   L.push('  「相談に乗ります」とは書かないこと。約束できるのは、同じ側にいることだけです。');
+  L.push('- ハッシュタグは末尾に5つまで。説明欄なので、題名の100文字には数えません。');
   L.push('');
-  L.push('計測リンク（このまま貼ってください。作り変えないでください）：');
+  L.push('説明文に含める計測リンク（このまま貼ってください。作り変えないでください）：');
   L.push(url);
   L.push('');
   L.push(`この末尾の \`utm_content=${slug}\` が、あとで「どの動画から相談ページに来たか」を数える印になります。`);
   L.push('短縮したり、パラメータを足し引きすると数えられなくなります。');
+  L.push('この計測の説明や識別子の解説は、貼り付け用の説明文には含めないでください。');
   L.push('');
-  L.push('### 7. 記録用の1行');
+  L.push('### 6. 記録用の1行');
   L.push('作ったものを分析ページに登録するので、最後にこの形で出してください。');
   L.push(`識別子: ${slug} ／ テーマ: ___ ／ 冒頭の掴み: ___ ／ 音: ${audioBest || 'BGM＋効果音'} ／ 形式: ${VISUAL_FORMAT} ／ 尺: ___（実際に書き出した秒数）／ 締め: ___ ／ 役割: ${role.role} ／ 今回変えたもの: ${nx ? nx.axis.name : '変えていない'}`);
   L.push('（掴みは 問いかけ・共感・断言・数字・体験談・場面描写 から、');
@@ -3367,7 +3366,7 @@ function buildPrompt(){
   L.push('　締めは リンクへ・コメント促し・登録の約束・なし から選んでください。');
   L.push(`　形式は「${VISUAL_FORMAT}」のまま書き換えないでください。分析ページは、この言葉で映像の回を数えています）`);
   L.push('');
-  L.push('### 8. 次の2本の設計（作らなくていいです。設計だけ）');
+  L.push('### 7. 次の2本の設計（作らなくていいです。設計だけ）');
   if (nx?.switching){
     L.push(`今回の1本と合わせて3本で、映像にした効き目を確かめます。次の2本も**${VISUAL_FORMAT}**で、ほかの条件は今回とそろえた案を、あと2本ぶん出してください。`);
     L.push('- 直近と同じテーマは続けない決まりなので、テーマだけは変えてかまいません。尺・テロップ・音・題名の形は今回と同じにする');
@@ -3438,19 +3437,19 @@ function buildLink(){
   const url = slug ? trackUrl(slug) : '';
   $('#link-out').value = url;
   $('#link-comment').value = url
-    ? `眠れない夜のための場所をつくっています。\n話を聞いてほしいとき、ひとりでつらいとき、ここに来てください。\n${url}\n\n毎晩1本、そっと置いていきます。よかったら登録して待っていてください。`
+    ? `この動画も、相談ページ「星の海」も、精神障害の当事者がひとりで作っています。\n眠れない夜、ひと息つきたいときに。読むだけでも、あなたのペースでどうぞ。\n${url}\n\n毎晩1本、そっと置いていきます。`
     : '';
 }
 $('#link-copy').addEventListener('click', async () => {
   if (!$('#link-out').value) return;
   await navigator.clipboard.writeText($('#link-out').value);
-  $('#link-msg').textContent = 'コピーしました。固定コメントに貼ってください。';
+  $('#link-msg').textContent = 'コピーしました。説明文に入れてください。';
   setTimeout(()=>{ $('#link-msg').textContent=''; }, 3000);
 });
 $('#comment-copy').addEventListener('click', async () => {
   if (!$('#link-comment').value) return;
   await navigator.clipboard.writeText($('#link-comment').value);
-  $('#comment-msg').textContent = 'コピーしました。動画のコメント欄に貼って、固定してください。';
+  $('#comment-msg').textContent = 'コピーしました。動画の説明文にまとめて貼ってください。';
   setTimeout(()=>{ $('#comment-msg').textContent=''; }, 4000);
 });
 $('#link-test').addEventListener('click', () => {

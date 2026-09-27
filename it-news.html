@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   ==========================================================================
-   星と海 ｜ IT ニュース
+   星の海 ｜ IT ニュース
   ==========================================================================
    いろいろなサイトの RSS を集めて、新しい順に並べるページです。
    「更新」を押すと、Supabase 自身が各サイトを読みに行きます。
@@ -26,13 +26,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#f2efe7">
-<title>星と海 ｜ IT ニュース</title>
+<title>星の海 ｜ IT ニュース</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49/dist/umd/supabase.min.js"></script>
 <style>
-  /* 星と海のサイト・分析ページと同じ和の色です。 */
+  /* 星の海のサイト・分析ページと同じ和の色です。 */
   :root{
     --sumi:#2b2f33;      /* 墨 … 本文 */
     --usuzumi:#6f757b;   /* 薄墨 … 補足 */
@@ -260,20 +260,20 @@
     .btn:hover, .chip:hover, .item a.title:hover{ border-color:var(--keisen); }
   }
 
-  /* 上の帯の「星と海」は、スマホでも指で押せる高さにする */
+  /* 上の帯の「星の海」は、スマホでも指で押せる高さにする */
   .site-bar a.home{ display:inline-flex; align-items:center; min-height:44px; }
 </style>
 </head>
 <body>
 
 <div class="site-bar">
-  <a class="home" href="./">星と海</a><span class="sep"></span><span class="here">IT ニュース</span>
+  <a class="home" href="./">星の海</a><span class="sep"></span><span class="here">IT ニュース</span>
 </div>
 
 <!-- ══════════ ログイン ══════════ -->
 <div id="login-view" class="hidden wrap" style="max-width:24rem;padding-top:4rem;">
   <div class="glass" style="padding:2rem;">
-    <h1 style="font-size:1.1rem;margin-bottom:.3rem;">星と海 ｜ IT ニュース</h1>
+    <h1 style="font-size:1.1rem;margin-bottom:.3rem;">星の海 ｜ IT ニュース</h1>
     <p class="tiny muted" style="margin-bottom:1.4rem;">サイトと同じアカウントでログインしてください。</p>
     <input id="login-email" type="email" placeholder="メールアドレス" autocomplete="username" class="fld" style="margin-bottom:.5rem;">
     <input id="login-pw" type="password" placeholder="パスワード" autocomplete="current-password" class="fld" style="margin-bottom:1rem;">

@@ -1,5 +1,5 @@
 -- ============================================================
---  星と海 ｜ IT ニュース収集
+--  星の海 ｜ IT ニュース収集
 --  Supabase の SQL Editor に貼り付けて実行してください。
 --
 --  APIキーも開発者登録も不要です。各サイトが公開している
@@ -202,7 +202,7 @@ begin
       'GET',
       s.url,
       array[
-        extensions.http_header('User-Agent', 'Mozilla/5.0 (compatible; HoshiToUmi/1.0; +https://hoshitoumi.vercel.app)'),
+        extensions.http_header('User-Agent', 'Mozilla/5.0 (compatible; HoshiNoUmi/1.0; +https://hoshitoumi.vercel.app)'),
         extensions.http_header('Accept', 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*')
       ],
       null, null)::extensions.http_request);
