@@ -303,7 +303,7 @@
   <link rel="stylesheet" href="retro.css" />
   <link rel="icon" type="image/svg+xml" href="assets/starlit-sea.svg" />
 </head>
-<body style="background:#08172a;" class="text-slate-800 font-sans antialiased overflow-x-hidden">
+<body style="background:#08172a;" class="text-slate-800 font-sans antialiased">
 
   <!-- スキップリンク（キーボード・スクリーンリーダー利用者向け） -->
   <a href="#hero"
@@ -324,9 +324,9 @@
     <nav class="retro-nav" aria-label="メインメニュー">
       <a href="#hero">HOME</a><a href="#profile">PROFILE</a><a href="#blog">DIARY</a><a href="#bulletin">BBS</a><a href="#links">LINK</a>
       <div class="nav-tools">
-        <button id="mobile-menu-btn" aria-expanded="false" aria-controls="mobile-menu" onclick="toggleMobileMenu()" aria-label="その他のメニュー" title="その他のメニュー"><svg id="mobile-menu-icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M4 12h16M4 18h16"/></svg><svg id="mobile-menu-icon-close" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 6l12 12M6 18L18 6"/></svg></button>
-        <button id="settings-btn" onclick="openSettingsModal()" aria-label="安心設定（アニメーションや文字サイズ）" title="安心設定"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M4 17h16"/><path d="M9 4v6M15 14v6"/></svg></button>
-        <button id="admin-btn" onclick="onAdminBtnClick()" aria-label="管理者ログイン" title="管理者ログイン"><svg id="admin-icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="10" width="14" height="11" rx="1"/><path d="M8 10V7a4 4 0 018 0v3M12 14v3"/></svg><svg id="admin-icon-user" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg></button>
+        <button id="mobile-menu-btn" aria-expanded="false" aria-controls="mobile-menu" onclick="toggleMobileMenu()" aria-label="その他のメニュー" title="その他のメニュー"><svg id="mobile-menu-icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M4 12h16M4 18h16"/></svg><svg id="mobile-menu-icon-close" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 6l12 12M6 18L18 6"/></svg><span class="nav-tool-label">メニュー</span></button>
+        <button id="settings-btn" onclick="openSettingsModal()" aria-label="安心設定（アニメーションや文字サイズ）" title="安心設定"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M4 17h16"/><path d="M9 4v6M15 14v6"/></svg><span class="nav-tool-label">表示設定</span></button>
+        <button id="admin-btn" onclick="onAdminBtnClick()" aria-label="管理者ログイン" title="管理者ログイン"><svg id="admin-icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="10" width="14" height="11" rx="1"/><path d="M8 10V7a4 4 0 018 0v3M12 14v3"/></svg><svg id="admin-icon-user" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg><span class="nav-tool-label">管理者</span></button>
       </div>
       <ul id="mobile-menu" class="hidden retro-mobile"><li><a href="#welcome" onclick="closeMobileMenu()" class="menu-row">はじめての方へ</a></li><li><a href="#music" onclick="closeMobileMenu()" class="menu-row">音楽室</a></li><li><a href="#mood" onclick="closeMobileMenu()" class="menu-row">きょうのきもち</a></li><li><a href="#coping" onclick="closeMobileMenu()" class="menu-row">こころのケア</a></li><li><a href="#services" onclick="closeMobileMenu()" class="menu-row">制度・サービス</a></li><li><a href="#promise" onclick="closeMobileMenu()" class="menu-row">星と海の約束</a></li><li id="admin-page-links-mobile" class="hidden"><button class="menu-row" onclick="closeMobileMenu();onAdminBtnClick()">管理者メニュー</button></li></ul>
     </nav>
@@ -346,7 +346,7 @@
         <section id="hero" aria-labelledby="hero-title">
           <div class="window-title"><span>ようこそ、星と海のホームページへ。</span><span class="window-dots" aria-hidden="true">□ ×</span></div>
           <div class="home-hero">
-            <div class="hero-heading"><p class="hero-eyebrow">A SMALL PLACE TO REST</p><h2 id="hero-title">言葉にならない夜も、<br>ここにいていい。</h2><p class="hero-description">星を見上げたり、海を眺めたり。<br>そんなふうに、ひと息ついていってください。<br>ここは、当事者がひとりでつくる<br>小さな相互サポートのホームページです。</p><div class="hero-actions"><a href="#bulletin" class="retro-button primary">BBSに足あとを残す</a><a href="#welcome" class="retro-button">はじめての方へ</a></div></div>
+            <div class="hero-heading"><p class="hero-eyebrow">A SMALL PLACE TO REST</p><h2 id="hero-title">言葉にならない夜も、<br>ここにいていい。</h2><p class="hero-description">星を見上げたり、海を眺めたり。<br>そんなふうに、ひと息ついていってください。<br>ここは、当事者がひとりでつくる小さな相互サポートのホームページです。</p><div class="hero-actions"><a href="#bulletin" class="retro-button primary">BBSに足あとを残す</a><a href="#welcome" class="retro-button">はじめての方へ</a></div></div>
             <figure class="hero-art"><img src="assets/starlit-sea.svg" alt="三日月と星が浮かぶ静かな海。小さな帆船が一隻。" width="240" height="240"><figcaption>somewhere between stars &amp; sea</figcaption></figure>
           </div>
           <div id="from-video" class="hero-from-video" hidden><p class="hero-from-video-title">動画から、来てくれたんですね。</p><p>あの動画も、このサイトも、同じ当事者がひとりで作っています。ここでは、何もしなくて大丈夫です。</p><ul><li><a href="#bulletin">掲示板に、ひとことだけ置いていく →</a></li><li><a href="#music">音楽を小さく流して、横になる →</a></li><li><a href="#support">夜中でもつながる窓口を見る →</a></li></ul></div>
@@ -363,7 +363,7 @@
 
     <div class="glass-panel relative z-10 max-w-4xl mx-auto px-5 sm:px-8 md:px-14 py-10 sm:py-14 md:py-16">
       <!-- ヘッダー -->
-      <div class="flex items-end justify-between gap-5 mb-8">
+      <div class="section-toolbar flex items-end justify-between gap-5 mb-8">
         <div class="sec-head flex-1" style="margin-bottom:0;">
           <span class="sec-no">DIARY</span>
           <h2 class="sec-title">日記・ひとりごと</h2>
@@ -459,7 +459,7 @@
   <section id="music" class="relative z-10 py-14 sm:py-20 md:py-24 px-4 sm:px-6 overflow-hidden">
 
     <div class="glass-panel relative z-10 max-w-3xl mx-auto px-5 sm:px-8 md:px-14 py-10 sm:py-14 md:py-16">
-      <div class="flex items-end justify-between gap-5 mb-8">
+      <div class="section-toolbar flex items-end justify-between gap-5 mb-8">
         <div class="sec-head flex-1" style="margin-bottom:0;">
           <span class="sec-no">MUSIC</span>
           <h2 class="sec-title">音楽</h2>
@@ -616,7 +616,7 @@
       <p class="lead mb-12 max-w-2xl">今日の気分にいちばん近いものを、ひとつ選んでみてください。記録は<strong style="color:var(--asagi);font-weight:500;">この端末の中だけ</strong>に保存され、外部には一切送信されません。誰にも見られない、あなただけの記録です。</p>
 
       <!-- きもちボタン -->
-      <div class="flex flex-nowrap justify-center gap-1.5 sm:gap-3 mb-8" role="group" aria-label="今日の気分を選ぶ">
+      <div class="mood-options mb-8" role="group" aria-label="今日の気分を選ぶ">
         <button onclick="recordMood(0)" data-mood="0" aria-label="つらい"
                 class="mood-btn glass rounded-2xl px-0.5 sm:px-5 py-3.5 flex flex-col items-center gap-1.5 flex-1 min-w-0 max-w-[6rem]">
           <span class="text-xl sm:text-2xl" aria-hidden="true">🌧️</span>
@@ -838,8 +838,10 @@
   <!-- ======================================================
        つらいとき ボタン（常に画面右下に表示）
        ====================================================== -->
+  <nav class="quick-actions" aria-label="いつでも使えるメニュー">
+    <a href="#site-title" aria-label="ページ上部へ戻る">↑ ページ上部へ</a>
   <button id="sos-btn" onclick="openSosModal()" aria-label="つらいときのサポートを開く"
-          class="fixed bottom-5 right-5 z-[100] glass px-5 py-3
+          class="glass px-3 py-2
                  flex items-center gap-2 text-sm mincho tracking-[.18em]
                  transition-all duration-300"
           style="color:var(--shu);border:1px solid rgba(183,71,42,.38);border-radius:2px;
@@ -850,6 +852,7 @@
     </svg>
     つらいとき
   </button>
+  </nav>
 
   <!-- ======================================================
        MODAL: つらいときのサポート
@@ -975,13 +978,13 @@
     <div class="absolute inset-0 bg-slate-700/25 backdrop-blur-sm" onclick="closeLoginModal()"></div>
     <div class="relative glass rounded-2xl p-6 sm:p-8 w-full max-w-sm shadow-2xl shadow-slate-400/30 max-h-[88vh] overflow-y-auto modal-scroll">
       <h2 class="text-xl font-bold text-slate-800 mb-2">管理者ログイン</h2>
-      <p class="text-slate-500 text-xs mb-6">Supabase Auth に登録したアカウントでログインしてください。</p>
+      <p class="text-slate-500 text-xs mb-6">管理者のメールアドレスとパスワードを入力してください。</p>
       <form id="login-form" class="space-y-4">
-        <input id="login-email" type="email" required placeholder="メールアドレス"
+        <input id="login-email" type="email" inputmode="email" autocomplete="username" aria-label="メールアドレス" required placeholder="メールアドレス"
                class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-3
                       text-slate-700 text-sm placeholder-slate-400
                       focus:outline-none focus:border-aurora-blue/50 transition-colors" />
-        <input id="login-pw" type="password" required placeholder="パスワード"
+        <input id="login-pw" type="password" autocomplete="current-password" aria-label="パスワード" required placeholder="パスワード"
                class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-3
                       text-slate-700 text-sm placeholder-slate-400
                       focus:outline-none focus:border-aurora-blue/50 transition-colors" />

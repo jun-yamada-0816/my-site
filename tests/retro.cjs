@@ -290,7 +290,12 @@ const assets = [
     );
     await page.keyboard.press("Escape");
     // A separate anonymous browser must read the saved public profile.
-    const visitor = await newContext({ viewport: { width: 390, height: 844 } });
+    const visitor = await newContext({
+      viewport: { width: 390, height: 844 },
+      isMobile: true,
+      hasTouch: true,
+      deviceScaleFactor: 2,
+    });
     const phone = await visitor.newPage();
     await phone.goto(base + "?utm_source=youtube");
     await settle(phone);
@@ -304,14 +309,79 @@ const assets = [
       path: path.join(output, "mobile.png"),
       fullPage: false,
     });
-    for (const width of [320, 390, 768, 1024, 1440]) {
-      await phone.setViewportSize({ width, height: 900 });
-      const overflow = await phone.evaluate(
-        () => document.documentElement.scrollWidth > innerWidth,
+    for (const largeText of [false, true]) {
+      await phone.evaluate(
+        (value) =>
+          document.documentElement.classList.toggle("large-text", value),
+        largeText,
       );
-      assert.equal(overflow, false, "Horizontal overflow at " + width);
+      for (const width of [320, 390, 480, 639, 640, 768, 1023, 1024, 1440]) {
+        await phone.setViewportSize({ width, height: 900 });
+        const layout = await phone.evaluate(() => {
+          const selectors =
+            ".retro-nav > a, .nav-tools button, .hero-actions a, .ticker-toggle, .mood-btn, #msg-submit, .quick-actions > a, #sos-btn";
+          const controls = [...document.querySelectorAll(selectors)]
+            .map((element) => {
+              const rect = element.getBoundingClientRect();
+              return {
+                name:
+                  element.getAttribute("aria-label") ||
+                  element.textContent.trim(),
+                width: rect.width,
+                height: rect.height,
+                left: rect.left,
+                right: rect.right,
+              };
+            })
+            .filter((rect) => rect.width && rect.height);
+          return {
+            width: innerWidth,
+            overflow: document.documentElement.scrollWidth > innerWidth,
+            controls,
+            sidebar: getComputedStyle(document.querySelector(".sidebar"))
+              .display,
+            bodyText: parseFloat(
+              getComputedStyle(document.querySelector(".profile-bio")).fontSize,
+            ),
+          };
+        });
+        assert.equal(
+          layout.width,
+          width,
+          "Mobile viewport must stay at device width",
+        );
+        assert.equal(
+          layout.overflow,
+          false,
+          `Horizontal overflow at ${width}, large text ${largeText}`,
+        );
+        assert.equal(
+          layout.sidebar === "none",
+          width < 1024,
+          "Sidebar requires room for a readable main column",
+        );
+        assert(
+          layout.bodyText >= 16,
+          "Main content must be readable without zoom",
+        );
+        for (const control of layout.controls) {
+          assert(
+            control.width >= 43.5 && control.height >= 43.5,
+            `Touch target too small at ${width}: ${JSON.stringify(control)}`,
+          );
+          assert(
+            control.left >= -1 && control.right <= width + 1,
+            `Clipped control at ${width}: ${JSON.stringify(control)}`,
+          );
+        }
+      }
     }
+    await phone.evaluate(() =>
+      document.documentElement.classList.remove("large-text"),
+    );
     await phone.setViewportSize({ width: 390, height: 844 });
+    await phone.locator("#bulletin").scrollIntoViewIfNeeded();
+    await phone.screenshot({ path: path.join(output, "mobile-bbs.png") });
     await phone.locator("#mobile-menu-btn").click();
     assert.equal(
       await phone.locator("#mobile-menu-btn").getAttribute("aria-expanded"),
@@ -350,12 +420,75 @@ const assets = [
     await phone.waitForFunction(
       () => !document.querySelector("#profile-save-btn").disabled,
     );
+    // Short heights cover landscape and the reduced room while entering text.
+    for (const viewport of [
+      { width: 320, height: 568 },
+      { width: 390, height: 460 },
+      { width: 844, height: 390 },
+    ]) {
+      await phone.setViewportSize(viewport);
+      await phone
+        .locator("#edit-profile-bio")
+        .fill("スマホでも、横向きでも。\n読みやすいホームページに。");
+      await phone.locator("#profile-save-btn").scrollIntoViewIfNeeded();
+      const editor = await phone.evaluate(() => {
+        const dialog = document.querySelector("#profile-editor");
+        const rect = dialog.getBoundingClientRect();
+        const save = document
+          .querySelector("#profile-save-btn")
+          .getBoundingClientRect();
+        return {
+          top: rect.top,
+          bottom: rect.bottom,
+          width: rect.width,
+          scroll: dialog.scrollWidth > dialog.clientWidth,
+          saveTop: save.top,
+          saveBottom: save.bottom,
+          font: parseFloat(
+            getComputedStyle(document.querySelector("#edit-profile-bio"))
+              .fontSize,
+          ),
+        };
+      });
+      assert(
+        editor.top >= 0 && editor.bottom <= viewport.height + 1,
+        "Editor must fit the visible screen",
+      );
+      assert(
+        !editor.scroll && editor.width <= viewport.width,
+        "Editor must not scroll sideways",
+      );
+      assert(
+        editor.saveTop >= 0 && editor.saveBottom <= viewport.height + 1,
+        "Save must remain reachable",
+      );
+      assert(editor.font >= 16, "Inputs must not trigger automatic zoom");
+    }
+    await phone.screenshot({
+      path: path.join(output, "mobile-editor-landscape.png"),
+    });
+    await phone.setViewportSize({ width: 390, height: 844 });
     await phone.locator("#edit-profile-likes").fill("");
     await phone.locator("#edit-profile-since").fill("");
     await phone.locator("#profile-save-btn").click();
     await phone.locator("#profile-editor").waitFor({ state: "hidden" });
     assert.equal(await phone.locator("#profile-likes-row").isVisible(), false);
     assert.equal(await phone.locator("#profile-since-row").isVisible(), false);
+    await phone.setViewportSize({ width: 844, height: 390 });
+    await phone.locator("#admin-btn").click();
+    await phone.getByRole("button", { name: "DIARY / 日記を書く" }).click();
+    await phone.locator("#post-title").fill("横向きからの日記");
+    await phone
+      .locator("#post-content")
+      .fill("画面が低くても投稿ボタンまでスクロールできます。");
+    const publish = phone.locator("#post-form button[type=submit]");
+    await publish.scrollIntoViewIfNeeded();
+    const publishBox = await publish.boundingBox();
+    assert(
+      publishBox.y >= 0 && publishBox.y + publishBox.height <= 391,
+      "Diary submit must be reachable in landscape",
+    );
+    await phone.keyboard.press("Escape");
     // A failed profile read must block edits instead of overwriting saved data with defaults.
     await page.locator("#admin-btn").click();
     await page.locator("#login-email").fill(user.email);
