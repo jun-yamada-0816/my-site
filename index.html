@@ -260,13 +260,12 @@
       theme: {
         extend: {
           colors: {
-            /* 和の色。クラス名は変えずに、色だけ入れ替えています。
-               blue=藍 / indigo=群青 / violet=藤 / teal=浅葱 */
+            /* 星空の背景でも読める、水色・藤色・浅葱のアクセント。 */
             aurora: {
-              blue:   '#17456b',
-              indigo: '#3a5b8c',
-              violet: '#6b6ba3',
-              teal:   '#2b7f8c',
+              blue:   '#9ed9f4',
+              indigo: '#a6bde2',
+              violet: '#c2b3e6',
+              teal:   '#a0d4ce',
             },
             sumi:   '#2b2f33',
             kinari: '#f6f3ec',
@@ -301,382 +300,8 @@
       },
     }
   </script>
-  <style>
-    .glass {
-      background: rgba(255,255,255,0.72);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border: 1px solid rgba(2,132,199,0.18);
-      transition: border-color .4s, background .4s, box-shadow .4s, transform .4s;
-    }
-    .glass:hover { border-color: rgba(2,132,199,0.42); }
-    /* セクション全体を包む大きなガラスパネル。
-       背景の空と海がパネルの周囲に途切れず見えるので、継ぎ目が出ない */
-    .glass-panel {
-      background: rgba(255,255,255,0.80);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,0.55);
-      border-radius: 1.75rem;
-      box-shadow: 0 10px 44px rgba(8,40,80,0.12);
-    }
-    .glass-teal  { border-color: rgba(13,148,136,0.20) !important; }
-    .glass-teal:hover { border-color: rgba(13,148,136,0.42) !important; }
-    .line-clamp-2 {
-      display:-webkit-box;
-      -webkit-line-clamp:2;
-      -webkit-box-orient:vertical;
-      overflow:hidden;
-    }
-    /* 呼吸法アニメーション: 4秒吸う→4秒止める→4秒吐く→4秒止める（計16秒ループ） */
-    .breathe-circle {
-      background: radial-gradient(circle, rgba(2,132,199,0.12), rgba(13,148,136,0.10));
-      border: 1px solid rgba(13,148,136,0.45);
-      animation: breathe 16s ease-in-out infinite;
-    }
-    @keyframes breathe {
-      0%   { transform: scale(0.62); }
-      25%  { transform: scale(1); }
-      50%  { transform: scale(1); }
-      75%  { transform: scale(0.62); }
-      100% { transform: scale(0.62); }
-    }
-    /* キーボード操作時のフォーカス表示 */
-    :focus-visible {
-      outline: 2px solid #0284c7;
-      outline-offset: 2px;
-      border-radius: 4px;
-    }
-    /* 文字を大きくする設定（rem基準なので全体が拡大される） */
-    html.large-text { font-size: 115%; }
-    /* アニメーションを減らす設定 */
-    html.reduce-motion { scroll-behavior: auto !important; }
-    html.reduce-motion .animate-float { animation: none !important; }
-    html.reduce-motion .animate-fade-in,
-    html.reduce-motion .animate-fade-in-up {
-      /* fill-mode:forwards を保ったまま一瞬で完了させ、opacity-0 のまま残らないようにする */
-      animation-duration: .01s !important;
-      animation-delay: 0s !important;
-    }
-    html.reduce-motion .glass { transition: none; }
-    /* きもちボタン */
-    .mood-btn {
-      transition: border-color .3s, background .3s, transform .2s;
-    }
-    .mood-btn:hover { transform: translateY(-2px); }
-    .mood-btn.selected {
-      border-color: rgba(13,148,136,0.7) !important;
-      background: rgba(13,148,136,0.08);
-    }
-    html.reduce-motion .mood-btn,
-    html.reduce-motion .mood-btn:hover { transition: none; transform: none; }
-    ::-webkit-scrollbar       { width:5px; }
-    ::-webkit-scrollbar-track { background:#e7f3fd; }
-    ::-webkit-scrollbar-thumb { background:#b9d7f0; border-radius:3px; }
-    /* modal scroll */
-    .modal-scroll::-webkit-scrollbar { width:4px; }
-    .modal-scroll::-webkit-scrollbar-thumb { background:#9cc4e8; border-radius:2px; }
-
-    /* ══════════════════════════════════════════════════════════
-       和の余白  ── 明朝と縦書き、紙の手ざわりで組み直したもの。
-       色や角丸を一か所で決めているので、ここを直せば全体が変わります。
-       ══════════════════════════════════════════════════════════ */
-    :root{
-      --sumi:#2b2f33;      /* 墨 … 本文 */
-      --usuzumi:#6f757b;   /* 薄墨 … 補足 */
-      --ai:#17456b;        /* 藍 */
-      --asagi:#2b7f8c;     /* 浅葱 */
-      --fuji:#6b6ba3;      /* 藤 */
-      --shu:#b7472a;       /* 朱 … ごく少しだけ */
-      --kinari:#f6f3ec;    /* 生成り … 紙 */
-      --keisen:rgba(43,47,51,.13);  /* 罫線 */
-    }
-    html body{
-      font-family:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;
-      color:var(--sumi);
-      letter-spacing:.04em;
-      font-weight:400;
-    }
-    /* 見出しは明朝。太らせずに、字間で見せる */
-    html h1, html h2, html h3, .mincho{
-      font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
-      font-weight:500;
-      letter-spacing:.10em;
-    }
-    html .font-black{ font-weight:500 !important; }
-    html .tracking-widest{ letter-spacing:.28em; }
-
-    /* ── 紙 ────────────────────────────────── */
-    html .glass-panel{
-      background:linear-gradient(180deg, rgba(251,249,244,.94), rgba(244,241,233,.90));
-      border:1px solid rgba(43,47,51,.10);
-      border-radius:2px;
-      box-shadow:0 1px 0 rgba(255,255,255,.7) inset,
-                 0 22px 60px -34px rgba(12,32,56,.55);
-      backdrop-filter:blur(6px);
-      -webkit-backdrop-filter:blur(6px);
-      position:relative;
-      overflow:hidden;
-    }
-    /* 紙の繊維。うっすら乗せるだけ */
-    html .glass-panel::before{
-      content:'';position:absolute;inset:0;pointer-events:none;
-      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
-      opacity:.045; mix-blend-mode:multiply;
-    }
-    html .glass-panel > *{ position:relative; }
-
-    /* ── 面ではなく、罫線で区切る ───────────── */
-    html .glass{
-      background:rgba(251,249,244,.88);
-      border:1px solid rgba(43,47,51,.12);
-      border-radius:2px;
-      backdrop-filter:blur(10px);
-      -webkit-backdrop-filter:blur(10px);
-    }
-    html .glass:hover{ border-color:rgba(23,69,107,.30); }
-    /* 紙の上に置かれたものは、白い箱にせず、うっすら沈ませるだけ */
-    html .glass-panel .glass{
-      background:rgba(255,255,255,.40);
-      border:1px solid var(--keisen);
-      border-radius:2px;
-      backdrop-filter:none;
-      -webkit-backdrop-filter:none;
-      box-shadow:none;
-    }
-    html .glass-panel .glass:hover{ border-color:rgba(23,69,107,.30); }
-    /* 読み物として並べるものは、箱をやめて罫線だけで区切る */
-    html .rule-card{
-      background:transparent !important;
-      border:0 !important;
-      border-top:1px solid var(--keisen) !important;
-      border-radius:0 !important;
-      padding:1.7rem 0 1.4rem !important;
-      box-shadow:none !important;
-    }
-    html .rule-card:hover{ border-top-color:rgba(23,69,107,.34) !important; }
-    html .glass-teal, html .glass-panel .glass-teal{ border-color:var(--keisen) !important; }
-
-    /* ── 見出しの組み ───────────────────────── */
-    .sec-head{ display:flex; align-items:baseline; gap:1.1rem; margin-bottom:2.75rem; }
-    .sec-no{
-      font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
-      font-size:.9rem; color:var(--asagi); letter-spacing:.34em; white-space:nowrap;
-    }
-    .sec-title{ font-size:1.65rem; line-height:1.5; white-space:nowrap; }
-    @media (min-width:768px){ .sec-title{ font-size:1.95rem; } }
-    /* 画面がせまいときは、見出しを折り返して横スクロールを出さない */
-    @media (max-width:480px){
-      .sec-head{ flex-wrap:wrap; gap:.6rem .9rem; margin-bottom:2rem; }
-      .sec-title{ white-space:normal; font-size:1.4rem; }
-      .sec-rule{ min-width:2rem; }
-    }
-    .sec-rule{ flex:1 1 auto; height:1px; background:linear-gradient(90deg,var(--keisen),rgba(43,47,51,0)); }
-    .lead{ color:var(--usuzumi); font-size:.9rem; line-height:2.1; }
-
-    /* ── 縦書き ─────────────────────────────── */
-    .tate{
-      writing-mode:vertical-rl;
-      -webkit-writing-mode:vertical-rl;
-      text-orientation:upright;
-      -webkit-text-orientation:upright;
-      letter-spacing:.34em;
-      line-height:1.1;
-    }
-    .tate-rule{ width:1px; background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0)); }
-
-    /* ── 罫線のボタン（丸いピルをやめる） ────── */
-    .btn-line{
-      display:inline-flex; align-items:center; justify-content:center; gap:.7rem;
-      padding:.9rem 2rem; border:1px solid currentColor; border-radius:1px;
-      letter-spacing:.18em; font-size:.85rem; font-weight:500;
-      transition:background .35s, color .35s, border-color .35s;
-    }
-    .btn-line:hover{ background:rgba(255,255,255,.10); }
-    html.reduce-motion .btn-line{ transition:none; }
-
-    /* 番号（〇一、〇二…）は明朝の数字で小さく */
-    .num-mincho{
-      font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
-      font-size:.95rem; letter-spacing:.22em; color:var(--asagi);
-    }
-
-    .nav-scroll{ scrollbar-width:none; -ms-overflow-style:none; }
-    .nav-scroll::-webkit-scrollbar{ display:none; }
-
-    .menu-row{
-      display:block; padding:.85rem .2rem;
-      border-bottom:1px solid var(--keisen);
-      letter-spacing:.12em; transition:color .3s;
-    }
-    .menu-row:last-child{ border-bottom:0; }
-    .menu-row:hover, .menu-row:active{ color:var(--ai); }
-    html.reduce-motion .menu-row{ transition:none; }
-
-    .tel-row{
-      display:flex; align-items:baseline; gap:1rem;
-      padding:.95rem .2rem; border-top:1px solid var(--keisen);
-      color:var(--sumi); transition:color .3s, border-color .3s;
-    }
-    .tel-row:hover{ color:var(--ai); border-top-color:rgba(23,69,107,.35); }
-    html.reduce-motion .tel-row{ transition:none; }
-
-    ::-webkit-scrollbar-track { background:#eae6dc; }
-    ::-webkit-scrollbar-thumb { background:#c3bdae; border-radius:0; }
-    :focus-visible{ outline-color:var(--ai); }
-
-    /* ══════════════════════════════════════════════════════════
-       モバイルファースト
-       ── ここまでの指定と、Tailwind の接頭辞なしのクラスが
-          「スマホで見たときの姿」です。sm: / md: は、画面が
-          広くなったぶんだけ足していくためのものです。
-          このサイトは夜、布団のなかでスマホから開かれます。
-          片手で届くこと・拡大しなくても読めることを先に決めています。
-       ══════════════════════════════════════════════════════════ */
-
-    /* ── 画面の高さ ────────────────────────── */
-    /* iOS はアドレスバーの出入りで 100vh がずれ、下が隠れる。
-       dvh が使える端末では dvh を優先します */
-    .hero-full{ min-height:100vh; }
-    @supports (min-height:100dvh){ .hero-full{ min-height:100dvh; } }
-    @supports (max-height:100dvh){
-      .max-h-\[88vh\]{ max-height:88dvh; }
-    }
-
-    /* ── ノッチとホームバー ───────────────── */
-    body{ overflow-x:hidden; }
-    nav.fixed{
-      padding-left:env(safe-area-inset-left);
-      padding-right:env(safe-area-inset-right);
-      padding-top:env(safe-area-inset-top);
-    }
-    #sos-btn{
-      right:max(1rem, env(safe-area-inset-right));
-      bottom:max(1rem, env(safe-area-inset-bottom));
-    }
-
-    /* ── 指で押せる大きさ（44px）──────────── */
-    /* ナビの小さなアイコンボタンは、見た目を変えずに押せる範囲だけ広げます */
-    nav button, #sos-btn, .menu-row, .tel-row, .btn-line, .mood-btn{
-      min-height:44px;
-    }
-    nav button{ display:inline-flex; align-items:center; justify-content:center; min-width:44px; }
-    .menu-row{ display:flex; align-items:center; }
-
-    /* ── 入力欄 ────────────────────────────── */
-    /* iOS は 16px 未満の入力欄に触れると画面を勝手に拡大する。
-       ここで拡大されると、書きかけの気持ちが飛んでしまいます。
-       Tailwind の text-sm より強く効かせる必要があるので、
-       スマホ幅のときだけ !important で上書きします */
-    @media (max-width:639px){
-      input, select, textarea{ font-size:16px !important; }
-    }
-
-    /* ── 文字と折り返し ───────────────────── */
-    img, iframe, svg, video{ max-width:100%; }
-    /* 長いURLや制度の名前で、横スクロールが出ないように */
-    p, h1, h2, h3, li, td, a{ overflow-wrap:break-word; }
-
-    /* ── ヒーロー（スマホ）───────────────── */
-    /* 縦書きの見出しは、狭い画面では背が高くなりすぎるので少し縮める */
-    @media (max-width:380px){
-      .tate{ letter-spacing:.22em; }
-    }
-
-    /* ── モーダル（スマホ）───────────────── */
-    /* せまい画面では下から立ち上がる形にして、親指の近くで操作できるようにする */
-    @media (max-width:639px){
-      [role="dialog"] > .relative,
-      #login-modal > .relative, #post-modal > .relative,
-      #x-share-modal > .relative, #detail-modal > .relative{
-        margin-bottom:env(safe-area-inset-bottom);
-      }
-    }
-
-    /* ── タブレット以上 ───────────────────── */
-    @media (min-width:768px){
-      /* マウスで押すので、44px の下限は外して元の詰まった見た目に戻す */
-      nav button{ min-height:0; min-width:0; }
-    }
-
-    /* ── マウスのない端末では hover の見た目を出さない ── */
-    @media (hover:none){
-      .glass:hover{ border-color:rgba(43,47,51,.12); }
-      .mood-btn:hover{ transform:none; }
-      html .rule-card:hover{ border-top-color:var(--keisen) !important; }
-    }
-
-    /* ── 横向きの小さな画面 ───────────────── */
-    @media (orientation:landscape) and (max-height:480px){
-      .hero-full{ min-height:auto; padding-top:5.5rem; padding-bottom:3.5rem; }
-    }
-    :focus-visible{outline:3px solid #2b7f8c;outline-offset:4px;}
-    @media(prefers-reduced-motion:reduce){
-      html{scroll-behavior:auto!important;}
-      *,*::before,*::after{animation:none!important;transition:none!important;}
-    }
-
-    html{scroll-padding-top:calc(5rem + env(safe-area-inset-top));}
-    @media(max-width:539px){html.large-text #hero-title{font-size:1.65rem;}}
-    /* 星と海の入口。小さな画面から、余白と文字の大きさを組み立てる。 */
-    #hero{display:flex;flex-direction:column;justify-content:center;min-height:100svh;color:#f4f1ea;background:linear-gradient(180deg,rgba(3,10,24,.12),rgba(3,10,24,.3));}
-    .home-hero{width:min(100%,1120px);margin-inline:auto;padding:6.5rem 1.5rem 3.5rem;display:grid;gap:1.5rem;}
-    .hero-eyebrow{font-size:.7rem;letter-spacing:.14em;color:#b4ceda;margin:0 0 1.7rem;display:flex;align-items:center;gap:.7rem;}
-    .hero-eyebrow>span{color:#dcc49b;font-size:1rem;}
-    #hero-title{font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;font-size:clamp(2rem,8.2vw,3.5rem);line-height:1.6;letter-spacing:.06em;font-weight:400;margin:0;text-shadow:0 3px 28px #030a18;}
-    #hero-title span{white-space:nowrap;}
-    .hero-divider{display:block;width:3rem;height:1px;background:#a9bcb8;margin:1.5rem 0;}
-    .hero-subtitle{font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;font-size:1.05rem;line-height:1.95;letter-spacing:.13em;color:#cfdae0;}
-    .hero-description{font-size:.875rem;line-height:2.2;color:#d9e3e9;max-width:30rem;margin-bottom:1rem;}
-    .hero-actions{display:flex;flex-direction:column;align-items:stretch;gap:.5rem;margin-top:1.75rem;}
-    .hero-primary,.hero-secondary{display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:52px;padding:.85rem 1.1rem;font-size:.8rem;letter-spacing:.06em;transition:background .2s,transform .2s;}
-    .hero-primary{background:#eeeadd;color:#163447;border:1px solid #eeeadd;}
-    .hero-secondary{color:#d3e3ed;border-bottom:1px solid #718795;}
-    .hero-host{font-size:.7rem;line-height:1.8;color:#aebfca;margin-top:1.25rem;}
-    /* ショート動画の固定コメントから来た人にだけ出す、ひとことの出迎え */
-    .hero-from-video{border-left:2px solid #dcc49b;padding:.2rem 0 .2rem 1.1rem;margin:0 0 1.6rem;max-width:30rem;color:#e3ebef;}
-    .hero-from-video-title{font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;font-size:1rem;letter-spacing:.08em;color:#f4f1ea;margin-bottom:.45rem;}
-    .hero-from-video p{font-size:.8rem;line-height:2;}
-    .hero-from-video ul{margin-top:.6rem;display:flex;flex-direction:column;}
-    .hero-from-video a{display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:44px;font-size:.78rem;letter-spacing:.04em;color:#d3e3ed;border-bottom:1px solid rgba(180,206,218,.25);}
-    .hero-from-video a:hover{color:#fffaf0;}
-    /* 相談窓口の行の下に、受付時間をそっと添える */
-    .tel-note{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:.68rem;line-height:1.7;letter-spacing:.02em;color:var(--usuzumi);margin-top:.15rem;}
-    .tel-row{flex-wrap:wrap;}
-    /* せまい画面では、番号を必ず名前の下の行に置いて、並びをそろえる */
-    @media(max-width:539px){.tel-row > .mincho:first-child{flex:1 1 100%;}}
-    .hero-footnote{display:none;}
-    .welcome-lead{font-size:1rem;line-height:2;color:var(--usuzumi);margin:-.5rem 0 2rem;}
-    #welcome .sec-title{white-space:normal;text-wrap:balance;}
-    .visit-paths{display:grid;gap:.75rem;}
-    .visit-path{display:block;padding:1.25rem;background:rgba(255,255,255,.5);border:1px solid var(--keisen);transition:background .2s,border-color .2s;}
-    .path-top{display:flex;justify-content:space-between;align-items:center;color:var(--asagi);font-size:.65rem;letter-spacing:.14em;margin-bottom:.9rem;}
-    .path-top>span:last-child{font-size:1.1rem;}
-    .visit-path h3{font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;font-size:1.1rem;line-height:1.7;color:var(--sumi);letter-spacing:.03em;}
-    .visit-path p{font-size:.8rem;line-height:1.9;color:var(--usuzumi);margin:.4rem 0 1.1rem;}
-    .path-destination{color:var(--ai);font-size:.75rem;border-bottom:1px solid rgba(23,69,107,.3);padding-bottom:.2rem;}
-    .welcome-reassurance{display:flex;flex-direction:column;gap:.5rem;margin:1.5rem 0;color:var(--usuzumi);font-size:.75rem;line-height:1.8;}
-    .welcome-guide{border-top:1px solid var(--keisen);padding-top:1rem;}
-    .welcome-guide summary{cursor:pointer;font-size:.8rem;line-height:1.8;color:var(--ai);padding:.5rem 0;min-height:44px;}
-    .welcome-guide[open] summary{margin-bottom:1rem;}
-    #mobile-menu{max-height:calc(100dvh - 4rem - env(safe-area-inset-top));overflow-y:auto;overscroll-behavior:contain;padding-bottom:max(1.25rem,env(safe-area-inset-bottom));}
-    @media(min-width:540px){.visit-paths{grid-template-columns:repeat(2,minmax(0,1fr));}.hero-actions{max-width:25rem;}}
-    @media(min-width:900px){
-      .home-hero{grid-template-columns:1.15fr 1fr;align-items:center;gap:5rem;padding:10rem 3rem 8rem;}
-      #hero-title{font-size:clamp(2.6rem,4.1vw,3.75rem);}
-      .hero-eyebrow{margin-bottom:2.3rem;}
-      .hero-letter{border-left:1px solid rgba(180,206,218,.23);padding-left:3rem;}
-      .hero-description{font-size:.95rem;}
-      .hero-footnote{display:flex;align-items:center;gap:1.2rem;width:min(100% - 6rem,1024px);margin:0 auto 2.5rem;color:#9bb0bd;font-size:.65rem;letter-spacing:.16em;}
-      .hero-footnote-line{height:1px;background:rgba(180,206,218,.25);flex:1;}
-      .visit-path{padding:1.6rem;}
-      .welcome-reassurance{flex-direction:row;justify-content:space-between;gap:1rem;}
-    }
-    @media(hover:hover){.hero-primary:hover{background:#fffaf0;transform:translateY(-2px);}.hero-secondary:hover{background:rgba(255,255,255,.07);}.visit-path:hover{background:#fffdf8;border-color:var(--asagi);}}
-    @media(max-width:359px){.home-hero{padding-inline:1.1rem;}#hero-title{font-size:1.85rem;}.hero-eyebrow{font-size:.65rem;}}
-    @media(prefers-reduced-motion:reduce){.hero-primary:hover{transform:none;}}
-    html.reduce-motion .hero-primary,html.reduce-motion .hero-secondary,html.reduce-motion .visit-path{transition:none;transform:none;}
-  </style>
+  <link rel="stylesheet" href="retro.css" />
+  <link rel="icon" type="image/svg+xml" href="assets/starlit-sea.svg" />
 </head>
 <body style="background:#08172a;" class="text-slate-800 font-sans antialiased overflow-x-hidden">
 
@@ -688,127 +313,187 @@
     本文へスキップ
   </a>
 
-  <!-- CANVAS BACKGROUND -->
-  <canvas aria-hidden="true" id="cosmos" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
+  <div class="site-shell">
+    <div class="site-status"><span><i class="online-light" aria-hidden="true"></i>WELCOME TO MY LITTLE CORNER OF THE INTERNET</span><span>EST. 2026 / INSPIRED BY 1995</span></div>
+    <header class="masthead">
+      <p class="eyebrow">HOSHI TO UMI · PERSONAL WEBSITE</p>
+      <h1 id="site-title">星と海</h1>
+      <p class="tagline">眠れない夜に、ふらっと立ち寄れる場所。</p>
+      <p class="since">Since 2026 <span aria-hidden="true">✦</span> Internet life since 1995</p>
+    </header>
+    <nav class="retro-nav" aria-label="メインメニュー">
+      <a href="#hero">HOME</a><a href="#profile">PROFILE</a><a href="#blog">DIARY</a><a href="#bulletin">BBS</a><a href="#links">LINK</a>
+      <div class="nav-tools">
+        <button id="mobile-menu-btn" aria-expanded="false" aria-controls="mobile-menu" onclick="toggleMobileMenu()" aria-label="その他のメニュー" title="その他のメニュー"><svg id="mobile-menu-icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M4 12h16M4 18h16"/></svg><svg id="mobile-menu-icon-close" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 6l12 12M6 18L18 6"/></svg></button>
+        <button id="settings-btn" onclick="openSettingsModal()" aria-label="安心設定（アニメーションや文字サイズ）" title="安心設定"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M4 17h16"/><path d="M9 4v6M15 14v6"/></svg></button>
+        <button id="admin-btn" onclick="onAdminBtnClick()" aria-label="管理者ログイン" title="管理者ログイン"><svg id="admin-icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="10" width="14" height="11" rx="1"/><path d="M8 10V7a4 4 0 018 0v3M12 14v3"/></svg><svg id="admin-icon-user" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg></button>
+      </div>
+      <ul id="mobile-menu" class="hidden retro-mobile"><li><a href="#welcome" onclick="closeMobileMenu()" class="menu-row">はじめての方へ</a></li><li><a href="#music" onclick="closeMobileMenu()" class="menu-row">音楽室</a></li><li><a href="#mood" onclick="closeMobileMenu()" class="menu-row">きょうのきもち</a></li><li><a href="#coping" onclick="closeMobileMenu()" class="menu-row">こころのケア</a></li><li><a href="#services" onclick="closeMobileMenu()" class="menu-row">制度・サービス</a></li><li><a href="#promise" onclick="closeMobileMenu()" class="menu-row">星と海の約束</a></li><li id="admin-page-links-mobile" class="hidden"><button class="menu-row" onclick="closeMobileMenu();onAdminBtnClick()">管理者メニュー</button></li></ul>
+    </nav>
+    <div class="welcome-strip"><span>ひとこと通信</span><div class="marquee-viewport"><span class="marquee-text">ようこそ、星と海へ。読むだけでも、音楽を聴くだけでも。あなたのペースで、ゆっくりしていってください。 ☆ BBSへの足あとも、お気軽に。</span></div><button class="ticker-toggle" onclick="toggleWelcomeTicker(this)" aria-label="流れる文字を停止" aria-pressed="false">Ⅱ</button></div>
+    <div class="retro-grid">
+      <aside class="sidebar" aria-label="サイトのご案内">
+        <div class="side-box"><h2 class="window-title">CONTENTS <span class="window-dots" aria-hidden="true">□ ×</span></h2><ul class="side-menu">
+          <li><a href="#hero"><span class="symbol">⌂</span>ホーム</a></li><li><a href="#profile"><span class="symbol">♙</span>管理人のこと</a></li><li><a href="#blog"><span class="symbol">▤</span>日記・ひとりごと</a></li><li><a href="#bulletin"><span class="symbol">▱</span>みんなの掲示板</a></li><li><a href="#music"><span class="symbol">♫</span>音楽室</a></li><li><a href="#links"><span class="symbol">∞</span>リンク集</a></li>
+        </ul></div>
+        <div class="side-box"><h2 class="window-title">ひと休みの部屋</h2><ul class="side-menu"><li><a href="#mood"><span class="symbol">☁</span>きょうのきもち</a></li><li><a href="#coping"><span class="symbol">✧</span>こころのケア</a></li><li><a href="#services"><span class="symbol">◇</span>支えになる制度</a></li><li><a href="#support"><span class="symbol">♡</span>相談窓口</a></li></ul></div>
+        <div class="side-box"><h2 class="window-title">管理人より</h2><div class="side-content side-note"><p><strong>1995年のインターネットを<br>覚えていますか。</strong></p><p style="margin-top:9px">小さなホームページと、<br>「はじめまして」のカキコ。<br>あの頃の距離感で、<br>ここにいられたら。</p><p style="margin-top:10px"><a href="#profile">管理人のプロフィール →</a></p></div></div>
+        <div class="side-box"><h2 class="window-title">SITE BANNER</h2><div class="side-content"><a class="site-banner" href="#links" aria-label="星と海のリンク案内">星と海</a><p class="banner-caption">88 × 31 / LINK FREE</p><div class="mini-badges"><span>NO AUTO MUSIC</span><span>スマホ対応</span></div></div></div>
+        <div id="admin-page-links" class="hidden side-box side-content"><button onclick="onAdminBtnClick()" class="retro-button">管理者メニュー</button></div>
+        <p class="side-footer">☆ take your time ☆<br>また、いつでも。</p>
+      </aside>
+      <main class="retro-content">
+        <section id="hero" aria-labelledby="hero-title">
+          <div class="window-title"><span>ようこそ、星と海のホームページへ。</span><span class="window-dots" aria-hidden="true">□ ×</span></div>
+          <div class="home-hero">
+            <div class="hero-heading"><p class="hero-eyebrow">A SMALL PLACE TO REST</p><h2 id="hero-title">言葉にならない夜も、<br>ここにいていい。</h2><p class="hero-description">星を見上げたり、海を眺めたり。<br>そんなふうに、ひと息ついていってください。<br>ここは、当事者がひとりでつくる<br>小さな相互サポートのホームページです。</p><div class="hero-actions"><a href="#bulletin" class="retro-button primary">BBSに足あとを残す</a><a href="#welcome" class="retro-button">はじめての方へ</a></div></div>
+            <figure class="hero-art"><img src="assets/starlit-sea.svg" alt="三日月と星が浮かぶ静かな海。小さな帆船が一隻。" width="240" height="240"><figcaption>somewhere between stars &amp; sea</figcaption></figure>
+          </div>
+          <div id="from-video" class="hero-from-video" hidden><p class="hero-from-video-title">動画から、来てくれたんですね。</p><p>あの動画も、このサイトも、同じ当事者がひとりで作っています。ここでは、何もしなくて大丈夫です。</p><ul><li><a href="#bulletin">掲示板に、ひとことだけ置いていく →</a></li><li><a href="#music">音楽を小さく流して、横になる →</a></li><li><a href="#support">夜中でもつながる窓口を見る →</a></li></ul></div>
+          <script>try { if (new URLSearchParams(location.search).get('utm_source') === 'youtube') document.getElementById('from-video').hidden = false; } catch (e) {}</script>
+          <div class="counter-box"><div class="counter-line"><span>あなたは</span><span id="visit-counter" class="counter-digits" aria-label="訪問者数を読み込み中">--------</span><span>人目のお客様です</span></div><p class="counter-note">※ キリ番を踏んだ方は、よかったら <a href="#bulletin">BBS</a> へどうぞ。ROMだけでも大歓迎。</p><p id="kiriban-message" class="kiriban-hit" hidden></p></div>
+        </section>
+        <section class="news-box" aria-labelledby="news-title"><div class="window-title"><h2 id="news-title" style="font:inherit">WHAT'S NEW! <span class="new-badge">NEW</span></h2><span id="last-update" class="last-update">更新履歴</span></div><ul id="news-list" class="news-list"><li><time datetime="2026-09-27">2026.09.27</time><span>懐かしい個人ホームページの装いになりました。<span class="new-badge">NEW</span></span></li></ul></section>
+        <div class="star-rule" aria-hidden="true">· · ✦ · · ✧ · · ✦ · ·</div>
+        <section id="profile" aria-labelledby="profile-title"><div class="glass-panel"><div class="sec-head"><span class="sec-no">PROFILE</span><h2 id="profile-title" class="sec-title">管理人のこと</h2><span class="sec-rule" aria-hidden="true"></span><button id="edit-profile-btn" class="hidden retro-button profile-edit" onclick="openProfileEditor()">編集する</button></div><div class="profile-intro"><div class="profile-avatar" aria-hidden="true">✧</div><div><h3 id="profile-name">管理人</h3><p id="profile-tagline">1995年から、インターネットの片隅で。</p></div></div><p id="profile-bio" class="profile-bio">はじめまして。「星と海」の管理人です。
+精神障害の当事者として、この場所をひとりで運営しています。
+読むだけでも、音楽を聴くだけでも。気が向いたら、BBSでお話ししましょう。</p><dl class="profile-facts"><div id="profile-likes-row" hidden><dt>好きなもの</dt><dd id="profile-likes"></dd></div><div id="profile-since-row"><dt>ネット歴</dt><dd id="profile-since">1995年から</dd></div></dl><p id="profile-status" class="profile-status" role="status"></p><p id="profile-saved" class="profile-message" role="status"></p></div></section>
+  <!-- ========== BLOG ========== -->
+  <section id="blog" class="relative z-10 py-14 sm:py-20 md:py-24 px-4 sm:px-6 overflow-hidden">
 
-  <!-- ========== NAV ========== -->
-  <nav aria-label="メインメニュー" class="fixed top-0 inset-x-0 z-50 glass" style="border-radius:0;border:0;border-bottom:1px solid var(--keisen);">
-    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-      <a href="#" class="mincho text-lg tracking-[.35em] shrink-0 whitespace-nowrap flex items-center min-h-[44px]" style="color:var(--ai);">星と海</a>
-      <div class="flex items-center gap-4 lg:gap-6 min-w-0">
-        <ul class="nav-scroll hidden lg:flex flex-nowrap items-center gap-5 xl:gap-7 text-[.78rem] tracking-[.04em] xl:tracking-[.1em] whitespace-nowrap min-w-0 overflow-x-auto"
-            style="color:#5b6167;">
-          <li><a href="#hero"     class="hover:text-aurora-blue transition-colors">ホーム</a></li>
-          <li><a href="#promise"  class="hover:text-aurora-blue transition-colors">約束</a></li>
-          <li><a href="#blog"     class="hover:text-aurora-blue transition-colors">ブログ</a></li>
-          <li><a href="#music"    class="hover:text-aurora-blue transition-colors">音楽</a></li>
-          <li><a href="#mood"     class="hover:text-aurora-blue transition-colors">きもち</a></li>
-          <li><a href="#coping"   class="hover:text-aurora-blue transition-colors">こころのケア</a></li>
-          <li><a href="#services" class="hover:text-aurora-blue transition-colors">制度・サービス</a></li>
-          <li><a href="#bulletin" class="hover:text-aurora-blue transition-colors">掲示板</a></li>
-          <li id="admin-page-links" class="hidden items-center gap-4 pl-4 xl:pl-5 text-[.7rem]"
-              style="border-left:1px solid var(--keisen);color:#7d848b;">
-            <a href="shorts.html" target="_blank" title="YouTube分析" class="hover:text-aurora-blue transition-colors">分析</a>
-            <a href="next-business-expo.html" target="_blank" title="展示会" class="hover:text-aurora-blue transition-colors">展示会</a>
-            <a href="niigata-cafes-list.html" target="_blank" title="新潟のカフェ一覧" class="hover:text-aurora-blue transition-colors">カフェ</a>
-            <a href="it-news.html" target="_blank" title="IT ニュース" class="hover:text-aurora-blue transition-colors">IT</a>
-          </li>
-        </ul>
-        <!-- モバイルメニューボタン -->
-        <button id="mobile-menu-btn" aria-expanded="false" aria-controls="mobile-menu" onclick="toggleMobileMenu()" title="メニュー" aria-label="メニュー"
-                class="lg:hidden p-2 rounded-lg text-slate-500 hover:text-aurora-blue transition-colors">
-          <svg id="mobile-menu-icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
-          <svg id="mobile-menu-icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
-        <!-- 安心設定ボタン -->
-        <button id="settings-btn" onclick="openSettingsModal()" title="安心設定" aria-label="安心設定（アニメーションや文字サイズの調整）"
-                class="p-2 rounded-lg text-slate-500 hover:text-aurora-teal transition-colors">
+    <div class="glass-panel relative z-10 max-w-4xl mx-auto px-5 sm:px-8 md:px-14 py-10 sm:py-14 md:py-16">
+      <!-- ヘッダー -->
+      <div class="flex items-end justify-between gap-5 mb-8">
+        <div class="sec-head flex-1" style="margin-bottom:0;">
+          <span class="sec-no">DIARY</span>
+          <h2 class="sec-title">日記・ひとりごと</h2>
+          <span class="sec-rule" aria-hidden="true"></span>
+          <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">管理人の日記</span>
+        </div>
+        <button id="new-post-btn" onclick="openPostEditor()"
+                class="hidden glass rounded-xl px-5 py-2.5 text-aurora-blue border border-aurora-blue/40
+                       hover:border-aurora-blue hover:bg-aurora-blue/10 transition-all duration-300
+                       flex items-center gap-2 text-sm font-semibold">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
-        </button>
-        <!-- 管理者ボタン（ナビ右端） -->
-        <button id="admin-btn" onclick="onAdminBtnClick()" title="管理者ログイン" aria-label="管理者ログイン"
-                class="p-2 rounded-lg text-slate-500 hover:text-aurora-blue transition-colors">
-          <svg id="admin-icon-lock" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-          </svg>
-          <svg id="admin-icon-user" class="w-4 h-4 hidden text-aurora-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                  d="M5.121 17.804A9 9 0 0112 15a9 9 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
+          新規投稿
         </button>
       </div>
+      <!-- ブログ説明文 -->
+      <p class="text-slate-500 text-sm leading-relaxed mb-10 max-w-2xl">
+        特異的恐怖症を抱えながら日々を送っています。感じたこと、乗り越えたこと、まだ乗り越えられていないこと、ありのままを綴ります。同じ悩みを持つ方の、ほんの少しの支えになれたら。
+      </p>
+      <!-- 投稿一覧 -->
+      <div id="posts-container">
+        <div class="flex flex-col items-center gap-3 py-16 text-slate-500">
+          <div class="w-5 h-5 border-2 border-aurora-blue/30 border-t-aurora-blue rounded-full animate-spin-slow"></div>
+          <p class="text-sm">読み込み中...</p>
+        </div>
+      </div>
     </div>
-    <!-- モバイルメニュー パネル -->
-    <ul id="mobile-menu" class="hidden lg:hidden flex-col px-6 pb-5 text-[.9rem]"
-        style="color:#4d545b;border-top:1px solid var(--keisen);">
-      <li><a href="#hero"     onclick="closeMobileMenu()" class="menu-row">ホーム</a></li>
-      <li><a href="#promise"  onclick="closeMobileMenu()" class="menu-row">星と海の約束</a></li>
-      <li><a href="#music"    onclick="closeMobileMenu()" class="menu-row">音楽</a></li>
-      <li><a href="#blog"     onclick="closeMobileMenu()" class="menu-row">ひとりごと</a></li>
-      <li><a href="#mood"     onclick="closeMobileMenu()" class="menu-row">きょうのきもち</a></li>
-      <li><a href="#coping"   onclick="closeMobileMenu()" class="menu-row">こころのケア</a></li>
-      <li><a href="#services" onclick="closeMobileMenu()" class="menu-row">支えになる制度</a></li>
-      <li><a href="#bulletin" onclick="closeMobileMenu()" class="menu-row">掲示板</a></li>
-      <li id="admin-page-links-mobile" class="hidden flex-col mt-2 pt-2" style="border-top:1px solid var(--keisen);">
-        <a href="shorts.html" target="_blank" class="menu-row" style="border:0;color:#7d848b;font-size:.8rem;">YouTube分析</a>
-        <a href="next-business-expo.html" target="_blank" class="menu-row" style="border:0;color:#7d848b;font-size:.8rem;">展示会</a>
-        <a href="niigata-cafes-list.html" target="_blank" class="menu-row" style="border:0;color:#7d848b;font-size:.8rem;">カフェ一覧</a>
-        <a href="it-news.html" target="_blank" class="menu-row" style="border:0;color:#7d848b;font-size:.8rem;">IT ニュース</a>
-      </li>
-    </ul>
-  </nav>
+  </section>
 
-  <!-- ========== HERO ========== -->
-  <section id="hero" class="hero-full relative z-10" aria-labelledby="hero-title">
-    <div class="home-hero">
-      <div class="hero-heading">
-        <p class="hero-eyebrow"><span aria-hidden="true">✦</span> 星と海 — こころを休める場所</p>
-        <h1 id="hero-title">あなたは、<br><span>ひとりじゃない。</span></h1>
-        <span class="hero-divider" aria-hidden="true"></span>
-        <p class="hero-subtitle">言葉にならない夜も、<br>ここにいていい。</p>
+  <!-- ========== 掲示板 ========== -->
+  <section id="bulletin" class="relative z-10 py-14 sm:py-20 md:py-24 px-4 sm:px-6 overflow-hidden">
+
+    <div class="glass-panel relative z-10 max-w-3xl mx-auto px-5 sm:px-8 md:px-14 py-10 sm:py-14 md:py-16">
+      <!-- ヘッダー -->
+      <div class="sec-head">
+        <span class="sec-no">BBS</span>
+        <h2 class="sec-title">みんなの掲示板</h2>
+        <span class="sec-rule" aria-hidden="true"></span>
+        <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">みんなのひとこと</span>
       </div>
-      <div class="hero-letter">
-        <!-- ショート動画の固定コメントのリンク（?utm_source=youtube）から来た人にだけ出します。
-             動画と同じ声のまま、次の一歩を3つだけ置きます。普通に開いた人には何も出ません。 -->
-        <div id="from-video" class="hero-from-video" hidden>
-          <p class="hero-from-video-title">動画から、来てくれたんですね。</p>
-          <p>あの動画も、このサイトも、同じ当事者がひとりで作っています。<br>ここでは、何もしなくて大丈夫です。</p>
-          <ul>
-            <li><a href="#bulletin">掲示板に、ひとことだけ置いていく <span aria-hidden="true">↓</span></a></li>
-            <li><a href="#music">音楽を小さく流して、横になる <span aria-hidden="true">↓</span></a></li>
-            <li><a href="#support">夜中でもつながる窓口を見る <span aria-hidden="true">↓</span></a></li>
-          </ul>
+      <p class="lead mb-12 max-w-2xl">眠れない夜に、ひとこと残していってください。はじめましてのご挨拶も、キリ番のご報告も。ハンドルネームで大丈夫です。読むだけの方も、ゆっくりどうぞ。</p>
+
+      <!-- 書き込みガイドライン -->
+      <div class="glass rounded-xl px-5 py-4 mb-6 text-xs text-slate-500 leading-relaxed"
+           style="border-color:rgba(13,148,136,0.30);">
+        <p>
+          ここでの過ごし方は
+          <a href="#promise" class="text-aurora-teal hover:underline">「星と海の約束」</a>
+          を大切にしています。書き込む前に、少しだけ目を通してみてください。
+        </p>
+      </div>
+
+      <!-- 書き込みフォーム -->
+      <div class="glass glass-teal rounded-2xl p-6 mb-10">
+        <h3 class="text-slate-500 font-semibold mb-1 text-sm">新規カキコ</h3>
+        <p class="text-slate-500 text-xs mb-4">
+          書き込みには「返信する」から返事ができます。返事がなくても、必ず読んでいます。
+        </p>
+        <form id="message-form" class="space-y-3">
+          <input id="msg-name" type="text" maxlength="30" required
+                 aria-label="お名前・ハンドルネーム" placeholder="お名前・ハンドルネーム（30文字以内）"
+                 class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-3
+                        text-slate-700 text-sm placeholder-slate-400
+                        focus:outline-none focus:border-aurora-teal/50 transition-colors" />
+          <textarea id="msg-content" rows="4" maxlength="500" required
+                    aria-label="書き込み本文" placeholder="今日感じたこと、誰かに話したかったこと、なんでも（500文字以内）"
+                    class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-3
+                           text-slate-700 text-sm placeholder-slate-400 resize-none
+                           focus:outline-none focus:border-aurora-teal/50 transition-colors"></textarea>
+          <div class="flex items-center justify-between">
+            <p id="msg-error" class="text-red-500 text-xs"></p>
+            <button id="msg-submit" type="submit"
+                    class="btn-line disabled:opacity-40 disabled:cursor-not-allowed"
+                    style="color:var(--asagi);padding:.7rem 2.2rem;">
+              書き込む
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- メッセージ一覧 -->
+      <div id="messages-container">
+        <div class="flex flex-col items-center gap-3 py-16 text-slate-500">
+          <div class="w-5 h-5 border-2 border-aurora-teal/30 border-t-aurora-teal rounded-full animate-spin-slow"></div>
+          <p class="text-sm">読み込み中...</p>
         </div>
-        <script>
-          // 表示が一瞬遅れて跳ねないよう、読み込みの途中でその場で出します
-          try { if (new URLSearchParams(location.search).get('utm_source') === 'youtube') document.getElementById('from-video').hidden = false; } catch (e) {}
-        </script>
-        <p class="hero-description">誰にも言えないこと。<br>うまく説明できない気持ち。<br>そのままのあなたで、ひと息ついていってください。</p>
-        <p class="hero-description">読むだけでも、音楽を聴くだけでも。<br>話したくなったら、あなたの言葉で。</p>
-        <div class="hero-actions">
-          <a href="#welcome" class="hero-primary">自分のペースで、はじめる <span aria-hidden="true">↓</span></a>
-          <a href="#bulletin" class="hero-secondary">掲示板で話す <span aria-hidden="true">↗</span></a>
-        </div>
-        <p class="hero-host">精神障害の当事者が、ひとりで運営しています。</p>
       </div>
     </div>
-    <div class="hero-footnote" aria-hidden="true"><span>星を見上げて、海にほどける。</span><span class="hero-footnote-line"></span><span>SCROLL</span></div>
+  </section>
+
+  <!-- ========== 音楽 ========== -->
+  <section id="music" class="relative z-10 py-14 sm:py-20 md:py-24 px-4 sm:px-6 overflow-hidden">
+
+    <div class="glass-panel relative z-10 max-w-3xl mx-auto px-5 sm:px-8 md:px-14 py-10 sm:py-14 md:py-16">
+      <div class="flex items-end justify-between gap-5 mb-8">
+        <div class="sec-head flex-1" style="margin-bottom:0;">
+          <span class="sec-no">MUSIC</span>
+          <h2 class="sec-title">音楽</h2>
+          <span class="sec-rule" aria-hidden="true"></span>
+          <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">Suno で制作</span>
+        </div>
+        <button id="upload-track-btn" onclick="openUploadModal()"
+                class="hidden glass rounded-xl px-5 py-2.5 text-aurora-indigo border border-aurora-indigo/40
+                       hover:border-aurora-indigo hover:bg-aurora-indigo/10 transition-all duration-300
+                       flex items-center gap-2 text-sm font-semibold">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+          </svg>
+          アップロード
+        </button>
+      </div>
+      <p class="text-slate-500 text-sm leading-relaxed mb-10">
+        気持ちを言葉にできないとき、音楽が寄り添ってくれることがあります。自分のために作った曲を置いておきます。
+      </p>
+      <div id="tracks-container">
+        <div class="flex flex-col items-center gap-3 py-16 text-slate-500">
+          <div class="w-5 h-5 border-2 border-aurora-indigo/30 border-t-aurora-indigo rounded-full animate-spin-slow"></div>
+          <p class="text-sm">読み込み中...</p>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- ========== はじめての方へ ========== -->
   <section id="welcome" class="relative z-10 py-14 sm:py-20 md:py-24 px-4 sm:px-6 overflow-hidden">
     <div class="glass-panel relative z-10 max-w-4xl mx-auto px-5 sm:px-8 md:px-14 py-10 sm:py-14 md:py-16">
       <div class="sec-head">
-        <span class="sec-no">一</span>
+        <span class="sec-no">GUIDE</span>
         <h2 class="sec-title">いまのあなたに、合う過ごし方</h2>
         <span class="sec-rule" aria-hidden="true"></span>
         <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">はじめての方へ</span>
@@ -855,7 +540,7 @@
 
     <div class="glass-panel relative z-10 max-w-4xl mx-auto px-5 sm:px-8 md:px-14 py-10 sm:py-14 md:py-16">
       <div class="sec-head">
-        <span class="sec-no">二</span>
+        <span class="sec-no">PROMISE</span>
         <h2 class="sec-title">星と海の約束</h2>
         <span class="sec-rule" aria-hidden="true"></span>
         <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">安心して過ごすために</span>
@@ -918,82 +603,12 @@
     </div>
   </section>
 
-  <!-- ========== 音楽 ========== -->
-  <section id="music" class="relative z-10 py-14 sm:py-20 md:py-24 px-4 sm:px-6 overflow-hidden">
-
-    <div class="glass-panel relative z-10 max-w-3xl mx-auto px-5 sm:px-8 md:px-14 py-10 sm:py-14 md:py-16">
-      <div class="flex items-end justify-between gap-5 mb-8">
-        <div class="sec-head flex-1" style="margin-bottom:0;">
-          <span class="sec-no">三</span>
-          <h2 class="sec-title">音楽</h2>
-          <span class="sec-rule" aria-hidden="true"></span>
-          <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">Suno で制作</span>
-        </div>
-        <button id="upload-track-btn" onclick="openUploadModal()"
-                class="hidden glass rounded-xl px-5 py-2.5 text-aurora-indigo border border-aurora-indigo/40
-                       hover:border-aurora-indigo hover:bg-aurora-indigo/10 transition-all duration-300
-                       flex items-center gap-2 text-sm font-semibold">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-          </svg>
-          アップロード
-        </button>
-      </div>
-      <p class="text-slate-500 text-sm leading-relaxed mb-10">
-        気持ちを言葉にできないとき、音楽が寄り添ってくれることがあります。自分のために作った曲を置いておきます。
-      </p>
-      <div id="tracks-container">
-        <div class="flex flex-col items-center gap-3 py-16 text-slate-500">
-          <div class="w-5 h-5 border-2 border-aurora-indigo/30 border-t-aurora-indigo rounded-full animate-spin-slow"></div>
-          <p class="text-sm">読み込み中...</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== BLOG ========== -->
-  <section id="blog" class="relative z-10 py-14 sm:py-20 md:py-24 px-4 sm:px-6 overflow-hidden">
-
-    <div class="glass-panel relative z-10 max-w-4xl mx-auto px-5 sm:px-8 md:px-14 py-10 sm:py-14 md:py-16">
-      <!-- ヘッダー -->
-      <div class="flex items-end justify-between gap-5 mb-8">
-        <div class="sec-head flex-1" style="margin-bottom:0;">
-          <span class="sec-no">四</span>
-          <h2 class="sec-title">ひとりごと</h2>
-          <span class="sec-rule" aria-hidden="true"></span>
-          <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">管理者のブログ</span>
-        </div>
-        <button id="new-post-btn" onclick="openPostEditor()"
-                class="hidden glass rounded-xl px-5 py-2.5 text-aurora-blue border border-aurora-blue/40
-                       hover:border-aurora-blue hover:bg-aurora-blue/10 transition-all duration-300
-                       flex items-center gap-2 text-sm font-semibold">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-          </svg>
-          新規投稿
-        </button>
-      </div>
-      <!-- ブログ説明文 -->
-      <p class="text-slate-500 text-sm leading-relaxed mb-10 max-w-2xl">
-        特異的恐怖症を抱えながら日々を送っています。感じたこと、乗り越えたこと、まだ乗り越えられていないこと、ありのままを綴ります。同じ悩みを持つ方の、ほんの少しの支えになれたら。
-      </p>
-      <!-- 投稿一覧 -->
-      <div id="posts-container">
-        <div class="flex flex-col items-center gap-3 py-16 text-slate-500">
-          <div class="w-5 h-5 border-2 border-aurora-blue/30 border-t-aurora-blue rounded-full animate-spin-slow"></div>
-          <p class="text-sm">読み込み中...</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- ========== きょうのきもち ========== -->
   <section id="mood" class="relative z-10 py-14 sm:py-20 md:py-24 px-4 sm:px-6 overflow-hidden">
 
     <div class="glass-panel relative z-10 max-w-3xl mx-auto px-5 sm:px-8 md:px-14 py-10 sm:py-14 md:py-16">
       <div class="sec-head">
-        <span class="sec-no">五</span>
+        <span class="sec-no">MOOD</span>
         <h2 class="sec-title">きょうのきもち</h2>
         <span class="sec-rule" aria-hidden="true"></span>
         <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">じぶんをそっと見つめる</span>
@@ -1058,7 +673,7 @@
 
     <div class="glass-panel relative z-10 max-w-4xl mx-auto px-5 sm:px-8 md:px-14 py-10 sm:py-14 md:py-16">
       <div class="sec-head">
-        <span class="sec-no">六</span>
+        <span class="sec-no">CARE</span>
         <h2 class="sec-title">こころのケア</h2>
         <span class="sec-rule" aria-hidden="true"></span>
         <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">つらいときに、ひとりで</span>
@@ -1112,7 +727,7 @@
 
     <div class="glass-panel relative z-10 max-w-4xl mx-auto px-5 sm:px-8 md:px-14 py-10 sm:py-14 md:py-16">
       <div class="sec-head">
-        <span class="sec-no">七</span>
+        <span class="sec-no">SUPPORT</span>
         <h2 class="sec-title">支えになる制度</h2>
         <span class="sec-rule" aria-hidden="true"></span>
         <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">ひとりで抱えなくていい</span>
@@ -1177,75 +792,11 @@
     </div>
   </section>
 
-  <!-- ========== 掲示板 ========== -->
-  <section id="bulletin" class="relative z-10 py-14 sm:py-20 md:py-24 px-4 sm:px-6 overflow-hidden">
-
-    <div class="glass-panel relative z-10 max-w-3xl mx-auto px-5 sm:px-8 md:px-14 py-10 sm:py-14 md:py-16">
-      <!-- ヘッダー -->
-      <div class="sec-head">
-        <span class="sec-no">八</span>
-        <h2 class="sec-title">掲示板</h2>
-        <span class="sec-rule" aria-hidden="true"></span>
-        <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">みんなのひとこと</span>
-      </div>
-      <p class="lead mb-12 max-w-2xl">悩んでいること、誰かに話したかったこと、今日感じたこと——なんでも書いていいです。ニックネームで大丈夫。あなたのペースで、ゆっくり話してください。</p>
-
-      <!-- 書き込みガイドライン -->
-      <div class="glass rounded-xl px-5 py-4 mb-6 text-xs text-slate-500 leading-relaxed"
-           style="border-color:rgba(13,148,136,0.30);">
-        <p>
-          ここでの過ごし方は
-          <a href="#promise" class="text-aurora-teal hover:underline">「星と海の約束」</a>
-          を大切にしています。書き込む前に、少しだけ目を通してみてください。
-        </p>
-      </div>
-
-      <!-- 書き込みフォーム -->
-      <div class="glass glass-teal rounded-2xl p-6 mb-10">
-        <h3 class="text-slate-500 font-semibold mb-1 text-sm">ここに書き残していってください</h3>
-        <p class="text-slate-500 text-xs mb-4">
-          書き込みには「返信する」から返事ができます。返事がなくても、必ず読んでいます。
-        </p>
-        <form id="message-form" class="space-y-3">
-          <input id="msg-name" type="text" maxlength="30" required
-                 placeholder="ニックネームでOK（30文字以内）"
-                 class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-3
-                        text-slate-700 text-sm placeholder-slate-400
-                        focus:outline-none focus:border-aurora-teal/50 transition-colors" />
-          <textarea id="msg-content" rows="4" maxlength="500" required
-                    placeholder="今日感じたこと、誰かに話したかったこと、なんでも（500文字以内）"
-                    class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-3
-                           text-slate-700 text-sm placeholder-slate-400 resize-none
-                           focus:outline-none focus:border-aurora-teal/50 transition-colors"></textarea>
-          <div class="flex items-center justify-between">
-            <p id="msg-error" class="text-red-500 text-xs"></p>
-            <button id="msg-submit" type="submit"
-                    class="btn-line disabled:opacity-40 disabled:cursor-not-allowed"
-                    style="color:var(--asagi);padding:.7rem 2.2rem;">
-              送る
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- メッセージ一覧 -->
-      <div id="messages-container">
-        <div class="flex flex-col items-center gap-3 py-16 text-slate-500">
-          <div class="w-5 h-5 border-2 border-aurora-teal/30 border-t-aurora-teal rounded-full animate-spin-slow"></div>
-          <p class="text-sm">読み込み中...</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== FOOTER ========== -->
-  <footer class="relative z-10 py-20" style="border-top:1px solid rgba(255,255,255,.08);">
-
-    <!-- 相談窓口。ここだけは、暗い海の底でも読めるように紙を敷く -->
-    <div id="support" class="max-w-2xl mx-auto px-6">
+  <section id="links" aria-labelledby="links-title"><div class="glass-panel"><div class="sec-head"><span class="sec-no">LINK</span><h2 id="links-title" class="sec-title">インターネットの小さな道しるべ</h2></div><p class="lead">このホームページの、もうひとつの入口と、お役立ちリンク。</p><div class="links-grid"><a class="link-item" href="https://www.youtube.com/@jenjenjenjun" target="_blank" rel="noopener noreferrer"><span class="link-label">YouTube ↗</span><div><h3>星と海の動画</h3><p>眠れない夜に。毎晩、短い動画を置いています。</p></div></a><a class="link-item" href="#music"><span class="link-label">MUSIC ROOM</span><div><h3>星と海の音楽室</h3><p>言葉を探さず、音に耳をすます時間。</p></div></a><a class="link-item" href="https://www.mhlw.go.jp/mamorouyokokoro/" target="_blank" rel="noopener noreferrer"><span class="link-label">こころの窓口 ↗</span><div><h3>まもろうよ こころ</h3><p>厚生労働省による、電話・SNSの相談窓口のご案内。</p></div></a></div><div class="banner-guide"><a class="site-banner" href="https://hoshitoumi.vercel.app/">星と海</a><p style="margin-top:10px">当サイトはリンクフリーです。リンク先はこちら。ご報告はBBSへ、お気軽にどうぞ。</p><code>https://hoshitoumi.vercel.app/</code></div></div></section>
+    <div id="support" class="support-section">
       <div class="glass-panel px-6 md:px-10 py-10">
         <div class="sec-head" style="margin-bottom:1.75rem;">
-          <span class="sec-no">相談</span>
+          <span class="sec-no">HELP</span>
           <h2 class="sec-title" style="font-size:1.15rem;">もしも、つらくてたまらないときは</h2>
           <span class="sec-rule" aria-hidden="true"></span>
         </div>
@@ -1279,21 +830,10 @@
       </div>
     </div>
 
-    <!-- 結び -->
-    <div class="flex flex-col items-center gap-6 mt-16">
-      <span class="tate mincho text-[.85rem]" style="color:rgba(203,213,225,.5);letter-spacing:.5em;">星と海</span>
-      <span class="block w-px h-10" style="background:linear-gradient(180deg,rgba(148,163,184,.35),rgba(148,163,184,0));" aria-hidden="true"></span>
-      <div class="text-center text-[11px] leading-[2.2] px-6" style="color:rgba(148,163,184,.65);">
-        <p>このサイトは、精神障害の当事者がひとりで運営している、相互サポートの場です。医療的な診断・治療の代わりにはなりません。</p>
-        <!-- 動画 → サイトの道はあるのに、サイト → 動画の道がなかったので置いています -->
-        <p class="mt-2"><a href="https://www.youtube.com/@jenjenjenjun" target="_blank" rel="noopener"
-             style="display:inline-block;padding:.65rem .4rem;color:rgba(203,213,225,.85);text-decoration:underline;text-underline-offset:5px;text-decoration-color:rgba(148,163,184,.4);">
-          毎晩、短い動画も置いています（YouTube）</a></p>
-        <p class="num-mincho mt-2" style="color:rgba(148,163,184,.55);">&copy; 2026 星と海</p>
-        <p id="visit-counter" class="num-mincho" style="color:rgba(148,163,184,.55);">読み込み中…</p>
-      </div>
+      </main>
     </div>
-  </footer>
+  </div>
+  <footer class="site-footer"><nav class="footer-nav" aria-label="フッターメニュー"><a href="#hero">HOME</a><a href="#profile">PROFILE</a><a href="#blog">DIARY</a><a href="#bulletin">BBS</a><a href="#links">LINK</a></nav><p>最後まで見てくれて、ありがとうございます。また、いつでも遊びにきてください。</p><p class="footer-star" aria-hidden="true">✧ · ✦ · ✧</p><p>このサイトは、精神障害の当事者がひとりで運営している、相互サポートの場です。医療的な診断・治療の代わりにはなりません。</p><p>© 2026 星と海 · Since 2026 / Internet life since 1995</p><button class="footer-admin" onclick="onAdminBtnClick()">管理者メニュー</button></footer>
 
   <!-- ======================================================
        つらいとき ボタン（常に画面右下に表示）
@@ -1403,7 +943,7 @@
           <span>
             <span class="block text-slate-700 text-sm font-semibold">アニメーションを減らす</span>
             <span class="block text-slate-500 text-xs mt-1 leading-relaxed">
-              背景の星や光の動きを止めます。動きや光の刺激がつらいときに。
+              流れる文字やアニメーションを止めます。動きの刺激がつらいときに。
             </span>
           </span>
         </label>
@@ -1621,530 +1161,21 @@
     </div>
   </div>
 
-  <!-- ======================================================
-       CANVAS RENDERER
-       ====================================================== -->
-  <script>
-  (function () {
-    'use strict';
-    const canvas = document.getElementById('cosmos');
-    const ctx    = canvas.getContext('2d');
-    if (!ctx) return;
-    let W, H, HY0;
-    let stars = [], bio = [], shoots = [], bubbles = [], floorStars = [], clouds = [];
-    let lastShoot = 6;
-
-    /* ── スクロール進行度: 0=夜空（最上部）→ 1=暗い海の底（最下部） ── */
-    let targetP = 0, curP = 0;
-    function readScroll() {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      targetP = max > 0 ? Math.min(Math.max(window.scrollY / max, 0), 1) : 0;
-    }
-    window.addEventListener('scroll', readScroll, { passive: true });
-
-    const lerp    = (a, b, t) => a + (b - a) * t;
-    const clamp01 = v => Math.min(Math.max(v, 0), 1);
-    const smooth  = (e0, e1, v) => { const t = clamp01((v - e0) / (e1 - e0)); return t * t * (3 - 2 * t); };
-    const hex2rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
-    const mix     = (c1, c2, t) => [0, 1, 2].map(i => Math.round(lerp(c1[i], c2[i], t)));
-
-    /* ── 夜 → 夜明け → 昼 → 海中 → 深海 → 海の底 のキーフレーム（各6段グラデーション） ── */
-    const STOPS = [0, 0.2, 0.42, 0.65, 0.85, 1];
-    const PHASES = [
-      { p: 0.00, // 深い夜。空は天頂が最も暗く、水平線に向かってほんのり明るい
-        sky: ['#02040c','#040a18','#081226','#0c1c36','#122a4a','#1a3a5e'],
-        sea: ['#0d2338','#091a2b','#061220','#040c17','#02070e','#010408'] },
-      { p: 0.25, // 夜明け。水平線が暖色に染まり、星がゆっくり消えていく
-        sky: ['#101c42','#1d2c5c','#37477e','#6f639c','#c288a0','#f5c08c'],
-        sea: ['#7c6a92','#59567e','#3d476e','#293858','#1a2944','#101c31'] },
-      { p: 0.50, // 昼。水平線近くの空は白く霞み、海はくっきり濃い青（境目が明確になる）
-        sky: ['#6fbaf0','#8ac9f4','#a6d7f8','#c2e4fb','#def1fd','#f4fbff'],
-        sea: ['#3287c8','#2e7dbb','#2971ad','#24639c','#1e5489','#184674'] },
-      { p: 0.68, // 海面下へ。明るい水中
-        sky: ['#9fd4f4','#a9d9f5','#b4def6','#bfe3f7','#cae8f9','#d5edfa'],
-        sea: ['#2f86bd','#2776ab','#1f6598','#185484','#114370','#0b345c'] },
-      { p: 0.85, // 深く潜る。光が減り、青が沈んでいく
-        sky: ['#2b6f9e','#256390','#1f5782','#194b74','#134066','#0e3558'],
-        sea: ['#144a72','#103d5f','#0c304c','#08243a','#051a2b','#03101d'] },
-      { p: 1.00, // 海の底。ほとんど光の届かない群青の闇
-        sky: ['#0d3350','#0b2c46','#09253c','#071e32','#051828','#04121f'],
-        sea: ['#06263e','#052033','#041a29','#031320','#020d17','#01070e'] },
-    ].map(ph => ({ p: ph.p, sky: ph.sky.map(hex2rgb), sea: ph.sea.map(hex2rgb) }));
-
-    function palette(p) {
-      let a = PHASES[0], b = PHASES[PHASES.length - 1];
-      for (let i = 0; i < PHASES.length - 1; i++) {
-        if (p >= PHASES[i].p && p <= PHASES[i + 1].p) { a = PHASES[i]; b = PHASES[i + 1]; break; }
-      }
-      const t = b.p === a.p ? 0 : (p - a.p) / (b.p - a.p);
-      return { sky: a.sky.map((c, i) => mix(c, b.sky[i], t)),
-               sea: a.sea.map((c, i) => mix(c, b.sea[i], t)) };
-    }
-
-    /* 水平線: 昼までは固定。海へ潜るにつれ画面の上へ抜けていく */
-    function horizonY(p) { return lerp(H * 0.57, -H * 0.3, smooth(0.52, 0.70, p)); }
-
-    function resize() {
-      W   = canvas.width  = window.innerWidth;
-      H   = canvas.height = window.innerHeight;
-      HY0 = H * 0.57;
-      buildStars(); buildBio(); buildFloorStars(); buildClouds();
-      bubbles = [];
-      readScroll();
-    }
-
-    /* ── 星空。実在の星空に寄せて、大半は微小な星＋ごく少数の明るい星 ── */
-    const STAR_PAL = [
-      [255,255,255],[255,255,255],[255,255,255],[255,255,255],
-      [212,228,255],[212,228,255],[190,214,255],
-      [255,244,214],[255,224,178],
-    ];
-
-    function buildStars() {
-      stars = [];
-      const n = Math.min(Math.floor(W * HY0 / 1300), 700);
-      for (let i = 0; i < n; i++) placeStar(Math.random()*W, Math.random()*HY0, false);
-      for (let i = 0; i < 850; i++) {
-        const t  = Math.random();
-        const cx = W*0.78 - t*W*0.60, cy = HY0*0.04 + t*HY0*0.89;
-        const hw = W*0.12 * Math.sin(t*Math.PI);
-        const ang = Math.atan2(HY0*0.89, -W*0.60) + Math.PI/2;
-        const d = (Math.random()-0.5)*hw;
-        const x = cx + Math.cos(ang)*d, y = cy + Math.sin(ang)*d;
-        if (x<0||x>W||y<0||y>HY0) continue;
-        placeStar(x, y, true);
-      }
-    }
-
-    function placeStar(x, y, milky) {
-      const r = Math.random();
-      const size = milky ? 0.20+Math.random()*0.45
-        : r<0.02 ? 1.7+Math.random()*0.9
-        : r<0.10 ? 1.0+Math.random()*0.6
-        :           0.24+Math.random()*0.55;
-      stars.push({
-        x, y, size,
-        col:  STAR_PAL[Math.floor(Math.random()*STAR_PAL.length)],
-        base: milky ? 0.08+Math.random()*0.26 : 0.30+Math.random()*0.58,
-        // 水平線に近い星ほど大気で減光する
-        ext:  0.40+0.60*(1 - y/HY0),
-        ts:   0.3+Math.random()*1.8,
-        to:   Math.random()*Math.PI*2,
-        milky,
-      });
-    }
-
-    /* ── 昼のちぎれ雲（重なった白い塊で表現） ── */
-    function buildClouds() {
-      clouds = [];
-      [{fx:0.22,fy:0.20,s:1.0},{fx:0.62,fy:0.34,s:1.35},{fx:0.85,fy:0.14,s:0.8}].forEach(c => {
-        const puffs = [];
-        const n = 6;
-        for (let i = 0; i < n; i++) {
-          puffs.push({
-            dx: (i - n/2) * 34 * c.s + (Math.random()-0.5)*20,
-            dy: (Math.random()-0.5)*14*c.s - Math.abs(i - n/2)*4,
-            r:  (26 + Math.random()*22) * c.s,
-          });
-        }
-        clouds.push({ x: c.fx*W, y: c.fy*HY0, puffs });
-      });
-    }
-
-    /* ── 海のきらめき／深海のプランクトンの光 ── */
-    const BIO_PAL = [[0,225,195],[255,255,255],[255,222,140],[60,150,235],[150,225,235]];
-    function buildBio() {
-      bio = [];
-      for (let i=0;i<58;i++) spawnBio(true);
-    }
-    function spawnBio(init=false) {
-      const c = BIO_PAL[Math.floor(Math.random()*BIO_PAL.length)];
-      const top = Math.max(horizonY(curP), 0);
-      bio.push({
-        x:Math.random()*W, y:init? top+Math.random()*(H-top) : H+4,
-        size:0.55+Math.random()*1.5, c,
-        vy:0.22+Math.random()*0.65,
-        dFreq:0.38+Math.random()*0.85, dAmp:9+Math.random()*18,
-        phase:Math.random()*Math.PI*2,
-        alpha:0, maxA:0.30+Math.random()*0.45,
-        life:0, maxL:190+Math.random()*290,
-      });
-    }
-
-    /* ── 海の底で眠る星たち ── */
-    function buildFloorStars() {
-      floorStars = [];
-      const n = 7;
-      for (let i = 0; i < n; i++) {
-        floorStars.push({
-          fx: (i + 0.2 + Math.random()*0.6) / n,
-          fy: 0.90 + Math.random()*0.075,
-          size: 5 + Math.random()*6,
-          rot: Math.random()*Math.PI,
-          ts: 0.4 + Math.random()*1.2,
-          to: Math.random()*Math.PI*2,
-        });
-      }
-    }
-
-    function starPath(x, y, R, rot) {
-      const r2 = R * 0.45;
-      ctx.beginPath();
-      for (let i = 0; i < 10; i++) {
-        const rr = i % 2 === 0 ? R : r2;
-        const a  = rot + i * Math.PI / 5 - Math.PI / 2;
-        const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr;
-        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-    }
-
-    /* ── 背景（空・海とも6段グラデーションで滑らかに） ── */
-    function drawBg(pal, hy) {
-      if (hy > 0) {
-        const sg = ctx.createLinearGradient(0, 0, 0, hy);
-        STOPS.forEach((s, i) => sg.addColorStop(s, `rgb(${pal.sky[i]})`));
-        ctx.fillStyle = sg; ctx.fillRect(0, 0, W, hy + 1);
-      }
-      const og = ctx.createLinearGradient(0, hy, 0, H);
-      STOPS.forEach((s, i) => og.addColorStop(s, `rgb(${pal.sea[i]})`));
-      ctx.fillStyle = og; ctx.fillRect(0, Math.max(hy, 0), W, H - Math.max(hy, 0));
-    }
-
-    function drawNightNebulae(a1) {
-      [{x:W*0.70,y:HY0*0.17,rx:W*0.19,ry:HY0*0.22,c:'50,75,200',a:0.05},
-       {x:W*0.27,y:HY0*0.44,rx:W*0.14,ry:HY0*0.17,c:'110,38,158',a:0.04},
-       {x:W*0.83,y:HY0*0.57,rx:W*0.11,ry:HY0*0.13,c:'18,95,165',a:0.038}]
-      .forEach(n=>{
-        ctx.save(); ctx.translate(n.x,n.y); ctx.scale(1,n.ry/n.rx);
-        const g=ctx.createRadialGradient(0,0,0,0,0,n.rx);
-        g.addColorStop(0,`rgba(${n.c},${n.a*a1})`);
-        g.addColorStop(0.45,`rgba(${n.c},${n.a*0.45*a1})`);
-        g.addColorStop(1,'rgba(0,0,0,0)');
-        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,n.rx,0,Math.PI*2); ctx.fill();
-        ctx.restore();
-      });
-    }
-
-    function drawClouds(t, a1) {
-      for (const c of clouds) {
-        const drift = Math.sin(t*0.05 + c.x)*12;
-        for (const p of c.puffs) {
-          const x = c.x + p.dx + drift, y = c.y + p.dy;
-          ctx.save(); ctx.translate(x, y); ctx.scale(1, 0.55);
-          const g = ctx.createRadialGradient(0, 0, 0, 0, 0, p.r);
-          g.addColorStop(0, `rgba(255,255,255,${0.5*a1})`);
-          g.addColorStop(0.6, `rgba(255,255,255,${0.28*a1})`);
-          g.addColorStop(1, 'rgba(255,255,255,0)');
-          ctx.fillStyle = g;
-          ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI*2); ctx.fill();
-          ctx.restore();
-        }
-      }
-    }
-
-    function drawMilkyWay(a1) {
-      for (let i=0;i<24;i++) {
-        const t=i/23, cx=W*0.78-t*W*0.60, cy=HY0*0.04+t*HY0*0.89;
-        const r=W*0.09*Math.sin(t*Math.PI); if(r<2) continue;
-        const a=(0.022+0.018*Math.sin(t*Math.PI))*a1;
-        const g=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
-        g.addColorStop(0,`rgba(165,195,255,${a})`); g.addColorStop(1,'rgba(0,0,0,0)');
-        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
-      }
-    }
-
-    function drawStars(t, a1) {
-      for (const s of stars) {
-        const tw=0.72+0.28*Math.sin(t*s.ts+s.to);
-        const a=s.base*s.ext*tw*a1, sz=s.size*(0.92+0.08*tw);
-        const [r,g,b]=s.col;
-        if (!s.milky && s.size>1.1) {
-          const gr=ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,sz*5);
-          gr.addColorStop(0,`rgba(${r},${g},${b},${a*0.30})`); gr.addColorStop(1,'rgba(0,0,0,0)');
-          ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(s.x,s.y,sz*5,0,Math.PI*2); ctx.fill();
-          if (s.size>2.0) {
-            ctx.save(); ctx.globalAlpha=a*0.16; ctx.strokeStyle=`rgb(${r},${g},${b})`; ctx.lineWidth=0.5;
-            const sp=sz*7;
-            ctx.beginPath();
-            ctx.moveTo(s.x-sp,s.y); ctx.lineTo(s.x+sp,s.y);
-            ctx.moveTo(s.x,s.y-sp); ctx.lineTo(s.x,s.y+sp);
-            ctx.stroke(); ctx.restore();
-          }
-        }
-        ctx.globalAlpha=a; ctx.fillStyle=`rgb(${r},${g},${b})`;
-        ctx.beginPath(); ctx.arc(s.x,s.y,Math.max(sz,0.26),0,Math.PI*2); ctx.fill();
-      }
-      ctx.globalAlpha=1;
-    }
-
-    /* ── 水平線。昼はくっきり、夜はほのかに ── */
-    function drawHorizon(hy, dayF) {
-      // 水平線のすぐ上: 大気の霞（昼ほど白く）
-      const haze=ctx.createLinearGradient(0,hy-70,0,hy);
-      haze.addColorStop(0,'rgba(255,255,255,0)');
-      haze.addColorStop(1,`rgba(255,255,255,${0.05+0.22*dayF})`);
-      ctx.fillStyle=haze; ctx.fillRect(0,hy-70,W,70);
-      // 水平線のすぐ下: 遠くの海の濃い帯（空との境目を明確に）
-      const far=ctx.createLinearGradient(0,hy,0,hy+16);
-      far.addColorStop(0,`rgba(8,52,92,${0.10+0.35*dayF})`);
-      far.addColorStop(1,'rgba(8,52,92,0)');
-      ctx.fillStyle=far; ctx.fillRect(0,hy,W,16);
-      // 水平線そのもの
-      ctx.save();
-      ctx.globalAlpha=0.10+0.40*dayF;
-      ctx.strokeStyle='#0d5c95'; ctx.lineWidth=1;
-      ctx.beginPath(); ctx.moveTo(0,hy); ctx.lineTo(W,hy); ctx.stroke();
-      ctx.restore();
-    }
-
-    function drawReflections(t, hy, a1) {
-      for (const s of stars) {
-        if (s.milky || s.size<=0.82) continue;
-        const ry0=hy+(hy-s.y); if(ry0>H||ry0<hy) continue;
-        const depth=(ry0-hy)/(H-hy);
-        const wx=Math.sin(s.x*0.017+t*0.88)*10*depth+Math.sin(s.x*0.048+t*1.65)*3;
-        const wy=Math.sin(t*1.25+s.x*0.031)*2.8*depth;
-        const rx=s.x+wx, ry=ry0+wy;
-        const tw=0.72+0.28*Math.sin(t*s.ts+s.to+1.3);
-        const a=s.base*tw*(1-depth*0.76)*0.5*a1;
-        const [r,g,b]=s.col;
-        const sh=s.size*(1.6+depth*11)*(0.75+0.5*Math.sin(t*1.9+s.x));
-        const sg=ctx.createLinearGradient(rx,ry-sh,rx,ry+sh);
-        sg.addColorStop(0,'rgba(0,0,0,0)'); sg.addColorStop(0.5,`rgba(${r},${g},${b},${a})`); sg.addColorStop(1,'rgba(0,0,0,0)');
-        ctx.fillStyle=sg; ctx.fillRect(rx-s.size*1.1,ry-sh,s.size*2.2,sh*2);
-      }
-    }
-
-    /* ── 波。手前ほど間隔が広く・うねりが大きく（遠近感） ── */
-    function drawWaves(t, hy, dayF, a1) {
-      const col = dayF > 0.4 ? '255,255,255' : '140,175,215';
-      const base = lerp(0.06, 0.15, dayF) * a1;
-      for (let i=0;i<10;i++) {
-        const y=hy+3+i*i*1.15+i*3.2+Math.sin(t*0.38+i*1.05)*1.2;
-        if (y>H) break;
-        const amp=1+i*0.55;
-        ctx.globalAlpha=base*(1-i*0.07); ctx.strokeStyle=`rgb(${col})`; ctx.lineWidth=0.8;
-        ctx.beginPath(); ctx.moveTo(0,y);
-        for (let x=0;x<=W;x+=5) {
-          ctx.lineTo(x, y+Math.sin(x*0.012+t*1.35+i*1.25)*1.4*amp+Math.sin(x*0.005+t*0.68+i*0.75)*1.8*amp);
-        }
-        ctx.stroke();
-      }
-      ctx.globalAlpha=1;
-    }
-
-    /* ── 太陽のきらめき。水平線を中心に放射状に薄れるので継ぎ目が出ない ── */
-    function drawGlitter(hy, a1) {
-      const g=ctx.createRadialGradient(W*0.56,hy,0,W*0.56,hy,W*0.45);
-      g.addColorStop(0,`rgba(255,255,255,${0.30*a1})`);
-      g.addColorStop(0.45,`rgba(255,255,255,${0.10*a1})`);
-      g.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=g;
-      ctx.fillRect(0,hy,W,Math.min(H-hy,H*0.55));
-    }
-
-    function drawBio(t, waterTop, boost) {
-      for (let i=bio.length-1;i>=0;i--) {
-        const p=bio[i]; p.life++; p.y-=p.vy; p.x+=Math.sin(t*p.dFreq+p.phase)*0.32;
-        if      (p.life<28)          p.alpha=(p.life/28)*p.maxA;
-        else if (p.life>p.maxL-28)   p.alpha=((p.maxL-p.life)/28)*p.maxA;
-        else                         p.alpha=p.maxA;
-        if (p.life>=p.maxL||p.y<waterTop) { bio.splice(i,1); spawnBio(); continue; }
-        const a=Math.min(p.alpha*boost,0.85);
-        const [r,g,b]=p.c;
-        const gr=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.size*5.5);
-        gr.addColorStop(0,`rgba(${r},${g},${b},${a})`); gr.addColorStop(1,'rgba(0,0,0,0)');
-        ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(p.x,p.y,p.size*5.5,0,Math.PI*2); ctx.fill();
-        ctx.globalAlpha=Math.min(a*1.1,1); ctx.fillStyle=`rgb(${r},${g},${b})`;
-        ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
-      }
-    }
-
-    function tickShoots(t, a1) {
-      if (a1>0.6 && t>lastShoot+4+Math.random()*7) {
-        lastShoot=t;
-        const ang=-(22+Math.random()*28)*Math.PI/180, spd=10+Math.random()*7;
-        shoots.push({x:Math.random()*W*0.76, y:Math.random()*HY0*0.38,
-          vx:Math.cos(ang)*spd, vy:Math.sin(ang)*spd, spd, life:0, maxL:52+Math.random()*38});
-      }
-      for (let i=shoots.length-1;i>=0;i--) {
-        const s=shoots[i]; s.life++; s.x+=s.vx; s.y+=s.vy;
-        const p=s.life/s.maxL, a=(p<0.1?p*10:p>0.65?(1-p)/0.35:1)*a1;
-        const tx=s.x-s.vx*15, ty=s.y-s.vy*15;
-        const g=ctx.createLinearGradient(tx,ty,s.x,s.y);
-        g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(0.65,`rgba(215,235,255,${a*0.55})`); g.addColorStop(1,`rgba(255,255,255,${a*0.9})`);
-        ctx.strokeStyle=g; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(s.x,s.y); ctx.stroke();
-        if (s.life>=s.maxL) shoots.splice(i,1);
-      }
-    }
-
-    /* ── 海中: 差し込む光。深く潜るほど弱まる ── */
-    function drawRays(t, a1) {
-      for (let i=0;i<5;i++) {
-        const bx=W*(0.12+0.19*i)+Math.sin(t*0.10+i*1.7)*36;
-        const sway=Math.sin(t*0.16+i*0.9)*70;
-        const a=(0.05+0.03*Math.sin(t*0.3+i*1.3))*a1;
-        if (a<=0.004) continue;
-        const g=ctx.createLinearGradient(0,0,0,H);
-        g.addColorStop(0,`rgba(220,240,255,${a})`);
-        g.addColorStop(0.7,`rgba(220,240,255,${a*0.25})`);
-        g.addColorStop(1,'rgba(0,0,0,0)');
-        ctx.fillStyle=g;
-        ctx.beginPath();
-        ctx.moveTo(bx-18,0); ctx.lineTo(bx+42,0);
-        ctx.lineTo(bx+sway+170,H); ctx.lineTo(bx+sway-70,H);
-        ctx.closePath(); ctx.fill();
-      }
-    }
-
-    /* ── 海中: のぼる泡 ── */
-    function drawBubbles(t, a1) {
-      if (bubbles.length<26 && Math.random()<0.35) {
-        bubbles.push({x:Math.random()*W, y:H+8, r:1+Math.random()*3.2,
-          v:0.5+Math.random()*1.1, ph:Math.random()*Math.PI*2, w:6+Math.random()*14});
-      }
-      for (let i=bubbles.length-1;i>=0;i--) {
-        const b=bubbles[i]; b.y-=b.v;
-        const x=b.x+Math.sin(t*1.1+b.ph)*b.w*0.1+Math.sin(t*0.4+b.ph)*b.w*0.06;
-        if (b.y<-10) { bubbles.splice(i,1); continue; }
-        const fade=clamp01(b.y/(H*0.25));
-        ctx.globalAlpha=0.28*a1*fade;
-        ctx.strokeStyle='#dceeff'; ctx.lineWidth=0.8;
-        ctx.beginPath(); ctx.arc(x,b.y,b.r,0,Math.PI*2); ctx.stroke();
-        ctx.globalAlpha=0.4*a1*fade;
-        ctx.fillStyle='#eaf5ff';
-        ctx.beginPath(); ctx.arc(x-b.r*0.3,b.y-b.r*0.3,b.r*0.28,0,Math.PI*2); ctx.fill();
-        ctx.globalAlpha=1;
-      }
-    }
-
-    /* ── 海の底: 暗い砂地と、夜空から沈んできて眠る金色の星 ── */
-    function drawFloor(t, a1, darkness) {
-      const top=H-H*0.15*a1;
-      const g=ctx.createLinearGradient(0,top-30,0,H);
-      g.addColorStop(0,'rgba(30,42,54,0)');
-      g.addColorStop(0.4,`rgba(30,42,54,${0.5*a1})`);
-      g.addColorStop(1,`rgba(22,32,42,${0.9*a1})`);
-      ctx.fillStyle=g;
-      ctx.beginPath(); ctx.moveTo(0,H);
-      ctx.lineTo(0,top+8);
-      for (let x=0;x<=W;x+=14) {
-        ctx.lineTo(x, top+Math.sin(x*0.012+1.7)*5+Math.sin(x*0.03)*2.5);
-      }
-      ctx.lineTo(W,H); ctx.closePath(); ctx.fill();
-
-      // かすかに揺れる光（深いのでごく淡く）
-      const ca=0.10*a1*(1-darkness*0.6);
-      for (let i=0;i<3;i++) {
-        const y=top+14+i*10;
-        ctx.globalAlpha=ca*(1-i*0.25);
-        ctx.strokeStyle='#cfe6f5'; ctx.lineWidth=1;
-        ctx.beginPath(); ctx.moveTo(0,y);
-        for (let x=0;x<=W;x+=8) {
-          ctx.lineTo(x, y+Math.sin(x*0.03+t*0.9+i*2)*2.6+Math.sin(x*0.011-t*0.5)*2);
-        }
-        ctx.stroke();
-      }
-      ctx.globalAlpha=1;
-
-      // 暗闇の中、星たちがやわらかく光る
-      for (const s of floorStars) {
-        const x=s.fx*W, y=s.fy*H+H*0.15*(1-a1);
-        const tw=0.6+0.4*Math.sin(t*s.ts+s.to);
-        const gr=ctx.createRadialGradient(x,y,0,x,y,s.size*4.5);
-        gr.addColorStop(0,`rgba(255,210,110,${0.55*tw*a1})`);
-        gr.addColorStop(0.5,`rgba(255,190,90,${0.18*tw*a1})`);
-        gr.addColorStop(1,'rgba(0,0,0,0)');
-        ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(x,y,s.size*4.5,0,Math.PI*2); ctx.fill();
-        ctx.globalAlpha=(0.6+0.4*tw)*a1;
-        ctx.fillStyle='#f2c14e';
-        starPath(x,y,s.size,s.rot);
-        ctx.fill();
-        ctx.globalAlpha=1;
-      }
-    }
-
-    /* ── 1フレーム描画 ── */
-    function renderFrame(t, p) {
-      const pal = palette(p);
-      const hy  = horizonY(p);
-      const sf       = 1 - smooth(0.10, 0.32, p);                        // 星
-      const mf       = 1 - smooth(0.06, 0.26, p);                        // 天の川
-      const nightNeb = 1 - smooth(0.04, 0.22, p);                        // 夜の星雲
-      const dayF     = smooth(0.22, 0.48, p);                            // 昼らしさ
-      const cloudF   = smooth(0.30, 0.46, p) * (1 - smooth(0.52, 0.64, p)); // 昼の雲
-      const glitter  = smooth(0.34, 0.50, p) * (1 - smooth(0.55, 0.66, p)); // 海面のきらめき
-      const u        = smooth(0.55, 0.72, p);                            // 海中
-      const d        = smooth(0.72, 0.90, p);                            // 深さ（暗さ）
-      const f        = smooth(0.86, 0.97, p);                            // 海の底
-      const skyShift = hy - HY0;
-
-      ctx.clearRect(0,0,W,H);
-      drawBg(pal, hy);
-
-      // 空の要素は水平線と一緒に上へ抜けていく
-      if (hy > -H*0.3) {
-        ctx.save(); ctx.translate(0, skyShift);
-        if (nightNeb > 0.01) drawNightNebulae(nightNeb);
-        if (cloudF > 0.01) drawClouds(t, cloudF);
-        if (mf > 0.01) drawMilkyWay(mf);
-        if (sf > 0.01) { drawStars(t, sf); tickShoots(t, sf); }
-        ctx.restore();
-      }
-
-      if (hy > -80 && hy < H) drawHorizon(hy, dayF);
-      if (sf > 0.02 && hy > 0) drawReflections(t, hy, sf);
-      if (hy > -20 && hy < H) drawWaves(t, hy, dayF, clamp01(hy/(H*0.25)+0.4));
-      if (glitter > 0.01 && hy > 0) drawGlitter(hy, glitter);
-
-      drawBio(t, Math.max(hy, 0), 1 + 1.6*d);
-      if (u > 0.01) {
-        const rayA = u * (1 - d*0.85);
-        if (rayA > 0.01) drawRays(t, rayA);
-        drawBubbles(t, u * (1 - d*0.35));
-      }
-      if (f > 0.01) drawFloor(t, f, d);
-    }
-
-    /* 静止設定ではイベント時だけ描画。非表示タブでは描画を止める。 */
-    let frameId = null, lastFrame = 0;
-    function queueFrame() {
-      if (frameId === null && !document.hidden) frameId = requestAnimationFrame(loop);
-    }
-    function loop(ts) {
-      frameId = null;
-      if (document.hidden) return;
-      const rm = document.documentElement.classList.contains('reduce-motion');
-      if (rm) {
-        curP = targetP;
-        renderFrame(8, curP);
-        return;
-      }
-      // 背景は30fpsに抑え、120Hzのスマホでも描画を増やしすぎない。
-      const elapsed = ts - lastFrame;
-      if (elapsed >= 1000 / 30) {
-        curP += (targetP - curP) * (1 - Math.pow(.93, Math.min(elapsed, 100) / (1000 / 60)));
-        renderFrame(ts * .001, curP);
-        lastFrame = ts;
-      }
-      queueFrame();
-    }
-    window.addEventListener('scroll', queueFrame, { passive: true });
-    window.addEventListener('resize', () => { resize(); readScroll(); queueFrame(); });
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden && frameId !== null) {
-        cancelAnimationFrame(frameId);
-        frameId = null;
-      } else { readScroll(); queueFrame(); }
-    });
-    new MutationObserver(queueFrame).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    resize();
-    readScroll();
-    curP = targetP;
-    queueFrame();
-  })();
-  </script>
+  <dialog id="admin-menu" class="retro-dialog" aria-labelledby="admin-menu-title">
+    <div class="dialog-title"><h2 id="admin-menu-title" style="font:inherit">管理者メニュー / CONTROL ROOM</h2><button onclick="closeAdminMenu()" aria-label="管理者メニューを閉じる">×</button></div>
+    <div class="dialog-body"><p>おかえりなさい。今日は、どこを更新しますか。</p><div class="admin-actions"><button class="retro-button" onclick="closeAdminMenu();openProfileEditor()">PROFILE / プロフィールを編集する</button><button class="retro-button" onclick="closeAdminMenu();openPostEditor()">DIARY / 日記を書く</button><button class="retro-button" onclick="closeAdminMenu();openUploadModal()">MUSIC / 音楽を追加する</button><a class="retro-button" href="#bulletin" onclick="closeAdminMenu()">BBS / 掲示板を管理する</a></div><div class="admin-tools"><a href="shorts.html" target="_blank" rel="noopener">YouTube分析 ↗</a><a href="it-news.html" target="_blank" rel="noopener">ITニュース ↗</a><a href="next-business-expo.html" target="_blank" rel="noopener">展示会 ↗</a><a href="niigata-cafes-list.html" target="_blank" rel="noopener">カフェ ↗</a></div><p id="admin-error" role="alert"></p><button class="retro-button" onclick="logoutFromMenu()">ログアウト</button></div>
+  </dialog>
+  <dialog id="profile-editor" class="retro-dialog" aria-labelledby="profile-editor-title">
+    <div class="dialog-title"><h2 id="profile-editor-title" style="font:inherit">PROFILE / プロフィール編集</h2><button onclick="closeProfileEditor()" aria-label="プロフィール編集を閉じる">×</button></div>
+    <div class="dialog-body"><p>保存した内容は、ホームページの「管理人のこと」に公開されます。</p><form id="profile-form" class="profile-form">
+      <label for="edit-profile-name">お名前・ハンドルネーム <input id="edit-profile-name" name="name" required maxlength="40" autocomplete="nickname"></label>
+      <label for="edit-profile-tagline">ひとこと <input id="edit-profile-tagline" name="tagline" maxlength="120" placeholder="あなたらしいひとことを。"></label>
+      <label for="edit-profile-bio">自己紹介 <textarea id="edit-profile-bio" name="bio" rows="7" required maxlength="5000" placeholder="どんな人か、どんな場所にしたいか。自由に書いてください。"></textarea><small>改行もそのまま表示されます。5,000文字まで。</small></label>
+      <label for="edit-profile-likes">好きなもの <input id="edit-profile-likes" name="likes" maxlength="200" placeholder="音楽、海、昔のインターネット…"></label>
+      <label for="edit-profile-since">インターネットを始めた年 <input id="edit-profile-since" name="since" type="number" min="1969" max="2100" placeholder="1995" inputmode="numeric"><small>「好きなもの」と「始めた年」は、空欄にすると表示しません。</small></label>
+      <p id="profile-error" class="profile-status" role="alert"></p><div class="dialog-actions"><button type="button" class="retro-button" onclick="closeProfileEditor()">キャンセル</button><button id="profile-save-btn" type="submit" class="retro-button primary">保存して公開する</button></div>
+    </form></div>
+  </dialog>
 
   <!-- ======================================================
        APP: Supabase + Blog + Bulletin
@@ -2196,6 +1227,161 @@
     let currentAudio   = null;
     let currentTrackId = null;
 
+    /* Profile is a reserved content document in the existing admin-writable
+       blog_posts table. Exclude its stable ID from all diary queries. This
+       reuses the site's deployed RLS without requiring a SQL migration. */
+    const PROFILE_ID = '00000000-0000-4000-8000-000000000095';
+    const PROFILE_TITLE = '__site_profile_v1__';
+    const defaultProfile = Object.freeze({
+      name: '管理人', tagline: '1995年から、インターネットの片隅で。',
+      bio: 'はじめまして。「星と海」の管理人です。\n精神障害の当事者として、この場所をひとりで運営しています。\n読むだけでも、音楽を聴くだけでも。気が向いたら、BBSでお話ししましょう。',
+      likes: '', since: '1995',
+    });
+    let siteProfile = { ...defaultProfile };
+    let profileReady = false;
+    let profileSaving = false;
+    let profileUpdatedAt = null;
+    const profileFields = ['name', 'tagline', 'bio', 'likes', 'since'];
+
+    function renderProfile() {
+      for (const field of profileFields) {
+        document.getElementById('profile-' + field).textContent =
+          field === 'since' && siteProfile.since ? siteProfile.since + '年から' : siteProfile[field];
+      }
+      document.getElementById('profile-likes-row').hidden = !siteProfile.likes;
+      document.getElementById('profile-since-row').hidden = !siteProfile.since;
+      document.getElementById('profile-tagline').hidden = !siteProfile.tagline;
+      document.getElementById('profile-status').textContent = '';
+    }
+
+    async function fetchProfile() {
+      profileReady = false;
+      try {
+        if (!sb) throw new Error('Connection unavailable');
+        const { data, error } = await sb.from('blog_posts').select('id,title,content').eq('id', PROFILE_ID).maybeSingle();
+        if (error) throw error;
+        if (data) {
+          if (data.title !== PROFILE_TITLE) throw new Error('Profile ID is already in use');
+          const value = JSON.parse(data.content);
+          if (value.version !== 1 || !profileFields.every(key => typeof value[key] === 'string')) throw new Error('Invalid profile');
+          siteProfile = Object.fromEntries(profileFields.map(key => [key, value[key]]));
+          profileUpdatedAt = typeof value.updatedAt === 'string' && Number.isFinite(Date.parse(value.updatedAt)) ? value.updatedAt : null;
+        } else {
+          siteProfile = { ...defaultProfile };
+          profileUpdatedAt = null;
+        }
+        profileReady = true;
+        renderProfile();
+        renderNews();
+      } catch (error) {
+        console.error('fetchProfile:', error);
+        document.getElementById('profile-status').textContent = 'プロフィールの最新情報を取得できませんでした。時間をおいて、ページを再読み込みしてください。';
+      }
+      return profileReady;
+    }
+
+    window.closeAdminMenu = () => document.getElementById('admin-menu').close();
+    window.logoutFromMenu = async () => {
+      try {
+        await doLogout();
+        closeAdminMenu();
+        document.getElementById('profile-editor').close();
+      } catch {
+        document.getElementById('admin-error').textContent = 'ログアウトできませんでした。もう一度お試しください。';
+      }
+    };
+    window.openProfileEditor = async () => {
+      if (!adminUser) { openLoginModal(); return; }
+      const dialog = document.getElementById('profile-editor');
+      const errorEl = document.getElementById('profile-error');
+      const button = document.getElementById('profile-save-btn');
+      dialog.showModal();
+      errorEl.textContent = '';
+      button.disabled = true;
+      // Re-read before editing, so another device's saved profile isn't lost.
+      const ready = await fetchProfile();
+      if (!dialog.open) return;
+      if (!ready) {
+        errorEl.textContent = '保存済みのプロフィールを読み込めませんでした。一度閉じてから、もう一度お試しください。';
+        return;
+      }
+      for (const field of profileFields) document.getElementById('edit-profile-' + field).value = siteProfile[field];
+      button.disabled = false;
+      document.getElementById('edit-profile-name').focus();
+    };
+    window.closeProfileEditor = () => {
+      if (profileSaving) return;
+      const dialog = document.getElementById('profile-editor');
+      if (!dialog.open) return;
+      const dirty = profileReady && profileFields.some(key => document.getElementById('edit-profile-' + key).value !== siteProfile[key]);
+      if (dirty && !confirm('保存していない変更を破棄して閉じますか？')) return;
+      dialog.close();
+    };
+    document.getElementById('profile-editor').addEventListener('cancel', event => {
+      event.preventDefault();
+      closeProfileEditor();
+    });
+    document.getElementById('profile-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      if (profileSaving) return;
+      const errorEl = document.getElementById('profile-error');
+      errorEl.textContent = '';
+      if (!sb || !adminUser || !profileReady) {
+        errorEl.textContent = 'プロフィールを読み込み直して、管理者としてログインしてください。';
+        return;
+      }
+      const value = Object.fromEntries(profileFields.map(key => [key, document.getElementById('edit-profile-' + key).value.trim()]));
+      if (!value.name || !value.bio) { errorEl.textContent = 'お名前と自己紹介を入力してください。'; return; }
+      const button = document.getElementById('profile-save-btn');
+      const updatedAt = new Date().toISOString();
+      profileSaving = true;
+      button.disabled = true;
+      button.textContent = '保存中…';
+      try {
+        const { data, error } = await sb.from('blog_posts').upsert({
+          id: PROFILE_ID, title: PROFILE_TITLE,
+          content: JSON.stringify({ version: 1, ...value, updatedAt }),
+        }, { onConflict: 'id' }).select('id').single();
+        if (error || data?.id !== PROFILE_ID) throw error || new Error('Save was not confirmed');
+        siteProfile = value;
+        profileUpdatedAt = updatedAt;
+        renderProfile();
+        renderNews();
+        document.getElementById('profile-editor').close();
+        document.getElementById('profile-saved').textContent = 'プロフィールを保存しました。公開ページに反映されています。';
+        document.getElementById('profile').scrollIntoView({ behavior: displaySettings.reduceMotion ? 'auto' : 'smooth' });
+      } catch (error) {
+        console.error('saveProfile:', error);
+        errorEl.textContent = '保存できませんでした。入力内容は残っています。通信状況とログイン状態を確認して、もう一度お試しください。';
+      } finally {
+        profileSaving = false;
+        button.disabled = false;
+        button.textContent = '保存して公開する';
+      }
+    });
+
+    function renderNews() {
+      const updates = [{ date: '2026-09-27T00:00:00+09:00', text: '懐かしい個人ホームページの装いになりました。', href: '#hero' }];
+      if (profileUpdatedAt) updates.push({ date: profileUpdatedAt, text: '管理人のプロフィールを更新しました。', href: '#profile' });
+      for (const post of allPosts.slice(0, 3)) updates.push({ date: post.created_at, text: '日記「' + post.title + '」を更新しました。', href: '#blog', postId: post.id });
+      updates.sort((a, b) => new Date(b.date) - new Date(a.date));
+      const day = date => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Tokyo' }).format(new Date(date));
+      document.getElementById('news-list').innerHTML = updates.slice(0, 4).map((item, i) =>
+        `<li><time datetime="${day(item.date)}">${day(item.date).replaceAll('-', '.')}</time><span><a href="${item.href}"${item.postId ? ` data-news-post="${esc(item.postId)}"` : ''}>${esc(item.text)}</a>${i === 0 ? '<span class="new-badge">NEW</span>' : ''}</span></li>`).join('');
+      document.getElementById('last-update').textContent = 'LAST UPDATE ' + day(updates[0].date).replaceAll('-', '.');
+    }
+    document.getElementById('news-list').addEventListener('click', event => {
+      const link = event.target.closest('[data-news-post]');
+      if (link) { event.preventDefault(); openPost(link.dataset.newsPost); }
+    });
+    window.toggleWelcomeTicker = button => {
+      const paused = button.getAttribute('aria-pressed') !== 'true';
+      button.setAttribute('aria-pressed', String(paused));
+      button.setAttribute('aria-label', paused ? '流れる文字を再開' : '流れる文字を停止');
+      button.textContent = paused ? '▷' : 'Ⅱ';
+      button.closest('.welcome-strip').classList.toggle('ticker-paused', paused);
+    };
+
     /* ══ AUTH ══ */
     async function doLogin(email, pw) {
       const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
@@ -2205,7 +1391,8 @@
     }
 
     async function doLogout() {
-      await sb.auth.signOut();
+      const { error } = await sb.auth.signOut();
+      if (error) throw error;
       adminUser = null;
       updateAdminUI();
     }
@@ -2225,13 +1412,15 @@
       if (adminUser) {
         lockIcon.classList.add('hidden');
         userIcon.classList.remove('hidden');
-        adminBtn.title = 'ログアウト';
+        adminBtn.title = '管理者メニュー';
+        adminBtn.setAttribute('aria-label', '管理者メニュー');
         newPostBtn.classList.remove('hidden');
         newPostBtn.classList.add('flex');
       } else {
         lockIcon.classList.remove('hidden');
         userIcon.classList.add('hidden');
         adminBtn.title = '管理者ログイン';
+        adminBtn.setAttribute('aria-label', '管理者ログイン');
         newPostBtn.classList.add('hidden');
         newPostBtn.classList.remove('flex');
       }
@@ -2263,10 +1452,10 @@
         adminPageLinksMobile.classList.remove('flex');
       }
 
+      document.getElementById('edit-profile-btn').classList.toggle('hidden', !adminUser);
       renderPosts();
       renderMessages();
       renderTracks();
-      updateVisitCounter();
     }
 
     /* ══ モバイルメニュー ══ */
@@ -2313,7 +1502,8 @@
 
     window.onAdminBtnClick = function () {
       if (adminUser) {
-        if (confirm('ログアウトしますか？')) doLogout();
+        document.getElementById('admin-error').textContent = '';
+        document.getElementById('admin-menu').showModal();
       } else {
         openLoginModal();
       }
@@ -2326,11 +1516,13 @@
         const { data, error } = await sb
           .from('blog_posts')
           .select('*')
+          .neq('id', PROFILE_ID)
           .order('created_at', { ascending: false })
           .limit(100);   // 表示は少しずつだが、取得は多めにしておく
         if (error) throw error;
-        allPosts = data ?? [];
+        allPosts = (data ?? []).filter(post => post.id !== PROFILE_ID);
         renderPosts();
+        renderNews();
       } catch (e) {
         console.error('fetchPosts:', e);
         showFetchError('posts-container', e.message);
@@ -2480,6 +1672,7 @@
     };
 
     async function deletePost(id) {
+      if (id === PROFILE_ID) return;
       const { error } = await sb.from('blog_posts').delete().eq('id', id);
       if (error) throw error;
       await fetchPosts();
@@ -2515,7 +1708,7 @@
                 </p>
               </div>
               <h3 class="mincho text-[1.05rem] mb-2.5 group-hover:text-aurora-blue
-                         transition-colors leading-snug" style="color:var(--sumi);">${esc(p.title)}</h3>
+                         transition-colors leading-snug" style="color:var(--sumi);"><button type="button" style="text-align:left" onclick="event.stopPropagation();openPost('${p.id}')">${esc(p.title)}</button></h3>
               <p class="text-[.8rem] leading-[2] line-clamp-2" style="color:var(--usuzumi);">${esc(p.content)}</p>
             </div>
             ${adminUser ? `
@@ -2750,7 +1943,7 @@
       return `
         <div class="mt-4 pt-4 border-t border-aurora-teal/20 space-y-2">
           <input id="reply-name-${id}" type="text" maxlength="30" oninput="onInlineInput(this)"
-                 placeholder="ニックネームでOK（30文字以内）"
+                 aria-label="お名前・ハンドルネーム" placeholder="お名前・ハンドルネーム（30文字以内）"
                  class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-2.5
                         text-slate-700 text-sm placeholder-slate-400
                         focus:outline-none focus:border-aurora-teal/50 transition-colors" />
@@ -3210,6 +2403,7 @@
       try {
         await doLogin(email, pw);
         closeLoginModal();
+        onAdminBtnClick();
       } catch {
         errEl.textContent = 'ログインに失敗しました。認証情報を確認してください。';
       }
@@ -3312,38 +2506,35 @@
        自分の再読み込みや、同じ人の何度もの訪問まで数に入っていました。 */
     const VISIT_DAY_KEY = 'hoshiumi_visit_day';
 
-    function markVisitToday() {
-      // すでに今日ぶんを数えていれば true（＝もう増やさない）を返します
-      try {
-        const today = new Date().toLocaleDateString('sv-SE');   // 端末の時計で YYYY-MM-DD
-        if (localStorage.getItem(VISIT_DAY_KEY) === today) return true;
-        localStorage.setItem(VISIT_DAY_KEY, today);
-        return false;
-      } catch {
-        return true;   // 端末に印を残せないときは、数えすぎないよう増やしません
-      }
-    }
-
     async function updateVisitCounter() {
       const el = document.getElementById('visit-counter');
-      if (!el) return;
-      if (!sb) { el.textContent = ''; return; }
-      // 管理者のアクセスと、今日すでに数えたぶんは、増やさず今の値だけ見せます
-      const countedToday = markVisitToday();
-      const readOnly = adminUser || countedToday;
+      const day = new Date().toLocaleDateString('sv-SE');
+      let countedToday = true;
+      try { countedToday = localStorage.getItem(VISIT_DAY_KEY) === day; } catch {}
       try {
-        if (readOnly) {
-          const { data, error } = await sb.from('site_visits').select('count').eq('id', 1).single();
-          if (error) throw error;
-          el.textContent = `訪問者数：${(data?.count ?? 0).toLocaleString()}`;
-        } else {
-          const { data, error } = await sb.rpc('increment_visit_count');
-          if (error) throw error;
-          el.textContent = `訪問者数：${(data ?? 0).toLocaleString()}`;
-        }
-      } catch (e) {
-        console.error('updateVisitCounter:', e);
-        el.textContent = '訪問者数：取得エラー（Supabase未設定の可能性）';
+        if (!sb) throw new Error('Connection unavailable');
+        const readOnly = adminUser || countedToday;
+        const { data, error } = readOnly
+          ? await sb.from('site_visits').select('count').eq('id', 1).single()
+          : await sb.rpc('increment_visit_count');
+        if (error) throw error;
+        const raw = String(readOnly ? data?.count : data);
+        if (!/^\d+$/.test(raw)) throw new Error('Invalid counter response');
+        // Persist the visit marker only after the server confirms the increment.
+        if (!readOnly) { try { localStorage.setItem(VISIT_DAY_KEY, day); } catch {} }
+        const digits = raw.padStart(8, '0');
+        el.innerHTML = [...digits].map(digit => `<span aria-hidden="true">${digit}</span>`).join('');
+        el.setAttribute('aria-label', raw + '人');
+        const number = BigInt(raw);
+        const isKiriban = number >= 100n && (number % 1000n === 0n || /^(\d)\1{2,}$/.test(raw) || raw === '12345' || raw === '123456');
+        const message = document.getElementById('kiriban-message');
+        message.hidden = !isKiriban;
+        if (isKiriban) message.textContent = '☆ ' + raw + '番！ キリ番の記念に、ひとこといかがですか。';
+      } catch (error) {
+        console.error('updateVisitCounter:', error);
+        el.textContent = '--------';
+        el.setAttribute('aria-label', '訪問者数を取得できませんでした');
+        el.title = '訪問者数を取得できませんでした。時間をおいて再読み込みしてください。';
       }
     }
 
@@ -3508,8 +2699,8 @@
     /* ══ INIT ══ */
     async function init() {
       forgetNickname();   // 以前の版が端末に保存した名前を消しておく
-      await checkSession();
-      await Promise.all([fetchPosts(), fetchMessages(), fetchTracks(), updateVisitCounter()]);
+      try { await checkSession(); } catch (error) { console.error('checkSession:', error); }
+      await Promise.all([fetchPosts(), fetchMessages(), fetchTracks(), fetchProfile(), updateVisitCounter()]);
       subscribeRealtime();
     }
 

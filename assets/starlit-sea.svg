@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240" shape-rendering="crispEdges">
+<title>三日月と星が浮かぶ、静かな夜の海</title>
+<path fill="#0b142c" d="M0 0h240v240H0z"/>
+<path fill="#111f3b" d="M0 88h240v50H0z"/><path fill="#182d49" d="M0 118h240v29H0z"/>
+<g fill="#859db9"><path d="M18 25h2v2h-2zm36 42h2v2h-2zm-23 37h2v2h-2zm54-78h2v2h-2zm31 42h2v2h-2zm-9 41h2v2h-2zm38-91h2v2h-2zm68 64h2v2h-2zm-21 31h2v2h-2zm37-78h2v2h-2zm-62 64h2v2h-2z"/></g>
+<g fill="#ddd6b1"><path d="M44 30h2v10h-2zm-4 4h10v2H40zm93 51h2v8h-2zm-3 3h8v2h-8zm83-28h2v6h-2zm-2 2h6v2h-6z"/></g>
+<path fill="#ddd7b5" d="M177 27h16v4h8v7h4v17h-4v7h-8v4h-16v-4h-7v-7h-4V38h4v-7h7z"/>
+<path fill="#0b142c" d="M169 24h14v7h-5v8h-3v13h4v7h8v4h-15v-6h-7V34h4z"/>
+<path fill="#31445f" d="M0 139h22v-4h13v-7h18v7h16v6h13v-3h21v5h32v-4h20v3h19v-10h18v-6h13v8h16v7h19v18H0z"/>
+<path fill="#102439" d="M0 148h240v92H0z"/><path fill="#1b354c" d="M0 148h240v3H0zm0 18h240v2H0zm0 28h240v2H0zm0 31h240v3H0z"/>
+<g fill="#47647b"><path d="M165 153h33v2h-33zm8 6h20v2h-20zm-12 8h44v2h-44zm7 8h31v2h-31zm-14 11h50v2h-50zm14 9h22v2h-22zm-11 13h43v2h-43zm13 14h23v2h-23z"/></g>
+<g fill="#2a4862"><path d="M12 158h31v2H12zm53 18h33v2H65zm-42 11h28v2H23zm77 17h29v2h-29zm-94 10h43v2H6zm205-33h21v2h-21z"/></g>
+<path fill="#091321" d="M0 212h20v-5h18v8h14v4h10v21H0zm213 16h27v12h-44v-6h17z"/>
+<path fill="#6f8699" d="M21 144v-26h2v26z"/><path fill="#a2afba" d="M24 120v20h14z"/><path fill="#0b1727" d="M13 144h30l-6 5H19z"/>
+</svg>
