@@ -3,7 +3,24 @@
 1995年頃の個人ホームページをイメージした、静的HTMLとSupabaseのサイトです。
 トップページは `index.html`、共通のレトロな見た目は `retro.css`、海のドット絵は `assets/starlit-sea.svg` にあります。
 
-公開URLは https://hoshitoumi.vercel.app/ です。
+公開URLは https://hoshinoumi.vercel.app/ です。
+
+## 公開URLの切り替え
+
+コードの変更とGitHubへのプッシュだけでは、Vercelのドメイン設定は変わりません。新URLを有効にするには、Vercelにログインして次を設定してください。
+
+1. 現在このサイトを公開しているプロジェクトの **Settings → Domains → Add Domain** で `hoshinoumi.vercel.app` を追加し、Productionに接続します。
+2. 新URLでトップページと `/shorts.html` が開けることを確認します。YouTubeの計測リンクも、新URLに `utm_source`・`utm_medium`・`utm_content` が付いた状態で開けることを確認してください。
+3. 旧ドメインは削除せず、**Edit → Redirect to** で新ドメインへの恒久リダイレクトを設定します。旧URLの `/shorts.html` や計測パラメーター付きリンクでも、パスとパラメーターが引き継がれることを確認してください。
+4. YouTubeのプロフィールや投稿済み動画の説明文など、手動で掲載したURLも新URLに更新してください。
+
+ドメイン追加で「使用済み」と表示された場合は、Vercel側でそのドメインの利用状況を確認する必要があります。
+
+Supabaseの **Authentication → URL Configuration** に旧URLを設定している場合は、**Site URL** と該当する **Redirect URLs** を新URLに更新してください。現在のログインはメール・パスワード方式ですが、確認メールやパスワード再設定の戻り先にはこの設定が使われます。
+
+掲示板通知メールのSQLを導入済みの場合は、`index.html` 冒頭にある `create or replace function notify_new_bulletin_message()` から対応する `$fn$;` までをSupabaseのSQL Editorで再実行すると、メール内のリンクも新URLになります。ニュース取得SQLを導入済みの場合も、`it-news.sql` の `create or replace function it_news_fetch_source(p_id uuid)` から対応する `$fn$;` までを再実行するとUser-AgentのURLが更新されます。GitHubへのプッシュでは、データベースに保存済みの関数は更新されません。
+
+参考: [Vercelのドメイン追加](https://vercel.com/docs/domains/working-with-domains/add-a-domain)、[ドメインのリダイレクト](https://vercel.com/docs/domains/working-with-domains/deploying-and-redirecting)、[SupabaseのURL設定](https://supabase.com/docs/guides/auth/redirect-urls)。
 
 ## YouTube分析のプロンプト
 

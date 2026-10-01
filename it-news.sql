@@ -202,7 +202,7 @@ begin
       'GET',
       s.url,
       array[
-        extensions.http_header('User-Agent', 'Mozilla/5.0 (compatible; HoshiNoUmi/1.0; +https://hoshitoumi.vercel.app)'),
+        extensions.http_header('User-Agent', 'Mozilla/5.0 (compatible; HoshiNoUmi/1.0; +https://hoshinoumi.vercel.app)'),
         extensions.http_header('Accept', 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*')
       ],
       null, null)::extensions.http_request);
