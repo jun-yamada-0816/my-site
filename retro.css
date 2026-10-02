@@ -1336,14 +1336,52 @@ a {
   min-width: 44px;
   min-height: 44px;
 }
-.detail-admin {
+.detail-actions {
   margin-top: 24px;
   padding-top: 16px;
   border-top: 1px dotted var(--keisen);
   display: grid;
+  gap: 10px;
+}
+.detail-share,
+.detail-admin {
+  display: grid;
+  gap: 6px;
 }
 .detail-admin[hidden] {
   display: none;
+}
+.detail-link-note {
+  color: var(--gold);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.detail-link-note:empty {
+  display: none;
+}
+/* Monthly diary archive (過去ログ). */
+.diary-archive {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 18px;
+  color: #bcd0e3;
+  font-size: 0.9375rem;
+}
+.diary-archive[hidden] {
+  display: none;
+}
+.diary-archive select {
+  width: 100%;
+}
+.diary-archive .profile-status:empty {
+  display: none;
+}
+.month-head {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 14px;
+  color: #dbe8f5;
+  font-size: 1rem;
 }
 /* Small tablets and wider phones get adjacent actions, without a sidebar. */
 @media (min-width: 480px) {
@@ -1466,8 +1504,22 @@ a {
   #posts-container .post-admin-actions {
     flex-direction: row;
   }
-  .detail-admin {
-    justify-content: end;
+  .detail-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+  .diary-archive {
+    grid-template-columns: auto minmax(0, 18rem);
+    justify-content: start;
+    align-items: center;
+    gap: 12px;
+  }
+  .diary-archive .profile-status {
+    grid-column: 1 / -1;
+  }
+  .month-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
   }
   [id$="-modal"] > .relative {
     padding: 28px;

@@ -109,6 +109,14 @@
         特異的恐怖症を抱えながら日々を送っています。感じたこと、乗り越えたこと、まだ乗り越えられていないこと、ありのままを綴ります。同じ悩みを持つ方の、ほんの少しの支えになれたら。
       </p>
       <p id="post-saved" class="profile-message" role="status"></p>
+      <!-- 過去ログ（月ごと）。月が2つ以上になったら表示する -->
+      <div id="diary-archive" class="diary-archive" hidden>
+        <label for="diary-month">過去ログ（月ごとに読む）</label>
+        <select id="diary-month" onchange="selectDiaryMonth(this.value)">
+          <option value="">新しい順にすべて</option>
+        </select>
+        <p id="diary-month-status" class="profile-status" role="status"></p>
+      </div>
       <!-- 投稿一覧 -->
       <div id="posts-container">
         <div class="flex flex-col items-center gap-3 py-16 text-slate-500">
@@ -827,9 +835,15 @@
         </div>
         <h2 id="detail-title" class="text-2xl font-bold text-slate-800 mb-6 leading-snug"></h2>
         <div id="detail-content" class="text-slate-600 leading-relaxed text-sm whitespace-pre-wrap"></div>
-        <!-- 管理者でログインしているときだけ出す。読みながら誤字に気づいたら、そのまま直せるように。 -->
-        <div id="detail-admin" class="detail-admin" hidden>
-          <button id="detail-edit-btn" type="button" class="retro-button" onclick="editCurrentPost()">この日記を編集する</button>
+        <div class="detail-actions">
+          <div class="detail-share">
+            <button id="detail-copy-link" type="button" class="retro-button" onclick="copyDiaryLink()">この日記へのリンクをコピー</button>
+            <p id="detail-link-note" class="detail-link-note" role="status" aria-live="polite"></p>
+          </div>
+          <!-- 管理者でログインしているときだけ出す。読みながら誤字に気づいたら、そのまま直せるように。 -->
+          <div id="detail-admin" class="detail-admin" hidden>
+            <button id="detail-edit-btn" type="button" class="retro-button" onclick="editCurrentPost()">この日記を編集する</button>
+          </div>
         </div>
       </div>
       <button onclick="closePostDetail()" aria-label="閉じる"
@@ -1265,6 +1279,17 @@
     };
 
     /* ══ BLOG ══ */
+    /* 同じ日記は、一覧・月ごとの一覧・リンクから開いたものでも同じ1つのオブジェクトにそろえる。
+       こうしておくと、編集や閲覧数の更新がどこに表示していても一度で反映される。 */
+    const knownPosts = new Map();  // id → 日記
+    function canonicalPost(row) {
+      const known = knownPosts.get(row.id);
+      if (known) return Object.assign(known, row);
+      knownPosts.set(row.id, row);
+      return row;
+    }
+    const canonicalPosts = rows => (rows ?? []).filter(p => p.id !== PROFILE_ID).map(canonicalPost);
+
     // from 件目から POSTS_FETCH_SIZE 件ぶん取る。総数もいっしょに数えてもらう。
     function queryPosts(from) {
       return sb
@@ -1285,7 +1310,7 @@
       try {
         const { data, error, count } = await queryPosts(0);
         if (error) throw error;
-        allPosts = (data ?? []).filter(post => post.id !== PROFILE_ID);
+        allPosts = canonicalPosts(data);
         notePostsTotal(count, data?.length ?? 0);
         renderPosts();
         renderNews();
@@ -1299,17 +1324,111 @@
       const { data, error, count } = await queryPosts(allPosts.length);
       if (error) throw error;
       const known = new Set(allPosts.map(p => p.id));
-      allPosts = allPosts.concat((data ?? []).filter(p => p.id !== PROFILE_ID && !known.has(p.id)));
+      allPosts = allPosts.concat(canonicalPosts(data).filter(p => !known.has(p.id)));
       notePostsTotal(count, data?.length ?? 0);
       if (!data?.length) postsHasMore = false;  // 何も返ってこなければ、それ以上は取りにいかない
     }
 
-    // 編集を始める前に、サーバーにある最新の内容を読み直す
-    // （別の端末で直したばかりの内容を、古い画面の内容で上書きしないため）
-    async function fetchPostForEdit(id) {
+    // 1件だけ読む。編集を始める前（別の端末で直した内容を古い画面で上書きしないため）と、
+    // 日記へのリンク（?diary=…）から来たときに使う。
+    async function fetchPostById(id) {
       const { data, error } = await sb.from('blog_posts').select('*').eq('id', id).maybeSingle();
       if (error) throw error;
-      return data;
+      return data && data.id !== PROFILE_ID ? canonicalPost(data) : null;
+    }
+
+    /* ── 過去ログ（月ごと） ──
+       日付だけを全件読んで月ごとに数え、選んだ月の日記をまとめて読む。月の区切りは日本時間。 */
+    let diaryMonths = [];       // [{ ym: '2026-09', count: 30 }] 新しい月から
+    let diaryMonth  = null;     // 表示中の月（'2026-09'）。null なら新しい順の一覧
+    let monthPosts  = [];
+    let monthLoading = false;
+    const jstMonth = iso => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit' }).format(new Date(iso));
+    const monthLabel = ym => `${Number(ym.slice(0, 4))}年${Number(ym.slice(5, 7))}月`;
+    function monthRange(ym) {
+      const y = Number(ym.slice(0, 4)), m = Number(ym.slice(5, 7));
+      const next = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
+      return [`${ym}-01T00:00:00+09:00`, `${next}-01T00:00:00+09:00`];
+    }
+
+    async function fetchDiaryMonths() {
+      if (!sb) return;
+      try {
+        const counts = new Map();
+        // Supabase は1回に1000件までしか返さないので、足りなくなるまで続きを読む
+        for (let from = 0; ; from += 1000) {
+          const { data, error } = await sb.from('blog_posts').select('created_at')
+            .neq('id', PROFILE_ID).order('created_at', { ascending: false }).range(from, from + 999);
+          if (error) throw error;
+          for (const row of data ?? []) {
+            const ym = jstMonth(row.created_at);
+            counts.set(ym, (counts.get(ym) ?? 0) + 1);
+          }
+          if (!data || data.length < 1000) break;
+        }
+        diaryMonths = [...counts].map(([ym, count]) => ({ ym, count })).sort((a, b) => b.ym.localeCompare(a.ym));
+        renderDiaryMonths();
+      } catch (e) {
+        console.error('fetchDiaryMonths:', e);  // 過去ログが出せなくても、ふだんの一覧はそのまま使える
+      }
+    }
+
+    function renderDiaryMonths() {
+      const box = document.getElementById('diary-archive');
+      const select = document.getElementById('diary-month');
+      box.hidden = diaryMonths.length < 2;
+      select.innerHTML = '<option value="">新しい順にすべて</option>' + diaryMonths.map(({ ym, count }) =>
+        `<option value="${esc(ym)}">${monthLabel(ym)}（${count}件）</option>`).join('');
+      select.value = diaryMonth ?? '';
+    }
+
+    async function fetchMonthPosts(ym) {
+      const [start, end] = monthRange(ym);
+      const { data, error } = await sb.from('blog_posts').select('*')
+        .neq('id', PROFILE_ID).gte('created_at', start).lt('created_at', end)
+        .order('created_at', { ascending: true });  // ひと月ぶんは、日記帳のように日付の古い順に
+      if (error) throw error;
+      return canonicalPosts(data);
+    }
+
+    window.selectDiaryMonth = async (ym) => {
+      const status = document.getElementById('diary-month-status');
+      status.textContent = '';
+      document.getElementById('diary-month').value = ym || '';
+      if (!ym) {
+        diaryMonth = null;
+        monthPosts = [];
+        renderPosts();
+        return;
+      }
+      monthLoading = true;
+      diaryMonth = ym;
+      renderPosts();
+      try {
+        const posts = await fetchMonthPosts(ym);
+        if (diaryMonth !== ym) return;  // 読み込み中に別の月が選ばれた
+        monthPosts = posts;
+      } catch (e) {
+        console.error('fetchMonthPosts:', e);
+        if (diaryMonth !== ym) return;
+        diaryMonth = null;
+        monthPosts = [];
+        document.getElementById('diary-month').value = '';
+        status.textContent = 'この月の日記を読み込めませんでした。時間をおいて、もう一度お試しください。';
+      } finally {
+        if (diaryMonth === ym || diaryMonth === null) monthLoading = false;
+      }
+      renderPosts();
+    };
+
+    // 書いた・消したあとに、一覧と過去ログの件数を新しくする
+    async function refreshDiaryLists() {
+      await fetchPosts();
+      fetchDiaryMonths();
+      if (diaryMonth) {
+        try { monthPosts = await fetchMonthPosts(diaryMonth); } catch (e) { console.error('fetchMonthPosts:', e); }
+        renderPosts();
+      }
     }
 
     async function updatePost(id, title, content) {
@@ -1322,23 +1441,55 @@
         .single();
       if (error) throw error;
       if (data?.id !== id) throw new Error('Save was not confirmed');
-      const i = allPosts.findIndex(p => p.id === id);
-      if (i >= 0) allPosts[i] = { ...allPosts[i], ...data };
-      return allPosts[i] ?? data;
+      return canonicalPost(data);
     }
 
+    // 書いた日記の id を返す（Xに貼るリンクを、その日記そのものにするため）
     async function createPost(title, content) {
-      const { error } = await sb.from('blog_posts').insert({ title, content });
+      const { data, error } = await sb.from('blog_posts').insert({ title, content }).select('id').single();
       if (error) throw error;
-      await fetchPosts();
+      await refreshDiaryLists();
+      return data?.id ?? null;
+    }
+
+    /* ── 日記ごとのリンク ──
+       https://hoshinoumi.vercel.app/?diary=<id> で、その日記を開いた状態で表示する。 */
+    const SITE_URL = 'https://hoshinoumi.vercel.app';
+    const DIARY_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const diaryUrl = id => `${SITE_URL}/?diary=${encodeURIComponent(id)}`;
+
+    // 開いている日記をアドレス欄にも出す（そのままコピーして共有できるように）。履歴は増やさない。
+    function setDiaryParam(id) {
+      try {
+        const url = new URL(location.href);
+        if (id) url.searchParams.set('diary', id); else url.searchParams.delete('diary');
+        if (url.href !== location.href) history.replaceState(history.state, '', url);
+      } catch {}
+    }
+
+    async function openDiaryFromUrl() {
+      let id = null;
+      try { id = new URLSearchParams(location.search).get('diary'); } catch {}
+      if (!id) return;
+      let post = DIARY_ID_PATTERN.test(id) && id !== PROFILE_ID ? knownPosts.get(id) : null;
+      if (!post && sb && DIARY_ID_PATTERN.test(id) && id !== PROFILE_ID) {
+        try { post = await fetchPostById(id); } catch (e) { console.error('fetchPostById:', e); }
+      }
+      // 閉じたときに日記の一覧の前にいられるよう、先にそこまで移っておく
+      document.getElementById('blog').scrollIntoView({ behavior: 'auto', block: 'start' });
+      if (!post) {
+        setDiaryParam(null);
+        document.getElementById('post-saved').textContent = 'リンクの日記は見つかりませんでした。削除されたか、リンクが途中で切れているかもしれません。';
+        return;
+      }
+      openPost(post.id);
     }
 
     /* ══ Xへの投稿準備 ══
        ブログと同じ内容を入力済みにしてXの投稿画面を開く（実際の投稿はXの画面上で行う）。
        スマホではブラウザ版だとログインを求められるため、Xアプリを直接起動する。 */
 
-    // 投稿文の末尾に必ず付ける2行。本文が長い場合も削らず、本文側を切り詰める。
-    const X_SITE_URL  = 'https://hoshinoumi.vercel.app';
+    // 投稿文の末尾に必ず付ける2行（その日記へのリンクとハッシュタグ）。本文が長い場合も削らず、本文側を切り詰める。
     const X_HASHTAGS  = '#精神障害 #生きづらさ #居場所';
     // X Premium（有料）なので長文をそのまま投稿できる。無料アカウントに戻すときは 280 にする。
     const X_MAX_LEN   = 25000;
@@ -1365,8 +1516,12 @@
       return n;
     }
 
-    function buildXPostText(title, content) {
-      const footer = `\n\n${X_SITE_URL}\n${X_HASHTAGS}`;
+    // Xは本文中のURLを長さに関わらず23字と数える
+    const xPostLength = s => xLength(s.replace(/https?:\/\/\S+/g, 'x'.repeat(X_URL_LEN)));
+
+    // url は、その日記へのリンク（分からないときはトップページ）
+    function buildXPostText(title, content, url = SITE_URL) {
+      const footer = `\n\n${url}\n${X_HASHTAGS}`;
       // フッターは必ず残すので、その分を差し引いた残りが本文に使える枠
       const footerLen = 2 + X_URL_LEN + 1 + xLength(X_HASHTAGS);
       const budget = X_MAX_LEN - footerLen;
@@ -1393,7 +1548,7 @@
       const webUrl = `https://x.com/intent/post?text=${encodeURIComponent(text)}`;
 
       // そのまま渡すと本文が欠けてしまう長さなら、コピー＆貼り付けの画面に切り替える
-      if (xLength(text) > X_INTENT_MAX_LEN) {
+      if (xPostLength(text) > X_INTENT_MAX_LEN) {
         if (preOpenedTab) preOpenedTab.close();
         openXShareModal(text);
         return;
@@ -1472,13 +1627,27 @@
       if (id === PROFILE_ID) return;
       const { error } = await sb.from('blog_posts').delete().eq('id', id);
       if (error) throw error;
-      await fetchPosts();
+      knownPosts.delete(id);
+      monthPosts = monthPosts.filter(p => p.id !== id);
+      await refreshDiaryLists();
     }
 
     function renderPosts() {
       const el = document.getElementById('posts-container');
       if (!configured) {
         el.innerHTML = notConfiguredMsg('aurora-blue');
+        return;
+      }
+      // 過去ログ（月ごと）を表示しているとき
+      if (diaryMonth) {
+        const head = `
+          <div class="month-head">
+            <p>${monthLabel(diaryMonth)}の日記${monthLoading ? '' : `（${monthPosts.length}件・日付の古い順）`}</p>
+            <button type="button" onclick="selectDiaryMonth('')" class="btn-line" style="color:var(--ai);">新しい日記の一覧にもどる</button>
+          </div>`;
+        el.innerHTML = head + (monthLoading
+          ? '<p class="text-slate-500 text-sm text-center py-12" role="status">読み込み中...</p>'
+          : monthPosts.length ? `<div>${monthPosts.map(postCardHtml).join('')}</div>` : emptyMsg('この月の日記はありません。'));
         return;
       }
       if (allPosts.length === 0) {
@@ -1489,7 +1658,28 @@
       const total = Math.max(postsTotal ?? 0, allPosts.length);
       const rest  = total - shown.length;
 
-      el.innerHTML = `<div>${shown.map(p => `
+      el.innerHTML = `<div>${shown.map(postCardHtml).join('')}</div>
+      ${total > BLOG_PAGE_SIZE ? `
+      <div class="mt-6 flex flex-col items-center gap-3">
+        <p class="text-slate-500 text-xs">${total}件のうち ${shown.length}件を表示しています</p>
+        <div class="flex flex-wrap justify-center gap-3">
+          ${rest > 0 ? `
+          <button onclick="showMorePosts()"
+                  class="btn-line" style="color:var(--ai);">
+            もっと見る（あと${rest}件）
+          </button>` : ''}
+          ${blogVisible > BLOG_PAGE_SIZE ? `
+          <button onclick="collapsePosts()"
+                  class="btn-line" style="color:var(--usuzumi);">
+            最初の${BLOG_PAGE_SIZE}件にもどす
+          </button>` : ''}
+        </div>
+      </div>` : ''}`;
+    }
+
+    // 一覧の日記1件ぶん
+    function postCardHtml(p) {
+      return `
         <article onclick="openPost('${p.id}')"
                  class="glass rule-card cursor-pointer group">
           <div class="flex items-start justify-between gap-4">
@@ -1532,24 +1722,7 @@
               </button>
             </div>` : ''}
           </div>
-        </article>
-      `).join('')}</div>
-      ${total > BLOG_PAGE_SIZE ? `
-      <div class="mt-6 flex flex-col items-center gap-3">
-        <p class="text-slate-500 text-xs">${total}件のうち ${shown.length}件を表示しています</p>
-        <div class="flex flex-wrap justify-center gap-3">
-          ${rest > 0 ? `
-          <button onclick="showMorePosts()"
-                  class="btn-line" style="color:var(--ai);">
-            もっと見る（あと${rest}件）
-          </button>` : ''}
-          ${blogVisible > BLOG_PAGE_SIZE ? `
-          <button onclick="collapsePosts()"
-                  class="btn-line" style="color:var(--usuzumi);">
-            最初の${BLOG_PAGE_SIZE}件にもどす
-          </button>` : ''}
-        </div>
-      </div>` : ''}`;
+        </article>`;
     }
 
     window.showMorePosts = async () => {
@@ -2305,7 +2478,7 @@
       setPostEditorBusy(true);
       showModal('post-modal');
       try {
-        const post = await fetchPostForEdit(id);
+        const post = await fetchPostById(id);
         if (editingPostId !== id || modal.classList.contains('hidden')) return;  // 読み込み中に閉じられた
         if (!post) {
           errEl.textContent = 'この日記が見つかりませんでした。削除された可能性があります。';
@@ -2318,7 +2491,7 @@
         setPostEditorBusy(false);
         document.getElementById('post-title').focus();
       } catch (e) {
-        console.error('fetchPostForEdit:', e);
+        console.error('fetchPostById:', e);
         if (editingPostId !== id) return;
         errEl.textContent = '保存済みの日記を読み込めませんでした。一度閉じてから、もう一度お試しください。';
       }
@@ -2338,11 +2511,13 @@
       document.getElementById('detail-title').textContent   = p.title;
       document.getElementById('detail-content').textContent = p.content;
       document.getElementById('detail-admin').hidden = !adminUser;
+      document.getElementById('detail-link-note').textContent = '';
+      setDiaryParam(p.id);
       showModal('detail-modal');
     }
 
     window.openPost = (id) => {
-      const p = allPosts.find(x => x.id === id);
+      const p = knownPosts.get(id);
       if (!p) return;
       // 閲覧数は、列があるときだけ・管理者以外が読んだときだけ数える（訪問者数と同じ考え方）
       if (hasViewCount(p) && !adminUser) {
@@ -2362,8 +2537,23 @@
       renderPosts();
     };
     window.closePostDetail = () => {
+      if (detailPostId) setDiaryParam(null);
       hideModal('detail-modal');
       detailPostId = null;
+    };
+
+    // 詳細画面の「この日記へのリンクをコピー」
+    window.copyDiaryLink = async () => {
+      if (!detailPostId) return;
+      const note = document.getElementById('detail-link-note');
+      const url  = diaryUrl(detailPostId);
+      try {
+        await navigator.clipboard.writeText(url);
+        note.textContent = 'リンクをコピーしました。';
+      } catch {
+        // コピーできないブラウザでは、リンクそのものを見せて手で選べるようにする
+        note.textContent = url;
+      }
     };
 
     // 詳細画面の「この日記を編集する」
@@ -2453,10 +2643,10 @@
       // スマホはアプリ起動のため現在のタブから遷移するので、事前に開くのはPCのみ。
       const xTab = isMobile ? null : window.open('');
       try {
-        await createPost(title, content);
+        const newId = await createPost(title, content);
         postSaving = false;
         resetPostEditor();
-        openXCompose(buildXPostText(title, content), xTab);
+        openXCompose(buildXPostText(title, content, newId ? diaryUrl(newId) : SITE_URL), xTab);
       } catch {
         if (xTab) xTab.close();
         errEl.textContent = '投稿に失敗しました。ログイン状態を確認してください。';
@@ -2740,7 +2930,9 @@
       forgetNickname();   // 以前の版が端末に保存した名前を消しておく
       try { await checkSession(); } catch (error) { console.error('checkSession:', error); }
       await Promise.all([fetchPosts(), fetchMessages(), fetchTracks(), fetchProfile(), updateVisitCounter()]);
+      await openDiaryFromUrl();
       subscribeRealtime();
+      fetchDiaryMonths();
     }
 
     applyDisplaySettings();

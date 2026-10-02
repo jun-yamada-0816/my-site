@@ -33,6 +33,8 @@ let failDiaryUpdate = false,
   viewIncrements = 0;
 const diaryUpdates = [];
 const diaryPageRequests = [];
+const createdDiaries = [];
+const diaries = () => [...createdDiaries, diary, ...(manyDiaries ? olderDiaries : [])];
 const olderDiaries = Array.from({ length: 102 }, (_, i) => ({
   id: `10000000-0000-4000-8000-${String(i + 2).padStart(12, "0")}`,
   title: `むかしの日記 ${i + 2}`,
@@ -165,7 +167,25 @@ const assets = [
           Object.assign(diary, body);
           return send(diary);
         }
-        if (url.searchParams.get("id") === "eq." + diary.id) return send([diary]);
+        if (route.request().method() === "POST" && route.request().postDataJSON().id !== profileId) {
+          assert(
+            route.request().headers().authorization?.startsWith("Bearer "),
+            "Authenticated diary insert required",
+          );
+          const body = route.request().postDataJSON();
+          assert.deepEqual(Object.keys(body).sort(), ["content", "title"]);
+          const created = {
+            ...body,
+            id: `10000000-0000-4000-8000-${String(900 + createdDiaries.length).padStart(12, "0")}`,
+            created_at: new Date().toISOString(),
+            view_count: 0,
+          };
+          createdDiaries.unshift(created);
+          return send({ id: created.id }, 201);
+        }
+        const single = url.searchParams.get("id");
+        if (single?.startsWith("eq.") && single !== "eq." + profileId)
+          return send(diaries().filter((d) => "eq." + d.id === single));
         if (route.request().method() === "POST") {
           if (failSave)
             return send(
@@ -189,10 +209,21 @@ const assets = [
           "neq." + profileId,
           "Profile must be filtered on the server before diary limit",
         );
-        if (!manyDiaries) return send([diary]);
-        const all = [diary, ...olderDiaries];
+        // Monthly archive: one month by date range, oldest first.
+        const range = url.searchParams.getAll("created_at");
+        if (range.length) {
+          const from = range.find((v) => v.startsWith("gte.")).slice(4);
+          const to = range.find((v) => v.startsWith("lt.")).slice(3);
+          return send(diaries()
+            .filter((d) => new Date(d.created_at) >= new Date(from) && new Date(d.created_at) < new Date(to))
+            .sort((a, b) => new Date(a.created_at) - new Date(b.created_at)));
+        }
+        const all = diaries();
         const offset = Number(url.searchParams.get("offset") || 0);
         const limit = Number(url.searchParams.get("limit") || all.length);
+        if (url.searchParams.get("select") === "created_at")
+          return send(all.slice(offset, offset + limit).map(({ created_at }) => ({ created_at })));
+        if (!manyDiaries && !createdDiaries.length) return send([diary]);
         diaryPageRequests.push(offset);
         const rows = all.slice(offset, offset + limit);
         return route.fulfill({
@@ -417,8 +448,28 @@ const assets = [
     assert.equal(await page.locator("#post-modal-title").textContent(), "新規ブログ投稿");
     assert.equal(await page.locator("#post-title").inputValue(), "");
     assert.equal(await page.locator("#post-edit-note").isVisible(), false);
-    await page.keyboard.press("Escape");
+    // A new diary links the X post to that diary, not just the top page.
+    await page.locator("#post-title").fill("あたらしい日記");
+    await page.locator("#post-content").fill("今日は、少し歩けました。");
+    const xRequest = context.waitForEvent("request", (r) => r.url().startsWith("https://x.com/intent/post"));
+    await page.locator("#post-submit").click();
+    const xUrl = new URL((await xRequest).url());
+    const newDiaryId = createdDiaries[0].id;
+    assert(
+      xUrl.searchParams.get("text").includes(`https://hoshinoumi.vercel.app/?diary=${newDiaryId}`),
+      "X post links to the new diary",
+    );
     await page.locator("#post-modal").waitFor({ state: "hidden" });
+    for (const extra of context.pages().slice(1)) await extra.close();
+    await page.waitForFunction(() => document.querySelector("#posts-container").textContent.includes("あたらしい日記"));
+    // Two months now: the archive appears and shows one month at a time, oldest first.
+    await page.locator("#diary-archive").waitFor({ state: "visible" });
+    await page.locator("#diary-month").selectOption("2026-09");
+    await page.waitForFunction(() => document.querySelector("#posts-container").textContent.includes("2026年9月の日記（1件"));
+    assert.deepEqual(await page.locator("#posts-container article h3").allTextContents(), [editedTitle]);
+    await page.getByRole("button", { name: "新しい日記の一覧にもどる" }).click();
+    assert.equal(await page.locator("#diary-month").inputValue(), "");
+    assert.equal(await page.locator("#posts-container article").count(), 2);
     await page.locator("#admin-btn").click();
     await page.getByRole("button", { name: "ログアウト", exact: true }).click();
     await page.locator("#admin-menu").waitFor({ state: "hidden" });
@@ -429,7 +480,7 @@ const assets = [
       "Visitors never see diary edit buttons",
     );
     const viewsBeforeVisitor = viewIncrements;
-    await page.locator("#news-list [data-news-post]").click();
+    await page.locator(`#news-list [data-news-post="${diary.id}"]`).click();
     assert.equal(
       await page.locator("#detail-title").textContent(),
       diary.title,
@@ -703,19 +754,23 @@ const assets = [
     assert.equal(increments, before + 1);
     // More than 100 diaries: older ones load on demand instead of disappearing.
     manyDiaries = true;
+    diaryPageRequests.length = 0;
+    const totalDiaries = diaries().length;
+    assert(totalDiaries > 100);
     const archive = await (await newContext()).newPage();
     await archive.goto(base);
     await settle(archive);
-    await archive.waitForFunction(() =>
-      document.querySelector("#posts-container").textContent.includes("103件のうち 5件"),
+    await archive.waitForFunction((n) =>
+      document.querySelector("#posts-container").textContent.includes(`${n}件のうち 5件`), totalDiaries,
     );
     assert.equal(
       (await archive.locator("#posts-container").textContent()).includes("回閲覧"),
       true,
       "Entries with a view count show it",
     );
-    for (let i = 0; i < 20; i++) await archive.getByRole("button", { name: /もっと見る/ }).click();
-    await archive.waitForFunction(() => document.querySelectorAll("#posts-container article").length === 103);
+    for (let i = 0; i < Math.ceil(totalDiaries / 5) - 1; i++)
+      await archive.getByRole("button", { name: /もっと見る/ }).click();
+    await archive.waitForFunction((n) => document.querySelectorAll("#posts-container article").length === n, totalDiaries);
     assert.deepEqual(diaryPageRequests, [0, 100], "Second page is requested only when needed");
     assert.equal(await archive.getByRole("button", { name: /もっと見る/ }).count(), 0);
     assert.equal(
@@ -723,10 +778,43 @@ const assets = [
       0,
       "No invented view count when the column is missing",
     );
+    // Monthly archive with many months: the month's entries load by date range, oldest first.
+    await archive.locator("#diary-archive").waitFor({ state: "visible" });
+    const jst = (iso) => new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit" }).format(new Date(iso));
+    const may = olderDiaries.filter((d) => jst(d.created_at) === "2026-05");
+    assert((await archive.locator("#diary-month").textContent()).includes(`2026年5月（${may.length}件）`));
+    await archive.locator("#diary-month").selectOption("2026-05");
+    await archive.waitForFunction((n) => document.querySelectorAll("#posts-container article").length === n, may.length);
+    const mayTitles = may.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)).map((d) => d.title);
+    assert.deepEqual(await archive.locator("#posts-container article h3").allTextContents(), mayTitles);
+    await archive.screenshot({ path: path.join(output, "diary-archive.png") });
+    // Links to one diary: an entry beyond the first 100 opens directly, and the address bar follows.
+    const oldest = olderDiaries.at(-1);
+    const linked = await (await newContext({ permissions: ["clipboard-read", "clipboard-write"] })).newPage();
+    await linked.goto(base + "/?diary=" + oldest.id);
+    await linked.locator("#detail-modal").waitFor({ state: "visible" });
+    assert.equal(await linked.locator("#detail-title").textContent(), oldest.title);
+    await linked.getByRole("button", { name: "この日記へのリンクをコピー" }).click();
+    await linked.waitForFunction(() => document.querySelector("#detail-link-note").textContent.includes("コピーしました"));
+    assert.equal(
+      await linked.evaluate(() => navigator.clipboard.readText()),
+      "https://hoshinoumi.vercel.app/?diary=" + oldest.id,
+    );
+    await linked.screenshot({ path: path.join(output, "diary-link.png") });
+    await linked.keyboard.press("Escape");
+    assert.equal(await linked.evaluate(() => location.search), "", "Closing removes the diary from the address");
+    await linked.locator("#posts-container article h3 button").first().click();
+    assert(await linked.evaluate(() => location.search.startsWith("?diary=")));
+    await linked.keyboard.press("Escape");
+    await linked.goto(base + "/?diary=not-a-diary");
+    await settle(linked);
+    await linked.waitForFunction(() => document.querySelector("#post-saved").textContent.includes("見つかりませんでした"));
+    assert.equal(await linked.locator("#detail-modal").isVisible(), false);
+    assert.equal(await linked.evaluate(() => location.search), "");
     manyDiaries = false;
     assert.deepEqual(errors, [], "Uncaught browser errors");
     console.log(
-      "PASS: profile login/edit/save/error/reload/public read/logout, diary edit/save/error/discard/paging/view counts, XSS escaping, diary isolation, counter/retry, navigation, mobile widths, support/settings.",
+      "PASS: profile login/edit/save/error/reload/public read/logout, diary edit/save/error/discard/paging/view counts/links/monthly archive/X link, dialog focus, XSS escaping, diary isolation, counter/retry, navigation, mobile widths, support/settings.",
     );
     console.log("Screenshots: " + output);
   } finally {
