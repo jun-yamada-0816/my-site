@@ -26,6 +26,19 @@ const diary = {
   created_at: "2026-09-26T15:00:00Z",
   view_count: 4,
 };
+// Diary edits and paging. Older generated entries have no view_count column,
+// matching a production DB where the optional counter SQL has not been run.
+let failDiaryUpdate = false,
+  manyDiaries = false,
+  viewIncrements = 0;
+const diaryUpdates = [];
+const diaryPageRequests = [];
+const olderDiaries = Array.from({ length: 102 }, (_, i) => ({
+  id: `10000000-0000-4000-8000-${String(i + 2).padStart(12, "0")}`,
+  title: `むかしの日記 ${i + 2}`,
+  content: "少し前の、ひとりごと。",
+  created_at: new Date(Date.UTC(2026, 5, 1) - i * 86400000).toISOString(),
+}));
 const user = {
   id: "20000000-0000-4000-8000-000000000001",
   email: "admin@example.test",
@@ -142,6 +155,23 @@ const assets = [
         return route.fulfill({ status: 204 });
       if (url.pathname.endsWith("/user")) return send(user);
       if (url.pathname.endsWith("/blog_posts")) {
+        if (route.request().method() === "PATCH") {
+          assert(
+            route.request().headers().authorization?.startsWith("Bearer "),
+            "Authenticated diary edit required",
+          );
+          const body = route.request().postDataJSON();
+          diaryUpdates.push({ id: url.searchParams.get("id"), body });
+          assert.notEqual(url.searchParams.get("id"), "eq." + profileId, "Diary edit must never touch the profile");
+          assert.deepEqual(Object.keys(body).sort(), ["content", "title"], "Edit sends only title and content");
+          // PostgREST answers .single() with 406 when RLS lets no row through.
+          if (failDiaryUpdate)
+            return send({ code: "PGRST116", message: "Test: no rows updated" }, 406);
+          assert.equal(url.searchParams.get("id"), "eq." + diary.id);
+          Object.assign(diary, body);
+          return send(diary);
+        }
+        if (url.searchParams.get("id") === "eq." + diary.id) return send([diary]);
         if (route.request().method() === "POST") {
           if (failSave)
             return send(
@@ -165,7 +195,22 @@ const assets = [
           "neq." + profileId,
           "Profile must be filtered on the server before diary limit",
         );
-        return send([diary]);
+        if (!manyDiaries) return send([diary]);
+        const all = [diary, ...olderDiaries];
+        const offset = Number(url.searchParams.get("offset") || 0);
+        const limit = Number(url.searchParams.get("limit") || all.length);
+        diaryPageRequests.push(offset);
+        const rows = all.slice(offset, offset + limit);
+        return route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          headers: {
+            "access-control-allow-origin": "*",
+            "access-control-expose-headers": "content-range",
+            "content-range": `${offset}-${offset + rows.length - 1}/${all.length}`,
+          },
+          body: JSON.stringify(rows),
+        });
       }
       if (url.pathname.endsWith("/site_visits")) return send({ count: visits });
       if (url.pathname.endsWith("/increment_visit_count")) {
@@ -173,7 +218,10 @@ const assets = [
         increments++;
         return send(++visits);
       }
-      if (url.pathname.endsWith("/increment_post_views")) return send(5);
+      if (url.pathname.endsWith("/increment_post_views")) {
+        viewIncrements++;
+        return send(5);
+      }
       if (url.pathname.endsWith("/bulletin_messages")) {
         assert.equal(route.request().method(), "GET", "BBS must never write directly to Supabase");
         return send([
@@ -317,15 +365,85 @@ const assets = [
         "プロフィールを更新",
       ),
     );
+    // Admin diary editing: from the detail view, failure keeps the draft, success updates everywhere.
+    const viewsBeforeAdmin = viewIncrements;
+    await page.locator("#posts-container article h3 button").first().click();
+    await page.locator("#detail-modal").waitFor({ state: "visible" });
+    assert.equal(viewIncrements, viewsBeforeAdmin, "Admin reading must not count as a view");
+    await page.getByRole("button", { name: "この日記を編集する" }).click();
+    await page.locator("#post-modal").waitFor({ state: "visible" });
+    assert.equal(await page.locator("#detail-modal").isVisible(), false);
+    await page.waitForFunction(() => !document.querySelector("#post-submit").disabled);
+    assert.equal(await page.locator("#post-modal-title").textContent(), "日記を編集する");
+    assert.equal(await page.locator("#post-title").inputValue(), "夜のひとりごと");
+    assert.equal(await page.locator("#post-content").inputValue(), "今日も、ゆっくり。");
+    assert(await page.locator("#post-edit-note").isVisible());
+    const editedTitle = "夜のひとりごと（なおしました）";
+    const editedBody = "今日も、ゆっくり。\n<img src=x onerror=alert(1)>\n誤字をなおしました。";
+    await page.locator("#post-title").fill(editedTitle);
+    await page.locator("#post-content").fill(editedBody);
+    await page.screenshot({ path: path.join(output, "diary-editor.png") });
+    failDiaryUpdate = true;
+    const popupsBefore = context.pages().length;
+    await page.locator("#post-submit").click();
+    await page.waitForFunction(() => document.querySelector("#post-error").textContent.includes("保存できません"));
+    assert.equal(await page.locator("#post-title").inputValue(), editedTitle, "Failed save keeps the title");
+    assert.equal(await page.locator("#post-content").inputValue(), editedBody, "Failed save keeps the text");
+    assert.equal(diary.title, "夜のひとりごと", "Failed write must not change the diary");
+    failDiaryUpdate = false;
+    await page.locator("#post-submit").click();
+    await page.locator("#post-modal").waitFor({ state: "hidden" });
+    assert.equal(context.pages().length, popupsBefore, "Editing must not open an X compose tab");
+    assert.equal(diaryUpdates.at(-1).id, "eq." + diary.id);
+    // Saving from the detail view returns to the updated entry.
+    await page.locator("#detail-modal").waitFor({ state: "visible" });
+    assert.equal(await page.locator("#detail-title").textContent(), editedTitle);
+    assert.equal(await page.locator("#detail-content").textContent(), editedBody);
+    assert.equal(await page.locator("#detail-content img").count(), 0, "Diary text must never become HTML");
+    await page.keyboard.press("Escape");
+    await page.locator("#detail-modal").waitFor({ state: "hidden" });
+    assert((await page.locator("#posts-container").textContent()).includes(editedTitle));
+    assert.equal(await page.locator("#posts-container img").count(), 0);
+    assert((await page.locator("#post-saved").textContent()).includes("保存しました"));
+    assert((await page.locator("#news-list").textContent()).includes(editedTitle));
+    // From the list: closing with unsaved changes asks first, and keeps them when declined.
+    await page.getByRole("button", { name: `「${editedTitle}」を編集` }).click();
+    await page.waitForFunction(() => !document.querySelector("#post-submit").disabled);
+    await page.locator("#post-content").fill("書きかけ");
+    page.once("dialog", (dialog) => dialog.dismiss());
+    await page.keyboard.press("Escape");
+    assert(await page.locator("#post-modal").isVisible(), "Declined discard keeps the editor open");
+    assert.equal(await page.locator("#post-content").inputValue(), "書きかけ");
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.locator("#post-modal button[aria-label='閉じる']").click();
+    await page.locator("#post-modal").waitFor({ state: "hidden" });
+    assert.equal(diary.content, editedBody, "Discarded draft must not be saved");
+    // A new diary after an edit starts empty, in new-post mode.
+    await page.locator("#new-post-btn").click();
+    assert.equal(await page.locator("#post-modal-title").textContent(), "新規ブログ投稿");
+    assert.equal(await page.locator("#post-title").inputValue(), "");
+    assert.equal(await page.locator("#post-edit-note").isVisible(), false);
+    await page.keyboard.press("Escape");
+    await page.locator("#post-modal").waitFor({ state: "hidden" });
     await page.locator("#admin-btn").click();
     await page.getByRole("button", { name: "ログアウト", exact: true }).click();
     await page.locator("#admin-menu").waitFor({ state: "hidden" });
     assert.equal(await page.locator("#edit-profile-btn").isVisible(), false);
+    assert.equal(
+      await page.locator('#posts-container [aria-label$="を編集"]').count(),
+      0,
+      "Visitors never see diary edit buttons",
+    );
+    const viewsBeforeVisitor = viewIncrements;
     await page.locator("#news-list [data-news-post]").click();
     assert.equal(
       await page.locator("#detail-title").textContent(),
       diary.title,
     );
+    assert.equal(await page.locator("#detail-admin").isVisible(), false);
+    for (let i = 0; i < 50 && viewIncrements === viewsBeforeVisitor; i++)
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(viewIncrements, viewsBeforeVisitor + 1, "Visitor reading counts once");
     await page.keyboard.press("Escape");
     // A separate anonymous browser must read the saved public profile.
     const visitor = await newContext({
@@ -560,9 +678,32 @@ const assets = [
     await retry.reload();
     await settle(retry);
     assert.equal(increments, before + 1);
+    // More than 100 diaries: older ones load on demand instead of disappearing.
+    manyDiaries = true;
+    const archive = await (await newContext()).newPage();
+    await archive.goto(base);
+    await settle(archive);
+    await archive.waitForFunction(() =>
+      document.querySelector("#posts-container").textContent.includes("103件のうち 5件"),
+    );
+    assert.equal(
+      (await archive.locator("#posts-container").textContent()).includes("回閲覧"),
+      true,
+      "Entries with a view count show it",
+    );
+    for (let i = 0; i < 20; i++) await archive.getByRole("button", { name: /もっと見る/ }).click();
+    await archive.waitForFunction(() => document.querySelectorAll("#posts-container article").length === 103);
+    assert.deepEqual(diaryPageRequests, [0, 100], "Second page is requested only when needed");
+    assert.equal(await archive.getByRole("button", { name: /もっと見る/ }).count(), 0);
+    assert.equal(
+      await archive.locator("#posts-container article").last().locator("text=回閲覧").count(),
+      0,
+      "No invented view count when the column is missing",
+    );
+    manyDiaries = false;
     assert.deepEqual(errors, [], "Uncaught browser errors");
     console.log(
-      "PASS: profile login/edit/save/error/reload/public read/logout, XSS escaping, diary isolation, counter/retry, navigation, mobile widths, support/settings.",
+      "PASS: profile login/edit/save/error/reload/public read/logout, diary edit/save/error/discard/paging/view counts, XSS escaping, diary isolation, counter/retry, navigation, mobile widths, support/settings.",
     );
     console.log("Screenshots: " + output);
   } finally {

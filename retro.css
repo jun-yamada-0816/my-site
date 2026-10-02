@@ -1314,6 +1314,37 @@ a {
 #post-modal > .relative > form {
   display: flex;
 }
+/* Diary editing (admin only). */
+.post-edit-note {
+  color: var(--usuzumi);
+  font-size: 0.875rem;
+  line-height: 1.8;
+  margin: -12px 0 16px;
+}
+#post-saved {
+  margin: -8px 0 18px;
+}
+#post-saved:empty {
+  display: none;
+}
+#posts-container .post-admin-actions {
+  flex-direction: column;
+}
+#posts-container .post-admin-actions button {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+.detail-admin {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px dotted var(--keisen);
+  display: grid;
+}
+.detail-admin[hidden] {
+  display: none;
+}
 /* Small tablets and wider phones get adjacent actions, without a sidebar. */
 @media (min-width: 480px) {
   .site-shell {
@@ -1431,8 +1462,12 @@ a {
   #coping .grid > :last-child {
     grid-column: 1/-1;
   }
-  #messages-container .self-start {
+  #messages-container .self-start,
+  #posts-container .post-admin-actions {
     flex-direction: row;
+  }
+  .detail-admin {
+    justify-content: end;
   }
   [id$="-modal"] > .relative {
     padding: 28px;
