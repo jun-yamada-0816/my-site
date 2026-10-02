@@ -29,6 +29,23 @@ Supabaseの **Authentication → URL Configuration** に旧URLを設定してい
 
 更新元の `../shorts-analytics/index.html` と `shorts.html` は同じ内容に保ってください。
 
+## Tailwind CSS の作り直し
+
+`index.html` のTailwindのクラスは、ブラウザで毎回組み立てるのをやめ、あらかじめ作った `tailwind.css` を読み込んでいます（以前の `cdn.tailwindcss.com` は約400KBのスクリプトを読み込んでから画面を組み立てるため、スマホでは表示が遅れ、一瞬崩れて見えることがありました）。`tailwind.css` は約20KBです。
+
+**`index.html` でTailwindのクラスを足したり変えたりしたら、作り直してください。** 作り直さないと、新しいクラスだけが黙って効きません。
+
+```sh
+cd tools/tailwind
+npm install      # 初回だけ
+npm run build    # ../../tailwind.css を作り直す
+```
+
+`node tests/tailwind-fresh.cjs` で、`tailwind.css` が今の `index.html` と合っているかを確かめられます。設定（色やアニメーション）は `tools/tailwind/tailwind.config.js` にあり、以前 `index.html` の中にあった設定と同じです。Tailwindのバージョンは、それまでCDNが配っていたのと同じ3.4.17に固定しています。
+切り替えの前後で、3つの画面幅・管理者/訪問者・各モーダルを開いた状態の全要素の計算済みスタイルを比べ、違いがないことを確かめました。`retro.css` より後に読み込むのは、CDNが差し込んでいた順番と同じにするためです。
+
+`shorts.html`（管理者用）はまだCDNのままです。`../shorts-analytics/index.html` と同じ内容に保つ必要があるため、別に対応します。
+
 ## スマホを基準にした表示
 
 CSSの基本指定は1列表示です。480px以上でボタンなどを横に並べ、640px以上で紹介文と画像を2列にし、1024px以上で左側の目次を表示します。
@@ -150,7 +167,7 @@ node tests/retro.cjs
 ```
 
 必要に応じて `PLAYWRIGHT_PATH` でPlaywrightのモジュール位置、`CHROMIUM_PATH` でChromiumの実行ファイルを指定できます。
-テストはローカルHTTPサーバーを起動します。最初の実行ではサイトが使うTailwindとSupabaseの公開CDNファイルを一時フォルダに取得します。
+テストはローカルHTTPサーバーを起動します。最初の実行ではサイトが使うSupabaseの公開CDNファイルを一時フォルダに取得します。
 Supabaseへの通信はすべてテスト内で置き換えるため、本番の投稿・プロフィール・訪問者数は変更しません。
 
 確認範囲は、ログイン、プロフィールの編集・保存・失敗・再表示・匿名閲覧、ログアウト、日記との分離、日記の編集（詳細画面・一覧から、保存失敗時の入力保持、未保存のまま閉じるときの確認、訪問者には編集ボタンが出ないこと）、100件を超える日記の追加取得、閲覧数の列がないときの非表示、HTMLの文字列表示、カウンターの重複防止と通信失敗時の再試行、ナビゲーションと既存モーダルです。

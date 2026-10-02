@@ -61,7 +61,6 @@ const token = [
   "test-signature",
 ].join(".");
 const assets = [
-  ["https://cdn.tailwindcss.com/", "tailwind.js"],
   [
     "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49/dist/umd/supabase.min.js",
     "supabase.js",
@@ -126,11 +125,6 @@ const assets = [
         return route.fulfill({ status: bbsStatus, contentType: "application/json", body: JSON.stringify(bbsResponse) });
       }
       if (url.hostname === "127.0.0.1") return route.continue();
-      if (url.hostname === "cdn.tailwindcss.com")
-        return route.fulfill({
-          path: path.join(output, "tailwind.js"),
-          contentType: "text/javascript",
-        });
       if (url.hostname === "cdn.jsdelivr.net")
         return route.fulfill({
           path: path.join(output, "supabase.js"),

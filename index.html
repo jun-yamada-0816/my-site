@@ -211,54 +211,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49/dist/umd/supabase.min.js"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            /* 星空の背景でも読める、水色・藤色・浅葱のアクセント。 */
-            aurora: {
-              blue:   '#9ed9f4',
-              indigo: '#a6bde2',
-              violet: '#c2b3e6',
-              teal:   '#a0d4ce',
-            },
-            sumi:   '#2b2f33',
-            kinari: '#f6f3ec',
-            shu:    '#b7472a',
-          },
-          animation: {
-            'float':      'float 6s ease-in-out infinite',
-            'shimmer':    'shimmer 8s linear infinite',
-            'fade-in-up': 'fadeInUp 1s ease-out forwards',
-            'fade-in':    'fadeIn 1.5s ease-out forwards',
-            'spin-slow':  'spin 1.2s linear infinite',
-          },
-          keyframes: {
-            float: {
-              '0%, 100%': { transform: 'translateY(0px)' },
-              '50%':      { transform: 'translateY(-18px)' },
-            },
-            shimmer: {
-              '0%':   { backgroundPosition: '-200% center' },
-              '100%': { backgroundPosition:  '200% center' },
-            },
-            fadeInUp: {
-              '0%':   { opacity: '0', transform: 'translateY(40px)' },
-              '100%': { opacity: '1', transform: 'translateY(0)' },
-            },
-            fadeIn: {
-              '0%':   { opacity: '0' },
-              '100%': { opacity: '1' },
-            },
-          },
-        },
-      },
-    }
-  </script>
   <link rel="stylesheet" href="retro.css" />
+  <!-- Tailwind は tools/tailwind で作ったファイルを読む（以前はブラウザで毎回組み立てていた）。
+       Play CDN が retro.css のあとに差し込んでいたのと同じ順番にするため、retro.css より後に置く。 -->
+  <link rel="stylesheet" href="tailwind.css" />
   <link rel="icon" type="image/svg+xml" href="assets/starlit-sea.svg" />
 </head>
 <body style="background:#08172a;" class="text-slate-800 font-sans antialiased">

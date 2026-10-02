@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "description": "index.html 用の Tailwind CSS を作る（以前はブラウザで毎回組み立てていた）",
+  "scripts": {
+    "build": "tailwindcss -c tailwind.config.js -i input.css -o ../../tailwind.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}
