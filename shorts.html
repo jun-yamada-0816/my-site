@@ -196,6 +196,11 @@
   .prompt-steps li{display:flex;align-items:center;gap:.65rem;font-size:.8rem;}
   .prompt-steps span{color:var(--asagi);font-variant-numeric:tabular-nums;font-weight:600;}
   .prompt-note{font-size:.8rem;color:var(--usuzumi);line-height:1.8;margin-bottom:1.25rem;}
+  .tomori-toggle{display:flex;gap:.6rem;align-items:flex-start;font-size:.8rem;line-height:1.7;margin:-.5rem 0 .75rem;cursor:pointer;
+    padding:.65rem .8rem;border-radius:.9rem;background:rgba(23,69,107,.06);}
+  .tomori-toggle input{width:1.15rem;height:1.15rem;margin-top:.2rem;flex-shrink:0;accent-color:#17456b;}
+  .tomori-toggle-sub{font-size:.72rem;color:var(--usuzumi);}
+  .tomori-kit-note{font-size:.75rem;line-height:1.75;color:#9a7420;background:rgba(154,116,32,.09);border-radius:.75rem;padding:.55rem .8rem;margin-bottom:1rem;}
   .prompt-output-label{display:block;font-size:.85rem;font-weight:500;margin-bottom:.65rem;}
   #prompt-out{min-height:20rem;max-height:65vh;resize:vertical;line-height:1.9;border-radius:12px;padding:1rem;background:#fffdf9;}
   #prompt-base-hint{text-align:left;width:100%;}
@@ -438,7 +443,16 @@
         <li><span>02</span>プロンプトをコピー</li>
         <li><span>03</span>使いたいAIに渡す</li>
       </ol>
-      <p class="prompt-note">場面が動く映像（音入り）と冒頭3秒のコマ、投稿文、次の検証案まで依頼します。映像はAIがコードで描いて書き出すので、コードを実行できる環境が必要です。</p>
+      <p class="prompt-note" id="prompt-note">場面が動く映像（音入り）と冒頭3秒のコマ、投稿文、次の検証案まで依頼します。映像はAIがコードで描いて書き出すので、コードを実行できる環境が必要です。</p>
+      <label class="tomori-toggle" for="use-tomori">
+        <input type="checkbox" id="use-tomori" checked>
+        <span><b>キャラクター「ともり」で作る</b><br>
+          <span class="tomori-toggle-sub">外すと、これまでの「映像＋テロップ」（ともりなし）の指示文に戻ります。</span></span>
+      </label>
+      <p id="tomori-kit-note" class="tomori-kit-note">
+        AIに渡すときは、プロンプトと一緒に <b>tomori_kit.zip</b>（ともりの描画キット）も添付してください。
+        キットがないと、ともりの見た目を毎回同じにできないので、AIは作り始めずにキットをお願いしてきます。
+      </p>
       <button type="button" id="prompt-base-hint" class="hidden text-[11px] mb-3 rounded-lg px-3 py-2 leading-relaxed cursor-pointer"
          style="background:rgba(154,116,32,.09);color:#9a7420">
         「土台」タブがまだ空です。<b>なぜやるのか</b>と<b>この分野の上限</b>を入れておくと、
@@ -457,6 +471,7 @@
           <button id="prompt-build2" class="glass rounded-xl px-4 text-xs whitespace-nowrap">作り直す</button>
         </div>
         <p id="prompt-msg" role="status" aria-live="polite" class="text-[11px] mt-2"></p>
+        <p id="prompt-kit-reminder" class="tomori-kit-note mt-2 hidden">貼り付けるときに、<b>tomori_kit.zip</b> も一緒に添付してください。</p>
         <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">
           この動画は <b id="prompt-slug" class="text-slate-300"></b> として数えます。
           できあがったら「動画」タブで<b class="text-slate-300">同じ識別子</b>で登録してください。
@@ -481,11 +496,11 @@
     <div class="glass rounded-3xl p-6">
       <div class="flex items-center gap-2 mb-1">
         <span class="text-lg" aria-hidden="true">🎞️</span>
-        <h2 class="font-bold">映像にしてから</h2>
+        <h2 class="font-bold">形式を変えてから</h2>
       </div>
       <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">
-        2026-09-23 から、動画を「映像＋テロップ」に切り替えました。
-        文字を並べていたころの回と並べて、<b class="text-slate-300">通る割合</b>と<b class="text-slate-300">冒頭の3秒</b>が変わったかを見ます。
+        2026-09-23 に「映像＋テロップ」、2026-10-02 にキャラクター「ともり」へ切り替えました。
+        それぞれの回を、文字を並べていたころの回と並べて、<b class="text-slate-300">通る割合</b>と<b class="text-slate-300">冒頭の3秒</b>が変わったかを見ます。
       </p>
       <div id="format-compare"></div>
     </div>
@@ -745,7 +760,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <label><span class="block text-[11px] text-slate-500 mb-1">形式</span>
             <input id="vm-format" list="dl-format" class="fld" placeholder="映像＋テロップ">
-            <datalist id="dl-format"><option value="映像＋テロップ"><option value="語り"><option value="テロップのみ"><option value="音楽メイン"><option value="対話"></datalist></label>
+            <datalist id="dl-format"><option value="ともり＋テロップ"><option value="映像＋テロップ"><option value="語り"><option value="テロップのみ"><option value="音楽メイン"><option value="対話"></datalist></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">尺(秒)</span><input id="vm-dur" type="number" inputmode="numeric" class="fld"></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">締め</span>
             <input id="vm-cta" list="dl-cta" class="fld" placeholder="リンクへ">
@@ -912,6 +927,19 @@ const AXES = [
    数えるのは「動画」タブの形式に「映像」と入っている回です。 */
 const VISUAL_FORMAT = '映像＋テロップ';
 const isVisual = v => /映像/.test(v.format || '');
+
+/* 2026-10-02 から、キャラクター「ともり」（灯りの子）で作ります（ユーザーの判断）。
+   ともりの見た目と動きは、ユーザーが用意した描画キット tomori_kit.zip で固定し、指示文と一緒にAIへ添付します。
+   映像（場面だけ）からさらに形式を変えるので、ともりの回が MIN_SAMPLE 本たまるまでは形式だけを変えます。
+   数えるのは「動画」タブの形式に「ともり」と入っている回です（「映像」とは別に数えます）。
+   「ともりで作る」のチェックを外すと、これまでの「映像＋テロップ」の指示文に戻ります。 */
+const CHARACTER_FORMAT = 'ともり＋テロップ';
+const isCharacter = v => /ともり/.test(v.format || '');
+const TOMORI_KEY = 'sv-use-tomori';
+function useTomori(){
+  try { return localStorage.getItem(TOMORI_KEY) !== 'off'; } catch { return true; }
+}
+const currentFormat = () => useTomori() ? CHARACTER_FORMAT : VISUAL_FORMAT;
 
 /* ========================= 状態 ========================= */
 let sb = null;
@@ -1694,11 +1722,17 @@ function fixedCombo(states, nx){
 
 /* 今回変える1つ。AXES は効きやすい順に並べてあるので、
    まだ確定していないもののうち、いちばん上のものを選びます。
-   ただし映像に切り替えた直後は、映像の回が MIN_SAMPLE 本たまるまで形式だけを変えます（VISUAL_FORMAT の説明）。 */
+   ただし形式を切り替えた直後は、新しい形式の回が MIN_SAMPLE 本たまるまで形式だけを変えます
+   （VISUAL_FORMAT・CHARACTER_FORMAT の説明）。 */
 function nextAxis(states){
   const fmt  = states.find(x => x.axis.key === 'format');
-  const made = state.videos.filter(isVisual).length;
-  if (fmt && made < MIN_SAMPLE) return Object.assign({}, fmt, { switching:true, made });
+  const tomori = useTomori();
+  const made = state.videos.filter(tomori ? isCharacter : isVisual).length;
+  const from = tomori ? VISUAL_FORMAT : '文字を並べた動画';
+  const to   = tomori ? CHARACTER_FORMAT : VISUAL_FORMAT;
+  const unit = tomori ? 'ともりの回' : '映像の回';
+  const base = tomori ? '映像の回' : '文字だけの回';
+  if (fmt && made < MIN_SAMPLE) return Object.assign({}, fmt, { switching:true, made, from, to, unit, base });
   // 形式は映像に決めたので、ここから先は選び直しません
   const pool = states.filter(x => x.axis.key !== 'format');
   const undecided = pool.filter(x => x.solid.length < 2);
@@ -1711,7 +1745,7 @@ function axisCandidates(x){
   const known = {
     hook:    ['問いかけ','共感','断言','数字','体験談','場面描写'],
     audio:   ['BGM＋効果音','BGMのみ','効果音のみ','語り＋BGM','無音'],
-    format:  [VISUAL_FORMAT,'語り','テロップのみ','音楽メイン','対話'],
+    format:  [CHARACTER_FORMAT,VISUAL_FORMAT,'語り','テロップのみ','音楽メイン','対話'],
     cta:     ['リンクへ','コメント促し','登録の約束','なし'],
     dur:     ['〜15秒','16〜30秒','31〜45秒','46〜60秒'],
     hour:    ['深夜 0〜6時','朝 6〜11時','昼 11〜15時','夕方 15〜19時','夜 19〜24時'],
@@ -1734,9 +1768,9 @@ function renderTestPlan(){
   const chip = t => `<span class="chip">${esc(t)}</span>`;
   const design = [];
 
-  // 形式は映像に決めたので、切り替えの途中でなければ「固定するもの」の先頭に置きます
+  // 形式は決めてあるので、切り替えの途中でなければ「固定するもの」の先頭に置きます
   const fmtChip = nx?.switching ? ''
-    : `<span class="chip" style="background:rgba(23,69,107,.10);color:#17456b">形式：${esc(VISUAL_FORMAT)}（決めた作り方）</span>`;
+    : `<span class="chip" style="background:rgba(23,69,107,.10);color:#17456b">形式：${esc(currentFormat())}（決めた作り方）</span>`;
   design.push(`<div class="rounded-2xl p-4" style="background:rgba(43,47,51,.06);border-left:3px solid #2b7f8c">
     <div class="text-xs font-semibold mb-2" style="color:#2b7f8c">固定するもの（変えない）</div>
     ${fmtChip || fixed.length
@@ -1750,12 +1784,12 @@ function renderTestPlan(){
   if (nx?.switching){
     design.push(`<div class="rounded-2xl p-4" style="background:rgba(43,47,51,.06);border-left:3px solid #9a7420">
       <div class="text-xs font-semibold mb-2" style="color:#9a7420">今回だけ変えるもの</div>
-      <p class="text-xs text-slate-300 mb-2"><b>形式</b>：文字を並べた動画 → <b>${esc(VISUAL_FORMAT)}</b></p>
-      <div class="flex flex-wrap gap-1.5 mb-2">${chip(`映像の回 ${nx.made}／${MIN_SAMPLE}本`)}</div>
+      <p class="text-xs text-slate-300 mb-2"><b>形式</b>：${esc(nx.from)} → <b>${esc(nx.to)}</b></p>
+      <div class="flex flex-wrap gap-1.5 mb-2">${chip(`${nx.unit} ${nx.made}／${MIN_SAMPLE}本`)}</div>
       <p class="text-[11px] text-slate-400 leading-relaxed">
-        今回から、場面を描いて動かす映像で作ります。映像の回が${MIN_SAMPLE}本そろうまでは、形式のほかは何も変えません。
-        一緒に変えると、映像にしたから通ったのか（落ちたのか）が分からなくなるためです。
-        できた動画は「動画」タブで、形式を「${esc(VISUAL_FORMAT)}」にして登録してください。その本数をここで数えています。
+        ${useTomori() ? '今回から、キャラクター「ともり」で作ります。' : '今回から、場面を描いて動かす映像で作ります。'}${esc(nx.unit)}が${MIN_SAMPLE}本そろうまでは、形式のほかは何も変えません。
+        一緒に変えると、形式を変えたから通ったのか（落ちたのか）が分からなくなるためです。
+        できた動画は「動画」タブで、形式を「${esc(nx.to)}」にして登録してください。その本数をここで数えています。
       </p>
     </div>`);
   } else if (nx){
@@ -1810,8 +1844,9 @@ function formatCompare(){
   const dated = cur.withViews.filter(s => s.postedAt)
     .sort((a,b) => new Date(b.postedAt) - new Date(a.postedAt));
   const settled = dated.filter(s => Date.now() - new Date(s.postedAt) >= 2*864e5);
+  const chr = settled.filter(s => isCharacter(s.v));
   const vis = settled.filter(s => isVisual(s.v));
-  const txt = settled.filter(s => !isVisual(s.v)).slice(0, 30);
+  const txt = settled.filter(s => !isVisual(s.v) && !isCharacter(s.v)).slice(0, 30);
   const gate = passGate(dated.slice(0, 30).map(s => s.views));
   const mid = xs => { const a = xs.filter(n => n != null && isFinite(n)); return a.length ? median(a) : null; };
   const sum = arr => arr.length ? {
@@ -1822,16 +1857,18 @@ function formatCompare(){
     ret: mid(arr.map(s => s.retention)),
     sub: mid(arr.map(s => s.subRate)),
   } : null;
-  return { gate, vis: sum(vis), txt: sum(txt), visList: vis,
-           young: dated.filter(s => isVisual(s.v) && !settled.includes(s)).length };
+  const young = test => dated.filter(s => test(s.v) && !settled.includes(s)).length;
+  return { gate, chr: sum(chr), vis: sum(vis), txt: sum(txt), chrList: chr, visList: vis,
+           young: young(isVisual), youngChr: young(isCharacter) };
 }
 function renderFormatCompare(){
   const box = $('#format-compare'); if (!box) return;
   const fc = formatCompare();
-  if (!fc.vis){
+  if (!fc.vis && !fc.chr){
+    const young = fc.young + fc.youngChr;
     box.innerHTML = `<p class="text-[11px] text-slate-400 leading-relaxed">
-      まだ映像の回の数字がありません${fc.young ? `（投稿から2日たっていない回が${fc.young}本あります）` : ''}。
-      「動画」タブで形式を「${esc(VISUAL_FORMAT)}」にして登録すると、投稿から2日たったところで、ここに文字だけの回と並べて出ます。</p>`;
+      まだ形式を変えた回の数字がありません${young ? `（投稿から2日たっていない回が${young}本あります）` : ''}。
+      「動画」タブで形式を「${esc(currentFormat())}」にして登録すると、投稿から2日たったところで、ここに文字だけの回と並べて出ます。</p>`;
     return;
   }
   const pct = (a, b) => b ? `${Math.round(a/b*100)}%` : '—';
@@ -1843,21 +1880,28 @@ function renderFormatCompare(){
     ['最後まで見られた割合',         x => x.ret != null ? `${dec(x.ret,0)}%` : '—'],
     ['1000再生あたりの登録',         x => x.sub != null ? `${dec(x.sub)}人` : '—'],
   ];
+  // ともりの回は、記録があるとき（またはともりで作っているとき）だけ列を出す
+  const cols = [
+    ...(fc.chr || useTomori() ? [{ label: CHARACTER_FORMAT, x: fc.chr, strong: true }] : []),
+    { label: VISUAL_FORMAT, x: fc.vis, strong: !fc.chr && !useTomori() },
+    { label: `文字だけ（直近${fc.txt ? fc.txt.n : 0}本）`, x: fc.txt, strong: false },
+  ];
+  const cell = (c, f) => c.x ? f(c.x) : '—';
+  const note = (label, x) => !x ? '' : x.n < MIN_SAMPLE
+    ? `${label}はまだ${x.n}本です。${MIN_SAMPLE}本そろうまでは、差があっても参考として見てください。`
+    : `${label}が${x.n}本になりました。テーマや投稿時刻の違いも混ざっているので、1本ごとの差より、続けて同じ向きに出るかを見てください。`;
   box.innerHTML = `<div class="scroll-x"><table class="w-full text-[11px]">
     <thead><tr class="text-slate-500">
       <th class="text-left font-normal py-1.5"></th>
-      <th class="text-right font-semibold py-1.5" style="color:#17456b">${esc(VISUAL_FORMAT)}</th>
-      <th class="text-right font-normal py-1.5 pl-3">文字だけ（直近${fc.txt ? fc.txt.n : 0}本）</th></tr></thead>
+      ${cols.map(c => `<th class="text-right ${c.strong ? 'font-semibold' : 'font-normal'} py-1.5 pl-3"${c.strong ? ' style="color:#17456b"' : ''}>${esc(c.label)}</th>`).join('')}</tr></thead>
     <tbody>${rows.map(([label, f]) => `<tr style="border-top:1px solid var(--line)">
       <td class="py-1.5 text-slate-400">${esc(label)}</td>
-      <td class="py-1.5 text-right num font-semibold">${esc(f(fc.vis))}</td>
-      <td class="py-1.5 text-right num text-slate-400 pl-3">${esc(fc.txt ? f(fc.txt) : '—')}</td></tr>`).join('')}</tbody>
+      ${cols.map(c => `<td class="py-1.5 text-right num pl-3 ${c.strong ? 'font-semibold' : 'text-slate-400'}">${esc(cell(c, f))}</td>`).join('')}</tr>`).join('')}</tbody>
   </table></div>
   <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">
-    ${fc.vis.n < MIN_SAMPLE
-      ? `映像の回はまだ${fc.vis.n}本です。${MIN_SAMPLE}本そろうまでは、差があっても参考として見てください。`
-      : `映像の回が${fc.vis.n}本になりました。テーマや投稿時刻の違いも混ざっているので、1本ごとの差より、続けて同じ向きに出るかを見てください。`}
-    投稿から2日たっていない回は、まだ数字が動いているので入れていません${fc.young ? `（いま${fc.young}本）` : ''}。
+    ${[note('ともりの回', fc.chr), note('映像の回', fc.vis)].filter(Boolean).join('<br>')}
+    ${useTomori() && !fc.chr ? `<br>ともりの回は、まだ数字がありません${fc.youngChr ? `（投稿から2日たっていない回が${fc.youngChr}本）` : ''}。` : ''}
+    <br>投稿から2日たっていない回は、まだ数字が動いているので入れていません${fc.young + fc.youngChr ? `（いま${fc.young + fc.youngChr}本）` : ''}。
     ${state.hasStayed ? '' : '<br>「視聴を選択」を出すには、<code>youtube-hook.sql</code> の実行と、「数字を入力」タブでの書き写しが要ります。'}
   </p>`;
 }
@@ -2705,6 +2749,203 @@ function roleForNext(st){
     : { role:'間口',   why:`いま間口が${dec(pct,0)}%（決めた割合は${st.mix}%）で、新しい人が入ってくる入口が細くなっています。今回は広く届く1本にします。` };
 }
 
+/* ========================= ともり（キャラクター）で作るときの章 =========================
+   2026-10-02、ユーザーが用意した描画キット tomori_kit.zip（tomori.py・scene.py・audio.py・ep_ame.py・README.md・tomori_sheet.png）で
+   作る形に切り替えました。キャラクター設定は、キットの README の CHARACTER_START〜END をそのまま写しています
+   （キットを直したら、ここも合わせてください）。
+   キットをそのまま使うと、このチャンネルの決まりから外れるところが4つありました。
+   同じキットで雨の回（ep_ame.py）を書き出して測った結果です：
+   - ともりの顔の中心が y≈1575 にあり、YouTube の題名・チャンネル名の帯（y=1550 より下）に隠れる
+   - 行末が「、」「。」の行は、文字が21〜28px左に寄る（字の枠で中央にそろえているため）
+   - 1フレーム目だけ初期値の姿で描かれ、光がぱっと明るくなる（平均の明るさ 85→78）。くり返し再生のつなぎ目でも起きる
+   - 音が大きく、出だしもいきなり鳴る（全体 -14.8 LUFS、冒頭0.2秒の平均 -23.4dB。決まりは -20 LUFS・-40dB 以下）
+   下の直しを入れて17.5秒を書き出し直し、顔の中心 y≈1300・文字の中心 x=540（全ビート）・1フレーム目の明るさの跳ねなし・
+   全体 -20.2 LUFS・冒頭0.2秒 -57.9dB になることを確かめてあります。 */
+function pushTomoriMaking(L, ctx){
+  const { slug, minutes, pushAsk, pushRole, nx } = ctx;
+
+  L.push('## ともり（この動画の主役）');
+  L.push('添付のキットの README.md「キャラクター設定」と同じ内容です。見た目・色・形は tomori.py で固定されています。変えないでください。');
+  L.push('- **名前**：ともり（灯りの子）');
+  L.push('- **見た目**：まるい体の小さなランプの子。くすんだ青のかさ（下ふちに丸いふさ飾り）、てっぺんに金色のつまみ。小さな丸い手と足。人間ではない。見た目・色・形は毎回同じ（変えない）。');
+  L.push('- **光＝気持ち**：体の光の強さで気持ちを見せる。しんどい日は暗く（0.15〜0.3）、のぞく・迷う時は中くらい（0.3〜0.5）、ほっとするとあたたかく光る（0.9〜1.0）。');
+  L.push('- **立ち位置**：同じようにしんどい日がある「なかま」。助ける側・教える側ではない。上の「この発信の土台」の「私も」と同じ立ち位置です。');
+  L.push('- **話し方**：一人称は「わたし」。短く、ひらがな多め、やわらかい。助言・説教・診断はしない（約束01＝まず聴き合う）。病名・治療・薬の話はしない。否定的・攻撃的なことばは使わない（約束03）。');
+  L.push('- **声**：なし。口の動き（口パク）とテロップで話す。**テロップは、ともりのことば**です。');
+  L.push('- ともりは、このチャンネルの運営者の代わりではありません。説明文の「当事者本人がひとりで運営している」は、これまでどおり書いてください。');
+  L.push('');
+  L.push('### 表情（この4つから選ぶ）');
+  L.push('| 表情 | 見た目 | 光の目安 |');
+  L.push('|---|---|---|');
+  L.push('| しんどい | たれ目・困り眉・への字口、かさが少し垂れる | 0.15〜0.3 |');
+  L.push('| のぞく | 目をぱっちり開けて見上げる、首をかしげる | 0.3〜0.5 |');
+  L.push('| にっこり | 目を少し細めて笑う、口を開けて笑う | 0.9〜1.0 |');
+  L.push('| ほっと | 目を閉じてにこっ、ゆったり | 1.0 |');
+  L.push('');
+  L.push('### 動きの語彙（この中からだけ選ぶ。新しい動きは作らない）');
+  L.push('まばたき／呼吸でゆれる（常時）／首をかしげる／うなずく／かさを深くかぶって目をかくす／かさの下からのぞく／見上げてこちらを見る／手をふる／両手を体の横におろす／光が強くなる・弱くなる');
+  L.push('');
+  L.push('### 毎回の決まり');
+  L.push('- 最後のビートは必ずあたたかく光る（0.9以上）で終える（＝やさしい反転）。');
+  L.push('- 光の変化は0.5秒以上かけてゆっくり。点滅させない。');
+  L.push('- 人間は描かない。ともりの顔と小さな手だけ描く。');
+  L.push('');
+
+  L.push('## 場面（キットの「雨の夜の部屋」をそのまま使います）');
+  L.push('- 場面は scene.py の「雨の夜の部屋」（雨の窓・机のランプ・机）です。**今回は場面を作り変えたり、物を描き足したりしないでください。**');
+  L.push('- テーマが雨の話でなくても、夜の部屋としてそのまま使います。テーマの場面（お風呂・カーテン・カレンダー…）は、ともりの表情・動きとテロップで伝えてください。');
+  L.push('- 雨は背景です。テロップで毎回「雨」の話をしないでください（上の「直近に出した5本」と同じく、同じ話が続くと落ちます）。');
+  L.push('- カメラはキットのまま（17秒かけて、ゆっくり5%寄る）。');
+  L.push('- 写真・動画・イラスト・音の素材をダウンロードしてこないでください。すべてキットのコードで描いて鳴らします。');
+  L.push('');
+
+  L.push('## 冒頭の3秒（ここで指を止めてもらう）');
+  L.push('このチャンネルで効くのは驚かせることではなく、**「これは自分のことだ」と「あれ、なんだろう」が同時に来ること**です。');
+  L.push('- **0.0秒：もう場面の中にいる。** 1フレーム目から、部屋・ともり・1枚目のテロップが写っていること（キットはそうなっています）。黒からのフェードインやタイトルから始めない。');
+  L.push('- **1枚目のテロップは、ともりの最初のひとこと（12〜18字）。** 前置きや挨拶ではなく、いきなり場面を言う。例：「雨の日って、／起き上がれない。」');
+  L.push('- **1枚目の表情は「しんどい」か「のぞく」で、光は弱め（0.15〜0.4）。** ここが暗いほど、最後にあたたかく光る変化が効きます。');
+  L.push('- **0.8〜1.5秒：ともりの小さな動きを1つ。** まばたき（BLINKS に入れる）か、首を少しかしげる（0.5秒以上かけて）。これが「なんだろう」になります。音は付けません。');
+  L.push('- **3.0〜3.4秒で2つ目のビートへ。** 表情か動きが変わり、新しいテロップが出ること。');
+  L.push('');
+
+  L.push('## 最後まで見てもらう作り');
+  L.push('- **ビートごとに、ともりの表情か動きを1つ変える。** 同じ姿のままテロップだけ替えない。');
+  L.push('- **1枚目で場面と気持ちを出して、最後の1枚で答える。** 途中で答えを言わない。');
+  L.push('- **画の答えは、ともりの光です。** 暗いところから始まり、最後のビートであたたかく光る（0.9以上）。最後の一行と光が強くなる瞬間を合わせてください。');
+  L.push('- **真ん中（7〜10秒あたり）で、ともりがこちらを見る。** 「かさの下からのぞく」→「見上げてこちらを見る」のように、見ている人のほうを向く場面を置く。いちばん離れられやすいところです。');
+  L.push('- **最後から1枚目へ、そのままつながるように。** ショート動画は自動でくり返し再生されます。最後のことばは、1枚目の頭に静かに戻っていけることばにしてください。');
+  L.push('  最後のフレームにも、文字と部屋とともりが残っていること（黒画面・ロゴ・「ご視聴ありがとうございました」で終わらせない）。');
+  L.push('- 尺は17〜17.5秒。13秒に縮めた回はそろって通りませんでした（実測メモ）。');
+  L.push('');
+  pushAsk();
+  pushRole();
+
+  L.push('## 音（キットの audio.py で作ります。無音のまま出さないこと）');
+  L.push('**無音の mp4 は不可です。** 音はキットの audio.py で作ります。BGM は、やわらかい和音と、ビートが変わるときの小さなベル。効果音は、ずっと続く雨の音と、回の定義ファイルで置く布のこすれ・光がともる音です。');
+  L.push('このチャンネルは、出だしの音が大きくて最初の1秒で閉じられていたことがあります。キットの音はそのままだと大きいので、下の「直し4」で静かにしてから使ってください。');
+  L.push('- 出だしは BGM と雨のフェードインだけ（0.8秒）。**3秒より前に効果音を置かない。** 0秒のベルも鳴らさない。');
+  L.push('- 効果音は合計4つまで。ともりの動き（かさをかぶる・かさを上げる）に合わせて、ごく小さく。');
+  L.push('- 最後にあたたかく光る瞬間に、光がともる音（shimmer）を1回だけ。余韻として残します。');
+  L.push('- 最後まで鳴らし続ける。最後の0.5秒だけ少し落として、1枚目の頭の静かな音とつながるようにする。');
+  L.push('- 全体は **-20 LUFS**（SNS標準の -14 より、あえて静かめ）。冒頭0.2秒の平均（mean_volume）は -40dB 以下。');
+  L.push('  こちらで直しを入れて試したときは、全体 -20.2 LUFS・冒頭0.2秒 -57.9dB・BGM のまんなか -28dB 前後・最後の0.3秒 -31dB でした。');
+  L.push('- 星の海の曲（Suno で作ったもの）に、あとでこちらで差し替えることがあります。そのため音のファイルは別々にも渡してください（下の「出してほしいもの」）。');
+  L.push('- どの秒に何の音を置いたかを、ビート表の「音」の列に書いてください（例：3.45秒 かさをかぶる布の音 ／ 13.95秒 光がともる音）。');
+  if (nx && !nx.switching && nx.axis.key === 'audio'){
+    L.push('- **今回は上の「今回だけ変えるもの」が「音」です。** そちらで選んだ形を優先してください。');
+    L.push('  BGMだけにするなら回の定義ファイルの SE を空に、効果音だけにするなら audio.py の BGM を0倍に、無音にはしない（無音の mp4 は不可のまま）。音量の決まり（-20 LUFS・出だし -40dB 以下）は同じです。');
+  }
+  L.push('');
+
+  L.push('## キットの使い方と、先に直すところ（ここは必ず）');
+  L.push('**添付の tomori_kit を使ってください。** 作り方は README.md の「作り方（Claude 向け）」のとおりです。');
+  L.push('ただし、キットをそのまま使うと、このチャンネルの決まりから外れるところが4つあります。**書き出す前に、下の4つを直してください。**');
+  L.push('こちらで同じキットに直しを入れて雨の回を書き出し、直ったことを測って確かめてあります。');
+  L.push('（すでに直してあるキットが添付されていたら、値が下と同じかを確かめるだけで構いません）');
+  L.push('');
+  L.push('### 直し1：ともりと文字の位置（scene.py）');
+  L.push('キットのままだと、ともりの顔の中心が y≈1575 にきます。ショート動画の題名・チャンネル名の帯（y=1550 より下）に、顔がまるごと隠れます。');
+  L.push('次の3行を書きかえてください。');
+  L.push('```');
+  L.push('TOMO_SC = 1.35      →  TOMO_SC = 1.30');
+  L.push('TOMO_FOOT = 1830.0  →  TOMO_FOOT = 1540.0');
+  L.push('TEXT_Y = 720        →  TEXT_Y = 650');
+  L.push('```');
+  L.push('直したあとは、顔の中心が y≈1293（カメラが寄り切っても1300）で帯より上に出て、テロップはその上（中心 y=650）に収まります。');
+  L.push('（ともりがいる回は、文字をこれまでの y=760〜1100 ではなく y=650 に置きます。ともりの顔を帯から出すためです）');
+  L.push('');
+  L.push('### 直し2：文字を左右まんなかに（scene.py の make_text_layer）');
+  L.push('行末に「、」「。」がある行は、字の枠の右側が空いているので、枠で中央にそろえると21〜28px左に寄ります（キットのままで測りました）。');
+  L.push('実際に描かれた字の左右の端で、まんなかに合わせてください。make_text_layer の中の、影（shadow）を描く前にこれを足し、');
+  L.push('```python');
+  L.push('    def ink_dx(tx, f):   # 実際に描かれた字の左右の端で、まんなかに合わせるためのずれ');
+  L.push('        probe = Image.new("L", (W, 400), 0)');
+  L.push('        ImageDraw.Draw(probe).text((540, 200), tx, font=f, fill=255, anchor="mm")');
+  L.push('        cols = np.where(np.asarray(probe).max(0) > 40)[0]');
+  L.push('        return 540 - (cols[0] + cols[-1]) / 2 if len(cols) else 0');
+  L.push('    dxs = [ink_dx(tx, f) for (tx, _), f in zip(lines, fonts)]');
+  L.push('```');
+  L.push('影と文字を描く2か所のループを、`for (tx, _), f, y, dx in zip(lines, fonts, ys, dxs):` にして、x を `540` から `540 + dx` に変えてください。');
+  L.push('');
+  L.push('### 直し3：1フレーム目の姿（tomori.py の build_keys）');
+  L.push('キットのままだと、1フレーム目だけ初期値の姿（光0.5・ふつうの顔）で描かれ、2フレーム目から「しんどい」に変わります。');
+  L.push('光がぱっと明るくなって見え、くり返し再生のつなぎ目でも起きます。build_keys の `for k, v in target.items():` のすぐ下に、これを足してください。');
+  L.push('```python');
+  L.push('            if t0 <= 0 and dur <= 0:   # 0秒ちょうどの姿は、最初の値にする');
+  L.push('                keys[k] = [(0.0, float(v))]');
+  L.push('                cur[k] = float(v)');
+  L.push('                continue');
+  L.push('```');
+  L.push('');
+  L.push('### 直し4：音の出だしと大きさ（audio.py と、重ねるとき）');
+  L.push('キットのままだと全体が -14.8 LUFS、冒頭0.2秒の平均が -23.4dB で、0秒にベルも鳴ります。このチャンネルは出だしの音で閉じられていたので、静かに入ります。');
+  L.push('```');
+  L.push('for t0, m in zip(BEAT_T, notes):');
+  L.push('  →  for t0, m in list(zip(BEAT_T, notes))[1:]:   # 0秒のベルは鳴らさない');
+  L.push('');
+  L.push('fade = np.clip(t / 0.25, 0, 1) * np.clip((DUR - t) / 1.0, 0, 1)');
+  L.push('  →  fade = np.clip(t / 0.8, 0, 1) ** 2 * (1 - 0.6 * np.clip((t - (DUR - 0.5)) / 0.5, 0, 1))');
+  L.push('      bgm *= 0.5   # BGM は雨の音より一段小さく');
+  L.push('```');
+  L.push('（フェードインは0.8秒。最後は0.5秒で少し落とすだけで、無音にはしません。1枚目の頭の静かな音とつながります）');
+  L.push('音を映像に重ねるときは、**全体を -20 LUFS にそろえてください。**');
+  L.push('1. `ffmpeg -i NAME_mix.wav -af ebur128 -f null -` で、最後に出る `I:` の値を読む（例：-14.3 LUFS）');
+  L.push('2. 上げ下げする量 ＝ -20 −（その値）（例：-5.7dB）');
+  L.push('3. `ffmpeg -i NAME_otonashi.mp4 -i NAME_mix.wav -af "volume=-5.7dB" -c:v copy -c:a aac -b:a 192k -ar 48000 -shortest -movflags +faststart NAME.mp4`');
+  L.push('loudnorm は使わないでください。出だしの静けさまで持ち上げてしまうことがあるので、全体を同じ量だけ動かす volume にします。');
+  L.push('渡す BGM だけ・効果音だけの wav にも、同じ量をかけてください。');
+  L.push('');
+  L.push('### 回の定義ファイル（ep_ame.py をコピーして ep_' + slug + '.py を作る）');
+  L.push(`- \`NAME = "tomori_${slug}"\`、\`DUR\` は 17.0〜17.5。`);
+  L.push('- `BEATS`（テロップ）は5〜6ビート。1つ目は3.0〜3.4秒で切り替え、1ビートは2.8〜3.6秒。');
+  L.push('  1ビートは1〜3行。字の大きさは86〜100（キットの例と同じ）。**1行の幅は880px以内**（86なら全角10字まで）。長い行は2行に割る。');
+  L.push('  最後のビートは、キットの例のように「星の海」を大きめの1行で置いて、小さな1行を添えてもいい（例：120 と 64）。');
+  L.push('- `MOVES`（動き）は、上の「動きの語彙」と4つの表情だけで組む。キットの対応表のとおり：');
+  L.push('  しんどい/のぞく/にっこり/ほっと → `EXPR["…"]`、両手を体の横におろす → `ARMS["おろす"]`、手をふる → `{"wave": 1}`、');
+  L.push('  かさを深くかぶって目をかくす → `hold(120)`、かさの下からのぞく → `hold(62)`、かさを上げる → `{**ARMS["よこ"], "sd": 0}`、');
+  L.push('  首をかしげる → `{"tilt": ±8}`、見上げてこちらを見る → `{"gy": -5, "lid": 0.03}`、うなずく → `NODS`、光 → `{"g": 値}`（かける秒は0.5以上）。');
+  L.push('- `BLINKS` に、0.8〜1.5秒のまばたきを1つ入れる（「冒頭の3秒」の小さな出来事）。');
+  L.push('- `SPEAK`（口パク）は、ともりが話しているビートだけ。最後の「ほっと」のビートは口を動かさない。');
+  L.push('- `SE`（効果音）は**4つまで・すべて3.0秒より後**。使うのは rustle（布のこすれ）と shimmer（光がともる）だけ。');
+  L.push('  shimmer は、最後にあたたかく光る瞬間に1回だけ。pon（きょとん）は使わない（はじける音は、このチャンネルでは避けています）。大きさは 0.08 以下。');
+  L.push('');
+  L.push('### 作る順番');
+  L.push('1. 上の4つを直す。');
+  L.push('2. ep_' + slug + '.py を書く。');
+  L.push('3. 確認用の静止画を出して見る：`python3 scene.py ep_' + slug + '.py stills 0.0 1.2 5.0 9.0 13.0 16.8`');
+  L.push('   ともりの顔が帯より上か、文字がまんなかか、表情がビートに合っているかを見てから、本番に進んでください。');
+  L.push('4. 書き出し：`python3 scene.py ep_' + slug + '.py video`（音なし）→ `python3 audio.py ep_' + slug + '.py` → 上の手順で -20 LUFS にして重ねる。');
+  L.push('- 日本語の太字フォントが要ります（Noto Sans CJK Bold）。場所が違うときは環境変数 FONT_PATH で指定。見つからなければ探してから描き、豆腐（□）のまま書き出さないでください。');
+  L.push('- こちらの環境では1フレーム約0.4秒（17.5秒・525フレームで約4分）でした。キットの README には約15分とあります。');
+  L.push('  1回の実行に時間の制限がある環境なら、render(f) をフレームの範囲ごとに分けて書き出し、最後に ffmpeg でつないでください。');
+  L.push('');
+  L.push('**凝りすぎて書き出せないのが、いちばんの失敗です。** キットの部屋とともりは、もうできています。変えるのは回の定義ファイルと、上の4つの直しだけです。');
+  L.push(`この型は、しんどい日でも${minutes}分あれば出せるように決めたものです。途中で止まって聞き返さず、最後まで進めてください（キットがないときだけは、作り始めずにお願いしてください）。`);
+  L.push('');
+
+  L.push('## mp4 の書き出し方');
+  L.push('- 形式は mp4（H.264・yuv420p）／ 1080×1920 ／ 30fps ／ 17〜17.5秒');
+  L.push('- **音声トラックは必須**（AAC 48kHz ステレオ）。無音の mp4 は未完成です');
+  L.push('- **0フレーム目から、部屋・ともり・テロップが写っていること。**');
+  L.push('- 文字は白の太字（キットのまま）。ショート動画の右下のボタン列（およそ x=900〜1050 / y=1150〜1750）と、下の題名・チャンネル名（y=1550より下）は、');
+  L.push('  ともりの顔と文字の置き場所で避けます（直し1）。横にずらして避けないでください。');
+  L.push('- 書き出したら、必ず**この環境で開けるファイルリンクまたは保存先のパスを渡してください**。作れなかったときは、黙って構成案だけ返さずに、どこで詰まったかを書いてください');
+  L.push('');
+  L.push('### 書き出したあとの自己点検（ここまでやって完成です）');
+  L.push('次の9つを実際に測って、結果を短く書いてください。ひとつでも外れていたら、直してから渡してください。');
+  L.push('1. 長さが17〜17.5秒に入っているか（ffprobe）');
+  L.push('2. **文字が左右まんなかにあるか。** scene.py の TEXT_LAYERS の文字の層（txt）で、ビートごとに文字の画素がある範囲の左端と右端を取り、その中心が **540±10px** に入っていること');
+  L.push(`   （scene.py は読み込むときに sys.argv[1] の回のファイルを使います。測るときは \`sys.argv = ["scene.py", "ep_${slug}.py"]\` にしてから import してください。そのままだと雨の回の文字を測ってしまいます）`);
+  L.push('3. 文字のかたまりの縦の中心が y=600〜700 にあるか');
+  L.push('4. **ともりの顔が題名の帯に隠れないか。** 顔の中心 ＝ TOMO_FOOT − 190 × TOMO_SC が y=1250〜1350 にあること（1540 と 1.30 なら1293）');
+  L.push('5. **1フレーム目と2フレーム目で、平均の明るさ（0〜255）の差が1以下か**（直し3が効いているか）。0.0秒のフレームに部屋・ともり・テロップが写っているか');
+  L.push('6. **最初の3秒で動いているか。** 0.0・1.0・2.0・3.0秒のフレームのとなり同士の画素の差の平均がゼロでないこと。0.8〜1.5秒のともりの動きがコマで分かること');
+  L.push('7. **点滅していないか。** フレームごとの平均の明るさを並べ、となりのフレームとの差が12を超えるところがないこと');
+  L.push('8. **音**：音声トラックがあり、全体が -20±1 LUFS（ebur128）、冒頭0.2秒の平均の音量（volumedetect の mean_volume）が -40dB 以下、最後の0.3秒が無音でないこと');
+  L.push('9. 最後のビートの光（g）が0.9以上で、最後のフレームに文字・部屋・ともりが残っているか');
+  L.push('');
+}
+
 function buildPrompt(){
   const cur = currentValues();
   const { withViews, values } = cur;
@@ -2722,6 +2963,8 @@ function buildPrompt(){
   const slug   = nextSlug();
   const url    = trackUrl(slug);
   const ch     = state.channel.length ? state.channel[state.channel.length-1] : null;
+  const tomori = useTomori();          // キャラクター「ともり」で作るか（チェックで切り替え）
+  const FORMAT = currentFormat();
   const L = [];
 
   L.push('あなたは YouTube ショート動画の構成作家であり、映像を作って書き出す担当でもあります。');
@@ -2732,13 +2975,25 @@ function buildPrompt(){
   L.push('この会話の中でコードを書いて動かし、実際に再生できる mp4 を書き出して、');
   L.push('この環境で開けるファイルリンクまたは保存先のパスで渡すところまでを、ひとつづきの仕事としてやってください。');
   L.push('');
-  L.push('**今回から、作るのは「映像」です。** 暗い背景に文字を並べただけの動画は、もう作りません。');
-  L.push('テロップが言っている場面（部屋・窓・灯り・天気）を画にして動かし、その上に文字を置きます。');
-  L.push('狙いは2つです。**冒頭の3秒で指を止めてもらうこと**と、**最後まで見てもらうこと**。');
-  L.push('作り方は、下の「映像にする」「冒頭の3秒」「最後まで見てもらう作り」の章に書きました。');
+  if (tomori){
+    L.push('**今回から、キャラクター「ともり」で作ります。** この指示文と一緒に、ともりの描画キット（tomori_kit.zip）を添付しています。');
+    L.push('ともりは、くすんだ青いかさをかぶった小さなランプの子です。気持ちを体の光の強さで見せます（しんどい日は暗く、ほっとするとあたたかく光る）。');
+    L.push('キットの「雨の夜の部屋」にともりとテロップを置き、ビートごとにともりが表情を変えて、最後にあたたかく光るまでを17秒ほどで見せます。');
+    L.push('狙いは2つです。**冒頭の3秒で指を止めてもらうこと**と、**最後まで見てもらうこと**。');
+    L.push('作り方は、下の「ともり」「冒頭の3秒」「最後まで見てもらう作り」「キットの使い方と、先に直すところ」の章に書きました。');
+  } else {
+    L.push('**今回から、作るのは「映像」です。** 暗い背景に文字を並べただけの動画は、もう作りません。');
+    L.push('テロップが言っている場面（部屋・窓・灯り・天気）を画にして動かし、その上に文字を置きます。');
+    L.push('狙いは2つです。**冒頭の3秒で指を止めてもらうこと**と、**最後まで見てもらうこと**。');
+    L.push('作り方は、下の「映像にする」「冒頭の3秒」「最後まで見てもらう作り」の章に書きました。');
+  }
   L.push('');
   L.push('## 実行環境と受け渡し（Claude・Codex 共通）');
   L.push('- この指示文だけで作業できるように進めてください。過去の会話・専用ツール・特定のフォルダがあることを前提にしないでください。');
+  if (tomori){
+    L.push('- **ただし、ともりの描画キットだけは使います。** 添付の tomori_kit（tomori_kit.zip、または展開した tomori.py・scene.py・audio.py・ep_ame.py・README.md・tomori_sheet.png）を使ってください。');
+    L.push('  見当たらないときは、作り始めずに「tomori_kit.zip を添付してください」とだけ返してください。キットなしで似せて描くと、ともりの見た目が毎回変わってしまいます。');
+  }
   L.push('- 最初に利用できるコード実行環境、ffmpeg / ffprobe、日本語フォント、出力先を確認し、利用できる道具で制作してください。');
   L.push('- ローカルで制作する場合は、作業フォルダ内に識別子ごとの出力フォルダを作り、既存ファイルを上書きしないでください。');
   L.push('- 成果物は、この環境で開けるファイルリンクまたは保存先のパスで渡してください。添付できる環境ではダウンロードリンクも付けてください。');
@@ -2813,23 +3068,31 @@ function buildPrompt(){
 
   /* ── 2.55 映像にした回の結果。切り替えがうまくいっているかを、作る側にも返します ── */
   const fc = formatCompare();
-  if (fc.vis){
+  if (fc.vis || fc.chr){
     const line = (label, x) => `- ${label}：${x.n}本・通った ${x.pass}/${x.n}本・再生の中央値 ${num(Math.round(x.med))}回`
       + (x.stayed != null ? `・視聴を選択 ${dec(x.stayed,0)}%` : '')
       + (x.ret != null ? `・最後まで ${dec(x.ret,0)}%` : '');
-    L.push('## 映像にした回の結果（投稿から2日たった回だけ）');
-    L.push(line(VISUAL_FORMAT, fc.vis));
+    L.push('## 形式を変えた回の結果（投稿から2日たった回だけ）');
+    if (fc.chr) L.push(line(CHARACTER_FORMAT, fc.chr));
+    if (fc.vis) L.push(line(VISUAL_FORMAT, fc.vis));
     if (fc.txt) L.push(line(`文字だけ（直近${fc.txt.n}本）`, fc.txt));
-    L.push('映像にした回（新しい順）：');
-    L.push(...fc.visList.slice(0, 5).map(promptLineOf));
-    L.push(fc.vis.n < MIN_SAMPLE
-      ? `- 映像の回はまだ${fc.vis.n}本です。差があっても、まだ言い切らないでください。`
-      : '- テーマや投稿時刻の違いも混ざっています。1本ごとの差より、同じ向きに続けて出ているかで読んでください。');
-    if (fc.vis.stayed != null){
+    if (fc.chr){
+      L.push('ともりの回（新しい順）：');
+      L.push(...fc.chrList.slice(0, 5).map(promptLineOf));
+    }
+    if (fc.vis){
+      L.push('映像にした回（新しい順）：');
+      L.push(...fc.visList.slice(0, 5).map(promptLineOf));
+    }
+    for (const [label, x] of [['ともりの回', fc.chr], ['映像の回', fc.vis]]){
+      if (x && x.n < MIN_SAMPLE) L.push(`- ${label}はまだ${x.n}本です。差があっても、まだ言い切らないでください。`);
+    }
+    L.push('- テーマや投稿時刻の違いも混ざっています。1本ごとの差より、同じ向きに続けて出ているかで読んでください。');
+    if ((fc.chr || fc.vis).stayed != null){
       L.push('- 冒頭の3秒が効いたかは「視聴を選択」の割合がいちばんまっすぐな手がかりです。');
       L.push('  高かった回と低かった回で、1カット目の画と0.8〜1.5秒の出来事がどう違ったかを比べて、今回に生かしてください。');
     }
-    L.push('- 映像の回が文字だけの回より落ちていたら、ごまかさずにそのまま書いてください。映像を続けるかどうかは、こちらで決めます。');
+    L.push('- 形式を変えた回が前の形式より落ちていたら、ごまかさずにそのまま書いてください。続けるかどうかは、こちらで決めます。');
     L.push('');
   }
 
@@ -2855,9 +3118,10 @@ function buildPrompt(){
   L.push('  → 「黒い1フレーム目が原因」というのは外れでした。ただし1フレーム目に文字がある作りは損ではないので、そのまま続けます。');
   L.push('- **文字の位置**：公開ぶんのフレームを測ったところ、文字のかたまりの中心が画面中央（x=540）より');
   L.push('  25〜87pxだけ左にずれていました。原因は前回の指示にあった「右から200pxを空ける」です。');
-  L.push('  → この決まりは廃止します。下の「動画の作り方」のとおり、左右まんなかに置いてください。');
+  L.push(tomori ? '  → この決まりは廃止します。下の「キットの使い方と、先に直すところ」の直し2のとおり、左右まんなかに置いてください。'
+                : '  → この決まりは廃止します。下の「動画の作り方」のとおり、左右まんなかに置いてください。');
   L.push('- この105本は、どれも暗い背景に文字を並べた動画です。映像にした回の数字は、まだありません。');
-  L.push('  尺・題名・テーマ・投稿時刻の実測は、映像にしてもそのまま守ってください。');
+  L.push(`  尺・題名・テーマ・投稿時刻の実測は、${tomori ? 'ともりにしても' : '映像にしても'}そのまま守ってください。`);
   L.push('');
 
   /* ── 3. この分野の上限と現在地 ── */
@@ -2934,19 +3198,25 @@ function buildPrompt(){
   L.push('**効いている型は固定し、変えるのは1つだけ**にしてください。');
   L.push('');
   if (nx?.switching){
-    L.push('**今回変えるのは「形式」です。文字を並べた動画から、映像＋テロップにします。**');
-    L.push(`映像の回が${MIN_SAMPLE}本たまるまでは（いまは${nx.made}本）、映像にすること以外は変えないでください。`);
-    L.push('尺・テロップの枚数と字数・文字の位置・題名の決まり・音・投稿する時間帯は、これまでどおりです。');
-    L.push('ここで一緒に何かを変えると、映像にしたから通ったのか（落ちたのか）が分からなくなります。');
+    L.push(`**今回変えるのは「形式」です。${nx.from}から、${nx.to}にします。**`);
+    L.push(`${nx.unit}が${MIN_SAMPLE}本たまるまでは（いまは${nx.made}本）、形式を変えること以外は変えないでください。`);
+    L.push(tomori
+      ? '尺・テロップの枚数・題名の決まり・投稿する時間帯は、これまでどおりです（文字の縦の位置と音の作りだけは、ともりに合わせて下の「先に直すところ」のとおりにします）。'
+      : '尺・テロップの枚数と字数・文字の位置・題名の決まり・音・投稿する時間帯は、これまでどおりです。');
+    L.push('ここで一緒に何かを変えると、形式を変えたから通ったのか（落ちたのか）が分からなくなります。');
     L.push('');
   }
   L.push('**尺だけは例外です。** 下の「固定するもの」に13秒と入っていても、実測メモのとおり13秒は通りませんでした。');
-  L.push('尺は「動画の作り方」の指定（15〜20秒）を優先してください。それ以外は「固定するもの」に従ってください。');
+  L.push(tomori
+    ? '尺は「回の定義ファイル」の指定（17〜17.5秒）を優先してください。それ以外は「固定するもの」に従ってください。'
+    : '尺は「動画の作り方」の指定（15〜20秒）を優先してください。それ以外は「固定するもの」に従ってください。');
   L.push('（前回の改訂で型を大きく作り変えたところ、それまで6割通っていたものが5本続けて通らなくなりました。');
   L.push('　通っている型を推測で壊さない、というのが今回いちばんの反省点です）');
   L.push('');
   L.push(fixed.length || !nx?.switching ? '### 固定するもの（変えないでください）' : '### 固定するもの');
-  if (!nx?.switching) L.push(`- 形式：${VISUAL_FORMAT}（2026-09-23 に決めた作り方です。文字を並べただけの動画には戻さないでください）`);
+  if (!nx?.switching) L.push(tomori
+    ? `- 形式：${CHARACTER_FORMAT}（2026-10-02 に決めた作り方です。ともりの出てこない動画には戻さないでください）`
+    : `- 形式：${VISUAL_FORMAT}（2026-09-23 に決めた作り方です。文字を並べただけの動画には戻さないでください）`);
   fixed.forEach(f => L.push(f.compared
     ? `- ${f.name}：${f.value}（${dec(f.avg)}倍・${f.n}本で確定）`
     : `- ${f.name}：${f.value}（${f.n}本・ただし他の値と比べたことはまだありません）`));
@@ -2956,8 +3226,8 @@ function buildPrompt(){
   L.push('');
   if (nx?.switching){
     L.push('### 今回だけ変えるもの');
-    L.push(`- **形式**：文字を並べた動画 → **${VISUAL_FORMAT}**（映像の回は、いま${nx.made}本。${MIN_SAMPLE}本そろうと、文字だけの回と比べられます）`);
-    L.push(`- 最後に「今回は 形式 を ${VISUAL_FORMAT} にして試した」と、一行で書いてください。`);
+    L.push(`- **形式**：${nx.from} → **${nx.to}**（${nx.unit}は、いま${nx.made}本。${MIN_SAMPLE}本そろうと、${nx.base}と比べられます）`);
+    L.push(`- 最後に「今回は 形式 を ${nx.to} にして試した」と、一行で書いてください。`);
     L.push('');
   } else if (nx){
     const c = axisCandidates(nx);
@@ -3029,291 +3299,329 @@ function buildPrompt(){
     L.push('');
   }
 
-  /* ── 8. 映像にする・冒頭の3秒・最後まで見てもらう作り ──
-     2026-09-23、ユーザーの判断で「暗い背景に文字を並べる動画」から「映像＋テロップ」に切り替えました。
-     文字だけだと、指を止める手がかりが文字しかなく、読み終わったあとに画面に残る理由もありません。
-     描かせるのは、コードで無理なく描ける範囲（切り絵のような平らな層・灯り・天気・カメラの動き）に絞り、
-     画風は毎回そろえます。写実や人物はコードで描くと不自然になるので描かせません。
-     見る人にはしんどい夜の途中の人がいるので、危うい場所や道具を連想させる画も描かせません。 */
-  L.push('## 映像にする（今回からの作り方）');
-  L.push('文字だけの動画は、読み終わったら画面に見るものがなくなります。');
-  L.push('今回からは、テロップが言っている場面を画にして動かします。文字は、その映像の上に置く案内役です。');
-  L.push('');
-  L.push('### 何を描くか');
-  L.push('- **テロップに書いた場面を、そのまま描いてください。** 見ている人の部屋に、そのままありそうな景色にします。例：');
-  L.push('  - 眠れない夜 → 布団から見上げた天井と、枕元の時計');
-  L.push('  - カーテンを開けられない → 閉じたカーテンのすき間から差しこむ、昼の細い光');
-  L.push('  - 休職して曜日がわからない → めくられないままのカレンダーと、明るいのに閉じたままの窓');
-  L.push('  - 人に会ったあと寝こむ → 玄関に脱いだままの靴と、灯りのついていない廊下');
-  L.push('- **その人の目から見た景色（一人称の視点）で描きます。** 見ている人が「これは自分の部屋だ」と思えるように。');
-  L.push('- **人の姿・顔・手は描きません。** コードで描いた人は不自然になりやすく、見る人が自分を重ねにくくなります。');
-  L.push('  部屋・窓・灯り・物・天気だけで、そこに人がいることを伝えてください。');
-  L.push('- 描く場所は1〜3つに絞る。同じ場所を、引き・寄り・別の角度で見せてカットを作ります。');
-  L.push('- スマホを描くなら、光る四角だけにする。実在のアプリ画面・ロゴ・商品名・読める看板は描かない。');
-  L.push('');
-  L.push('### 画風（毎回そろえます。これがチャンネルの顔になります）');
-  L.push('- 切り絵のように、平らな形を3〜5枚重ねて奥行きを作る。輪郭線は描かない。');
-  L.push('  写真のような写実は狙わない（コードで写実をやると、どこか不気味になります）。');
-  L.push('- 色は夜の藍色の濃淡が土台（例：#0b1626・#13243b・#1d3557・#2b4a6f）。');
-  L.push('  そこに**あたたかい灯りの色を1つだけ**（例：#f2c879）。灯りを置くのは、画面の中の1〜2か所まで。');
-  L.push('- 灯りのまわりに、やわらかい光のにじみ。画面全体に、ごく薄いフィルムの粒（3フレームごとに少しずつ変わる）と、四隅がわずかに暗くなる周辺減光。');
-  L.push('- 夜にスマホで見てまぶしくない明るさ。いちばん明るい灯りでも、真っ白に飛ばさない。');
-  L.push('');
-  L.push('### 描かないもの（ここは必ず守ってください）');
-  L.push('見ている人の中には、いちばんしんどい夜の途中にいる人がいます。');
-  L.push('- 薬・お酒・刃物・ロープ・血や傷は、画に入れない。');
-  L.push('- 高い場所（ベランダの手すり・屋上・橋）、駅のホーム、線路は描かない。');
-  L.push('- 海は、水平線や波打ち際を遠くから見る画まで。水の中へ入っていく画・沈んでいく画は描かない。');
-  L.push('- 怖く見せない。人影・ドアのすき間の闇・急に現れるもの・画面が乱れるノイズ・赤い光は使わない。');
-  L.push('- 点滅させない。明るさを急に変えない（灯りがつくときも、0.5秒以上かけてゆっくり）。');
-  L.push('');
-  L.push('### 素材');
-  L.push('- 写真・動画・イラストの素材をダウンロードしてこないでください。権利の分からない素材は使えません。');
-  L.push('- すべてコードで描いて動かしてください（例：Python の Pillow と numpy で1枚ずつ描き、ffmpeg で mp4 にする）。');
-  L.push('');
+  /* 「反応をひとつだけもらう」と「この1本の役割」は、ともりの回でも同じなので、どちらの作り方からも呼びます */
+  const pushAsk = () => {
+    L.push('### 反応をひとつだけもらう');
+    L.push(`いいね率は${values.like != null ? dec(values.like) + '%' : '1%未満'}です。`);
+    L.push('ただし実測では、**通らなかった回のほうが見た人あたりの反応は多い**ことがありました。');
+    L.push('ですので「いいねを増やせば伸びる」とは考えないでください。ここでの問いは、伸ばすためではなく、答えたい人が答えられるように置くものです。');
+    L.push('このチャンネルで「いいねお願いします」は言わないこと。しんどい夜に見ている人に、お願いごとをしないでください。');
+    L.push('- かわりに、**答えが一行で書ける問いを、最後から2枚目に置いてください。**');
+    L.push('  例：「今日は、何時に横になりましたか。」「今日、いちばん静かだったのは何時ごろでしたか。」');
+    L.push('- 「はい／いいえ」で終わらない問いにする。ただし考えこませない。答えるのに5秒かからないもの。');
+    L.push('- 同じ問いを説明文にも自然に入れてください。答えたい人がコメントできるように、短い一文にします。');
+    L.push('- **ただし、その問いを題名にしないでください。** 題名を問いかけの形にした3本は中央285回、言い切りの31本は中央1011回でした。');
+    L.push('  問いは中にいる人に向けた言葉です。まだ知らない人には、まず場面を見せてください。');
+    L.push('');
 
-  L.push('## 冒頭の3秒（ここで指を止めてもらう）');
-  L.push('ショート動画は、流すか見るかを最初の数秒で決められます。');
-  L.push('このチャンネルで効くのは驚かせることではなく、**「これは自分のことだ」と「あれ、なんだろう」が同時に来ること**です。');
-  L.push('そのための組み立てを、秒で決めておきます。');
-  L.push('');
-  L.push('- **0.0秒：もう場面の中にいる。** 1フレーム目から、場面と1枚目のテロップの両方が写っていること。');
-  L.push('  黒からのフェードイン・タイトルカード・ロゴから始めない。');
-  L.push('- **0.0秒から、もう動いている。** カメラは最初から寄り始めている（最初の3秒で6〜8%寄る。はじめ少し速く、だんだんゆっくり）。');
-  L.push('  あわせて、光のゆらぎ・雨粒・ほこりの粒など、止まっていないものが最初から見えていること。');
-  L.push('- **0.8〜1.5秒：画の中で、小さな出来事を1つ起こす。** これが「なんだろう」になります。');
-  L.push('  例：時計が 3:11 から 3:12 に変わる／外を車が通って、天井を光がゆっくり横切る／カーテンのすき間の光が少し広がる／向かいの建物で、窓の灯りがひとつだけつく');
-  L.push('  音は付けません（出だしは BGM のフェードインだけ。下の「音」の章のとおり）。');
-  L.push('- **1枚目のテロップは15〜18字。** 3秒かからずに読み切れる長さにして、画と同じ場面を言う。');
-  L.push('  例：画が 3:12 の時計なら「3時12分。今夜も、目が覚めた。」');
-  L.push('  画と文字が同じことを言うと、見ている人は一瞬で「自分の夜だ」と分かります。');
-  L.push('- **2.5〜3.2秒：1回目の切り替え。** ここで2枚目のテロップとカットに変わる。新しいものが見えることが、続きを見る理由になります。');
-  L.push('- 1枚目は説明でも挨拶でもなく、いきなり相手のいる場面から始める。「今日は◯◯について」のような前置きは書かない。');
-  L.push('- 必要なのは煽りではなく、**小さな謎**です。効果音・大きすぎる文字・煽る言葉は合いません。');
-  L.push('  効くのは静けさ・間・具体的な場面です。「不安なとき」より「23時、天井を見ているとき」のほうが届きます。');
-  L.push('（実測メモのとおり、0秒目が黒かった昔の回でも通っています。黒い1フレーム目が伸びない原因だとまでは言えません。');
-  L.push('　ただ、映像にするなら1フレーム目から場面があるほうが損はないので、そうしてください）');
-  L.push('');
+  };
+  const pushRole = () => {
+    /* ── 9. この1本の役割 ── */
+    L.push('## この1本の役割');
+    L.push(`**${role.role}** として作ってください。`);
+    L.push(`（${role.why}）`);
+    L.push('');
+    L.push('- **間口**：まだこのチャンネルを知らない人に届けるための1本です。');
+    L.push('  内側の言葉（診断名・制度の名前・当事者どうしにしか通じない言い方）を入り口に置かない。');
+    L.push('  「精神障害の方へ」ではなく「眠れない夜がある人へ」のように、一段だけ広い入口にします。');
+    L.push('  ここでは登録も相談ページも急がず、最後に「毎晩1本置いています」とだけ伝えます。');
+    L.push('- **奥座敷**：すでに見てくれている人を、深いところへ連れていく1本です。');
+    L.push('  ここでは踏み込んでいい。具体的な体験、名前のついた制度、長めの間。');
+    L.push('  そして最後に、次の一歩（相談ページ・登録）へはっきり誘導します。');
+    L.push('- どちらの回でも、**間口 → 奥座敷 → 相談ページ**という順路のどこにこの1本が置かれるのかを意識してください。');
+    L.push('');
 
-  L.push('## 最後まで見てもらう作り');
-  L.push('文字だけの動画は、読み終わったら見るものがなくなります。映像では、**画のほうにも「続き」を作ります**。');
-  L.push('かといって13秒に詰めた回は、そろって通りませんでした（実測メモ）。尺は17秒のまま、中身で引っぱります。');
-  L.push('');
-  L.push('- **1枚目で問いを立てて、最後の1枚でそれに答える。** 途中で答えを言わない。');
-  L.push('  「この人は結局なんて言うんだろう」と思わせる一行を、1枚目に置いてください。');
-  L.push('- **画にも、問いと答えを持たせる。** 最後のカットで1カット目と同じ場所に戻ってきたとき、ひとつだけ何かが変わっている。');
-  L.push('  例：灯りがひとつ増えている／カーテンが少しだけ開いている／向かいの建物にも、灯りのついた窓がある。');
-  L.push('  それが画の答えです。最後の一行と、その変化が同じ瞬間に見えるようにしてください。');
-  L.push('- **テロップ1枚ごとにカットを変える（2.5〜3.5秒ごと）。** カットが変わるたびに、新しいものが1つ見えること。');
-  L.push('  同じ画を同じ動きのまま続けない。寄る → 横に流れる → 引く、のように、カメラの動きもカットごとに変える。');
-  L.push('- **画の中で、時間を少しずつ進める。** 時計が進む・窓の外が少しずつ白む・雨が弱まる・湯気が消えていく。');
-  L.push('  見ている人は、その変化の行き先を見届けたくなります。');
-  L.push('- **真ん中（8〜10秒あたり）に、2つ目の小さな出来事を置く。** いちばん離れられやすいところです。');
-  L.push('  灯りがつく・雨がやむ・カメラが窓のほうを向く、くらいの静かな変化で十分です。');
-  L.push('- **最後から1枚目へ、そのままつながるようにしてください。** ショート動画は自動でくり返し再生されます。');
-  L.push('  つながっていれば2周目に入ります。2周目まで見られた動画は、最後まで見られた割合が100%を超えて数えられます。');
-  L.push('  - 文字：最後の1枚の言葉が、1枚目の頭に戻っていく言葉にする。言い切って終わるより、静かに1枚目へ戻れる終わり方のほうが、このチャンネルには合っています。');
-  L.push('  - 画：最後のカットは、1カット目と同じ場所・近い構図で終える。変わっているのは上の「ひとつだけ」と時刻くらいにして、2周目の頭で画が大きく跳ばないようにする。');
-  L.push('- 最後を黒画面・ロゴ・「ご視聴ありがとうございました」で終わらせない。最後のフレームにも、文字と場面が残っていること。');
-  L.push('');
-  L.push('### 反応をひとつだけもらう');
-  L.push(`いいね率は${values.like != null ? dec(values.like) + '%' : '1%未満'}です。`);
-  L.push('ただし実測では、**通らなかった回のほうが見た人あたりの反応は多い**ことがありました。');
-  L.push('ですので「いいねを増やせば伸びる」とは考えないでください。ここでの問いは、伸ばすためではなく、答えたい人が答えられるように置くものです。');
-  L.push('このチャンネルで「いいねお願いします」は言わないこと。しんどい夜に見ている人に、お願いごとをしないでください。');
-  L.push('- かわりに、**答えが一行で書ける問いを、最後から2枚目に置いてください。**');
-  L.push('  例：「今日は、何時に横になりましたか。」「今日、いちばん静かだったのは何時ごろでしたか。」');
-  L.push('- 「はい／いいえ」で終わらない問いにする。ただし考えこませない。答えるのに5秒かからないもの。');
-  L.push('- 同じ問いを説明文にも自然に入れてください。答えたい人がコメントできるように、短い一文にします。');
-  L.push('- **ただし、その問いを題名にしないでください。** 題名を問いかけの形にした3本は中央285回、言い切りの31本は中央1011回でした。');
-  L.push('  問いは中にいる人に向けた言葉です。まだ知らない人には、まず場面を見せてください。');
-  L.push('');
+  };
 
-  /* ── 9. この1本の役割 ── */
-  L.push('## この1本の役割');
-  L.push(`**${role.role}** として作ってください。`);
-  L.push(`（${role.why}）`);
-  L.push('');
-  L.push('- **間口**：まだこのチャンネルを知らない人に届けるための1本です。');
-  L.push('  内側の言葉（診断名・制度の名前・当事者どうしにしか通じない言い方）を入り口に置かない。');
-  L.push('  「精神障害の方へ」ではなく「眠れない夜がある人へ」のように、一段だけ広い入口にします。');
-  L.push('  ここでは登録も相談ページも急がず、最後に「毎晩1本置いています」とだけ伝えます。');
-  L.push('- **奥座敷**：すでに見てくれている人を、深いところへ連れていく1本です。');
-  L.push('  ここでは踏み込んでいい。具体的な体験、名前のついた制度、長めの間。');
-  L.push('  そして最後に、次の一歩（相談ページ・登録）へはっきり誘導します。');
-  L.push('- どちらの回でも、**間口 → 奥座敷 → 相談ページ**という順路のどこにこの1本が置かれるのかを意識してください。');
-  L.push('');
-
-  /* ── 9.5 音。無音のまま出し続けていたのを、ここで止めます ── */
-  L.push('## 音（無音のまま出さないこと）');
-  L.push('**無音の mp4 は不可です。必ず音声トラックの入った mp4 を書き出してください。**');
-  L.push('これまでの指示文が「音はあとで載せる」と書いていたせいで、文字だけの静かな動画が続いていました。');
-  L.push('ショート動画は音のあるものとして見られています。音がないと、それだけで最後まで残りません。');
-  L.push('');
-  if (audioBest && audioEv && audioEv.level !== 'まだ推測'){
-    L.push(`このチャンネルの記録では、音は「${audioBest}」がいちばん良い結果です（${audioEv.level}）。`);
-    if (audioEv.reasons.length) L.push(`根拠：「${audioEv.worst.key}」と比べて ${audioEv.reasons.join(' ／ ')}`);
-    L.push(`今回も **${audioBest}** で作ってください。`);
-  } else if (audioBest){
-    L.push(`いまのところ音は「${audioBest}」で作った回が最も良い数字ですが、まだ比べられるだけの本数がありません。`);
-    L.push(`今回も **${audioBest}** で作って、本数を積んでください。`);
+  if (tomori){
+    pushTomoriMaking(L, { slug, minutes: st.minutes, pushAsk, pushRole, nx });
   } else {
-    L.push('音についての記録はまだ1本もありません。だからこそ、ここを今日から固定します。');
-    L.push('今回は **BGM＋効果音** で作ってください。');
-  }
-  L.push('');
-  L.push('### BGM（出だしがうるさいと、そこで閉じられます）');
-  L.push('- 星の海の曲（Suno で作ったもの）は、あとでこちらで差し替えます。');
-  L.push('  ですので今回は、**差し替えを前提にした仮のBGM**を、あなたのほうで作って敷いてください。無音にはしないこと。');
-  L.push('- ただし今回から、**音を一段ぶん静かに**します。これまでの出だしは音が大きく、最初の1秒で閉じられていました。');
-  L.push('- **冒頭0.8秒でフェードインしてください。** -40dBFS くらいの小さな音から始めて、0.8秒で定常の音量まで上げる。');
-  L.push('  いきなり鳴らさない。夜、イヤホンを着けたままの人が驚かない入り方にしてください。');
-  L.push('  （以前は2秒かけていましたが、それでは長すぎます。狙いは音を消すことではなく、立ち上がりの角を取ることです）');
-  L.push('- 静かなアンビエントにしてください。遠い波、細かい雨、低い持続音（ドローン）、ゆっくりした脈。');
-  L.push('- リズム（ビート・打楽器・刻み）は入れない。メロディも作らない。和音がゆっくり滲むだけで十分です。');
-  L.push('- 定常の音量は **-28〜-32dBFS**。（これまでの -20〜-24dBFS は、このチャンネルには大きすぎました）');
-  L.push('  テロップを読む邪魔をしない、「言われて初めて音に気づく」くらいの、部屋の空気のような音量にしてください。');
-  L.push('- 耳につく帯域を削る：8kHz より上と 80Hz より下は落としてください。シャリつきと重い低音は、小さい音量でも刺さります。');
-  L.push('- 音の変化はゆっくり。2秒より短い間に音量や音色が動かないようにしてください。');
-  L.push('- 最後まで鳴らし続ける。**無音で終わらせないでください。**最後の0.5秒だけ少し落として、1枚目の頭の音量とつながるようにする。');
-  L.push('  （ショート動画はくり返し再生されます。ぷつっと切れると、そこで抜けられます）');
-  L.push('');
-  L.push('### 効果音');
-  L.push('- **冒頭に効果音は置かないでください。** 0.8〜1.5秒の「小さな出来事」にも付けません。');
-  L.push('  出だしは BGM のフェードインだけです。掴みは音ではなく、1枚目のテロップと画で作ってください。');
-  L.push('- 3秒より後のカットの切り替わりのうち2〜3か所だけ、画の中の出来事（灯りがつく・カーテンが揺れる・雨が弱まる）に合わせて、ごく小さく1つずつ。');
-  L.push('  毎回入れるとうるさくなります。BGM より小さいくらいで十分です。');
-  L.push('- 最後のカット（画の答えが見えるところ）に、余韻の残る音を1つ。');
-  L.push('- 合計4つまで。これ以上は入れないでください。うるさい動画は、このチャンネルでは逆効果です。');
-  L.push('- どの効果音も、立ち上がりに 50ms 以上かけてゆるやかに。「コツン」と鳴る音は使わない。');
-  L.push('');
-  L.push('### 音の方向（ここを外すとチャンネルごと壊れます）');
-  L.push('- 使わない音：通知音、ポップ、キラキラ、ドゥン系の重い衝撃音、テレビのような効果音、ビート。');
-  L.push('  煽る音は、しんどい夜に見ている人をそのまま追い出します。');
-  L.push('- 使う音：波、雨、紙、鈴、遠い雷、風、低く短い余韻。減衰の長い、角のない音。');
-  L.push('- 目安は「夜、イヤホンで音量を上げずに聞いても痛くないか」。痛ければ音量か音色が間違っています。');
-  L.push('- 効果音は -30〜-36dBFS。全体は **-20 LUFS** にそろえてください。');
-  L.push('  （SNS標準は -14 LUFS ですが、それだと出だしで敬遠されます。このチャンネルは、あえて静かめに出します。）');
-  L.push('- 書き出したあと、**冒頭0.2秒の平均の音量**（volumedetect の mean_volume）を測ってください。-40dB より大きければ、フェードインが効いていません。作り直してください。');
-  L.push('');
-  L.push('### 音の作り方');
-  L.push('- 音源をどこかからダウンロードしてこないでください。権利の分からない音は使えません。');
-  L.push('- コードで合成してください（例：numpy で正弦波・ノイズを作り、包絡線をかけて wav に書き出し、ffmpeg で映像と合わせる）。');
-  L.push('  雨や波はホワイトノイズにフィルタをかければ作れます。鈴や余韻は減衰する正弦波の重ね合わせで作れます。');
-  L.push('- フェードインは音を作ったあとで包絡線をかけるだけです（冒頭0.8秒に、0から1へ上がるカーブを掛ける）。忘れないでください。');
-  L.push('- 書き出したら、**音が本当に入っているか確認してください**（ffprobe でストリームを見る、長さと音量を測るなど）。');
-  L.push('  無音のまま「できました」と返さないこと。ここが今回いちばん守ってほしいところです。');
-  L.push('- あわせて、**冒頭0.2秒だけを切り出して、平均の音量を測ってください**。ここが大きいと、中身を見てもらう前に閉じられます。');
-  L.push('  （いちばん大きい瞬間の値 max_volume ではなく、平均 mean_volume で見ます。0から1へ2乗の曲線で上げれば、平均は -50dB 前後になります）');
-  L.push('');
-  L.push('### 渡してほしい音のファイル');
-  L.push('1. 音入りの mp4（本命。これがないと今回は未完成です）');
-  L.push('2. 音なしの mp4（あとで星の海の曲に差し替えるとき用）');
-  L.push('3. BGM だけの wav と、効果音だけの wav（あとで音量を調整できるように、別々で）');
-  L.push('');
-  L.push('あわせて、**どの秒に何の音を置いたか**を、下の「絵コンテ」の表の「音」の列に書いてください（例：0.0秒 遠い波 ／ 8.6秒 灯りがつく小さな鈴 …）。');
-  L.push('');
+    /* ── 8. 映像にする・冒頭の3秒・最後まで見てもらう作り ──
+       2026-09-23、ユーザーの判断で「暗い背景に文字を並べる動画」から「映像＋テロップ」に切り替えました。
+       文字だけだと、指を止める手がかりが文字しかなく、読み終わったあとに画面に残る理由もありません。
+       描かせるのは、コードで無理なく描ける範囲（切り絵のような平らな層・灯り・天気・カメラの動き）に絞り、
+       画風は毎回そろえます。写実や人物はコードで描くと不自然になるので描かせません。
+       見る人にはしんどい夜の途中の人がいるので、危うい場所や道具を連想させる画も描かせません。 */
+    L.push('## 映像にする（今回からの作り方）');
+    L.push('文字だけの動画は、読み終わったら画面に見るものがなくなります。');
+    L.push('今回からは、テロップが言っている場面を画にして動かします。文字は、その映像の上に置く案内役です。');
+    L.push('');
+    L.push('### 何を描くか');
+    L.push('- **テロップに書いた場面を、そのまま描いてください。** 見ている人の部屋に、そのままありそうな景色にします。例：');
+    L.push('  - 眠れない夜 → 布団から見上げた天井と、枕元の時計');
+    L.push('  - カーテンを開けられない → 閉じたカーテンのすき間から差しこむ、昼の細い光');
+    L.push('  - 休職して曜日がわからない → めくられないままのカレンダーと、明るいのに閉じたままの窓');
+    L.push('  - 人に会ったあと寝こむ → 玄関に脱いだままの靴と、灯りのついていない廊下');
+    L.push('- **その人の目から見た景色（一人称の視点）で描きます。** 見ている人が「これは自分の部屋だ」と思えるように。');
+    L.push('- **人の姿・顔・手は描きません。** コードで描いた人は不自然になりやすく、見る人が自分を重ねにくくなります。');
+    L.push('  部屋・窓・灯り・物・天気だけで、そこに人がいることを伝えてください。');
+    L.push('- 描く場所は1〜3つに絞る。同じ場所を、引き・寄り・別の角度で見せてカットを作ります。');
+    L.push('- スマホを描くなら、光る四角だけにする。実在のアプリ画面・ロゴ・商品名・読める看板は描かない。');
+    L.push('');
+    L.push('### 画風（毎回そろえます。これがチャンネルの顔になります）');
+    L.push('- 切り絵のように、平らな形を3〜5枚重ねて奥行きを作る。輪郭線は描かない。');
+    L.push('  写真のような写実は狙わない（コードで写実をやると、どこか不気味になります）。');
+    L.push('- 色は夜の藍色の濃淡が土台（例：#0b1626・#13243b・#1d3557・#2b4a6f）。');
+    L.push('  そこに**あたたかい灯りの色を1つだけ**（例：#f2c879）。灯りを置くのは、画面の中の1〜2か所まで。');
+    L.push('- 灯りのまわりに、やわらかい光のにじみ。画面全体に、ごく薄いフィルムの粒（3フレームごとに少しずつ変わる）と、四隅がわずかに暗くなる周辺減光。');
+    L.push('- 夜にスマホで見てまぶしくない明るさ。いちばん明るい灯りでも、真っ白に飛ばさない。');
+    L.push('');
+    L.push('### 描かないもの（ここは必ず守ってください）');
+    L.push('見ている人の中には、いちばんしんどい夜の途中にいる人がいます。');
+    L.push('- 薬・お酒・刃物・ロープ・血や傷は、画に入れない。');
+    L.push('- 高い場所（ベランダの手すり・屋上・橋）、駅のホーム、線路は描かない。');
+    L.push('- 海は、水平線や波打ち際を遠くから見る画まで。水の中へ入っていく画・沈んでいく画は描かない。');
+    L.push('- 怖く見せない。人影・ドアのすき間の闇・急に現れるもの・画面が乱れるノイズ・赤い光は使わない。');
+    L.push('- 点滅させない。明るさを急に変えない（灯りがつくときも、0.5秒以上かけてゆっくり）。');
+    L.push('');
+    L.push('### 素材');
+    L.push('- 写真・動画・イラストの素材をダウンロードしてこないでください。権利の分からない素材は使えません。');
+    L.push('- すべてコードで描いて動かしてください（例：Python の Pillow と numpy で1枚ずつ描き、ffmpeg で mp4 にする）。');
+    L.push('');
 
-  /* ── 10. 作り方（仕組み化） ── */
-  L.push('## 動画の作り方（尺とテロップは実測のまま。画を映像にします）');
-  L.push('前回は13秒に縮めましたが、その5本はそろって通りませんでした。尺とテロップは、通っている帯のまま変えません。');
-  L.push('- 縦1080×1920 ／ **全体17秒**（15〜20秒の範囲。通った回はほぼこの帯です。13秒には縮めないでください）');
-  L.push('- **テロップ5〜7枚。1枚は2.5〜3.5秒。テロップ1枚＝1カット。** 読み終わって少し間があってから次へ行く速さにする');
-  L.push('- テロップ1枚は**15〜24字**（1枚目は15〜18字）。1行か2行で収める。3行になったら文を割ってください');
-  L.push('- 読み上げ音声（ナレーション）は入れません。音は BGM と効果音だけです（上の「音」の章のとおり）');
-  L.push('- 1枚目のテロップから本題に入る。「今日は◯◯について話します」のような前置きは書かない');
-  L.push('');
-  L.push('### 作る順番（この順で進めると、書き出しまでたどり着けます）');
-  L.push('1. **先に絵コンテを決める。** カットごとに「秒・何が見えるか・カメラの動き・画の中で起きること・テロップ・音」を表にする。');
-  L.push('2. **動かないものは、先に層ごとに1枚ずつ描いておく。** 奥の空・向かいの建物・部屋の壁・手前の物、のように3〜5層。');
-  L.push('   カメラが動いても端が切れないよう、画面より2割ほど大きく描く。手前の層ほど大きく動くので、端の余白は多めに');
-  L.push('   （切り取る範囲が絵の外に出ると、そこで止まります。切り取る位置は絵の内側に収めてください）。');
-  L.push('3. **毎フレームは、層をずらして重ねるだけにする。** 手前の層ほど大きく動かす（奥0.3・中1・手前1.6くらいの割合）と、奥行きが出ます。');
-  L.push('   動きは必ず、ゆっくり始まってゆっくり止まる曲線（イージング）で。等速で動かすと機械っぽく見えます。');
-  L.push('   カメラはどのカットでも止めない。寄る・引く・横に流すのどれかで、1カットのあいだに画面の4〜8%ぶん動かす。');
-  L.push('   **寄るときは、画の主役に向かって寄る。** 画面のまんなかに向かって寄ると、主役が画面の端へ逃げていきます。');
-  L.push('   主役は小さくしない。スマホで見て、何なのかすぐ分かる大きさ（目安は画面の幅の3分の1以上）にしてください。');
-  L.push('4. 雨・ほこり・星・湯気のような細かいものは、毎フレーム描く。光のにじみは、小さく縮めた画像をぼかしてから拡大すると速く作れます。');
-  L.push('   フィルムの粒は**ごく薄く**（明るさの揺れ±2〜3くらい）。数枚ぶんを先に作っておき、3フレームに1回入れ替えれば十分です。');
-  L.push('   強い粒を毎フレーム変えると圧縮が効かなくなり、書き出しが10倍以上遅く、ファイルも何倍も重くなります');
-  L.push('   （こちらの試作では、粒を薄くしただけで 11分・91MB が 40秒・17MB になりました）。');
-  L.push('5. フレームは PNG で保存せず、ffmpeg に直接流しこむ（生の画素をパイプで渡す）。ffmpeg は -preset veryfast -crf 20 前後で十分です。');
-  L.push('   1回の実行に時間の制限がある環境なら、カットごとに書き出して、最後につなぐ。');
-  L.push('6. 本番の前に、冒頭3秒だけを小さく（540×960）書き出して、コマを見て確かめると、やり直しが少なくて済みます。');
-  L.push('');
-  L.push('**凝りすぎて書き出せないのが、いちばんの失敗です。** 重くて間に合いそうにないときは、描く場所の数や細部を減らしてください。');
-  L.push('凝った未完成より、簡素でも最後まで書き出した1本のほうが、ずっと価値があります。');
-  L.push(`この型は、しんどい日でも${st.minutes}分あれば出せるように決めたものです。こちらがするのは、この指示文を貼って、できたものを投稿するところまでにしたい。`);
-  L.push('途中で止まって聞き返さず、最後まで進めてください。続かないほうが、質が低いことよりずっと痛いです。');
-  L.push('');
-  L.push('## mp4 の書き出し方');
-  L.push('- 形式は mp4（H.264・yuv420p）／ 1080×1920 ／ 30fps ／ 15〜20秒');
-  L.push('- **音声トラックは必須**（AAC 48kHz ステレオ）。上の「音」の章のとおりに作ってください');
-  L.push('- **0フレーム目から、場面とテロップの両方が写っていること。** 黒からのフェードインで始めないでください');
-  L.push('- 画は上の「画風」のとおり、夜の藍色が土台。文字は白。夜にスマホで見てまぶしくない明るさにする');
-  L.push('- **文字ははっきり大きく。** 1行の横幅が画面幅の80%くらいになる大きさ（1080px幅なら、およそ84〜110pxのフォント）。太めの字を使う。');
-  L.push('- **映像の上でも文字が読めるように。** 文字には、ぼかした黒い影を付ける（ずらさず、にじませるだけ）。');
-  L.push('  明るいカットでは、文字の帯の後ろだけを少し暗くする。くっきりした縁取りは使わない（テレビのテロップのように見えます）。');
-  L.push('- **画の主役（時計・窓・灯りなど、見てほしいもの）は、文字と重ならない位置に置く。** 目安は画面の上側（y=250〜700px）。');
-  L.push('');
-  L.push('  **文字の置き場所（前回いちばん直したところです。映像にしても、ここは変えません）**');
-  L.push('  いまの動画は、文字が左に寄っています。フレームを測ると、文字のかたまりの中心が');
-  L.push('  画面の中心（x=540）より25〜87px左にありました。原因は前の指示にあった「右から200pxを空ける」です。');
-  L.push('  右だけを避けると、そのぶん文字が左半分に押し込まれます。**この決まりは廃止します。**');
-  L.push('');
-  L.push('  - **文字のかたまりの中心を、必ず x=540（画面の左右まんなか）に置いてください。**');
-  L.push('  - **左の余白と右の余白を同じ幅にしてください。**1行の最大幅は880px（両側100pxずつ空ける）。');
-  L.push('  - 2行以上のときは、行ごとに**中央そろえ**にしてください。左そろえにすると、行の長さの差がそのまま左寄りに見えます。');
-  L.push('  - **行末の「、」「。」に気をつけてください。** この2つは字の枠の左下に描かれていて、右側が空いています（86pxの字で約50px）。');
-  L.push('    字の枠（フォントの幅）で中央にそろえると、その半分の**約27px、左に寄ります**（これまでの動画で測った25px前後の左寄りも、これかもしれません。推測です）。');
-  L.push('    中央は、実際に描かれた字の画素の左端と右端で合わせてください。');
-  L.push('  - 縦は、文字のかたまりの中心を **y=760〜1100px**（画面の上から4〜6割）に置いてください。');
-  L.push('    ショート動画の右下のボタン列（およそ x=900〜1050 / y=1150〜1750）と、下の題名・チャンネル名（y=1550より下）は、');
-  L.push('    **縦の位置で避けます。横にずらして避けないでください。**');
-  L.push('  - 画面を左右2つに割ったとき、白い文字の量が左右でほぼ同じになるのが正解です。');
-  L.push('- 日本語が豆腐（□）にならないよう、日本語が入ったフォントを指定してください。');
-  L.push('  見つからないときは、使えるフォントを探してから描いてください。文字化けしたまま書き出さないこと');
-  L.push('- テロップとカットの切り替えは同じ瞬間に。0.2〜0.3秒で重ねながら切り替える（白や黒を挟まない）');
-  L.push('- **最後のフレームにも、文字と場面が残っていること。** 黒画面やロゴで終わらせない（そのまま1周目の頭につながります）');
-  L.push('- 書き出したら、必ず**この環境で開けるファイルリンクまたは保存先のパスを渡してください**。');
-  L.push('  作れなかったときは、黙って構成案だけ返さずに、どこで詰まったかを書いてください');
-  L.push('');
-  L.push('### 書き出したあとの自己点検（ここまでやって完成です）');
-  L.push('次の8つを実際に測って、結果を短く書いてください。ひとつでも外れていたら、直してから渡してください。');
-  L.push('1. 長さが15〜20秒に入っているか（ffprobe）');
-  L.push('2. **文字が左右まんなかにあるか。** 映像の明るいところと混ざらないよう、**文字の層だけ**（透明の上に文字だけを描いたもの）で測ります。');
-  L.push('   テロップ3枚ぶんについて、文字の画素がある範囲の左端と右端を取り、その中心が **540±30px** に入っていること。');
-  L.push('   左の余白と右の余白の差が60pxより大きければ、寄っています。直してください。');
-  L.push('3. **0.0秒のフレームに、場面とテロップの両方が写っているか**（静止画を1枚書き出して見る。真っ黒や一色だけになっていないか）');
-  L.push('4. **最初の3秒で、画が動いているか。** 0.0秒・1.0秒・2.0秒・3.0秒のフレームを書き出し、となり同士の画素の差の平均がゼロでないこと。');
-  L.push('   0.8〜1.5秒の「小さな出来事」が、コマを見て分かること。');
-  L.push('5. **点滅していないか。** フレームごとの平均の明るさ（0〜255）を並べ、となりのフレームとの差が12を超えるところがないこと。');
-  L.push('6. 音声トラックが入っていて、無音でないか（ffprobe と volumedetect）');
-  L.push('7. 冒頭0.2秒の平均の音量（mean_volume）が -40dB 以下か（フェードインが効いているか）');
-  L.push('8. **最後のフレームに文字と場面が残っていて、1フレーム目とつながるか**（2枚を並べて見て、構図が大きく跳ばないこと）');
-  L.push('');
+    L.push('## 冒頭の3秒（ここで指を止めてもらう）');
+    L.push('ショート動画は、流すか見るかを最初の数秒で決められます。');
+    L.push('このチャンネルで効くのは驚かせることではなく、**「これは自分のことだ」と「あれ、なんだろう」が同時に来ること**です。');
+    L.push('そのための組み立てを、秒で決めておきます。');
+    L.push('');
+    L.push('- **0.0秒：もう場面の中にいる。** 1フレーム目から、場面と1枚目のテロップの両方が写っていること。');
+    L.push('  黒からのフェードイン・タイトルカード・ロゴから始めない。');
+    L.push('- **0.0秒から、もう動いている。** カメラは最初から寄り始めている（最初の3秒で6〜8%寄る。はじめ少し速く、だんだんゆっくり）。');
+    L.push('  あわせて、光のゆらぎ・雨粒・ほこりの粒など、止まっていないものが最初から見えていること。');
+    L.push('- **0.8〜1.5秒：画の中で、小さな出来事を1つ起こす。** これが「なんだろう」になります。');
+    L.push('  例：時計が 3:11 から 3:12 に変わる／外を車が通って、天井を光がゆっくり横切る／カーテンのすき間の光が少し広がる／向かいの建物で、窓の灯りがひとつだけつく');
+    L.push('  音は付けません（出だしは BGM のフェードインだけ。下の「音」の章のとおり）。');
+    L.push('- **1枚目のテロップは15〜18字。** 3秒かからずに読み切れる長さにして、画と同じ場面を言う。');
+    L.push('  例：画が 3:12 の時計なら「3時12分。今夜も、目が覚めた。」');
+    L.push('  画と文字が同じことを言うと、見ている人は一瞬で「自分の夜だ」と分かります。');
+    L.push('- **2.5〜3.2秒：1回目の切り替え。** ここで2枚目のテロップとカットに変わる。新しいものが見えることが、続きを見る理由になります。');
+    L.push('- 1枚目は説明でも挨拶でもなく、いきなり相手のいる場面から始める。「今日は◯◯について」のような前置きは書かない。');
+    L.push('- 必要なのは煽りではなく、**小さな謎**です。効果音・大きすぎる文字・煽る言葉は合いません。');
+    L.push('  効くのは静けさ・間・具体的な場面です。「不安なとき」より「23時、天井を見ているとき」のほうが届きます。');
+    L.push('（実測メモのとおり、0秒目が黒かった昔の回でも通っています。黒い1フレーム目が伸びない原因だとまでは言えません。');
+    L.push('　ただ、映像にするなら1フレーム目から場面があるほうが損はないので、そうしてください）');
+    L.push('');
+
+    L.push('## 最後まで見てもらう作り');
+    L.push('文字だけの動画は、読み終わったら見るものがなくなります。映像では、**画のほうにも「続き」を作ります**。');
+    L.push('かといって13秒に詰めた回は、そろって通りませんでした（実測メモ）。尺は17秒のまま、中身で引っぱります。');
+    L.push('');
+    L.push('- **1枚目で問いを立てて、最後の1枚でそれに答える。** 途中で答えを言わない。');
+    L.push('  「この人は結局なんて言うんだろう」と思わせる一行を、1枚目に置いてください。');
+    L.push('- **画にも、問いと答えを持たせる。** 最後のカットで1カット目と同じ場所に戻ってきたとき、ひとつだけ何かが変わっている。');
+    L.push('  例：灯りがひとつ増えている／カーテンが少しだけ開いている／向かいの建物にも、灯りのついた窓がある。');
+    L.push('  それが画の答えです。最後の一行と、その変化が同じ瞬間に見えるようにしてください。');
+    L.push('- **テロップ1枚ごとにカットを変える（2.5〜3.5秒ごと）。** カットが変わるたびに、新しいものが1つ見えること。');
+    L.push('  同じ画を同じ動きのまま続けない。寄る → 横に流れる → 引く、のように、カメラの動きもカットごとに変える。');
+    L.push('- **画の中で、時間を少しずつ進める。** 時計が進む・窓の外が少しずつ白む・雨が弱まる・湯気が消えていく。');
+    L.push('  見ている人は、その変化の行き先を見届けたくなります。');
+    L.push('- **真ん中（8〜10秒あたり）に、2つ目の小さな出来事を置く。** いちばん離れられやすいところです。');
+    L.push('  灯りがつく・雨がやむ・カメラが窓のほうを向く、くらいの静かな変化で十分です。');
+    L.push('- **最後から1枚目へ、そのままつながるようにしてください。** ショート動画は自動でくり返し再生されます。');
+    L.push('  つながっていれば2周目に入ります。2周目まで見られた動画は、最後まで見られた割合が100%を超えて数えられます。');
+    L.push('  - 文字：最後の1枚の言葉が、1枚目の頭に戻っていく言葉にする。言い切って終わるより、静かに1枚目へ戻れる終わり方のほうが、このチャンネルには合っています。');
+    L.push('  - 画：最後のカットは、1カット目と同じ場所・近い構図で終える。変わっているのは上の「ひとつだけ」と時刻くらいにして、2周目の頭で画が大きく跳ばないようにする。');
+    L.push('- 最後を黒画面・ロゴ・「ご視聴ありがとうございました」で終わらせない。最後のフレームにも、文字と場面が残っていること。');
+    L.push('');
+    pushAsk();
+    pushRole();
+
+    /* ── 9.5 音。無音のまま出し続けていたのを、ここで止めます ── */
+    L.push('## 音（無音のまま出さないこと）');
+    L.push('**無音の mp4 は不可です。必ず音声トラックの入った mp4 を書き出してください。**');
+    L.push('これまでの指示文が「音はあとで載せる」と書いていたせいで、文字だけの静かな動画が続いていました。');
+    L.push('ショート動画は音のあるものとして見られています。音がないと、それだけで最後まで残りません。');
+    L.push('');
+    if (audioBest && audioEv && audioEv.level !== 'まだ推測'){
+      L.push(`このチャンネルの記録では、音は「${audioBest}」がいちばん良い結果です（${audioEv.level}）。`);
+      if (audioEv.reasons.length) L.push(`根拠：「${audioEv.worst.key}」と比べて ${audioEv.reasons.join(' ／ ')}`);
+      L.push(`今回も **${audioBest}** で作ってください。`);
+    } else if (audioBest){
+      L.push(`いまのところ音は「${audioBest}」で作った回が最も良い数字ですが、まだ比べられるだけの本数がありません。`);
+      L.push(`今回も **${audioBest}** で作って、本数を積んでください。`);
+    } else {
+      L.push('音についての記録はまだ1本もありません。だからこそ、ここを今日から固定します。');
+      L.push('今回は **BGM＋効果音** で作ってください。');
+    }
+    L.push('');
+    L.push('### BGM（出だしがうるさいと、そこで閉じられます）');
+    L.push('- 星の海の曲（Suno で作ったもの）は、あとでこちらで差し替えます。');
+    L.push('  ですので今回は、**差し替えを前提にした仮のBGM**を、あなたのほうで作って敷いてください。無音にはしないこと。');
+    L.push('- ただし今回から、**音を一段ぶん静かに**します。これまでの出だしは音が大きく、最初の1秒で閉じられていました。');
+    L.push('- **冒頭0.8秒でフェードインしてください。** -40dBFS くらいの小さな音から始めて、0.8秒で定常の音量まで上げる。');
+    L.push('  いきなり鳴らさない。夜、イヤホンを着けたままの人が驚かない入り方にしてください。');
+    L.push('  （以前は2秒かけていましたが、それでは長すぎます。狙いは音を消すことではなく、立ち上がりの角を取ることです）');
+    L.push('- 静かなアンビエントにしてください。遠い波、細かい雨、低い持続音（ドローン）、ゆっくりした脈。');
+    L.push('- リズム（ビート・打楽器・刻み）は入れない。メロディも作らない。和音がゆっくり滲むだけで十分です。');
+    L.push('- 定常の音量は **-28〜-32dBFS**。（これまでの -20〜-24dBFS は、このチャンネルには大きすぎました）');
+    L.push('  テロップを読む邪魔をしない、「言われて初めて音に気づく」くらいの、部屋の空気のような音量にしてください。');
+    L.push('- 耳につく帯域を削る：8kHz より上と 80Hz より下は落としてください。シャリつきと重い低音は、小さい音量でも刺さります。');
+    L.push('- 音の変化はゆっくり。2秒より短い間に音量や音色が動かないようにしてください。');
+    L.push('- 最後まで鳴らし続ける。**無音で終わらせないでください。**最後の0.5秒だけ少し落として、1枚目の頭の音量とつながるようにする。');
+    L.push('  （ショート動画はくり返し再生されます。ぷつっと切れると、そこで抜けられます）');
+    L.push('');
+    L.push('### 効果音');
+    L.push('- **冒頭に効果音は置かないでください。** 0.8〜1.5秒の「小さな出来事」にも付けません。');
+    L.push('  出だしは BGM のフェードインだけです。掴みは音ではなく、1枚目のテロップと画で作ってください。');
+    L.push('- 3秒より後のカットの切り替わりのうち2〜3か所だけ、画の中の出来事（灯りがつく・カーテンが揺れる・雨が弱まる）に合わせて、ごく小さく1つずつ。');
+    L.push('  毎回入れるとうるさくなります。BGM より小さいくらいで十分です。');
+    L.push('- 最後のカット（画の答えが見えるところ）に、余韻の残る音を1つ。');
+    L.push('- 合計4つまで。これ以上は入れないでください。うるさい動画は、このチャンネルでは逆効果です。');
+    L.push('- どの効果音も、立ち上がりに 50ms 以上かけてゆるやかに。「コツン」と鳴る音は使わない。');
+    L.push('');
+    L.push('### 音の方向（ここを外すとチャンネルごと壊れます）');
+    L.push('- 使わない音：通知音、ポップ、キラキラ、ドゥン系の重い衝撃音、テレビのような効果音、ビート。');
+    L.push('  煽る音は、しんどい夜に見ている人をそのまま追い出します。');
+    L.push('- 使う音：波、雨、紙、鈴、遠い雷、風、低く短い余韻。減衰の長い、角のない音。');
+    L.push('- 目安は「夜、イヤホンで音量を上げずに聞いても痛くないか」。痛ければ音量か音色が間違っています。');
+    L.push('- 効果音は -30〜-36dBFS。全体は **-20 LUFS** にそろえてください。');
+    L.push('  （SNS標準は -14 LUFS ですが、それだと出だしで敬遠されます。このチャンネルは、あえて静かめに出します。）');
+    L.push('- 書き出したあと、**冒頭0.2秒の平均の音量**（volumedetect の mean_volume）を測ってください。-40dB より大きければ、フェードインが効いていません。作り直してください。');
+    L.push('');
+    L.push('### 音の作り方');
+    L.push('- 音源をどこかからダウンロードしてこないでください。権利の分からない音は使えません。');
+    L.push('- コードで合成してください（例：numpy で正弦波・ノイズを作り、包絡線をかけて wav に書き出し、ffmpeg で映像と合わせる）。');
+    L.push('  雨や波はホワイトノイズにフィルタをかければ作れます。鈴や余韻は減衰する正弦波の重ね合わせで作れます。');
+    L.push('- フェードインは音を作ったあとで包絡線をかけるだけです（冒頭0.8秒に、0から1へ上がるカーブを掛ける）。忘れないでください。');
+    L.push('- 書き出したら、**音が本当に入っているか確認してください**（ffprobe でストリームを見る、長さと音量を測るなど）。');
+    L.push('  無音のまま「できました」と返さないこと。ここが今回いちばん守ってほしいところです。');
+    L.push('- あわせて、**冒頭0.2秒だけを切り出して、平均の音量を測ってください**。ここが大きいと、中身を見てもらう前に閉じられます。');
+    L.push('  （いちばん大きい瞬間の値 max_volume ではなく、平均 mean_volume で見ます。0から1へ2乗の曲線で上げれば、平均は -50dB 前後になります）');
+    L.push('');
+    L.push('### 渡してほしい音のファイル');
+    L.push('1. 音入りの mp4（本命。これがないと今回は未完成です）');
+    L.push('2. 音なしの mp4（あとで星の海の曲に差し替えるとき用）');
+    L.push('3. BGM だけの wav と、効果音だけの wav（あとで音量を調整できるように、別々で）');
+    L.push('');
+    L.push('あわせて、**どの秒に何の音を置いたか**を、下の「絵コンテ」の表の「音」の列に書いてください（例：0.0秒 遠い波 ／ 8.6秒 灯りがつく小さな鈴 …）。');
+    L.push('');
+
+    /* ── 10. 作り方（仕組み化） ── */
+    L.push('## 動画の作り方（尺とテロップは実測のまま。画を映像にします）');
+    L.push('前回は13秒に縮めましたが、その5本はそろって通りませんでした。尺とテロップは、通っている帯のまま変えません。');
+    L.push('- 縦1080×1920 ／ **全体17秒**（15〜20秒の範囲。通った回はほぼこの帯です。13秒には縮めないでください）');
+    L.push('- **テロップ5〜7枚。1枚は2.5〜3.5秒。テロップ1枚＝1カット。** 読み終わって少し間があってから次へ行く速さにする');
+    L.push('- テロップ1枚は**15〜24字**（1枚目は15〜18字）。1行か2行で収める。3行になったら文を割ってください');
+    L.push('- 読み上げ音声（ナレーション）は入れません。音は BGM と効果音だけです（上の「音」の章のとおり）');
+    L.push('- 1枚目のテロップから本題に入る。「今日は◯◯について話します」のような前置きは書かない');
+    L.push('');
+    L.push('### 作る順番（この順で進めると、書き出しまでたどり着けます）');
+    L.push('1. **先に絵コンテを決める。** カットごとに「秒・何が見えるか・カメラの動き・画の中で起きること・テロップ・音」を表にする。');
+    L.push('2. **動かないものは、先に層ごとに1枚ずつ描いておく。** 奥の空・向かいの建物・部屋の壁・手前の物、のように3〜5層。');
+    L.push('   カメラが動いても端が切れないよう、画面より2割ほど大きく描く。手前の層ほど大きく動くので、端の余白は多めに');
+    L.push('   （切り取る範囲が絵の外に出ると、そこで止まります。切り取る位置は絵の内側に収めてください）。');
+    L.push('3. **毎フレームは、層をずらして重ねるだけにする。** 手前の層ほど大きく動かす（奥0.3・中1・手前1.6くらいの割合）と、奥行きが出ます。');
+    L.push('   動きは必ず、ゆっくり始まってゆっくり止まる曲線（イージング）で。等速で動かすと機械っぽく見えます。');
+    L.push('   カメラはどのカットでも止めない。寄る・引く・横に流すのどれかで、1カットのあいだに画面の4〜8%ぶん動かす。');
+    L.push('   **寄るときは、画の主役に向かって寄る。** 画面のまんなかに向かって寄ると、主役が画面の端へ逃げていきます。');
+    L.push('   主役は小さくしない。スマホで見て、何なのかすぐ分かる大きさ（目安は画面の幅の3分の1以上）にしてください。');
+    L.push('4. 雨・ほこり・星・湯気のような細かいものは、毎フレーム描く。光のにじみは、小さく縮めた画像をぼかしてから拡大すると速く作れます。');
+    L.push('   フィルムの粒は**ごく薄く**（明るさの揺れ±2〜3くらい）。数枚ぶんを先に作っておき、3フレームに1回入れ替えれば十分です。');
+    L.push('   強い粒を毎フレーム変えると圧縮が効かなくなり、書き出しが10倍以上遅く、ファイルも何倍も重くなります');
+    L.push('   （こちらの試作では、粒を薄くしただけで 11分・91MB が 40秒・17MB になりました）。');
+    L.push('5. フレームは PNG で保存せず、ffmpeg に直接流しこむ（生の画素をパイプで渡す）。ffmpeg は -preset veryfast -crf 20 前後で十分です。');
+    L.push('   1回の実行に時間の制限がある環境なら、カットごとに書き出して、最後につなぐ。');
+    L.push('6. 本番の前に、冒頭3秒だけを小さく（540×960）書き出して、コマを見て確かめると、やり直しが少なくて済みます。');
+    L.push('');
+    L.push('**凝りすぎて書き出せないのが、いちばんの失敗です。** 重くて間に合いそうにないときは、描く場所の数や細部を減らしてください。');
+    L.push('凝った未完成より、簡素でも最後まで書き出した1本のほうが、ずっと価値があります。');
+    L.push(`この型は、しんどい日でも${st.minutes}分あれば出せるように決めたものです。こちらがするのは、この指示文を貼って、できたものを投稿するところまでにしたい。`);
+    L.push('途中で止まって聞き返さず、最後まで進めてください。続かないほうが、質が低いことよりずっと痛いです。');
+    L.push('');
+    L.push('## mp4 の書き出し方');
+    L.push('- 形式は mp4（H.264・yuv420p）／ 1080×1920 ／ 30fps ／ 15〜20秒');
+    L.push('- **音声トラックは必須**（AAC 48kHz ステレオ）。上の「音」の章のとおりに作ってください');
+    L.push('- **0フレーム目から、場面とテロップの両方が写っていること。** 黒からのフェードインで始めないでください');
+    L.push('- 画は上の「画風」のとおり、夜の藍色が土台。文字は白。夜にスマホで見てまぶしくない明るさにする');
+    L.push('- **文字ははっきり大きく。** 1行の横幅が画面幅の80%くらいになる大きさ（1080px幅なら、およそ84〜110pxのフォント）。太めの字を使う。');
+    L.push('- **映像の上でも文字が読めるように。** 文字には、ぼかした黒い影を付ける（ずらさず、にじませるだけ）。');
+    L.push('  明るいカットでは、文字の帯の後ろだけを少し暗くする。くっきりした縁取りは使わない（テレビのテロップのように見えます）。');
+    L.push('- **画の主役（時計・窓・灯りなど、見てほしいもの）は、文字と重ならない位置に置く。** 目安は画面の上側（y=250〜700px）。');
+    L.push('');
+    L.push('  **文字の置き場所（前回いちばん直したところです。映像にしても、ここは変えません）**');
+    L.push('  いまの動画は、文字が左に寄っています。フレームを測ると、文字のかたまりの中心が');
+    L.push('  画面の中心（x=540）より25〜87px左にありました。原因は前の指示にあった「右から200pxを空ける」です。');
+    L.push('  右だけを避けると、そのぶん文字が左半分に押し込まれます。**この決まりは廃止します。**');
+    L.push('');
+    L.push('  - **文字のかたまりの中心を、必ず x=540（画面の左右まんなか）に置いてください。**');
+    L.push('  - **左の余白と右の余白を同じ幅にしてください。**1行の最大幅は880px（両側100pxずつ空ける）。');
+    L.push('  - 2行以上のときは、行ごとに**中央そろえ**にしてください。左そろえにすると、行の長さの差がそのまま左寄りに見えます。');
+    L.push('  - **行末の「、」「。」に気をつけてください。** この2つは字の枠の左下に描かれていて、右側が空いています（86pxの字で約50px）。');
+    L.push('    字の枠（フォントの幅）で中央にそろえると、その半分の**約27px、左に寄ります**（これまでの動画で測った25px前後の左寄りも、これかもしれません。推測です）。');
+    L.push('    中央は、実際に描かれた字の画素の左端と右端で合わせてください。');
+    L.push('  - 縦は、文字のかたまりの中心を **y=760〜1100px**（画面の上から4〜6割）に置いてください。');
+    L.push('    ショート動画の右下のボタン列（およそ x=900〜1050 / y=1150〜1750）と、下の題名・チャンネル名（y=1550より下）は、');
+    L.push('    **縦の位置で避けます。横にずらして避けないでください。**');
+    L.push('  - 画面を左右2つに割ったとき、白い文字の量が左右でほぼ同じになるのが正解です。');
+    L.push('- 日本語が豆腐（□）にならないよう、日本語が入ったフォントを指定してください。');
+    L.push('  見つからないときは、使えるフォントを探してから描いてください。文字化けしたまま書き出さないこと');
+    L.push('- テロップとカットの切り替えは同じ瞬間に。0.2〜0.3秒で重ねながら切り替える（白や黒を挟まない）');
+    L.push('- **最後のフレームにも、文字と場面が残っていること。** 黒画面やロゴで終わらせない（そのまま1周目の頭につながります）');
+    L.push('- 書き出したら、必ず**この環境で開けるファイルリンクまたは保存先のパスを渡してください**。');
+    L.push('  作れなかったときは、黙って構成案だけ返さずに、どこで詰まったかを書いてください');
+    L.push('');
+    L.push('### 書き出したあとの自己点検（ここまでやって完成です）');
+    L.push('次の8つを実際に測って、結果を短く書いてください。ひとつでも外れていたら、直してから渡してください。');
+    L.push('1. 長さが15〜20秒に入っているか（ffprobe）');
+    L.push('2. **文字が左右まんなかにあるか。** 映像の明るいところと混ざらないよう、**文字の層だけ**（透明の上に文字だけを描いたもの）で測ります。');
+    L.push('   テロップ3枚ぶんについて、文字の画素がある範囲の左端と右端を取り、その中心が **540±30px** に入っていること。');
+    L.push('   左の余白と右の余白の差が60pxより大きければ、寄っています。直してください。');
+    L.push('3. **0.0秒のフレームに、場面とテロップの両方が写っているか**（静止画を1枚書き出して見る。真っ黒や一色だけになっていないか）');
+    L.push('4. **最初の3秒で、画が動いているか。** 0.0秒・1.0秒・2.0秒・3.0秒のフレームを書き出し、となり同士の画素の差の平均がゼロでないこと。');
+    L.push('   0.8〜1.5秒の「小さな出来事」が、コマを見て分かること。');
+    L.push('5. **点滅していないか。** フレームごとの平均の明るさ（0〜255）を並べ、となりのフレームとの差が12を超えるところがないこと。');
+    L.push('6. 音声トラックが入っていて、無音でないか（ffprobe と volumedetect）');
+    L.push('7. 冒頭0.2秒の平均の音量（mean_volume）が -40dB 以下か（フェードインが効いているか）');
+    L.push('8. **最後のフレームに文字と場面が残っていて、1フレーム目とつながるか**（2枚を並べて見て、構図が大きく跳ばないこと）');
+    L.push('');
+
+  }
 
   /* ── 11. 出してほしいもの ── */
   L.push('## 出してほしいもの');
   L.push('');
-  L.push('### 1. mp4 の動画ファイル（音入り）');
-  L.push('上の「映像にする」「音」「mp4 の書き出し方」のとおりに書き出した、17秒（15〜20秒）の縦動画を渡してください。');
-  L.push('**音が入っていない mp4 と、場面が描かれていない（文字だけの）mp4 は、今回は未完成として扱います。**');
+  let no = 0;
+  const item = t => L.push(`### ${++no}. ${t}`);
+  item('mp4 の動画ファイル（音入り）');
+  if (tomori){
+    L.push('上の「ともり」「音」「キットの使い方と、先に直すところ」「mp4 の書き出し方」のとおりに書き出した、17〜17.5秒の縦動画を渡してください。');
+    L.push('**音が入っていない mp4 と、ともりが出てこない mp4 は、今回は未完成として扱います。**');
+    L.push('あわせて、音なしの mp4・BGM だけの wav・効果音だけの wav も渡してください（あとで星の海の曲に差し替えたり、音量を調整したりするため）。');
+  } else {
+    L.push('上の「映像にする」「音」「mp4 の書き出し方」のとおりに書き出した、17秒（15〜20秒）の縦動画を渡してください。');
+    L.push('**音が入っていない mp4 と、場面が描かれていない（文字だけの）mp4 は、今回は未完成として扱います。**');
+  }
   L.push('これが今回いちばん大事な成果物です。ここまで来て、はじめて終わりです。');
   L.push('');
-  L.push('### 2. 冒頭3秒のコマ（画像1枚）');
+  item('冒頭3秒のコマ（画像1枚）');
   L.push('0.0・0.5・1.0・1.5・2.0・2.5・3.0秒と、最後のフレームの8コマを、横4×縦2に並べた1枚の画像（PNG）にしてください。');
   L.push('各コマの下に秒数を入れる。こちらはこれを見て、最初の3秒で何が起きるかと、最後が最初につながるかを確かめます。');
   L.push('');
-  L.push('### 3. 絵コンテ（書き出した mp4 のとおりに）');
-  L.push('カットごとに1行ずつ、次の列の表にしてください。');
-  L.push('秒（例：0.0〜2.9）／何が見えるか／カメラの動き／画の中で起きること／テロップ／音');
-  L.push('- テロップの列には、画面に出す文字だけをそのまま書く。説明や指示は混ぜないでください。');
-  L.push('- 1枚目は、上の「冒頭の3秒」のとおり、場面と小さな謎から始めてください。');
-  L.push('- 最後から2枚目に、上の「反応をひとつだけもらう」の問いを置いてください。');
-  L.push('- 最後の1枚は、上の「この1本の役割」に合わせた締めで、そのまま1枚目につながる言葉にしてください。');
-  L.push('');
-  L.push('### 4. 題名（3案）');
+  if (tomori){
+    item('ビート表（書き出した mp4 のとおりに）');
+    L.push('ビートごとに1行ずつ、キットの README と同じ列に「音」を足した表にしてください。');
+    L.push('秒（例：0.0–3.4）／テロップ／表情／動き／光／口／音');
+    L.push('- テロップの列には、画面に出す文字だけをそのまま書く（行の区切りは「／」）。説明や指示は混ぜないでください。');
+    L.push('- 1行目は、上の「冒頭の3秒」のとおり、ともりの最初のひとことで場面から始めてください。');
+    L.push('- 最後から2行目に、上の「反応をひとつだけもらう」の問いを、ともりのことばとして置いてください。');
+    L.push('- 最後の行は、上の「この1本の役割」に合わせた締めで、光は0.9以上。そのまま1行目につながることばにしてください。');
+    L.push('');
+    item(`回の定義ファイルと、直したキット`);
+    L.push(`- ep_${slug}.py（この回の定義）。`);
+    L.push('- 「先に直すところ」の4つを入れた tomori.py・scene.py・audio.py と ep_ame.py・README.md・tomori_sheet.png を、zip にまとめたもの。');
+    L.push('  次の回から、そのまま添付して使えるようにするためです。');
+    L.push('');
+  } else {
+    item('絵コンテ（書き出した mp4 のとおりに）');
+    L.push('カットごとに1行ずつ、次の列の表にしてください。');
+    L.push('秒（例：0.0〜2.9）／何が見えるか／カメラの動き／画の中で起きること／テロップ／音');
+    L.push('- テロップの列には、画面に出す文字だけをそのまま書く。説明や指示は混ぜないでください。');
+    L.push('- 1枚目は、上の「冒頭の3秒」のとおり、場面と小さな謎から始めてください。');
+    L.push('- 最後から2枚目に、上の「反応をひとつだけもらう」の問いを置いてください。');
+    L.push('- 最後の1枚は、上の「この1本の役割」に合わせた締めで、そのまま1枚目につながる言葉にしてください。');
+    L.push('');
+  }
+  item('題名（3案）');
   L.push('題名とハッシュタグをひと続きにした形で、3案出してください。');
   L.push('例：眠れない夜にやっていること #ショート #精神障害 #生きづらさ');
   L.push('');
@@ -3337,7 +3645,7 @@ function buildPrompt(){
   L.push('- 支援者の言い方（「〜の方へ」「〜を応援します」「〜してあげる」）にしないこと。');
   L.push('  同じ側にいる人の言葉にしてください。「私も」で始められるかどうかが目安です。');
   L.push('');
-  L.push('### 5. 説明文');
+  item('説明文');
   L.push('**説明文は、そのまま概要欄へ一度でコピーできる完成文を1つだけ出してください。**');
   L.push('これまで固定コメントに分けていた問いかけ・サイト案内・計測リンクも、すべてこの説明文の本文に含めます。');
   L.push('固定コメントを別項目・別案・別のコピーブロックとして出さず、説明文の中にも「固定コメント」という見出しは付けないでください。');
@@ -3358,19 +3666,21 @@ function buildPrompt(){
   L.push('短縮したり、パラメータを足し引きすると数えられなくなります。');
   L.push('この計測の説明や識別子の解説は、貼り付け用の説明文には含めないでください。');
   L.push('');
-  L.push('### 6. 記録用の1行');
+  item('記録用の1行');
   L.push('作ったものを分析ページに登録するので、最後にこの形で出してください。');
-  L.push(`識別子: ${slug} ／ テーマ: ___ ／ 冒頭の掴み: ___ ／ 音: ${audioBest || 'BGM＋効果音'} ／ 形式: ${VISUAL_FORMAT} ／ 尺: ___（実際に書き出した秒数）／ 締め: ___ ／ 役割: ${role.role} ／ 今回変えたもの: ${nx ? nx.axis.name : '変えていない'}`);
+  L.push(`識別子: ${slug} ／ テーマ: ___ ／ 冒頭の掴み: ___ ／ 音: ${tomori ? 'BGM＋効果音' : (audioBest || 'BGM＋効果音')} ／ 形式: ${FORMAT} ／ 尺: ___（実際に書き出した秒数）／ 締め: ___ ／ 役割: ${role.role} ／ 今回変えたもの: ${nx ? nx.axis.name : '変えていない'}`);
   L.push('（掴みは 問いかけ・共感・断言・数字・体験談・場面描写 から、');
   L.push('　音は BGM＋効果音・BGMのみ・効果音のみ・語り＋BGM・無音 から、');
   L.push('　締めは リンクへ・コメント促し・登録の約束・なし から選んでください。');
-  L.push(`　形式は「${VISUAL_FORMAT}」のまま書き換えないでください。分析ページは、この言葉で映像の回を数えています）`);
+  L.push(`　形式は「${FORMAT}」のまま書き換えないでください。分析ページは、この言葉で${tomori ? 'ともりの回' : '映像の回'}を数えています）`);
   L.push('');
-  L.push('### 7. 次の2本の設計（作らなくていいです。設計だけ）');
+  item('次の2本の設計（作らなくていいです。設計だけ）');
   if (nx?.switching){
-    L.push(`今回の1本と合わせて3本で、映像にした効き目を確かめます。次の2本も**${VISUAL_FORMAT}**で、ほかの条件は今回とそろえた案を、あと2本ぶん出してください。`);
+    L.push(`今回の1本と合わせて3本で、${tomori ? 'ともりにした' : '映像にした'}効き目を確かめます。次の2本も**${FORMAT}**で、ほかの条件は今回とそろえた案を、あと2本ぶん出してください。`);
     L.push('- 直近と同じテーマは続けない決まりなので、テーマだけは変えてかまいません。尺・テロップ・音・題名の形は今回と同じにする');
-    L.push('- それぞれ、描く場面と、冒頭3秒の「小さな出来事」が分かる形で、1〜2行ずつ');
+    L.push(tomori
+      ? '- それぞれ、テロップの流れと、ともりの表情・光の移り変わり（暗いところから、あたたかい光まで）が分かる形で、1〜2行ずつ'
+      : '- それぞれ、描く場面と、冒頭3秒の「小さな出来事」が分かる形で、1〜2行ずつ');
     L.push('- 3本出したあとに何が分かるのか（何を確かめる3本なのか）を、最後に一行で');
   } else {
     L.push(`今回の1本と合わせて3本で1つの検証にします。${nx ? `**${nx.axis.name}だけ**を変えた案` : '1つだけ変えた案'}を、あと2本ぶん出してください。`);
@@ -3396,8 +3706,26 @@ function showPrompt(){
   $('#prompt-out').value = text;
   $('#prompt-slug').textContent = slug;
   $('#prompt-msg').textContent = '';
+  $('#prompt-kit-reminder').classList.toggle('hidden', !useTomori());
 }
 $('#prompt-build').addEventListener('click', showPrompt);
+
+/* 「ともりで作る」の切り替え。端末ごとの好みなので、この端末に覚えておきます（既定はオン）。 */
+function syncTomoriToggle(){
+  const on = useTomori();
+  $('#use-tomori').checked = on;
+  $('#tomori-kit-note').classList.toggle('hidden', !on);
+  $('#prompt-note').textContent = on
+    ? 'キャラクター「ともり」が出てくる動画（音入り）と冒頭3秒のコマ、投稿文、次の検証案まで依頼します。AIがキットのコードを動かして書き出すので、コードを実行できる環境が必要です。'
+    : '場面が動く映像（音入り）と冒頭3秒のコマ、投稿文、次の検証案まで依頼します。映像はAIがコードで描いて書き出すので、コードを実行できる環境が必要です。';
+}
+$('#use-tomori').addEventListener('change', e => {
+  try { localStorage.setItem(TOMORI_KEY, e.target.checked ? 'on' : 'off'); } catch {}
+  syncTomoriToggle();
+  if (state.ready){ renderTestPlan(); renderFormatCompare(); }
+  if (!$('#prompt-box').classList.contains('hidden')) showPrompt();   // 出ている指示文も作り直す
+});
+syncTomoriToggle();
 $('#prompt-build2').addEventListener('click', showPrompt);
 
 $('#prompt-copy').addEventListener('click', async () => {
