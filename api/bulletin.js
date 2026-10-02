@@ -11,7 +11,20 @@ allow: 挨拶、感想、応援、体験談、相談、建設的で穏やかな�
 安全に公開できると判断した場合だけallow。攻撃か相談か判断に迷う場合はuncertain。理由や原文は出力せず、decisionのみ返す。`;
 
 class PublicError extends Error {
-  constructor(status, code) { super(code); this.status = status; this.code = code; }
+  constructor(status, code, diagnostic) {
+    super(code); this.status = status; this.code = code; this.diagnostic = diagnostic;
+  }
+}
+
+function aiFailure(status, error) {
+  // Only known codes can leave the server. Provider messages can contain credentials.
+  const billingCodes = new Set(['credit_balance_exhausted', 'organization_spend_limit_exceeded',
+    'project_spend_limit_exceeded', 'organization_usage_limit_exceeded', 'insufficient_quota',
+    'billing_hard_limit_reached']);
+  if (billingCodes.has(error?.code)) return 'ai_' + error.code;
+  if (error?.type === 'insufficient_quota') return 'ai_quota';
+  return ({ 400: 'ai_request', 401: 'ai_auth', 403: 'ai_access',
+    404: 'ai_model', 429: 'ai_rate_limit' })[status] || 'ai_service';
 }
 
 function parseInput(body) {
@@ -22,7 +35,12 @@ function parseInput(body) {
   if (!body || typeof body !== 'object' || Array.isArray(body) ||
       Buffer.byteLength(JSON.stringify(body)) > 8192) throw new PublicError(400, 'invalid_input');
   const action = body.action ?? 'create';
-  if (!['create', 'edit'].includes(action)) throw new PublicError(400, 'invalid_input');
+  if (!['create', 'edit', 'check'].includes(action)) throw new PublicError(400, 'invalid_input');
+  // Public connectivity check: fixed input, same rate limits, and never a DB write.
+  // Ignore supplied names/text/IDs so this cannot become an arbitrary model playground.
+  if (action === 'check') return {
+    action, author_name: '接続確認', content: 'こんにちは。こちらの掲示板を利用できてうれしいです。', parent_id: null,
+  };
   const content = typeof body.content === 'string' ? body.content.trim() : '';
   const author = typeof body.author_name === 'string' ? body.author_name.trim() : '';
   if (!content || content.length > 500 || (action === 'create' && (!author || author.length > 30)))
@@ -42,12 +60,17 @@ module.exports = async function handler(req, res) {
     res.setHeader('Allow', 'POST');
     return send(405, { error: 'method_not_allowed' });
   }
+  let checkOnly = false;
+  let stage = 'configuration';
   try {
     if (!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || ''))
       throw new PublicError(415, 'invalid_input');
     if (Number(req.headers['content-length']) > 8192) throw new PublicError(413, 'invalid_input');
     const input = parseInput(req.body);
-    const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY, BBS_ADMIN_USER_ID } = process.env;
+    checkOnly = input.action === 'check';
+    const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY, BBS_ADMIN_USER_ID } =
+      Object.fromEntries(['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'OPENAI_API_KEY', 'BBS_ADMIN_USER_ID']
+        .map(key => [key, process.env[key]?.trim()]));
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !OPENAI_API_KEY)
       throw new PublicError(503, 'unavailable');
     const dbURL = new URL(SUPABASE_URL);
@@ -60,6 +83,8 @@ module.exports = async function handler(req, res) {
     // One deadline across DB/auth/model/write, with no retry that could double-post.
     const signal = AbortSignal.timeout(25000);
     async function db(path, options = {}) {
+      stage = path.startsWith('rpc/') ? 'database_rate_limit'
+        : ['POST', 'PATCH'].includes(options.method) ? 'database_save' : 'database_read';
       const response = await fetch(`${dbURL.origin}/rest/v1/${path}`, {
         ...options, headers: { ...headers, ...options.headers }, signal,
       });
@@ -68,6 +93,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (input.action === 'edit') {
+      stage = 'admin_auth';
       if (!BBS_ADMIN_USER_ID || !/^Bearer \S+$/.test(req.headers.authorization || ''))
         throw new PublicError(403, 'admin_required');
       const auth = await fetch(`${dbURL.origin}/auth/v1/user`, {
@@ -79,6 +105,7 @@ module.exports = async function handler(req, res) {
     }
 
     // Vercel overwrites this header. Never trust an IP supplied in the JSON body.
+    stage = 'client_ip';
     const ip = (req.headers['x-vercel-forwarded-for'] || '').split(',')[0].trim();
     if (!isIP(ip)) throw new PublicError(503, 'unavailable');
     const ipHash = createHmac('sha256', SUPABASE_SERVICE_ROLE_KEY)
@@ -103,6 +130,7 @@ module.exports = async function handler(req, res) {
       parent = { author_name: String(rows[0].author_name).slice(0, 30), content: String(rows[0].content).slice(0, 500) };
     }
 
+    stage = 'ai_connection';
     const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST', signal,
       headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
@@ -116,7 +144,11 @@ module.exports = async function handler(req, res) {
         } } },
       }),
     });
-    if (!response.ok) throw new PublicError(503, 'unavailable');
+    if (!response.ok) {
+      const failure = await response.json().catch(() => null);
+      throw new PublicError(503, 'unavailable', aiFailure(response.status, failure?.error));
+    }
+    stage = 'ai_response';
     const result = await response.json();
     if (result.status !== 'completed' || !Array.isArray(result.output)) throw new PublicError(503, 'unavailable');
     const parts = result.output.filter(o => o.type === 'message').flatMap(o => o.content || []);
@@ -124,6 +156,8 @@ module.exports = async function handler(req, res) {
     const verdict = JSON.parse(parts[0].text);
     if (!verdict || Object.keys(verdict).length !== 1 || !['allow', 'block', 'uncertain'].includes(verdict.decision))
       throw new PublicError(503, 'unavailable');
+    // This return is deliberately before every insert/update and email trigger.
+    if (checkOnly) return send(200, { ok: true, decision: verdict.decision });
     if (verdict.decision !== 'allow') throw new PublicError(422, 'not_allowed');
 
     const edit = input.action === 'edit';
@@ -137,6 +171,14 @@ module.exports = async function handler(req, res) {
     return send(edit ? 200 : 201, { message: saved[0] });
   } catch (error) {
     // Never echo or log model responses, post text, credentials, or database errors.
+    if (checkOnly) {
+      const known = error instanceof PublicError;
+      return send(known ? error.status : 503, {
+        error: known ? error.code : 'unavailable',
+        diagnostic: (known && error.diagnostic) || stage +
+          (error?.name === 'TimeoutError' || error?.name === 'AbortError' ? '_timeout' : '_failed'),
+      });
+    }
     if (error instanceof PublicError) return send(error.status, { error: error.code });
     return send(503, { error: 'unavailable' });
   }

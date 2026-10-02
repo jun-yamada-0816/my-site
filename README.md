@@ -95,6 +95,10 @@ SQLを適用せずフロントだけ更新すると、旧REST APIへの直接投
 
 ### BBSのテスト
 
+公開サイトで保存せずに接続を確認するには、`POST /api/bulletin` に `{"action":"check"}` をJSONで送ります。固定の挨拶だけをAIに送り、投稿・通知は作りません。通常投稿と同じ30秒・日次の制限を使い、API料金の対象になります。成功時は `{"ok":true,"decision":"allow"}`、失敗時は `diagnostic` に原因の種類だけを返します。任意の名前・本文を渡しても診断には使いません。これは接続と固定文の判定の確認で、保存・管理者UID・あらゆる内容の分類精度の検証ではありません。
+
+`ai_insufficient_quota` / `ai_quota` はAPI利用枠、`ai_credit_balance_exhausted` は前払い残高、`ai_project_spend_limit_exceeded` / `ai_organization_spend_limit_exceeded` は支出制限を確認してください。`ai_auth` はAPIキー、`ai_access` はアクセス権、`ai_model` はモデル、`ai_request` はリクエスト仕様、`ai_response_failed` は応答形式を確認します。通常の投稿画面には内部の診断情報や提供元の生のエラーメッセージを表示しません。[OpenAI公式のエラー一覧](https://developers.openai.com/api/docs/guides/error-codes)
+
 `node --test tests/bbs-api.cjs` で許可・拒否・判定保留・障害・不正入力・返信・管理者認証・回数制限を確認します。AI/DBの応答は模擬するため、実際のAIの分類精度や本番設定は検証しません。
 `node tests/retro.cjs` には、投稿と返信の拒否時の入力保持、判定障害時の停止、許可時のみ一覧に出ること、Supabaseへの直接書き込みがないことも含みます。
 

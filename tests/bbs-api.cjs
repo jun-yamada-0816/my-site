@@ -21,9 +21,14 @@ async function invoke(options = {}) {
     if (options.networkError) throw new Error('PRIVATE raw body must never escape');
     let data;
     if (url.includes('/auth/v1/')) data = { id: options.userId ?? admin };
-    else if (url.includes('/rpc/')) data = options.slot ?? true;
+    else if (url.includes('/rpc/')) {
+      if (options.dbStatus) return Response.json({ message: 'PRIVATE database details' }, { status: options.dbStatus });
+      data = options.slot ?? true;
+    }
     else if (url.includes('api.openai.com')) {
-      if (options.modelStatus) return Response.json({ private: 'PRIVATE provider details' }, { status: options.modelStatus });
+      if (options.modelStatus) return Response.json({ error: {
+        ...options.modelError, message: 'PRIVATE provider details with credentials',
+      } }, { status: options.modelStatus });
       data = options.model ?? model('allow');
     } else if (init.method === 'POST' || init.method === 'PATCH') data = [approved];
     else data = options.rows ?? [approved];
@@ -138,4 +143,57 @@ test('new Supabase secret key uses apikey without an invalid JWT Authorization',
   assert.equal(r.statusCode, 201);
   assert.equal(r.calls[0].headers.apikey, 'sb_secret_test');
   assert.equal(r.calls[0].headers.Authorization, undefined);
+});
+
+test('check uses a fixed greeting and never saves for any valid decision', async () => {
+  for (const decision of ['allow', 'block', 'uncertain']) {
+    const r = await invoke({ body: { action: 'check', content: 'PRIVATE ignored text',
+      author_name: 'PRIVATE ignored name', id, parent_id: id }, model: model(decision) });
+    assert.equal(r.statusCode, 200);
+    assert.deepEqual(r.body, { ok: true, decision });
+    assert.equal(writes(r).length, 0);
+    assert.equal(r.calls.length, 2, 'Check only reserves a slot and calls AI');
+    assert(!JSON.stringify(r.calls).includes('PRIVATE'));
+    assert.equal(JSON.parse(r.calls[1].payload.input[0].content).reply_to, null);
+  }
+});
+test('check uses the same rate limit and fails closed on DB failure', async () => {
+  for (const [options, status] of [[{ slot: false }, 429], [{ dbStatus: 403 }, 503]]) {
+    const r = await invoke({ ...options, body: { action: 'check' } });
+    assert.equal(r.statusCode, status);
+    assert.equal(r.calls.length, 1);
+    assert.equal(writes(r).length, 0);
+    assert(!JSON.stringify(r.body).includes('PRIVATE'));
+  }
+});
+test('check identifies billing/auth/permission errors without returning provider text', async () => {
+  for (const [status, error, diagnostic] of [
+    [429, { code: 'insufficient_quota' }, 'ai_insufficient_quota'],
+    [429, { code: 'credit_balance_exhausted' }, 'ai_credit_balance_exhausted'],
+    [429, { code: 'project_spend_limit_exceeded' }, 'ai_project_spend_limit_exceeded'],
+    [429, { type: 'insufficient_quota', code: 'PRIVATE unknown code' }, 'ai_quota'],
+    [401, {}, 'ai_auth'], [403, {}, 'ai_access'], [404, {}, 'ai_model'],
+    [400, {}, 'ai_request'], [429, {}, 'ai_rate_limit'], [500, {}, 'ai_service'],
+    [500, { code: 'PRIVATE unknown code', type: 'PRIVATE unknown type' }, 'ai_service'],
+  ]) {
+    const r = await invoke({ body: { action: 'check' }, modelStatus: status, modelError: error });
+    assert.equal(r.statusCode, 503);
+    assert.deepEqual(r.body, { error: 'unavailable', diagnostic });
+    assert.equal(writes(r).length, 0);
+    assert(!JSON.stringify(r.body).includes('PRIVATE'));
+  }
+});
+test('check distinguishes malformed model output and missing configuration', async () => {
+  const malformed = await invoke({ body: { action: 'check' }, model: { status: 'incomplete' } });
+  assert.deepEqual(malformed.body, { error: 'unavailable', diagnostic: 'ai_response_failed' });
+  const missing = await invoke({ body: { action: 'check' }, env: { OPENAI_API_KEY: '' } });
+  assert.equal(missing.body.diagnostic, 'configuration_failed');
+  assert.equal(missing.calls.length, 0);
+  assert.equal(writes(malformed).length, 0);
+});
+test('copy/paste whitespace in server environment values is removed', async () => {
+  const r = await invoke({ env: Object.fromEntries(Object.entries(env).map(([key, value]) => [key, '  ' + value + '\n'])) });
+  assert.equal(r.statusCode, 201);
+  assert.equal(r.calls[0].headers.apikey, env.SUPABASE_SERVICE_ROLE_KEY);
+  assert.equal(r.calls[1].headers.Authorization, 'Bearer ' + env.OPENAI_API_KEY);
 });
