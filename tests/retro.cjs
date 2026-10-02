@@ -17,6 +17,8 @@ let profile = null,
   increments = 0,
   visits = 999;
 const errors = [];
+let bbsStatus = 422, bbsResponse = { error: "not_allowed" };
+const bbsSubmissions = [];
 const diary = {
   id: "10000000-0000-4000-8000-000000000001",
   title: "夜のひとりごと",
@@ -106,6 +108,10 @@ const assets = [
     });
     await context.route("**/*", async (route) => {
       const url = new URL(route.request().url());
+      if (url.hostname === "127.0.0.1" && url.pathname === "/api/bulletin") {
+        bbsSubmissions.push(route.request().postDataJSON());
+        return route.fulfill({ status: bbsStatus, contentType: "application/json", body: JSON.stringify(bbsResponse) });
+      }
       if (url.hostname === "127.0.0.1") return route.continue();
       if (url.hostname === "cdn.tailwindcss.com")
         return route.fulfill({
@@ -168,10 +174,12 @@ const assets = [
         return send(++visits);
       }
       if (url.pathname.endsWith("/increment_post_views")) return send(5);
-      if (url.pathname.endsWith("/bulletin_messages"))
+      if (url.pathname.endsWith("/bulletin_messages")) {
+        assert.equal(route.request().method(), "GET", "BBS must never write directly to Supabase");
         return send([
           {
             id: "30000000-0000-4000-8000-000000000001",
+            edited_at: null,
             author_name: "夜ふかしさん",
             content: "こんばんは。足あとを残していきます。",
             created_at: "2026-09-26T14:42:00Z",
@@ -185,6 +193,7 @@ const assets = [
             parent_id: "30000000-0000-4000-8000-000000000001",
           },
         ]);
+      }
       return send([]);
     });
     context.on("page", (page) =>
@@ -218,6 +227,35 @@ const assets = [
     await page.reload();
     await settle(page);
     assert.equal(increments, 1, "Reload must not count twice");
+    // Rejected/failed posts and replies must preserve drafts and never appear in the feed.
+    const draft = 'テスト用の未公開メッセージ';
+    await page.locator('#msg-name').fill('テスト投稿者');
+    await page.locator('#msg-content').fill(draft);
+    await page.locator('#msg-submit').click();
+    await page.waitForFunction(() => document.querySelector('#msg-error').textContent.includes('掲載できません'));
+    assert.equal(await page.locator('#msg-content').inputValue(), draft);
+    assert(!(await page.locator('#messages-container').textContent()).includes(draft));
+    bbsStatus = 503; bbsResponse = { error: 'unavailable' };
+    await page.locator('#msg-submit').click();
+    await page.waitForFunction(() => document.querySelector('#msg-error').textContent.includes('受け付けていません'));
+    assert.equal(await page.locator('#msg-content').inputValue(), draft);
+    const parentId = '30000000-0000-4000-8000-000000000001';
+    await page.evaluate(id => openReply(id), parentId);
+    await page.locator('#reply-name-' + parentId).fill('返信テスト');
+    await page.locator('#reply-content-' + parentId).fill(draft);
+    bbsStatus = 422; bbsResponse = { error: 'not_allowed' };
+    await page.locator('#reply-submit-' + parentId).click();
+    await page.waitForFunction(id => document.getElementById('reply-error-' + id)?.textContent.includes('掲載できません'), parentId);
+    assert.equal(await page.locator('#reply-content-' + parentId).inputValue(), draft);
+    assert.equal(bbsSubmissions.at(-1).parent_id, parentId);
+    await page.evaluate(() => cancelReply());
+    bbsStatus = 201; bbsResponse = { message: { id: '30000000-0000-4000-8000-000000000099',
+      author_name: 'テスト投稿者', content: '確認を通過した書き込み', parent_id: null, edited_at: null, created_at: '2026-10-02T00:00:00Z' } };
+    await page.locator('#msg-content').fill('確認を通過した書き込み');
+    await page.locator('#msg-submit').click();
+    await page.waitForFunction(() => document.querySelector('#messages-container').textContent.includes('確認を通過した書き込み'));
+    assert.equal(await page.locator('#msg-content').inputValue(), '');
+    assert.equal(bbsSubmissions.length, 4);
     await page.locator("#admin-btn").click();
     await page.locator("#login-email").fill(user.email);
     await page.locator("#login-pw").fill("test-password");

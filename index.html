@@ -27,7 +27,7 @@
   );
   alter table bulletin_messages enable row level security;
   create policy "select_all"   on bulletin_messages for select using (true);
-  create policy "insert_all"   on bulletin_messages for insert with check (true);
+  -- 書き込みは bbs-moderation.sql と api/bulletin.js を通します。
   create policy "admin_delete" on bulletin_messages for delete using (auth.role() = 'authenticated');
 
   ── 掲示板の「返信」と「管理者による編集」を使うために追加で実行 ──
@@ -37,13 +37,10 @@
     add column if not exists parent_id uuid references bulletin_messages(id) on delete cascade,
     add column if not exists edited_at timestamptz;
   create index if not exists bulletin_messages_parent_idx on bulletin_messages(parent_id);
-  create policy "admin_update" on bulletin_messages for update
-    using (auth.role() = 'authenticated')
-    with check (auth.role() = 'authenticated');
-  -- 実行しなくてもサイトは今まで通り動きます（返信ボタンが出ないだけです）
+  -- 編集も公開前の判定を通します。セットアップの最後に bbs-moderation.sql を実行してください。
 
   ── 掲示板に書き込みがあったら管理者にメールで知らせる ──
-  Supabase側（データベース）から送るので、投稿者のブラウザに関係なく必ず届きます。
+  Supabase側（データベース）から通知します。メールサービスの状態により届かない場合があります。
   メール送信には Resend（https://resend.com）を使います。
 
   【事前準備】
@@ -58,67 +55,26 @@
   -- APIキーは金庫(Vault)に入れる。関数の中に直接書かないので後から漏れにくい。
   select vault.create_secret('re_ここにAPIキーを貼る', 'resend_api_key', '掲示板の通知メール用');
 
-  -- 書き込みが入るたびに呼ばれ、管理者あてにメールを送る
-  create or replace function notify_new_bulletin_message()
-  returns trigger
-  language plpgsql
-  security definer
-  set search_path = public, net, vault
-  as $fn$
-  declare
-    api_key   text;
-    parent    bulletin_messages%rowtype;
-    kind      text;
-    body_html text;
-    quoted    text;
+  -- 通知には名前・本文・返信先を含めません。
+  create or replace function public.notify_new_bulletin_message()
+  returns trigger language plpgsql security definer set search_path = '' as $fn$
+  declare api_key text;
   begin
-    -- 管理者自身（ログイン中）の書き込みでは、自分あてに送らない。
-    -- auth.role() は未ログインやSQL Editorからの実行では null を返す。
-    if auth.role() = 'authenticated' then
-      return new;
-    end if;
-
-    select decrypted_secret into api_key
-      from vault.decrypted_secrets where name = 'resend_api_key';
-    if api_key is null then
-      return new;  -- キーが未登録なら何もしない（書き込み自体は成功させる）
-    end if;
-
-    -- メール本文に混ざっても崩れないように記号を置き換える
-    quoted := replace(replace(replace(new.content, '&', '&amp;'), '<', '&lt;'), '>', '&gt;');
-
-    if new.parent_id is null then
-      kind := '新しい書き込み';
-    else
-      kind := '返信';
-      select * into parent from bulletin_messages where id = new.parent_id;
-    end if;
-
-    body_html :=
-      '<div style="font-family:sans-serif;line-height:1.8;color:#334155">' ||
-      '<p style="color:#0d9488;font-weight:bold">星の海の掲示板に' || kind || 'がありました</p>' ||
-      '<p>お名前：' || replace(replace(new.author_name, '<', '&lt;'), '>', '&gt;') || '</p>' ||
-      '<div style="border-left:3px solid #0d9488;padding-left:12px;white-space:pre-wrap">' ||
-        quoted || '</div>' ||
-      coalesce('<p style="color:#94a3b8;font-size:13px">返信先：' ||
-        replace(replace(parent.content, '<', '&lt;'), '>', '&gt;') || '</p>', '') ||
-      '<p><a href="https://hoshinoumi.vercel.app/#bulletin">掲示板をひらく</a></p>' ||
-      '</div>';
-
+    select decrypted_secret into api_key from vault.decrypted_secrets where name = 'resend_api_key' limit 1;
+    if api_key is null then return new; end if;
     perform net.http_post(
-      url     => 'https://api.resend.com/emails',
-      headers => jsonb_build_object(
-        'Content-Type',  'application/json',
-        'Authorization', 'Bearer ' || api_key
-      ),
-      body    => jsonb_build_object(
-        'from',    'Hoshi no Umi <onboarding@resend.dev>',
-        'to',      jsonb_build_array('jun_yamada_0816@yahoo.co.jp'),
-        'subject', '【星の海】掲示板に' || kind || 'がありました',
-        'html',    body_html
+      url => 'https://api.resend.com/emails',
+      headers => jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || api_key),
+      body => jsonb_build_object(
+        'from', 'Hoshi no Umi <onboarding@resend.dev>',
+        'to', jsonb_build_array('jun_yamada_0816@yahoo.co.jp'),
+        'subject', '【星の海】掲示板に新しい書き込みがありました',
+        'html', '<p>掲示板に新しい書き込みがあります。</p><p>通知にはお名前や本文を載せていません。</p><p><a href="https://hoshinoumi.vercel.app/#bulletin">掲示板をひらく</a></p>'
       )
     );
-
+    return new;
+  exception when others then
+    -- Optional email failure must not cause a successful post to be retried.
     return new;
   end;
   $fn$;
@@ -226,6 +182,8 @@
   end;
   $$;
   grant execute on function increment_track_plays(uuid) to anon, authenticated;
+
+  掲示板の保護：最後に bbs-moderation.sql を実行し、README の設定手順に従ってください。
 
   3. Authentication > Users で管理者アカウントを作成
      （メールアドレスとパスワードを設定）
@@ -415,13 +373,15 @@
           <a href="#promise" class="text-aurora-teal hover:underline">「星の海の約束」</a>
           を大切にしています。書き込む前に、少しだけ目を通してみてください。
         </p>
+        <p class="mt-2">名前と本文は公開前にAIで確認します。攻撃的な内容や宣伝などは掲載できません。つらい気持ちや相談は、そのまま話して大丈夫です。</p>
+        <p class="mt-2">確認のため、名前・本文・返信先の内容をOpenAIに送信します。住所や連絡先など、個人を特定できる情報は書かないでください。</p>
       </div>
 
       <!-- 書き込みフォーム -->
       <div class="glass glass-teal rounded-2xl p-6 mb-10">
         <h3 class="text-slate-500 font-semibold mb-1 text-sm">新規カキコ</h3>
         <p class="text-slate-500 text-xs mb-4">
-          書き込みには「返信する」から返事ができます。返事がなくても、必ず読んでいます。
+          書き込みには「返信する」から返事ができます。無理のないペースで、お話ししましょう。
         </p>
         <form id="message-form" class="space-y-3">
           <input id="msg-name" type="text" maxlength="30" required
@@ -435,7 +395,7 @@
                            text-slate-700 text-sm placeholder-slate-400 resize-none
                            focus:outline-none focus:border-aurora-teal/50 transition-colors"></textarea>
           <div class="flex items-center justify-between">
-            <p id="msg-error" class="text-red-500 text-xs"></p>
+            <p id="msg-error" class="text-red-500 text-xs" role="status" aria-live="polite"></p>
             <button id="msg-submit" type="submit"
                     class="btn-line disabled:opacity-40 disabled:cursor-not-allowed"
                     style="color:var(--asagi);padding:.7rem 2.2rem;">
@@ -1784,15 +1744,38 @@
       }
     }
 
+    const bulletinErrors = {
+      not_allowed: 'この内容は掲載できません。「星の海の約束」を確認し、表現を見直してください。',
+      rate_limited: '書き込みが続いています。少し時間をおいてからお試しください。',
+      invalid_input: '名前は30文字以内、本文は500文字以内で入力してください。',
+      parent_missing: '返信先が見つかりません。掲示板を読み込み直してください。',
+      not_found: '書き込みが見つかりません。掲示板を読み込み直してください。',
+      admin_required: '編集するには管理者としてログインし直してください。',
+      unavailable: '現在、書き込みの確認ができないため送信を受け付けていません。時間をおいてからお試しください。',
+    };
+    function bulletinErrorMessage(error) {
+      return bulletinErrors[error?.code] || bulletinErrors.unavailable;
+    }
+    async function submitBulletin(payload) {
+      const headers = { 'Content-Type': 'application/json' };
+      if (payload.action === 'edit') {
+        const { data: { session } } = await sb.auth.getSession();
+        if (session) headers.Authorization = 'Bearer ' + session.access_token;
+      }
+      const response = await fetch('/api/bulletin', {
+        method: 'POST', headers, body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.message?.id) {
+        const error = new Error('Bulletin submission failed');
+        error.code = result.error;
+        throw error;
+      }
+      return result.message;
+    }
     async function createMessage(authorName, content, parentId = null) {
-      const row = { author_name: authorName, content };
-      if (parentId) row.parent_id = parentId;
-      const { data, error } = await sb
-        .from('bulletin_messages')
-        .insert(row)
-        .select().single();
-      if (error) throw error;
-      // 楽観的追加（リアルタイムイベントで重複排除）
+      const data = await submitBulletin({ author_name: authorName, content, parent_id: parentId });
+      // Only a server-confirmed, approved post is shown; no direct-write fallback.
       if (!allMessages.find(m => m.id === data.id)) {
         allMessages.unshift(data);
         renderMessages();
@@ -1800,15 +1783,7 @@
     }
 
     async function updateMessage(id, content) {
-      const patch = threadsReady
-        ? { content, edited_at: new Date().toISOString() }
-        : { content };
-      const { data, error } = await sb
-        .from('bulletin_messages')
-        .update(patch)
-        .eq('id', id)
-        .select().single();
-      if (error) throw error;
+      const data = await submitBulletin({ action: 'edit', id, content });
       const i = allMessages.findIndex(m => m.id === id);
       if (i >= 0) allMessages[i] = data;
     }
@@ -1956,7 +1931,7 @@
                            text-slate-700 text-sm placeholder-slate-400 resize-none
                            focus:outline-none focus:border-aurora-teal/50 transition-colors"></textarea>
           <div class="flex items-center justify-between gap-3 flex-wrap">
-            <p id="reply-error-${id}" class="text-red-500 text-xs"></p>
+            <p id="reply-error-${id}" class="text-red-500 text-xs" role="status" aria-live="polite"></p>
             <div class="flex gap-2 ml-auto">
               <button onclick="cancelReply()"
                       class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-500
@@ -2039,12 +2014,11 @@
         await createMessage(name, content, id);
         renderMessages();
       } catch (e) {
-        console.error('submitReply:', e);
         replyOpenFor      = id;
         replyDrafts[id]   = { name, content };
         renderMessages();
         const again = document.getElementById(`reply-error-${id}`);
-        if (again) again.textContent = '返信を送れませんでした。しばらくしてからお試しください。';
+        if (again) again.textContent = bulletinErrorMessage(e);
       }
     };
 
@@ -2079,8 +2053,7 @@
         inlineFocusId    = null;
         renderMessages();
       } catch (e) {
-        console.error('saveMessageEdit:', e);
-        errEl.textContent = '更新できませんでした。ログイン状態を確認してください。';
+        errEl.textContent = bulletinErrorMessage(e);
       }
     };
 
@@ -2442,15 +2415,19 @@
       const errEl   = document.getElementById('msg-error');
       const btn     = document.getElementById('msg-submit');
       if (!name || !content) return;
+      if (btn.disabled) return;
       btn.disabled = true;
+      btn.textContent = '確認中…';
+      errEl.textContent = '';
       try {
         await createMessage(name, content);
         document.getElementById('msg-content').value = '';
         errEl.textContent = '';
-      } catch {
-        errEl.textContent = '送信に失敗しました。しばらくしてからお試しください。';
+      } catch (error) {
+        errEl.textContent = bulletinErrorMessage(error);
       } finally {
         btn.disabled = false;
+        btn.textContent = '書き込む';
       }
     });
 

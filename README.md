@@ -18,7 +18,7 @@
 
 Supabaseの **Authentication → URL Configuration** に旧URLを設定している場合は、**Site URL** と該当する **Redirect URLs** を新URLに更新してください。現在のログインはメール・パスワード方式ですが、確認メールやパスワード再設定の戻り先にはこの設定が使われます。
 
-掲示板通知メールのSQLを導入済みの場合は、`index.html` 冒頭にある `create or replace function notify_new_bulletin_message()` から対応する `$fn$;` までをSupabaseのSQL Editorで再実行すると、メール内のリンクも新URLになります。ニュース取得SQLを導入済みの場合も、`it-news.sql` の `create or replace function it_news_fetch_source(p_id uuid)` から対応する `$fn$;` までを再実行するとUser-AgentのURLが更新されます。GitHubへのプッシュでは、データベースに保存済みの関数は更新されません。
+掲示板通知メールのSQLを導入済みの場合は、`bbs-moderation.sql` をSupabaseのSQL Editorで実行すると、メール内のリンクも新URLになり、通知に名前・本文を含めなくなります。ニュース取得SQLを導入済みの場合も、`it-news.sql` の `create or replace function it_news_fetch_source(p_id uuid)` から対応する `$fn$;` までを再実行するとUser-AgentのURLが更新されます。GitHubへのプッシュでは、データベースに保存済みの関数は更新されません。
 
 参考: [Vercelのドメイン追加](https://vercel.com/docs/domains/working-with-domains/add-a-domain)、[ドメインのリダイレクト](https://vercel.com/docs/domains/working-with-domains/deploying-and-redirecting)、[SupabaseのURL設定](https://supabase.com/docs/guides/auth/redirect-urls)。
 
@@ -55,6 +55,62 @@ CSSの基本指定は1列表示です。480px以上でボタンなどを横に�
 ほかのクライアントから `blog_posts` を一覧取得するときも、このIDを除外してください。プロフィール本文はHTMLとして実行せず、文字列として表示します。
 
 カウンターは既存の `site_visits` と `increment_visit_count` を使用します。同じブラウザでは1日1回、管理者ログイン中は加算せず、取得に失敗した際に架空の数字は表示しません。
+
+## BBSの公開前チェック
+
+**コードを配置しただけでは保護は有効になりません。下記のSQL・環境変数・Vercelデプロイが必要です。**
+
+新規投稿・返信・管理者による編集を `/api/bulletin` に送り、名前と本文をAIで確認してから保存します。攻撃、嫌がらせ、差別、脅迫、宣伝などを拒否する方針です。本人のつらさの吐露や相談、穏やかな建設的意見は区別します。
+拒否・判断保留の原文はサイトのDB・管理画面・アプリのログには保存せず、通知もしません。判定失敗・タイムアウト・設定不足のときは投稿を止め、未審査のまま公開する代替経路は設けません。AIにも見逃し・誤判定があり、完全な遮断は保証できません。既存の投稿は再判定しません。
+
+通知メールは公開された新規投稿の存在とリンクだけを送り、名前・本文・返信先の引用を一切含めません。既存の通知トリガーを使い、未導入のメール通知は勝手に有効にしません。通知APIのエラーで投稿が二重送信されないよう、メール失敗で保存を取り消さない設計です。
+
+### 本番への適用順序
+
+1. SupabaseのSQL Editorで **`bbs-moderation.sql` 全体** を実行します。既存データは消しません。旧画面からの直接投稿・編集はこの時点で停止します。読み取りは継続します。複数回実行できます。
+2. Vercelの対象プロジェクト → Settings → Environment Variables の **Production** に以下を設定します。秘密の値をチャット、HTML、Gitに貼り付けないでください。
+
+   | 変数 | 設定する値 |
+   | --- | --- |
+   | `SUPABASE_URL` | `https://qnmzjwgacnfxwlbgwxcr.supabase.co` |
+   | `SUPABASE_SERVICE_ROLE_KEY` | 同じSupabaseプロジェクトのサーバー専用 `service_role` キー、または `sb_secret_…` キー。公開用キーは使えません。 |
+   | `OPENAI_API_KEY` | API利用可能なOpenAIプロジェクトのキー。API料金が別途発生します。 |
+   | `BBS_ADMIN_USER_ID` | Supabase → Authentication → Users にある、現在の管理者本人のUser UID。管理者による編集に必要です。メールアドレスではありません。 |
+
+3. ソースをGitHubへプッシュし、Vercelで再デプロイします。VercelのFramework Presetは静的サイト用の **Other**、Output Directoryは従来のルートを使い、`api/bulletin.js` がFunctionとして配置されていることを確認します。Node.js 20以降が必要です。
+4. 自分の通常の挨拶を1件投稿し、返信・管理者編集も確認します。不適切な文の実験を公開掲示板で行う必要はありません。拒否・障害時の動作は下記の模擬テストで確認できます。
+
+SQLを適用せずフロントだけ更新すると、旧REST APIへの直接投稿を防げません。保護を止めずに調整するときは、SQLの権限・トリガーを解除せずAPI側を修正します。Supabaseの認証アカウントは従来どおり管理者専用とし、一般ユーザーのサインアップは無効にしてください（既存の日記・削除の権限もこの前提を使っています）。
+
+### 判定・連投制限・データの扱い
+
+- 判定モデルは `gpt-4.1-mini-2025-04-14`。基準は `api/bulletin.js` の `POLICY` にあります。文字列中の指示は審査対象として扱いますが、AIによる判定回避を完全には防げません。
+- `allow` を明示的に返した場合だけ保存します。新規投稿だけでなく返信と編集も同じ判定を通します。編集者はSupabase Authで確認し、管理者のUIDと照合します。
+- 同じIPから30秒に1回・UTC日付で1日20回、サイト全体で1日200回までの判定受付です。拒否やAPI障害も受付回数に含みます。共有回線では枠を共有し、全体上限では全員の投稿が一時停止します。値はSQL関数内で調整できます。
+- IPはサーバーの秘密鍵を使う日替わりHMACにして回数制限にのみ使用します。DBにはそのハッシュと回数・時刻だけを残し、当日と前日より古い記録は次回受付時に削除します。
+- 名前・本文と、返信の場合は返信先の内容をOpenAIへ送ります。フォームにも明示しています。`store: false` を指定しますが、これは提供元でのすべての保持をゼロにする保証ではありません。API側のデータ取扱設定は別途確認してください。
+- サイト内に未承認投稿を読む審査待ち一覧は作りません。旧投稿やAIの見逃しを含め、目にする可能性をゼロにするには第三者による公開前確認などが別途必要です。
+
+実装時に確認した公式資料: [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)、[GPT-4.1 mini](https://developers.openai.com/api/docs/models/gpt-4.1-mini)、[Supabaseの権限とRLS](https://supabase.com/docs/guides/database/postgres/row-level-security)、[Vercel Node.js Functions](https://vercel.com/docs/functions/runtimes/node-js)、[VercelのIPヘッダー](https://vercel.com/docs/headers/request-headers)。
+
+### BBSのテスト
+
+`node --test tests/bbs-api.cjs` で許可・拒否・判定保留・障害・不正入力・返信・管理者認証・回数制限を確認します。AI/DBの応答は模擬するため、実際のAIの分類精度や本番設定は検証しません。
+`node tests/retro.cjs` には、投稿と返信の拒否時の入力保持、判定障害時の停止、許可時のみ一覧に出ること、Supabaseへの直接書き込みがないことも含みます。
+
+PostgreSQL 16でSQLの権限・トリガー・通知・回数制限・再実行を確認できます。これは外部ネットワークを使わない使い捨てDBで、本番には接続しません。
+
+```sh
+docker run --rm --network none --tmpfs /var/lib/postgresql/data \
+  --mount "type=bind,source=$PWD,target=/work,readonly" \
+  -e POSTGRES_HOST_AUTH_METHOD=trust postgres:16 sh /work/tests/run-bbs-db.sh
+```
+
+## 2026-10-02の訪問者数の確認
+
+調査時の本番 `site_visits` は `id=1, count=490` でした。名前変更前の `27a44e5` と公開中HTMLで、SupabaseのプロジェクトURLとカウンター処理が一致していることを確認しました。`5166429`（名前変更）と `591ec3b`（URL変更）に人数のリセットはありません。
+ローカルのHTMLバックアップや確認できた作業記録には、変更直前の実際の人数を確定できる記録が見つからなかったため、人数は変更していません。テスト内の999/1000は模擬値で、本番の人数ではありません。
+ドメインが変わるとブラウザの1日1回の記録が引き継がれず、同じブラウザでも新ドメイン初回に1回加算される可能性はありますが、DBの累計値そのものはドメイン単位で分かれていません。アクセス履歴全体を保存する仕組みはなく、`sv_site_visits` はUTM付き流入のみの別集計なので復元用の累計として使えません。
 
 ## 動作確認
 
