@@ -5,6 +5,11 @@
 
 公開URLは https://hoshinoumi.vercel.app/ です。
 
+## 公開サイトに載せないファイル
+
+`.vercelignore` で、`README.md`・`docs/`・`tests/`・`tools/`・`*.sql` をVercelに載せないようにしています（GitHubのリポジトリには残ります）。以前はSQLやテストのファイルも `https://hoshinoumi.vercel.app/bbs-moderation.sql` のように誰でも開けて、管理者のメールアドレスも読める状態でした。
+`index.html` の先頭にあったSupabaseのセットアップ手順（メールアドレス入り）も、`docs/supabase-setup.md` に移しました。**公開するHTMLのコメントには、手順やメールアドレスを書かないでください。** ページのソースは誰でも見られます。
+
 ## 公開URLの切り替え
 
 コードの変更とGitHubへのプッシュだけでは、Vercelのドメイン設定は変わりません。新URLを有効にするには、Vercelにログインして次を設定してください。
@@ -85,7 +90,7 @@ create policy "admin_update" on blog_posts for update using (auth.role() = 'auth
 
 一覧は最初に新しい100件を取得し、「もっと見る」で足りなくなったら続きを取得します（以前は100件で打ち切っていたため、101件目より古い日記が表示されなくなる状態でした）。
 
-閲覧数は `blog_posts.view_count` 列があるときだけ表示します。2026-10-02の時点で本番にはこの列がなく、全日記に「0 回閲覧」と表示されていました。数えたい場合は `index.html` 冒頭の「ブログ閲覧数・音楽再生数カウンター」のSQLを実行してください。管理者ログイン中に開いた分は数えません。音楽の再生数（`music_tracks.play_count`）も同じ扱いです。
+閲覧数は `blog_posts.view_count` 列があるときだけ表示します。2026-10-02の時点で本番にはこの列がなく、全日記に「0 回閲覧」と表示されていました。数えたい場合は `docs/supabase-setup.md` の「日記の閲覧数・音楽の再生数」のSQLを実行してください。管理者ログイン中に開いた分は数えません。音楽の再生数（`music_tracks.play_count`）も同じ扱いです。
 
 ## プロフィールの保存先
 
