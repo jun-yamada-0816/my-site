@@ -27,6 +27,17 @@ Supabaseの **Authentication → URL Configuration** に旧URLを設定してい
 
 参考: [Vercelのドメイン追加](https://vercel.com/docs/domains/working-with-domains/add-a-domain)、[ドメインのリダイレクト](https://vercel.com/docs/domains/working-with-domains/deploying-and-redirecting)、[SupabaseのURL設定](https://supabase.com/docs/guides/auth/redirect-urls)。
 
+## 共有したときの画像
+
+XやLINEにリンクを貼ると、`assets/og-image.png`（1200×630）が大きく表示されます。元は `tools/og-image/og-image.html` で、サイトのドット絵と同じ配色の「ウィンドウ」に名前とひとことを載せています。文言や名前を変えたら、次で作り直してください（Playwrightが必要です）。
+
+```sh
+cd tools/og-image
+PLAYWRIGHT_PATH=<playwrightの場所> node render.cjs
+```
+
+XやLINEは画像を覚えておくことがあるので、作り直してもすぐには変わらない場合があります。
+
 ## YouTube分析のプロンプト
 
 `shorts.html` から作るプロンプトは、動画の紹介・問いかけ・当事者が運営していること・サイト案内・計測リンクを、コピー用の説明文1つにまとめるよう指示します。固定コメントは別に出力しません。

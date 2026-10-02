@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!-- X や LINE にリンクを貼ったときに出る画像（1200×630）の元。render.cjs で ../../assets/og-image.png に書き出す。 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500&display=block" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background: #08172a;
+    color: #e1e8ef;
+    font-family: "Zen Kaku Gothic New", sans-serif;
+    position: relative;
+  }
+  /* 星（サイトの背景と同じ、細かい点） */
+  .stars { position: absolute; inset: 0; }
+  .stars i { position: absolute; width: 2px; height: 2px; background: #859db9; }
+  .stars i.big { width: 3px; height: 3px; background: #ddd6b1; }
+  .frame {
+    position: absolute; left: 60px; top: 55px; width: 1080px; height: 520px;
+    border: 1px solid #5a7491; background: #0e1c31;
+    box-shadow: 10px 10px #03091588;
+    display: grid; grid-template-rows: 40px 1fr;
+  }
+  .bar {
+    background: #243c57; color: #d1e3f2; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 16px;
+    font: 15px/1 monospace; letter-spacing: .08em;
+  }
+  .body { display: grid; grid-template-columns: 400px 1fr; gap: 56px; padding: 40px 56px 40px 40px; align-items: center; }
+  .art { border: 1px solid #5a7491; padding: 10px; background: #0b142c; }
+  .art img { display: block; width: 378px; height: 378px; image-rendering: pixelated; }
+  .eyebrow { font: 16px/1 monospace; color: #e2ce91; letter-spacing: .22em; }
+  h1 {
+    font-family: "Shippori Mincho B1", serif; font-weight: 600;
+    font-size: 104px; line-height: 1.15; letter-spacing: .14em; margin: 22px 0 18px;
+    color: #f4efe0; text-shadow: 0 0 24px #9ed9f433;
+  }
+  .tagline { font-size: 26px; color: #cfdde9; letter-spacing: .02em; white-space: nowrap; }
+  .lead { font-size: 21px; color: #a5b8ce; margin-top: 18px; line-height: 1.7; }
+  .url {
+    margin-top: 30px; display: inline-block; font: 19px/1 monospace; color: #9ed9f4;
+    border: 1px solid #526e88; padding: 10px 14px; background: #0a1528;
+  }
+</style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+  <div class="frame">
+    <div class="bar"><span>WELCOME TO MY LITTLE CORNER OF THE INTERNET</span><span>□ ×</span></div>
+    <div class="body">
+      <div class="art"><img src="../../assets/starlit-sea.svg" alt=""></div>
+      <div>
+        <p class="eyebrow">HOSHI NO UMI · PERSONAL WEBSITE</p>
+        <h1>星の海</h1>
+        <p class="tagline">眠れない夜に、ふらっと立ち寄れる場所。</p>
+        <p class="lead">精神障害の当事者がひとりでつくる、<br>小さな相互サポートのホームページです。</p>
+        <p class="url">hoshinoumi.vercel.app</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    // 毎回同じ並びになるよう、乱数ではなく決まった計算で星を置く
+    const box = document.getElementById('stars');
+    for (let i = 1; i <= 70; i++) {
+      const x = (i * 337) % 1200, y = (i * 211 + (i % 7) * 53) % 630;
+      const s = document.createElement('i');
+      if (i % 9 === 0) s.className = 'big';
+      s.style.left = x + 'px'; s.style.top = y + 'px';
+      box.appendChild(s);
+    }
+  </script>
+</body>
+</html>

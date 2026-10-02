@@ -812,9 +812,16 @@ const assets = [
     assert.equal(await linked.locator("#detail-modal").isVisible(), false);
     assert.equal(await linked.evaluate(() => location.search), "");
     manyDiaries = false;
+    // Share card: large image tags point at a real 1200×630 PNG in the site.
+    const ogImage = await page.locator('meta[property="og:image"]').getAttribute("content");
+    assert.equal(ogImage, "https://hoshinoumi.vercel.app/assets/og-image.png");
+    assert.equal(await page.locator('meta[name="twitter:card"]').getAttribute("content"), "summary_large_image");
+    const png = await fs.readFile(path.join(root, new URL(ogImage).pathname));
+    assert.equal(png.toString("ascii", 1, 4), "PNG");
+    assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [1200, 630]);
     assert.deepEqual(errors, [], "Uncaught browser errors");
     console.log(
-      "PASS: profile login/edit/save/error/reload/public read/logout, diary edit/save/error/discard/paging/view counts/links/monthly archive/X link, dialog focus, XSS escaping, diary isolation, counter/retry, navigation, mobile widths, support/settings.",
+      "PASS: profile login/edit/save/error/reload/public read/logout, diary edit/save/error/discard/paging/view counts/links/monthly archive/X link, dialog focus, share image, XSS escaping, diary isolation, counter/retry, navigation, mobile widths, support/settings.",
     );
     console.log("Screenshots: " + output);
   } finally {
