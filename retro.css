@@ -1534,3 +1534,7 @@ a {
     padding-bottom: 88px;
   }
 }
+/* Modal panels receive focus when opened (for keyboard and screen reader users); no ring on the panel itself. */
+[id$="-modal"] > .relative:focus {
+  outline: none;
+}

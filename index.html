@@ -701,13 +701,14 @@
   <!-- ======================================================
        MODAL: 管理者ログイン
        ====================================================== -->
-  <div id="login-modal" class="hidden fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-3 sm:p-4">
+  <div id="login-modal" class="hidden fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-3 sm:p-4"
+       role="dialog" aria-modal="true" aria-labelledby="login-modal-title">
     <div class="absolute inset-0 bg-slate-700/25 backdrop-blur-sm" onclick="closeLoginModal()"></div>
     <div class="relative glass rounded-2xl p-6 sm:p-8 w-full max-w-sm shadow-2xl shadow-slate-400/30 max-h-[88vh] overflow-y-auto modal-scroll">
-      <h2 class="text-xl font-bold text-slate-800 mb-2">管理者ログイン</h2>
+      <h2 id="login-modal-title" class="text-xl font-bold text-slate-800 mb-2">管理者ログイン</h2>
       <p class="text-slate-500 text-xs mb-6">管理者のメールアドレスとパスワードを入力してください。</p>
       <form id="login-form" class="space-y-4">
-        <input id="login-email" type="email" inputmode="email" autocomplete="username" aria-label="メールアドレス" required placeholder="メールアドレス"
+        <input id="login-email" data-autofocus type="email" inputmode="email" autocomplete="username" aria-label="メールアドレス" required placeholder="メールアドレス"
                class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-3
                       text-slate-700 text-sm placeholder-slate-400
                       focus:outline-none focus:border-aurora-blue/50 transition-colors" />
@@ -722,7 +723,7 @@
           ログイン
         </button>
       </form>
-      <button onclick="closeLoginModal()"
+      <button onclick="closeLoginModal()" aria-label="閉じる"
               class="absolute top-4 right-4 p-1 text-slate-500 hover:text-slate-600 transition-colors">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -774,11 +775,12 @@
   <!-- ======================================================
        MODAL: Xへの投稿（長文のためコピーして貼り付ける）
        ====================================================== -->
-  <div id="x-share-modal" class="hidden fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-3 sm:p-4">
+  <div id="x-share-modal" class="hidden fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-3 sm:p-4"
+       role="dialog" aria-modal="true" aria-labelledby="x-share-modal-title">
     <div class="absolute inset-0 bg-slate-700/25 backdrop-blur-sm" onclick="closeXShareModal()"></div>
     <div class="relative glass rounded-2xl p-6 sm:p-8 w-full max-w-2xl shadow-2xl shadow-slate-400/30
                 max-h-[88vh] flex flex-col">
-      <h2 class="text-xl font-bold text-slate-800 mb-2 shrink-0">Xに投稿する</h2>
+      <h2 id="x-share-modal-title" class="text-xl font-bold text-slate-800 mb-2 shrink-0">Xに投稿する</h2>
       <p class="text-slate-500 text-xs leading-relaxed mb-4 shrink-0">
         長い文章はXの投稿画面に直接渡せないため、本文をコピーして貼り付ける形にしています。<br/>
         下の「コピーする」を押してから「Xを開く」を押し、投稿画面で貼り付けてください。
@@ -801,7 +803,7 @@
           Xを開く
         </button>
       </div>
-      <button onclick="closeXShareModal()"
+      <button onclick="closeXShareModal()" aria-label="閉じる"
               class="absolute top-4 right-4 p-1 text-slate-500 hover:text-slate-600 transition-colors">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -842,12 +844,13 @@
   <!-- ======================================================
        MODAL: 楽曲アップロード
        ====================================================== -->
-  <div id="upload-modal" class="hidden fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-3 sm:p-4">
+  <div id="upload-modal" class="hidden fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-3 sm:p-4"
+       role="dialog" aria-modal="true" aria-labelledby="upload-modal-title">
     <div class="absolute inset-0 bg-slate-700/25 backdrop-blur-sm" onclick="closeUploadModal()"></div>
     <div class="relative glass rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl shadow-slate-400/30">
-      <h2 class="text-xl font-bold text-slate-800 mb-6">楽曲をアップロード</h2>
+      <h2 id="upload-modal-title" class="text-xl font-bold text-slate-800 mb-6">楽曲をアップロード</h2>
       <form id="upload-form" class="space-y-4">
-        <input id="track-title" type="text" required maxlength="100" placeholder="曲のタイトル"
+        <input id="track-title" data-autofocus type="text" required maxlength="100" placeholder="曲のタイトル"
                class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-3
                       text-slate-700 text-sm placeholder-slate-400
                       focus:outline-none focus:border-aurora-indigo/50 transition-colors" />
@@ -889,7 +892,7 @@
           </button>
         </div>
       </form>
-      <button onclick="closeUploadModal()"
+      <button onclick="closeUploadModal()" aria-label="閉じる"
               class="absolute top-4 right-4 p-1 text-slate-500 hover:text-slate-600 transition-colors">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -1118,7 +1121,7 @@
       updates.sort((a, b) => new Date(b.date) - new Date(a.date));
       const day = date => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Tokyo' }).format(new Date(date));
       document.getElementById('news-list').innerHTML = updates.slice(0, 4).map((item, i) =>
-        `<li><time datetime="${day(item.date)}">${day(item.date).replaceAll('-', '.')}</time><span><a href="${item.href}"${item.postId ? ` data-news-post="${esc(item.postId)}"` : ''}>${esc(item.text)}</a>${i === 0 ? '<span class="new-badge">NEW</span>' : ''}</span></li>`).join('');
+        `<li><time datetime="${day(item.date)}">${day(item.date).replaceAll('-', '.')}</time><span><a href="${item.href}"${item.postId ? ` data-news-post="${esc(item.postId)}" data-focus-key="news-${esc(item.postId)}"` : ''}>${esc(item.text)}</a>${i === 0 ? '<span class="new-badge">NEW</span>' : ''}</span></li>`).join('');
       document.getElementById('last-update').textContent = 'LAST UPDATE ' + day(updates[0].date).replaceAll('-', '.');
     }
     document.getElementById('news-list').addEventListener('click', event => {
@@ -1436,13 +1439,12 @@
     window.openXShareModal = (text) => {
       document.getElementById('x-share-text').value    = text;
       document.getElementById('x-share-note').textContent = '';
-      document.getElementById('x-share-modal').classList.remove('hidden');
+      showModal('x-share-modal');
       // 開いた時点でクリップボードにも入れておく（ブラウザに拒否されても手動でコピーできる）
       copyXShareText(true);
     };
 
-    window.closeXShareModal = () =>
-      document.getElementById('x-share-modal').classList.add('hidden');
+    window.closeXShareModal = () => hideModal('x-share-modal');
 
     window.copyXShareText = async (silent) => {
       const ta   = document.getElementById('x-share-text');
@@ -1505,12 +1507,12 @@
                 </p>` : ''}
               </div>
               <h3 class="mincho text-[1.05rem] mb-2.5 group-hover:text-aurora-blue
-                         transition-colors leading-snug" style="color:var(--sumi);"><button type="button" style="text-align:left" onclick="event.stopPropagation();openPost('${p.id}')">${esc(p.title)}</button></h3>
+                         transition-colors leading-snug" style="color:var(--sumi);"><button type="button" style="text-align:left" data-focus-key="post-${p.id}" onclick="event.stopPropagation();openPost('${p.id}')">${esc(p.title)}</button></h3>
               <p class="text-[.8rem] leading-[2] line-clamp-2" style="color:var(--usuzumi);">${esc(p.content)}</p>
             </div>
             ${adminUser ? `
             <div class="post-admin-actions shrink-0 self-start flex gap-1">
-              <button type="button" onclick="event.stopPropagation();openPostEditor('${p.id}')"
+              <button type="button" data-focus-key="edit-${p.id}" onclick="event.stopPropagation();openPostEditor('${p.id}')"
                       aria-label="「${esc(p.title)}」を編集" title="編集"
                       class="p-2 rounded-lg text-slate-400 hover:text-aurora-blue
                              hover:bg-aurora-blue/10 transition-colors duration-200">
@@ -2108,9 +2110,9 @@
     }
 
     /* ── アップロードモーダル ── */
-    window.openUploadModal  = () => document.getElementById('upload-modal').classList.remove('hidden');
+    window.openUploadModal  = () => showModal('upload-modal');
     window.closeUploadModal = () => {
-      document.getElementById('upload-modal').classList.add('hidden');
+      hideModal('upload-modal');
       document.getElementById('upload-form').reset();
       document.getElementById('file-label').textContent    = 'MP3 / WAV ファイルを選択';
       document.getElementById('upload-error').textContent  = '';
@@ -2178,10 +2180,79 @@
         .subscribe();
     }
 
-    /* ══ MODALS ══ */
-    window.openLoginModal = () => document.getElementById('login-modal').classList.remove('hidden');
+    /* ══ MODALS ══
+       開いたら中にフォーカスを移し、背後のページは inert（押せない・読み上げない・Tabで抜けない）にする。
+       閉じたら、開く前にいた場所へフォーカスを戻す。
+       以前は開いてもフォーカスが背後に残り、キーボードや読み上げでは「つらいとき」の中身にたどり着きにくかった。 */
+    const modalStack = [];  // [{ id, opener, key }] 今開いているモーダル（最後が一番上）
+
+    function syncInert() {
+      const top = modalStack.at(-1);
+      for (const el of document.body.children) {
+        if (el.tagName === 'SCRIPT' || el.tagName === 'DIALOG') continue;
+        el.inert = !!top && el.id !== top.id;
+      }
+    }
+
+    function showModal(id, focusTarget) {
+      const modal = document.getElementById(id);
+      if (!modalStack.some(m => m.id === id)) {
+        const opener = document.activeElement;
+        modalStack.push({ id, opener, key: opener?.dataset?.focusKey });
+      }
+      modal.classList.remove('hidden');
+      syncInert();
+      const panel = modal.querySelector(':scope > .relative');
+      if (panel && !panel.hasAttribute('tabindex')) panel.setAttribute('tabindex', '-1');
+      (focusTarget ?? modal.querySelector('[data-autofocus]') ?? panel)?.focus({ preventScroll: true });
+      // 押せない入力欄などでフォーカスが入らなかったときは、画面そのものに置く
+      if (!modal.contains(document.activeElement)) panel?.focus({ preventScroll: true });
+    }
+
+    function hideModal(id) {
+      document.getElementById(id).classList.add('hidden');
+      const i = modalStack.findIndex(m => m.id === id);
+      if (i < 0) return;
+      const [{ opener, key }] = modalStack.splice(i, 1);
+      syncInert();
+      if (modalStack.length) return;
+      // 一覧を描き直して元のボタンが入れ替わっていたら、同じ役目のボタンを探して戻す
+      const back = opener?.isConnected ? opener
+        : key ? document.querySelector(`[data-focus-key="${CSS.escape(key)}"]`) : null;
+      if (back && back !== document.body) back.focus({ preventScroll: true });
+    }
+
+    // Tab が最後のボタンから外へ抜けないよう、モーダルの中で一周させる
+    document.addEventListener('keydown', (e) => {
+      const top = modalStack.at(-1);
+      if (e.key !== 'Tab' || !top) return;
+      const modal = document.getElementById(top.id);
+      const items = [...modal.querySelectorAll('a[href], button, input, textarea, select, [tabindex]:not([tabindex="-1"])')]
+        .filter(el => !el.disabled && el.getClientRects().length);
+      if (!items.length) return;
+      const first = items[0], last = items.at(-1);
+      const inside = modal.contains(document.activeElement);
+      if (e.shiftKey && (!inside || document.activeElement === first || document.activeElement === modal.querySelector(':scope > .relative'))) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && (!inside || document.activeElement === last)) {
+        e.preventDefault(); first.focus();
+      }
+    });
+
+    // Esc で閉じるときに通す、それぞれの閉じ方（入力の片づけや、書きかけの確認があるため）
+    const modalClosers = {
+      'sos-modal':      () => closeSosModal(),
+      'settings-modal': () => closeSettingsModal(),
+      'login-modal':    () => closeLoginModal(),
+      'post-modal':     () => closePostEditor(),
+      'x-share-modal':  () => closeXShareModal(),
+      'detail-modal':   () => closePostDetail(),
+      'upload-modal':   () => closeUploadModal(),
+    };
+
+    window.openLoginModal = () => showModal('login-modal');
     window.closeLoginModal = () => {
-      document.getElementById('login-modal').classList.add('hidden');
+      hideModal('login-modal');
       document.getElementById('login-error').textContent = '';
     };
     /* ── 日記の投稿・編集（同じ画面を使い分ける） ──
@@ -2202,7 +2273,7 @@
     }
 
     function resetPostEditor() {
-      document.getElementById('post-modal').classList.add('hidden');
+      hideModal('post-modal');
       document.getElementById('post-title').value = '';
       document.getElementById('post-content').value = '';
       document.getElementById('post-error').textContent = '';
@@ -2228,11 +2299,11 @@
       editingPostId = editing ? id : null;
       returnToDetailAfter = editing && fromDetail;
       setPostEditorMode(editing);
-      modal.classList.remove('hidden');
-      if (!editing) return;
+      if (!editing) { showModal('post-modal', document.getElementById('post-title')); return; }
 
       errEl.textContent = '読み込み中…';
       setPostEditorBusy(true);
+      showModal('post-modal');
       try {
         const post = await fetchPostForEdit(id);
         if (editingPostId !== id || modal.classList.contains('hidden')) return;  // 読み込み中に閉じられた
@@ -2267,7 +2338,7 @@
       document.getElementById('detail-title').textContent   = p.title;
       document.getElementById('detail-content').textContent = p.content;
       document.getElementById('detail-admin').hidden = !adminUser;
-      document.getElementById('detail-modal').classList.remove('hidden');
+      showModal('detail-modal');
     }
 
     window.openPost = (id) => {
@@ -2291,7 +2362,7 @@
       renderPosts();
     };
     window.closePostDetail = () => {
-      document.getElementById('detail-modal').classList.add('hidden');
+      hideModal('detail-modal');
       detailPostId = null;
     };
 
@@ -2541,21 +2612,19 @@
       applyDisplaySettings();
     };
 
-    window.openSettingsModal  = () => document.getElementById('settings-modal').classList.remove('hidden');
-    window.closeSettingsModal = () => document.getElementById('settings-modal').classList.add('hidden');
+    window.openSettingsModal  = () => showModal('settings-modal');
+    window.closeSettingsModal = () => hideModal('settings-modal');
 
     /* ══ つらいときモーダル ══ */
-    window.openSosModal  = () => document.getElementById('sos-modal').classList.remove('hidden');
-    window.closeSosModal = () => document.getElementById('sos-modal').classList.add('hidden');
+    window.openSosModal  = () => showModal('sos-modal');
+    window.closeSosModal = () => hideModal('sos-modal');
 
     /* ══ Esc キーでモーダルを閉じる ══ */
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape') return;
-      ['sos-modal','settings-modal','login-modal','upload-modal','x-share-modal']
-        .forEach(id => document.getElementById(id)?.classList.add('hidden'));
-      // 日記の画面は、書きかけを確かめたり状態を戻したりするので専用の閉じ方を通す
-      closePostDetail();
-      closePostEditor();
+      // いちばん上のモーダルだけを、それぞれの閉じ方で閉じる
+      const top = modalStack.at(-1);
+      if (top) modalClosers[top.id]();
     });
 
     /* ══ きょうのきもち（端末内にのみ保存・外部送信なし） ══ */

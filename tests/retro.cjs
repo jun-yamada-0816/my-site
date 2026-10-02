@@ -559,6 +559,35 @@ const assets = [
     await phone.locator("#sos-btn").click();
     assert(await phone.locator("#sos-modal").isVisible());
     await phone.keyboard.press("Escape");
+    // Keyboard and screen reader users: focus moves into the dialog, stays there, and comes back.
+    await page.locator("#sos-btn").focus();
+    await page.keyboard.press("Enter");
+    await page.locator("#sos-modal").waitFor({ state: "visible" });
+    const trapped = [];
+    for (let i = 0; i < 12; i++) {
+      trapped.push(await page.evaluate(() => document.querySelector("#sos-modal").contains(document.activeElement)));
+      await page.keyboard.press("Tab");
+    }
+    assert(trapped.every(Boolean), "Focus must stay inside the open dialog");
+    assert.equal(await page.evaluate(() => document.querySelector(".site-shell").inert), true, "Page behind is inert");
+    await page.keyboard.press("Escape");
+    await page.locator("#sos-modal").waitFor({ state: "hidden" });
+    assert.equal(await page.evaluate(() => document.activeElement.id), "sos-btn", "Focus returns to the opener");
+    assert.equal(await page.evaluate(() => document.querySelector(".site-shell").inert), false);
+    await page.locator("#admin-btn").click();
+    await page.locator("#login-modal").waitFor({ state: "visible" });
+    assert.equal(await page.evaluate(() => document.activeElement.id), "login-email", "Login starts in the email field");
+    await page.keyboard.press("Escape");
+    assert.equal(await page.evaluate(() => document.activeElement.id), "admin-btn");
+    // The diary list is re-rendered while the entry is open; focus still returns to its title.
+    const firstTitle = page.locator("#posts-container article h3 button").first();
+    const focusKey = await firstTitle.getAttribute("data-focus-key");
+    await firstTitle.focus();
+    await page.keyboard.press("Enter");
+    await page.locator("#detail-modal").waitFor({ state: "visible" });
+    assert(await page.evaluate(() => document.querySelector("#detail-modal").contains(document.activeElement)));
+    await page.keyboard.press("Escape");
+    assert.equal(await page.evaluate(() => document.activeElement.dataset.focusKey), focusKey);
     await phone.locator("#admin-btn").click();
     await phone.locator("#login-email").fill(user.email);
     await phone.locator("#login-pw").fill("test-password");
