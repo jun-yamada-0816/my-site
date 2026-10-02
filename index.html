@@ -1482,7 +1482,8 @@
         try { post = await fetchPostById(id); } catch (e) { console.error('fetchPostById:', e); }
       }
       // 閉じたときに日記の一覧の前にいられるよう、先にそこまで移っておく
-      document.getElementById('blog').scrollIntoView({ behavior: 'auto', block: 'start' });
+      // （html の scroll-smooth のせいで 'auto' だとゆっくり流れるので、'instant' で一度に移る）
+      document.getElementById('blog').scrollIntoView({ behavior: 'instant', block: 'start' });
       if (!post) {
         setDiaryParam(null);
         document.getElementById('post-saved').textContent = 'リンクの日記は見つかりませんでした。削除されたか、リンクが途中で切れているかもしれません。';
