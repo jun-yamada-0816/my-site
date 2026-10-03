@@ -200,6 +200,10 @@
     padding:.65rem .8rem;border-radius:.9rem;background:rgba(23,69,107,.06);}
   .tomori-toggle input{width:1.15rem;height:1.15rem;margin-top:.2rem;flex-shrink:0;accent-color:#17456b;}
   .tomori-toggle-sub{font-size:.72rem;color:var(--usuzumi);}
+  .style-pick{border:0;padding:0;margin:-.5rem 0 .75rem;display:grid;gap:.45rem;min-width:0;}
+  .style-pick .tomori-toggle{margin:0;}
+  .style-pick .tomori-toggle:has(input:checked){background:rgba(23,69,107,.13);box-shadow:inset 0 0 0 1px rgba(23,69,107,.28);}
+  .style-pick-legend{font-size:.75rem;color:var(--usuzumi);padding:0;margin-bottom:.35rem;}
   .tomori-kit-note{font-size:.75rem;line-height:1.75;color:#9a7420;background:rgba(154,116,32,.09);border-radius:.75rem;padding:.55rem .8rem;margin-bottom:1rem;}
   .prompt-output-label{display:block;font-size:.85rem;font-weight:500;margin-bottom:.65rem;}
   #prompt-out{min-height:20rem;max-height:65vh;resize:vertical;line-height:1.9;border-radius:12px;padding:1rem;background:#fffdf9;}
@@ -444,11 +448,24 @@
         <li><span>03</span>使いたいAIに渡す</li>
       </ol>
       <p class="prompt-note" id="prompt-note">場面が動く映像（音入り）と冒頭3秒のコマ、投稿文、次の検証案まで依頼します。映像はAIがコードで描いて書き出すので、コードを実行できる環境が必要です。</p>
-      <label class="tomori-toggle" for="use-tomori">
-        <input type="checkbox" id="use-tomori" checked>
-        <span><b>キャラクター「ともり」で作る</b><br>
-          <span class="tomori-toggle-sub">外すと、これまでの「映像＋テロップ」（ともりなし）の指示文に戻ります。</span></span>
-      </label>
+      <fieldset class="style-pick" id="style-pick">
+        <legend class="style-pick-legend">作り方</legend>
+        <label class="tomori-toggle">
+          <input type="radio" name="make-style" value="lock">
+          <span><b>ともり × ロック画面（通知でことばが届く）</b><br>
+            <span class="tomori-toggle-sub">夜中のロック画面に、ともりのことばが通知で届きます。最後は「通知はありません」のあと、ともりから1通だけ。</span></span>
+        </label>
+        <label class="tomori-toggle">
+          <input type="radio" name="make-style" value="room">
+          <span><b>ともり × 部屋（テロップ）</b><br>
+            <span class="tomori-toggle-sub">10月2日からの作り方。雨の夜の部屋に、ともりと大きなテロップ。</span></span>
+        </label>
+        <label class="tomori-toggle">
+          <input type="radio" name="make-style" value="visual">
+          <span><b>映像＋テロップ（ともりなし）</b><br>
+            <span class="tomori-toggle-sub">9月23日からの作り方。場面を描いて動かします。</span></span>
+        </label>
+      </fieldset>
       <p id="tomori-kit-note" class="tomori-kit-note">
         AIに渡すときは、プロンプトと一緒に <b>tomori_kit.zip</b>（ともりの描画キット）も添付してください。
         キットがないと、ともりの見た目を毎回同じにできないので、AIは作り始めずにキットをお願いしてきます。
@@ -499,7 +516,7 @@
         <h2 class="font-bold">形式を変えてから</h2>
       </div>
       <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">
-        2026-09-23 に「映像＋テロップ」、2026-10-02 にキャラクター「ともり」へ切り替えました。
+        2026-09-23 に「映像＋テロップ」、2026-10-02 にキャラクター「ともり」、2026-10-04 に「ともり＋通知」（ロック画面）へ切り替えました。
         それぞれの回を、文字を並べていたころの回と並べて、<b class="text-slate-300">通る割合</b>と<b class="text-slate-300">冒頭の3秒</b>が変わったかを見ます。
       </p>
       <div id="format-compare"></div>
@@ -760,7 +777,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <label><span class="block text-[11px] text-slate-500 mb-1">形式</span>
             <input id="vm-format" list="dl-format" class="fld" placeholder="映像＋テロップ">
-            <datalist id="dl-format"><option value="ともり＋テロップ"><option value="映像＋テロップ"><option value="語り"><option value="テロップのみ"><option value="音楽メイン"><option value="対話"></datalist></label>
+            <datalist id="dl-format"><option value="ともり＋通知"><option value="ともり＋テロップ"><option value="映像＋テロップ"><option value="語り"><option value="テロップのみ"><option value="音楽メイン"><option value="対話"></datalist></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">尺(秒)</span><input id="vm-dur" type="number" inputmode="numeric" class="fld"></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">締め</span>
             <input id="vm-cta" list="dl-cta" class="fld" placeholder="リンクへ">
@@ -934,12 +951,40 @@ const isVisual = v => /映像/.test(v.format || '');
    数えるのは「動画」タブの形式に「ともり」と入っている回です（「映像」とは別に数えます）。
    「ともりで作る」のチェックを外すと、これまでの「映像＋テロップ」の指示文に戻ります。 */
 const CHARACTER_FORMAT = 'ともり＋テロップ';
-const isCharacter = v => /ともり/.test(v.format || '');
+const isCharacter = v => /ともり/.test(v.format || '');   // ともりの出てくる回（部屋・通知のどちらも）
+
+/* 2026-10-04 から、ともりのことばを「夜中のロック画面に届く通知」で出します（ユーザーの判断）。
+   手本は、ユーザーが作った「通知が来てないか」のショート（32秒）。作りの要は次のとおり：
+   - 0秒から最後まで、上に「来てないってわかってるのに、／また画面をつけてしまう人へ。」の2行（誰のための動画かを先に言い切る）
+   - 夜中 2:14 のロック画面。ことばは3秒ごとに上から届く通知で、前の通知は下へ押されて暗くなる
+   - 届いた通知の字は、左から順に明るくなる（読む目が字についていく）
+   - 「今夜、画面を見た回数 39回」が通知ごとに進み、「何回も見てしまう」の行で 99+ まで一気に進む
+   - 最後に通知がぜんぶ消えて「通知はありません」→ 一拍おいて1通だけ届く（＝答え）
+   これを、描画キットの lock.py（雨の夜の部屋とともりを壁紙にして、ロック画面を重ねる）で作ります。
+   ともり（部屋）からさらに形式を変えるので、通知の回が MIN_SAMPLE 本たまるまでは形式だけを変えます。
+   数えるのは形式に「通知」と入っている回です（「ともり」とも入っていますが、部屋の回とは分けて数えます）。
+   手本の音（歌・-13 LUFS・0秒から鳴る）と尺（32秒）は取り入れていません。このチャンネルの実測と決まり
+   （17〜17.5秒・-20 LUFS・出だしはフェードイン）のほうを守ります。 */
+const LOCK_FORMAT = 'ともり＋通知';
+const isLock = v => /通知/.test(v.format || '');
+const isRoom = v => isCharacter(v) && !isLock(v);        // ともり（部屋・大きなテロップ）の回
+
+/* 作り方は3つ（端末ごとの好みなので、この端末に覚えておきます）。既定は「ともり × ロック画面」。
+   以前の「ともりで作る」のチェックを外していた端末は、映像＋テロップのままにします。 */
 const TOMORI_KEY = 'sv-use-tomori';
-function useTomori(){
-  try { return localStorage.getItem(TOMORI_KEY) !== 'off'; } catch { return true; }
+const STYLE_KEY = 'sv-style';
+const STYLES = ['lock', 'room', 'visual'];
+function makeStyle(){
+  try {
+    const s = localStorage.getItem(STYLE_KEY);
+    if (STYLES.includes(s)) return s;
+    if (localStorage.getItem(TOMORI_KEY) === 'off') return 'visual';
+  } catch {}
+  return 'lock';
 }
-const currentFormat = () => useTomori() ? CHARACTER_FORMAT : VISUAL_FORMAT;
+const useTomori = () => makeStyle() !== 'visual';
+const useLock = () => makeStyle() === 'lock';
+const currentFormat = () => ({ lock: LOCK_FORMAT, room: CHARACTER_FORMAT, visual: VISUAL_FORMAT })[makeStyle()];
 
 /* ========================= 状態 ========================= */
 let sb = null;
@@ -1729,12 +1774,13 @@ function fixedCombo(states, nx){
    （VISUAL_FORMAT・CHARACTER_FORMAT の説明）。 */
 function nextAxis(states){
   const fmt  = states.find(x => x.axis.key === 'format');
-  const tomori = useTomori();
-  const made = state.videos.filter(tomori ? isCharacter : isVisual).length;
-  const from = tomori ? VISUAL_FORMAT : '文字を並べた動画';
-  const to   = tomori ? CHARACTER_FORMAT : VISUAL_FORMAT;
-  const unit = tomori ? 'ともりの回' : '映像の回';
-  const base = tomori ? '映像の回' : '文字だけの回';
+  const sw = {
+    lock:   { test: isLock,   from: CHARACTER_FORMAT,  to: LOCK_FORMAT,      unit: '通知の回',   base: 'ともり（部屋）の回' },
+    room:   { test: isRoom,   from: VISUAL_FORMAT,     to: CHARACTER_FORMAT, unit: 'ともりの回', base: '映像の回' },
+    visual: { test: isVisual, from: '文字を並べた動画', to: VISUAL_FORMAT,    unit: '映像の回',   base: '文字だけの回' },
+  }[makeStyle()];
+  const made = state.videos.filter(sw.test).length;
+  const { from, to, unit, base } = sw;
   if (fmt && made < MIN_SAMPLE) return Object.assign({}, fmt, { switching:true, made, from, to, unit, base });
   // 形式は映像に決めたので、ここから先は選び直しません
   const pool = states.filter(x => x.axis.key !== 'format');
@@ -1748,7 +1794,7 @@ function axisCandidates(x){
   const known = {
     hook:    ['問いかけ','共感','断言','数字','体験談','場面描写'],
     audio:   ['BGM＋効果音','BGMのみ','効果音のみ','語り＋BGM','無音'],
-    format:  [CHARACTER_FORMAT,VISUAL_FORMAT,'語り','テロップのみ','音楽メイン','対話'],
+    format:  [LOCK_FORMAT,CHARACTER_FORMAT,VISUAL_FORMAT,'語り','テロップのみ','音楽メイン','対話'],
     cta:     ['リンクへ','コメント促し','登録の約束','なし'],
     dur:     ['〜15秒','16〜30秒','31〜45秒','46〜60秒'],
     hour:    ['深夜 0〜6時','朝 6〜11時','昼 11〜15時','夕方 15〜19時','夜 19〜24時'],
@@ -1790,7 +1836,7 @@ function renderTestPlan(){
       <p class="text-xs text-slate-300 mb-2"><b>形式</b>：${esc(nx.from)} → <b>${esc(nx.to)}</b></p>
       <div class="flex flex-wrap gap-1.5 mb-2">${chip(`${nx.unit} ${nx.made}／${MIN_SAMPLE}本`)}</div>
       <p class="text-[11px] text-slate-400 leading-relaxed">
-        ${useTomori() ? '今回から、キャラクター「ともり」で作ります。' : '今回から、場面を描いて動かす映像で作ります。'}${esc(nx.unit)}が${MIN_SAMPLE}本そろうまでは、形式のほかは何も変えません。
+        ${{ lock:'今回から、ともりのことばをロック画面の通知で届けます。', room:'今回から、キャラクター「ともり」で作ります。', visual:'今回から、場面を描いて動かす映像で作ります。' }[makeStyle()]}${esc(nx.unit)}が${MIN_SAMPLE}本そろうまでは、形式のほかは何も変えません。
         一緒に変えると、形式を変えたから通ったのか（落ちたのか）が分からなくなるためです。
         できた動画は「動画」タブで、形式を「${esc(nx.to)}」にして登録してください。その本数をここで数えています。
       </p>
@@ -1847,7 +1893,8 @@ function formatCompare(){
   const dated = cur.withViews.filter(s => s.postedAt)
     .sort((a,b) => new Date(b.postedAt) - new Date(a.postedAt));
   const settled = dated.filter(s => Date.now() - new Date(s.postedAt) >= 2*864e5);
-  const chr = settled.filter(s => isCharacter(s.v));
+  const lock = settled.filter(s => isLock(s.v));
+  const chr = settled.filter(s => isRoom(s.v));
   const vis = settled.filter(s => isVisual(s.v));
   const txt = settled.filter(s => !isVisual(s.v) && !isCharacter(s.v)).slice(0, 30);
   const gate = passGate(dated.slice(0, 30).map(s => s.views));
@@ -1861,14 +1908,15 @@ function formatCompare(){
     sub: mid(arr.map(s => s.subRate)),
   } : null;
   const young = test => dated.filter(s => test(s.v) && !settled.includes(s)).length;
-  return { gate, chr: sum(chr), vis: sum(vis), txt: sum(txt), chrList: chr, visList: vis,
-           young: young(isVisual), youngChr: young(isCharacter) };
+  return { gate, lock: sum(lock), chr: sum(chr), vis: sum(vis), txt: sum(txt), lockList: lock, chrList: chr, visList: vis,
+           young: young(isVisual), youngChr: young(isRoom), youngLock: young(isLock) };
 }
 function renderFormatCompare(){
   const box = $('#format-compare'); if (!box) return;
   const fc = formatCompare();
-  if (!fc.vis && !fc.chr){
-    const young = fc.young + fc.youngChr;
+  const style = makeStyle();
+  if (!fc.vis && !fc.chr && !fc.lock){
+    const young = fc.young + fc.youngChr + fc.youngLock;
     box.innerHTML = `<p class="text-[11px] text-slate-400 leading-relaxed">
       まだ形式を変えた回の数字がありません${young ? `（投稿から2日たっていない回が${young}本あります）` : ''}。
       「動画」タブで形式を「${esc(currentFormat())}」にして登録すると、投稿から2日たったところで、ここに文字だけの回と並べて出ます。</p>`;
@@ -1883,10 +1931,11 @@ function renderFormatCompare(){
     ['最後まで見られた割合',         x => x.ret != null ? `${dec(x.ret,0)}%` : '—'],
     ['1000再生あたりの登録',         x => x.sub != null ? `${dec(x.sub)}人` : '—'],
   ];
-  // ともりの回は、記録があるとき（またはともりで作っているとき）だけ列を出す
+  // ともりの回（通知・部屋）は、記録があるとき（またはその作り方で作っているとき）だけ列を出す。太字はいまの作り方
   const cols = [
-    ...(fc.chr || useTomori() ? [{ label: CHARACTER_FORMAT, x: fc.chr, strong: true }] : []),
-    { label: VISUAL_FORMAT, x: fc.vis, strong: !fc.chr && !useTomori() },
+    ...(fc.lock || style === 'lock' ? [{ label: LOCK_FORMAT, x: fc.lock, strong: style === 'lock' }] : []),
+    ...(fc.chr || style === 'room' ? [{ label: CHARACTER_FORMAT, x: fc.chr, strong: style === 'room' }] : []),
+    { label: VISUAL_FORMAT, x: fc.vis, strong: style === 'visual' },
     { label: `文字だけ（直近${fc.txt ? fc.txt.n : 0}本）`, x: fc.txt, strong: false },
   ];
   const cell = (c, f) => c.x ? f(c.x) : '—';
@@ -1902,9 +1951,10 @@ function renderFormatCompare(){
       ${cols.map(c => `<td class="py-1.5 text-right num pl-3 ${c.strong ? 'font-semibold' : 'text-slate-400'}">${esc(cell(c, f))}</td>`).join('')}</tr>`).join('')}</tbody>
   </table></div>
   <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">
-    ${[note('ともりの回', fc.chr), note('映像の回', fc.vis)].filter(Boolean).join('<br>')}
-    ${useTomori() && !fc.chr ? `<br>ともりの回は、まだ数字がありません${fc.youngChr ? `（投稿から2日たっていない回が${fc.youngChr}本）` : ''}。` : ''}
-    <br>投稿から2日たっていない回は、まだ数字が動いているので入れていません${fc.young + fc.youngChr ? `（いま${fc.young + fc.youngChr}本）` : ''}。
+    ${[note('通知の回', fc.lock), note('ともりの回', fc.chr), note('映像の回', fc.vis)].filter(Boolean).join('<br>')}
+    ${style === 'lock' && !fc.lock ? `<br>通知の回は、まだ数字がありません${fc.youngLock ? `（投稿から2日たっていない回が${fc.youngLock}本）` : ''}。` : ''}
+    ${style === 'room' && !fc.chr ? `<br>ともりの回は、まだ数字がありません${fc.youngChr ? `（投稿から2日たっていない回が${fc.youngChr}本）` : ''}。` : ''}
+    <br>投稿から2日たっていない回は、まだ数字が動いているので入れていません${fc.young + fc.youngChr + fc.youngLock ? `（いま${fc.young + fc.youngChr + fc.youngLock}本）` : ''}。
     ${state.hasStayed ? '' : '<br>「視聴を選択」を出すには、<code>youtube-hook.sql</code> の実行と、「数字を入力」タブでの書き写しが要ります。'}
   </p>`;
 }
@@ -2764,9 +2814,8 @@ function roleForNext(st){
    - 音が大きく、出だしもいきなり鳴る（全体 -14.8 LUFS、冒頭0.2秒の平均 -23.4dB。決まりは -20 LUFS・-40dB 以下）
    下の直しを入れて17.5秒を書き出し直し、顔の中心 y≈1300・文字の中心 x=540（全ビート）・1フレーム目の明るさの跳ねなし・
    全体 -20.2 LUFS・冒頭0.2秒 -57.9dB になることを確かめてあります。 */
-function pushTomoriMaking(L, ctx){
-  const { slug, minutes, pushAsk, pushRole, nx } = ctx;
-
+/* ともりの設定の章。部屋（テロップ）とロック画面（通知）の両方で使います。words は、ことばを見せるもの */
+function pushTomoriCharacter(L, words = 'テロップ'){
   L.push('## ともり（この動画の主役）');
   L.push('添付のキットの README.md「キャラクター設定」と同じ内容です。見た目・色・形は tomori.py で固定されています。変えないでください。');
   L.push('- **名前**：ともり（灯りの子）');
@@ -2774,7 +2823,7 @@ function pushTomoriMaking(L, ctx){
   L.push('- **光＝気持ち**：体の光の強さで気持ちを見せる。しんどい日は暗く（0.15〜0.3）、のぞく・迷う時は中くらい（0.3〜0.5）、ほっとするとあたたかく光る（0.9〜1.0）。');
   L.push('- **立ち位置**：同じようにしんどい日がある「なかま」。助ける側・教える側ではない。上の「この発信の土台」の「私も」と同じ立ち位置です。');
   L.push('- **話し方**：一人称は「わたし」。短く、ひらがな多め、やわらかい。助言・説教・診断はしない（約束01＝まず聴き合う）。病名・治療・薬の話はしない。否定的・攻撃的なことばは使わない（約束03）。');
-  L.push('- **声**：なし。口の動き（口パク）とテロップで話す。**テロップは、ともりのことば**です。');
+  L.push(`- **声**：なし。口の動き（口パク）と${words}で話す。**${words}は、ともりのことば**です。`);
   L.push('- ともりは、このチャンネルの運営者の代わりではありません。説明文の「当事者本人がひとりで運営している」は、これまでどおり書いてください。');
   L.push('');
   L.push('### 表情（この4つから選ぶ）');
@@ -2793,6 +2842,12 @@ function pushTomoriMaking(L, ctx){
   L.push('- 光の変化は0.5秒以上かけてゆっくり。点滅させない。');
   L.push('- 人間は描かない。ともりの顔と小さな手だけ描く。');
   L.push('');
+}
+
+function pushTomoriMaking(L, ctx){
+  const { slug, minutes, pushAsk, pushRole, nx } = ctx;
+
+  pushTomoriCharacter(L, 'テロップ');
 
   L.push('## 場面（キットの「雨の夜の部屋」をそのまま使います）');
   L.push('- 場面は scene.py の「雨の夜の部屋」（雨の窓・机のランプ・机）です。**今回は場面を作り変えたり、物を描き足したりしないでください。**');
@@ -2949,6 +3004,167 @@ function pushTomoriMaking(L, ctx){
   L.push('');
 }
 
+/* ========================= ともり × ロック画面（通知でことばが届く）の章 =========================
+   2026-10-04、ユーザーの「通知が来てないか」のショートの作りを、ともりと合わせました（LOCK_FORMAT の説明）。
+   描くのはキットの lock.py：scene.py の雨の夜の部屋とともりを壁紙にして、上の帯・日付・時刻・数字・通知を重ねます。
+   こちらで lock.py と例の回（ep_tsuuchi.py）を作り、17.5秒を書き出して lock.py の check で測ってあります：
+   帯・時刻・数字の中心 x=539.5〜540、通知2通目の下端 y=902（ともりのかさの上端 y≈921 より上）、顔の中心 y=1293、
+   1→2フレーム目の明るさの差 0.04、となりのフレームの差の最大 1.1、全体 -20.1 LUFS、冒頭0.2秒 -55dB。
+   この版のキットには、部屋の回の4つの直しも入っているので、指示文では値の確認だけにしています。 */
+function lockDateStr(d = new Date()){
+  return `${d.getMonth()+1}月${d.getDate()}日 ${WEEKDAYS[d.getDay()]}曜日`;
+}
+function pushLockMaking(L, ctx){
+  const { slug, minutes, pushAsk, pushRole, nx, role, date } = ctx;
+
+  pushTomoriCharacter(L, '通知');
+
+  L.push('## ロック画面で届く（今回の作り方）');
+  L.push('見ている人の多くは、夜中にスマホのロック画面を何度もつけています。その画面を、そのまま舞台にします。');
+  L.push('「これは自分の画面だ」と一瞬で分かることと、3秒ごとに何かが届くことで、指を止めて、最後まで見てもらいます。');
+  L.push('');
+  L.push('### 画面の組み立て（lock.py が描きます。置き場所は変えないでください）');
+  L.push('上から順に：');
+  L.push('1. **上の帯（2行）** … 見る人を、やってしまう行動で呼ぶ。0秒から最後まで、同じ場所に出したまま。2行目は灯りの色');
+  L.push('2. **日付・時刻** … 夜中の時刻');
+  L.push('3. **数字の行** … やってしまう行動を数える（例：今夜、画面を見た回数 39回）');
+  L.push('4. **通知（2通まで）** … ともりのことば。アプリ名は「ともり」、アイコンは にっこりのともり');
+  L.push('5. **ともり** … 壁紙の部屋の中。顔の中心 y≈1293 で、ショート動画の題名の帯（y=1550 より下）にかからない');
+  L.push('- 新しい通知は上から届き、前の通知は下へ押されて暗くなります。3通目は消えていきます。');
+  L.push('- 届いた通知の字は、はじめ薄く、左から順に明るくなります（1秒に6字）。読む目が字についていくので、そのあいだは画面から離れにくくなります。');
+  L.push('- 通知の字はカードの中で左そろえです（本物の通知と同じ）。カードそのものは左右まんなかに置かれます。');
+  L.push('- 部屋のほうはキットのまま（雨・カメラがゆっくり5%寄る）。ロック画面の字と通知は寄らずに止まっています。');
+  L.push('- 実在のアプリ名・ロゴ・電池や電波の表示は描かない（lock.py は描きません）。アプリは「ともり」だけです。');
+  L.push('');
+  L.push('### 上の帯（誰のための動画かを、最初の1フレームで言い切る）');
+  L.push('- 1行目は場面、2行目は「〜してしまう人へ。」のように、**その人がやってしまう行動で呼ぶ**。');
+  L.push('  例：「来てないってわかってるのに、／また画面をつけてしまう人へ。」「お風呂に入らなきゃって、／ずっと思ってる人へ。」');
+  L.push('- 各行14字まで（句読点も1字）。病名・診断名で呼ばない。');
+  L.push('- 「〜の方へ」「〜で悩むあなたへ」「応援します」は使わない。支援する側の言い方になります（上の「この発信の土台」）。');
+  L.push('- 帯もことばも、今回のテーマで新しく書く。例の回（ep_tsuuchi.py）の帯・通知のことばは、そのまま使わないでください。');
+  L.push('');
+  L.push('### 日付・時刻・数字');
+  L.push(`- date は「${date}」（この指示文を作った日）。clock は、テーマの場面に合う夜中の時刻（22:00〜4:59）で、ちょうどでない時刻にする（例：2:14・23:47）。`);
+  L.push('- 数字の行は、テーマの「やってしまう行動」を数える。ラベルは14字まで。');
+  L.push('  例：今夜、画面を見た回数／お風呂を後回しにした回数／「明日こそ」と思った回数／ため息をついた回数');
+  L.push('- **1.0秒で数字が1つ進む**（冒頭の小さな出来事）。そのあとは通知が届くたびに1つずつ進む。');
+  L.push('- ことばが「何回も」を言う通知では、数字を一気に進めてもいい（2〜3秒かけて、はじめ速く、だんだんゆっくり。100以上は「99+」と出ます）。');
+  L.push('  ただし、行動の重さに合わない数にはしない（お風呂を後回しにした回数が 99+ などは、うそになります）。');
+  L.push('');
+  L.push('### 通知（ともりのことば）');
+  L.push('- 通知は5通：ともりのことば4通 ＋ 最後の1通（ともりからの答え）。**1通＝1行・13字まで**（句読点も1字。カードの中に1行で収まる長さ）。');
+  L.push('- 届く秒：1通目は0.0秒（0フレーム目から見えている）、2〜4通目は前の通知から3.0〜3.4秒おき。');
+  L.push('- 1通目は、上の帯の場面の続きを、ともりのことばで（例：帯「来てないってわかってるのに…」→ 1通目「夜は、静かすぎるから。」）。');
+  L.push('- 4通目（最後から2通目）に、下の「反応をひとつだけもらう」の問いを置く。');
+  L.push('- 4通目の約3秒後（clear_t）に、通知がぜんぶ消えて「通知はありません」。');
+  L.push('- clear_t の1.0〜1.4秒後に、最後の1通が届く。これがこの動画の答えです。ともりの「わたし」のことばで、同じ側にいることを言う（例：「わたしも、まだ起きてる。」）。');
+  L.push('  励まし・助言・「大丈夫」の言い切りにはしない。');
+  L.push(`- 最後の1通の約1.3秒後に、その下へ小さな1行（sub）。下の「この1本の役割」に合わせた締めにする（今回は${role.role}${role.role === '間口' ? '。例：「毎晩1本、ここに置いています。」' : '。例：「星の海は、説明欄のリンクから。」'}）。20字まで。`);
+  L.push('');
+  L.push('### ともりの動き（通知に合わせる）');
+  L.push('- 1通目：しんどい・光0.2前後。1.0〜1.2秒にまばたき。');
+  L.push('- 通知が届くたびに、ともりがそれを見上げる（「見上げてこちらを見る」）。真ん中（6〜10秒）で一度、首をかしげてこちらを見る。光は少しずつ上げる（0.25 → 0.4）。');
+  L.push('- 「通知はありません」で、かさを深くかぶって目をかくす（光0.15）。いちばん暗い瞬間です。');
+  L.push('- 最後の1通が届いた瞬間に、かさを上げて にっこり → 光0.9以上（1秒かけて）。その少しあとに ほっと（光1.0）。');
+  L.push('- 通知の字が明るくなっているあいだは、ともりの口を動かす（SPEAK）。最後の「ほっと」では動かさない。');
+  L.push('');
+
+  L.push('## 冒頭の3秒（ここで指を止めてもらう）');
+  L.push('このチャンネルで効くのは驚かせることではなく、**「これは自分のことだ」と「あれ、なんだろう」が同時に来ること**です。');
+  L.push('- **0.0秒：もう画面ができている。** 1フレーム目から、上の帯・時刻・数字・1通目の通知・ともりが写っていること（lock.py はそうなっています）。黒からのフェードインやタイトルから始めない。');
+  L.push('- **「これは自分のことだ」は上の帯が言います。** 0秒から読めるので、見る人が毎晩やっていることを、そのまま書く。');
+  L.push('- **0.1秒から、1通目の字が左から明るくなり始める。**');
+  L.push('- **1.0秒：数字が1つ進み、ともりがまばたきする。** これが「なんだろう」になります。音は付けません。');
+  L.push('- **3.0〜3.4秒で2通目が届く。** 前の通知が下へ押され、ともりが見上げる。');
+  L.push('');
+
+  L.push('## 最後まで見てもらう作り');
+  L.push('- **3秒ごとに、画面の何かが変わる。** 通知が届く・数字が進む・前の通知が押される・ともりの目線が動く。止まっている時間を作らない。');
+  L.push('- **1〜4通目で問いを積み、答えは最後の1通だけ。** 途中で答えを言わない。');
+  L.push('- **「通知はありません」の一拍が、いちばん大事な間です。** 見ている人の夜と同じ瞬間です。ここで ともりは暗く小さくなる。');
+  L.push('- **最後の1通は、ともりから届く。** 届く瞬間と、ともりがあたたかく光る瞬間を合わせてください（＝やさしい反転）。');
+  L.push('- **最後から1枚目へ、そのままつながるように。** ショート動画は自動でくり返し再生されます。');
+  L.push('  上の帯と時刻は最初と同じなので、2周目の頭に自然に戻ります。最後のフレームにも、帯・時刻・最後の通知・ともりが残っていること（黒画面・ロゴ・「ご視聴ありがとうございました」で終わらせない）。');
+  L.push('- 尺は17.5秒。13秒に縮めた回はそろって通りませんでした（実測メモ）。手本にした動画は32秒ありますが、このチャンネルの実測のほうを守ります。');
+  L.push('');
+  pushAsk();
+  pushRole();
+
+  L.push('## 音（キットの audio.py で作ります。無音のまま出さないこと）');
+  L.push('**無音の mp4 は不可です。** 音はキットの audio.py で作ります。BGM は、やわらかい和音と、通知が届くたびの小さなベル（audio.py が BEATS の秒に鳴らします。0秒は鳴らしません）。効果音は、ずっと続く雨の音と、回の定義ファイルで置く布のこすれ・光がともる音です。');
+  L.push('- **本物のスマホの通知音・バイブの音は使わない。** 夜中に見ている人が、自分のスマホが鳴ったと思って驚きます。');
+  L.push('- 出だしは BGM と雨のフェードインだけ（0.8秒）。**3秒より前に効果音を置かない。**');
+  L.push('- 効果音は合計4つまで。「通知はありません」で かさをかぶる布の音、最後の通知で かさを上げる布の音、光がともる音（shimmer）を1回だけ。');
+  L.push('- 最後まで鳴らし続ける。最後の0.5秒だけ少し落として、1枚目の頭の静かな音とつながるようにする。');
+  L.push('- 全体は **-20 LUFS**（SNS標準の -14 より、あえて静かめ）。冒頭0.2秒の平均（mean_volume）は -40dB 以下。');
+  L.push('  （手本の動画は歌で、-13 LUFS・0秒から鳴っていますが、このチャンネルは出だしの音で閉じられていたので、こちらの決まりを守ります）');
+  L.push('  こちらで例の回を書き出したときは、全体 -20.1 LUFS・冒頭0.2秒 -55dB・最後の0.3秒 -25dB でした。');
+  L.push('- 星の海の曲（Suno で作ったもの）に、あとでこちらで差し替えることがあります。そのため音のファイルは別々にも渡してください（下の「出してほしいもの」）。');
+  L.push('- どの秒に何の音を置いたかを、通知の表の「音」の列に書いてください。');
+  if (nx && !nx.switching && nx.axis.key === 'audio'){
+    L.push('- **今回は上の「今回だけ変えるもの」が「音」です。** そちらで選んだ形を優先してください。');
+    L.push('  BGMだけにするなら回の定義ファイルの SE を空に、効果音だけにするなら audio.py の BGM を0倍に、無音にはしない（無音の mp4 は不可のまま）。音量の決まり（-20 LUFS・出だし -40dB 以下）は同じです。');
+  }
+  L.push('');
+
+  L.push('## キットの使い方（ここは必ず）');
+  L.push('**添付の tomori_kit を使ってください。** 描くのは lock.py、音は audio.py です。README.md の「ロック画面で届く回（lock.py）」も読んでください。');
+  L.push('- この版のキットには、ともりの位置・1フレーム目の姿・音の出だしの直しが入っています。書き出す前に、次の値になっているかだけ確かめてください（違っていたら、この値に直す）：');
+  L.push('  scene.py の `TOMO_SC = 1.30`・`TOMO_FOOT = 1540.0`／tomori.py の build_keys に「0秒ちょうどの姿は、最初の値にする」の3行／audio.py の「0秒のベルは鳴らさない」・0.8秒の2乗フェード・`bgm *= 0.5`');
+  L.push('- lock.py の置き場所（帯・時刻・数字・通知の位置と大きさ）は変えないでください。こちらで、ともりの顔と題名の帯にかからないことを測ってあります。');
+  L.push('');
+  L.push('### 回の定義ファイル（ep_tsuuchi.py をコピーして ep_' + slug + '.py を作る）');
+  L.push(`- \`NAME = "tomori_${slug}"\`、\`DUR = 17.5\`。`);
+  L.push('- `BEATS`：通知5通。`(届く秒, 次の秒, [(ことば, 58)])`。最後の1つが ともりからの答え（次の秒は None）。');
+  L.push(`- \`LOCK\`：\`banner\`（帯の2行）・\`date="${date}"\`・\`clock\`・\`count_label\`・\`clear_t\`・\`sub\`（秒とことば）。`);
+  L.push('  `app="ともり"`・`empty="通知はありません"`・`cps=6.0` は変えない。');
+  L.push('- `COUNT`：数字の動き `(秒, かける秒, 数)`。0.0秒の数、1.0秒で+1、通知が届くたびに+1。');
+  L.push('- `MOVES`・`BLINKS`・`SPEAK`・`NODS` は、上の「動きの語彙」と4つの表情だけで組む。キットの対応表のとおり：');
+  L.push('  しんどい/のぞく/にっこり/ほっと → `EXPR["…"]`、両手を体の横におろす → `ARMS["おろす"]`、手をふる → `{"wave": 1}`、');
+  L.push('  かさを深くかぶって目をかくす → `hold(120)`、かさの下からのぞく → `hold(62)`、かさを上げる → `{**ARMS["よこ"], "sd": 0}`、');
+  L.push('  首をかしげる → `{"tilt": ±8}`、見上げてこちらを見る → `{"gy": -5, "lid": 0.03}`、うなずく → `NODS`、光 → `{"g": 値}`（かける秒は0.5以上）。');
+  L.push('  `SPEAK` は、通知の字が明るくなるあいだ（届いた秒＋0.1秒から、字数÷6秒）。');
+  L.push('- `SE`（効果音）は**4つまで・すべて3.0秒より後**。使うのは rustle（布のこすれ）と shimmer（光がともる）だけ。shimmer は最後の1通の瞬間に1回だけ。pon は使わない。大きさは 0.08 以下。');
+  L.push('- lock.py は、通知が長すぎるとき・clear_t や sub の秒が決まりから外れたときに止まります。止まったら、ことばや秒を直してください（止める仕組みを外さないこと）。');
+  L.push('');
+  L.push('### 作る順番');
+  L.push('1. ep_' + slug + '.py を書く。');
+  L.push('2. 確認用の静止画を出して見る：`python3 lock.py ep_' + slug + '.py stills 0.0 1.2 3.4 6.6 9.6 (clear_t+0.6) (最後の通知+0.4) 17.4`');
+  L.push('   帯が読めるか・通知の字が1行に収まっているか・ともりの表情が通知に合っているか・「通知はありません」の一拍が見えるかを確かめてから、本番に進んでください。');
+  L.push('3. 書き出し：`python3 lock.py ep_' + slug + '.py video`（音なし）→ `python3 audio.py ep_' + slug + '.py` → 次の手順で -20 LUFS にして重ねる。');
+  L.push('   1. `ffmpeg -i NAME_mix.wav -af ebur128 -f null -` で、最後に出る `I:` の値を読む（例：-14.4 LUFS）');
+  L.push('   2. 上げ下げする量 ＝ -20 −（その値）（例：-5.6dB）');
+  L.push('   3. `ffmpeg -i NAME_otonashi.mp4 -i NAME_mix.wav -af "volume=-5.6dB" -c:v copy -c:a aac -b:a 192k -ar 48000 -shortest -movflags +faststart NAME.mp4`');
+  L.push('   loudnorm は使わないでください（出だしの静けさまで持ち上げてしまうことがあるため）。BGM だけ・効果音だけの wav にも、同じ量をかけてください。');
+  L.push('4. 自己点検：`python3 lock.py ep_' + slug + '.py check NAME.mp4`（下の「書き出したあとの自己点検」の数字が出ます）');
+  L.push('- 日本語の太字フォントが要ります（Noto Sans CJK Bold）。場所が違うときは環境変数 FONT_PATH で指定。時刻の細い字は FONT_THIN（なければ自動で探し、見つからなければ太字で描きます）。豆腐（□）のまま書き出さないでください。');
+  L.push('- こちらの環境では1フレーム約0.55秒（17.5秒・525フレームで約5分）でした。');
+  L.push('  1回の実行に時間の制限がある環境なら、render(f) をフレームの範囲ごとに分けて書き出し、最後に ffmpeg でつないでください。');
+  L.push('');
+  L.push('**凝りすぎて書き出せないのが、いちばんの失敗です。** 部屋・ともり・ロック画面は、もうできています。書くのは回の定義ファイルだけです。');
+  L.push(`この型は、しんどい日でも${minutes}分あれば出せるように決めたものです。途中で止まって聞き返さず、最後まで進めてください（キットがないとき・lock.py がないときだけは、作り始めずにお願いしてください）。`);
+  L.push('');
+
+  L.push('## mp4 の書き出し方');
+  L.push('- 形式は mp4（H.264・yuv420p）／ 1080×1920 ／ 30fps ／ 17.5秒');
+  L.push('- **音声トラックは必須**（AAC 48kHz ステレオ）。無音の mp4 は未完成です');
+  L.push('- **0フレーム目から、上の帯・時刻・数字・1通目の通知・ともりが写っていること。**');
+  L.push('- 書き出したら、必ず**この環境で開けるファイルリンクまたは保存先のパスを渡してください**。作れなかったときは、黙って構成案だけ返さずに、どこで詰まったかを書いてください');
+  L.push('');
+  L.push('### 書き出したあとの自己点検（ここまでやって完成です）');
+  L.push('`python3 lock.py ep_' + slug + '.py check NAME.mp4` を動かし、出た数字で次の9つを確かめて、結果を短く書いてください。ひとつでも外れていたら、直してから渡してください。');
+  L.push('1. 長さが17〜17.5秒に入っているか');
+  L.push('2. 上の帯・時刻・数字の行の中心が、x=540±10 に入っているか');
+  L.push('3. 通知2通目の下端が y=915 より上か（ともりのかさにかからない）。通知の字の幅が 800px 以下か');
+  L.push('4. ともりの顔の中心が y=1250〜1350 か（題名の帯に隠れない）');
+  L.push('5. 1フレーム目と2フレーム目の明るさの差が1以下か');
+  L.push('6. 最初の3秒で動いているか（0/1/2/3秒のとなり同士の画素差がゼロでない）');
+  L.push('7. **点滅していないか**（となりのフレームの明るさの差の最大が12以下）');
+  L.push('8. **音**：音声トラックがあり、全体が -20±1 LUFS、冒頭0.2秒の平均が -40dB 以下、最後の0.3秒が無音でない');
+  L.push('9. 最後の1通の光（g）が0.9以上で、最後のフレームに帯・時刻・最後の通知・ともりが残っているか（17.4秒の静止画で見る）');
+  L.push('');
+}
+
 function buildPrompt(){
   const cur = currentValues();
   const { withViews, values } = cur;
@@ -2966,7 +3182,8 @@ function buildPrompt(){
   const slug   = nextSlug();
   const url    = trackUrl(slug);
   const ch     = state.channel.length ? state.channel[state.channel.length-1] : null;
-  const tomori = useTomori();          // キャラクター「ともり」で作るか（チェックで切り替え）
+  const tomori = useTomori();          // キャラクター「ともり」で作るか（作り方の選択で切り替え）
+  const lock   = useLock();            // ともりのことばを、ロック画面の通知で出すか
   const FORMAT = currentFormat();
   const L = [];
 
@@ -2978,7 +3195,14 @@ function buildPrompt(){
   L.push('この会話の中でコードを書いて動かし、実際に再生できる mp4 を書き出して、');
   L.push('この環境で開けるファイルリンクまたは保存先のパスで渡すところまでを、ひとつづきの仕事としてやってください。');
   L.push('');
-  if (tomori){
+  if (lock){
+    L.push('**今回から、ともりのことばを「夜中のスマホのロック画面に届く通知」で見せます。** この指示文と一緒に、ともりの描画キット（tomori_kit.zip・lock.py 入り）を添付しています。');
+    L.push('ともりは、くすんだ青いかさをかぶった小さなランプの子です。気持ちを体の光の強さで見せます（しんどい日は暗く、ほっとするとあたたかく光る）。');
+    L.push('画面全体が夜中のロック画面で、壁紙がキットの「雨の夜の部屋」とともりです。上に「誰のための動画か」を言い切る2行、時刻、やってしまう行動を数える数字。');
+    L.push('ともりのことばは通知で3秒ごとに上から届き、最後に通知がぜんぶ消えて「通知はありません」――そのあと、ともりから1通だけ届いて、ともりがあたたかく光ります。17.5秒です。');
+    L.push('狙いは2つです。**冒頭の3秒で指を止めてもらうこと**と、**最後まで見てもらうこと**。');
+    L.push('作り方は、下の「ともり」「ロック画面で届く」「冒頭の3秒」「最後まで見てもらう作り」「キットの使い方」の章に書きました。');
+  } else if (tomori){
     L.push('**今回から、キャラクター「ともり」で作ります。** この指示文と一緒に、ともりの描画キット（tomori_kit.zip）を添付しています。');
     L.push('ともりは、くすんだ青いかさをかぶった小さなランプの子です。気持ちを体の光の強さで見せます（しんどい日は暗く、ほっとするとあたたかく光る）。');
     L.push('キットの「雨の夜の部屋」にともりとテロップを置き、ビートごとにともりが表情を変えて、最後にあたたかく光るまでを17秒ほどで見せます。');
@@ -2993,7 +3217,11 @@ function buildPrompt(){
   L.push('');
   L.push('## 実行環境と受け渡し（Claude・Codex 共通）');
   L.push('- この指示文だけで作業できるように進めてください。過去の会話・専用ツール・特定のフォルダがあることを前提にしないでください。');
-  if (tomori){
+  if (lock){
+    L.push('- **ただし、ともりの描画キットだけは使います。** 添付の tomori_kit（tomori_kit.zip、または展開した tomori.py・scene.py・lock.py・audio.py・ep_tsuuchi.py・ep_ame.py・README.md・tomori_sheet.png）を使ってください。');
+    L.push('  見当たらないときは、作り始めずに「tomori_kit.zip を添付してください」とだけ返してください。キットなしで似せて描くと、ともりの見た目が毎回変わってしまいます。');
+    L.push('  **キットに lock.py が入っていないときも、作り始めずに「lock.py の入った tomori_kit.zip（2026-10-04 版）を添付してください」とだけ返してください。** 前の版のキットです。');
+  } else if (tomori){
     L.push('- **ただし、ともりの描画キットだけは使います。** 添付の tomori_kit（tomori_kit.zip、または展開した tomori.py・scene.py・audio.py・ep_ame.py・README.md・tomori_sheet.png）を使ってください。');
     L.push('  見当たらないときは、作り始めずに「tomori_kit.zip を添付してください」とだけ返してください。キットなしで似せて描くと、ともりの見た目が毎回変わってしまいます。');
   }
@@ -3071,14 +3299,19 @@ function buildPrompt(){
 
   /* ── 2.55 映像にした回の結果。切り替えがうまくいっているかを、作る側にも返します ── */
   const fc = formatCompare();
-  if (fc.vis || fc.chr){
+  if (fc.vis || fc.chr || fc.lock){
     const line = (label, x) => `- ${label}：${x.n}本・通った ${x.pass}/${x.n}本・再生の中央値 ${num(Math.round(x.med))}回`
       + (x.stayed != null ? `・視聴を選択 ${dec(x.stayed,0)}%` : '')
       + (x.ret != null ? `・最後まで ${dec(x.ret,0)}%` : '');
     L.push('## 形式を変えた回の結果（投稿から2日たった回だけ）');
+    if (fc.lock) L.push(line(LOCK_FORMAT, fc.lock));
     if (fc.chr) L.push(line(CHARACTER_FORMAT, fc.chr));
     if (fc.vis) L.push(line(VISUAL_FORMAT, fc.vis));
     if (fc.txt) L.push(line(`文字だけ（直近${fc.txt.n}本）`, fc.txt));
+    if (fc.lock){
+      L.push('通知の回（ロック画面・新しい順）：');
+      L.push(...fc.lockList.slice(0, 5).map(promptLineOf));
+    }
     if (fc.chr){
       L.push('ともりの回（新しい順）：');
       L.push(...fc.chrList.slice(0, 5).map(promptLineOf));
@@ -3087,11 +3320,11 @@ function buildPrompt(){
       L.push('映像にした回（新しい順）：');
       L.push(...fc.visList.slice(0, 5).map(promptLineOf));
     }
-    for (const [label, x] of [['ともりの回', fc.chr], ['映像の回', fc.vis]]){
+    for (const [label, x] of [['通知の回', fc.lock], ['ともりの回', fc.chr], ['映像の回', fc.vis]]){
       if (x && x.n < MIN_SAMPLE) L.push(`- ${label}はまだ${x.n}本です。差があっても、まだ言い切らないでください。`);
     }
     L.push('- テーマや投稿時刻の違いも混ざっています。1本ごとの差より、同じ向きに続けて出ているかで読んでください。');
-    if ((fc.chr || fc.vis).stayed != null){
+    if ((fc.lock || fc.chr || fc.vis).stayed != null){
       L.push('- 冒頭の3秒が効いたかは「視聴を選択」の割合がいちばんまっすぐな手がかりです。');
       L.push('  高かった回と低かった回で、1カット目の画と0.8〜1.5秒の出来事がどう違ったかを比べて、今回に生かしてください。');
     }
@@ -3121,10 +3354,11 @@ function buildPrompt(){
   L.push('  → 「黒い1フレーム目が原因」というのは外れでした。ただし1フレーム目に文字がある作りは損ではないので、そのまま続けます。');
   L.push('- **文字の位置**：公開ぶんのフレームを測ったところ、文字のかたまりの中心が画面中央（x=540）より');
   L.push('  25〜87pxだけ左にずれていました。原因は前回の指示にあった「右から200pxを空ける」です。');
-  L.push(tomori ? '  → この決まりは廃止します。下の「キットの使い方と、先に直すところ」の直し2のとおり、左右まんなかに置いてください。'
+  L.push(lock ? '  → この決まりは廃止します。上の帯・時刻・数字は左右まんなか、通知はカードごと左右まんなかです（lock.py がそう置きます）。'
+       : tomori ? '  → この決まりは廃止します。下の「キットの使い方と、先に直すところ」の直し2のとおり、左右まんなかに置いてください。'
                 : '  → この決まりは廃止します。下の「動画の作り方」のとおり、左右まんなかに置いてください。');
   L.push('- この105本は、どれも暗い背景に文字を並べた動画です。映像にした回の数字は、まだありません。');
-  L.push(`  尺・題名・テーマ・投稿時刻の実測は、${tomori ? 'ともりにしても' : '映像にしても'}そのまま守ってください。`);
+  L.push(`  尺・題名・テーマ・投稿時刻の実測は、${lock ? 'ロック画面の形にしても' : tomori ? 'ともりにしても' : '映像にしても'}そのまま守ってください。`);
   L.push('');
 
   /* ── 3. この分野の上限と現在地 ── */
@@ -3203,7 +3437,9 @@ function buildPrompt(){
   if (nx?.switching){
     L.push(`**今回変えるのは「形式」です。${nx.from}から、${nx.to}にします。**`);
     L.push(`${nx.unit}が${MIN_SAMPLE}本たまるまでは（いまは${nx.made}本）、形式を変えること以外は変えないでください。`);
-    L.push(tomori
+    L.push(lock
+      ? '尺（17.5秒）・ことばの区切りの数（5つ）と間隔（約3秒）・ともりの表情と光の流れ・音の作り・題名の決まり・投稿する時間帯は、ともり（部屋）の回と同じです。変わるのは、ことばの見せ方（大きなテロップ → ロック画面に届く通知）と、上の2行・時刻・数字が加わることだけです。'
+      : tomori
       ? '尺・テロップの枚数・題名の決まり・投稿する時間帯は、これまでどおりです（文字の縦の位置と音の作りだけは、ともりに合わせて下の「先に直すところ」のとおりにします）。'
       : '尺・テロップの枚数と字数・文字の位置・題名の決まり・音・投稿する時間帯は、これまでどおりです。');
     L.push('ここで一緒に何かを変えると、形式を変えたから通ったのか（落ちたのか）が分からなくなります。');
@@ -3217,7 +3453,9 @@ function buildPrompt(){
   L.push('　通っている型を推測で壊さない、というのが今回いちばんの反省点です）');
   L.push('');
   L.push(fixed.length || !nx?.switching ? '### 固定するもの（変えないでください）' : '### 固定するもの');
-  if (!nx?.switching) L.push(tomori
+  if (!nx?.switching) L.push(lock
+    ? `- 形式：${LOCK_FORMAT}（2026-10-04 に決めた作り方です。ともりのことばは通知で出します。大きなテロップの形には戻さないでください）`
+    : tomori
     ? `- 形式：${CHARACTER_FORMAT}（2026-10-02 に決めた作り方です。ともりの出てこない動画には戻さないでください）`
     : `- 形式：${VISUAL_FORMAT}（2026-09-23 に決めた作り方です。文字を並べただけの動画には戻さないでください）`);
   fixed.forEach(f => L.push(f.compared
@@ -3336,7 +3574,9 @@ function buildPrompt(){
 
   };
 
-  if (tomori){
+  if (lock){
+    pushLockMaking(L, { slug, minutes: st.minutes, pushAsk, pushRole, nx, role, date: lockDateStr() });
+  } else if (tomori){
     pushTomoriMaking(L, { slug, minutes: st.minutes, pushAsk, pushRole, nx });
   } else {
     /* ── 8. 映像にする・冒頭の3秒・最後まで見てもらう作り ──
@@ -3586,7 +3826,11 @@ function buildPrompt(){
   let no = 0;
   const item = t => L.push(`### ${++no}. ${t}`);
   item('mp4 の動画ファイル（音入り）');
-  if (tomori){
+  if (lock){
+    L.push('上の「ロック画面で届く」「音」「キットの使い方」「mp4 の書き出し方」のとおりに、lock.py で書き出した17.5秒の縦動画を渡してください。');
+    L.push('**音が入っていない mp4、ともりが出てこない mp4、ことばが通知で届かない（大きなテロップの）mp4 は、今回は未完成として扱います。**');
+    L.push('あわせて、音なしの mp4・BGM だけの wav・効果音だけの wav も渡してください（あとで星の海の曲に差し替えたり、音量を調整したりするため）。');
+  } else if (tomori){
     L.push('上の「ともり」「音」「キットの使い方と、先に直すところ」「mp4 の書き出し方」のとおりに書き出した、17〜17.5秒の縦動画を渡してください。');
     L.push('**音が入っていない mp4 と、ともりが出てこない mp4 は、今回は未完成として扱います。**');
     L.push('あわせて、音なしの mp4・BGM だけの wav・効果音だけの wav も渡してください（あとで星の海の曲に差し替えたり、音量を調整したりするため）。');
@@ -3600,7 +3844,21 @@ function buildPrompt(){
   L.push('0.0・0.5・1.0・1.5・2.0・2.5・3.0秒と、最後のフレームの8コマを、横4×縦2に並べた1枚の画像（PNG）にしてください。');
   L.push('各コマの下に秒数を入れる。こちらはこれを見て、最初の3秒で何が起きるかと、最後が最初につながるかを確かめます。');
   L.push('');
-  if (tomori){
+  if (lock){
+    item('通知の表（書き出した mp4 のとおりに）');
+    L.push('表の前に、上の帯の2行と、数字の行のラベルを書いてください（例：帯「来てないってわかってるのに、／また画面をつけてしまう人へ。」・数字「今夜、画面を見た回数」・時刻 2:14）。');
+    L.push('そのあと、通知ごとに1行ずつ、次の列の表にしてください。「通知はありません」の一拍も1行にします。');
+    L.push('秒（例：0.0–3.2）／通知のことば／数字／表情／動き／光／口／音');
+    L.push('- 通知のことばの列には、画面に出す文字だけをそのまま書く。説明や指示は混ぜないでください。');
+    L.push('- 1通目は、上の帯の場面の続きを、ともりのことばで。前置きや挨拶にしない。');
+    L.push('- 4通目（最後から2通目）に、上の「反応をひとつだけもらう」の問いを、ともりのことばとして置いてください。');
+    L.push('- 最後の1通は、ともりからの答え。光は0.9以上。その下の小さな1行は、上の「この1本の役割」に合わせた締めにしてください。');
+    L.push('');
+    item('回の定義ファイル');
+    L.push(`- ep_${slug}.py（この回の定義）。キットの中身は直さずに使えるので、渡すのはこの1つで構いません。`);
+    L.push('  キットのどこかを直したときだけ、直したファイルと理由も渡してください。');
+    L.push('');
+  } else if (tomori){
     item('ビート表（書き出した mp4 のとおりに）');
     L.push('ビートごとに1行ずつ、キットの README と同じ列に「音」を足した表にしてください。');
     L.push('秒（例：0.0–3.4）／テロップ／表情／動き／光／口／音');
@@ -3675,13 +3933,15 @@ function buildPrompt(){
   L.push('（掴みは 問いかけ・共感・断言・数字・体験談・場面描写 から、');
   L.push('　音は BGM＋効果音・BGMのみ・効果音のみ・語り＋BGM・無音 から、');
   L.push('　締めは リンクへ・コメント促し・登録の約束・なし から選んでください。');
-  L.push(`　形式は「${FORMAT}」のまま書き換えないでください。分析ページは、この言葉で${tomori ? 'ともりの回' : '映像の回'}を数えています）`);
+  L.push(`　形式は「${FORMAT}」のまま書き換えないでください。分析ページは、この言葉で${lock ? '通知の回' : tomori ? 'ともりの回' : '映像の回'}を数えています）`);
   L.push('');
   item('次の2本の設計（作らなくていいです。設計だけ）');
   if (nx?.switching){
-    L.push(`今回の1本と合わせて3本で、${tomori ? 'ともりにした' : '映像にした'}効き目を確かめます。次の2本も**${FORMAT}**で、ほかの条件は今回とそろえた案を、あと2本ぶん出してください。`);
-    L.push('- 直近と同じテーマは続けない決まりなので、テーマだけは変えてかまいません。尺・テロップ・音・題名の形は今回と同じにする');
-    L.push(tomori
+    L.push(`今回の1本と合わせて3本で、${lock ? 'ことばをロック画面の通知にした' : tomori ? 'ともりにした' : '映像にした'}効き目を確かめます。次の2本も**${FORMAT}**で、ほかの条件は今回とそろえた案を、あと2本ぶん出してください。`);
+    L.push(`- 直近と同じテーマは続けない決まりなので、テーマだけは変えてかまいません。尺・${lock ? '通知の数と間隔' : 'テロップ'}・音・題名の形は今回と同じにする`);
+    L.push(lock
+      ? '- それぞれ、上の帯の2行・数える行動・通知5通の流れ（最後の1通の答え）が分かる形で、1〜2行ずつ'
+      : tomori
       ? '- それぞれ、テロップの流れと、ともりの表情・光の移り変わり（暗いところから、あたたかい光まで）が分かる形で、1〜2行ずつ'
       : '- それぞれ、描く場面と、冒頭3秒の「小さな出来事」が分かる形で、1〜2行ずつ');
     L.push('- 3本出したあとに何が分かるのか（何を確かめる3本なのか）を、最後に一行で');
@@ -3710,25 +3970,40 @@ function showPrompt(){
   $('#prompt-slug').textContent = slug;
   $('#prompt-msg').textContent = '';
   $('#prompt-kit-reminder').classList.toggle('hidden', !useTomori());
+  $('#prompt-kit-reminder').innerHTML = useLock()
+    ? '貼り付けるときに、<b>tomori_kit.zip</b>（10月4日版・lock.py 入り）も一緒に添付してください。'
+    : '貼り付けるときに、<b>tomori_kit.zip</b> も一緒に添付してください。';
 }
 $('#prompt-build').addEventListener('click', showPrompt);
 
-/* 「ともりで作る」の切り替え。端末ごとの好みなので、この端末に覚えておきます（既定はオン）。 */
-function syncTomoriToggle(){
-  const on = useTomori();
-  $('#use-tomori').checked = on;
-  $('#tomori-kit-note').classList.toggle('hidden', !on);
-  $('#prompt-note').textContent = on
-    ? 'キャラクター「ともり」が出てくる動画（音入り）と冒頭3秒のコマ、投稿文、次の検証案まで依頼します。AIがキットのコードを動かして書き出すので、コードを実行できる環境が必要です。'
-    : '場面が動く映像（音入り）と冒頭3秒のコマ、投稿文、次の検証案まで依頼します。映像はAIがコードで描いて書き出すので、コードを実行できる環境が必要です。';
+/* 作り方の切り替え。端末ごとの好みなので、この端末に覚えておきます（既定は ともり × ロック画面）。 */
+const STYLE_NOTES = {
+  lock:   '夜中のロック画面に、ともりのことばが通知で届く動画（音入り）と冒頭3秒のコマ、投稿文、次の検証案まで依頼します。AIがキットのコード（lock.py）を動かして書き出すので、コードを実行できる環境が必要です。',
+  room:   'キャラクター「ともり」が出てくる動画（音入り）と冒頭3秒のコマ、投稿文、次の検証案まで依頼します。AIがキットのコードを動かして書き出すので、コードを実行できる環境が必要です。',
+  visual: '場面が動く映像（音入り）と冒頭3秒のコマ、投稿文、次の検証案まで依頼します。映像はAIがコードで描いて書き出すので、コードを実行できる環境が必要です。',
+};
+const KIT_NOTES = {
+  lock: 'AIに渡すときは、プロンプトと一緒に <b>tomori_kit.zip</b>（<b>10月4日版・lock.py 入り</b>）も添付してください。'
+      + '前の版のキットには lock.py が入っていないので、AIは作り始めずに新しい版をお願いしてきます。',
+  room: 'AIに渡すときは、プロンプトと一緒に <b>tomori_kit.zip</b>（ともりの描画キット）も添付してください。'
+      + 'キットがないと、ともりの見た目を毎回同じにできないので、AIは作り始めずにキットをお願いしてきます。',
+};
+const styleRadios = () => document.querySelectorAll('input[name="make-style"]');
+function syncStyle(){
+  const st = makeStyle();
+  styleRadios().forEach(r => { r.checked = r.value === st; });
+  $('#tomori-kit-note').classList.toggle('hidden', st === 'visual');
+  if (KIT_NOTES[st]) $('#tomori-kit-note').innerHTML = KIT_NOTES[st];
+  $('#prompt-note').textContent = STYLE_NOTES[st];
 }
-$('#use-tomori').addEventListener('change', e => {
-  try { localStorage.setItem(TOMORI_KEY, e.target.checked ? 'on' : 'off'); } catch {}
-  syncTomoriToggle();
+styleRadios().forEach(r => r.addEventListener('change', e => {
+  if (!e.target.checked || !STYLES.includes(e.target.value)) return;
+  try { localStorage.setItem(STYLE_KEY, e.target.value); } catch {}
+  syncStyle();
   if (state.ready){ renderTestPlan(); renderFormatCompare(); }
   if (!$('#prompt-box').classList.contains('hidden')) showPrompt();   // 出ている指示文も作り直す
-});
-syncTomoriToggle();
+}));
+syncStyle();
 $('#prompt-build2').addEventListener('click', showPrompt);
 
 $('#prompt-copy').addEventListener('click', async () => {
