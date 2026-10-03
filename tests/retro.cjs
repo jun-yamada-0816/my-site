@@ -64,8 +64,9 @@ const token = [
 ].join(".");
 const assets = [
   [
-    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49/dist/umd/supabase.min.js",
-    "supabase.js",
+    // Same pinned version as the pages; its integrity hash must match the cached copy.
+    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.10/dist/umd/supabase.min.js",
+    "supabase-2.49.10.js",
   ],
 ];
 
@@ -129,8 +130,10 @@ const assets = [
       if (url.hostname === "127.0.0.1") return route.continue();
       if (url.hostname === "cdn.jsdelivr.net")
         return route.fulfill({
-          path: path.join(output, "supabase.js"),
+          path: path.join(output, "supabase-2.49.10.js"),
           contentType: "text/javascript",
+          // The page loads it with crossorigin + integrity, which needs a CORS response.
+          headers: { "access-control-allow-origin": "*" },
         });
       if (!url.hostname.endsWith(".supabase.co")) return route.abort();
       const send = (body, status = 200) =>

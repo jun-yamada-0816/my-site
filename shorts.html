@@ -27,8 +27,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.10/dist/umd/supabase.min.js" integrity="sha384-ARQ6JMpleHd1EQUxL9V4CSjKPqSyRfswRYBiVKcn1MT6zUD+BdOm/NYzic64PuF4" crossorigin="anonymous"></script>
 <style>
   /* 夜空から深海へ。星の海のサイトと同じ世界観にそろえています。 */
   :root{
@@ -1200,10 +1200,13 @@ function postedTime(v){
 const ytIdFromUrl = u =>
   (String(u || '').match(/(?:shorts\/|watch\?v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{6,})/) || [])[1] || null;
 
+/* IDはそのまま画像やリンクのURLに入れるので、YouTubeのIDに使われる文字だけを通す */
+const YT_ID = /^[A-Za-z0-9_-]{6,20}$/;
 function ytIdOf(v){
   const p = postOf(v.id);
   if (!p) return null;
-  return p.platform_video_id || ytIdFromUrl(p.url);
+  const id = p.platform_video_id || ytIdFromUrl(p.url);
+  return YT_ID.test(id || '') ? id : null;
 }
 const thumbOf = id => `https://i.ytimg.com/vi/${id}/oardefault.jpg`;
 const thumbAlt = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;

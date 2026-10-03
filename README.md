@@ -7,8 +7,39 @@
 
 ## 公開サイトに載せないファイル
 
-`.vercelignore` で、`README.md`・`docs/`・`tests/`・`tools/`・`*.sql` をVercelに載せないようにしています（GitHubのリポジトリには残ります）。以前はSQLやテストのファイルも `https://hoshinoumi.vercel.app/bbs-moderation.sql` のように誰でも開けて、管理者のメールアドレスも読める状態でした。
+`.vercelignore` で、`README.md`・`docs/`・`tests/`・`tools/`・`*.sql`・`next-business-expo.html` をVercelに載せないようにしています（GitHubのリポジトリには残ります）。
+`next-business-expo.html`（展示会の旅程）には列車・ホテルの予約番号と最寄り駅が書かれていて、管理者メニューから隠していても URL を知っていれば誰でも開ける状態だったため、2026-10-03 に公開をやめ、管理者メニューのリンクも外しました。手元のファイルをブラウザで開けば読めます。以前はSQLやテストのファイルも `https://hoshinoumi.vercel.app/bbs-moderation.sql` のように誰でも開けて、管理者のメールアドレスも読める状態でした。
 `index.html` の先頭にあったSupabaseのセットアップ手順（メールアドレス入り）も、`docs/supabase-setup.md` に移しました。**公開するHTMLのコメントには、手順やメールアドレスを書かないでください。** ページのソースは誰でも見られます。
+
+## セキュリティの点検（2026-10-03）
+
+`~/.claude/CLAUDE.md` の開発ルールと照らし合わせて見直しました。**下の「管理者だけに絞る」は、Supabase側の操作が済むまで効きません。**
+
+### 管理者だけに絞る（要対応）
+
+点検の時点で、Supabaseの**新規登録（Sign up）が開いていました**（`/auth/v1/settings` の `disable_signup: false`）。サイトの権限は「ログインしている人＝管理者」という前提（`auth.role() = 'authenticated'`）なので、誰かがメールアドレスでアカウントを作ると、日記・プロフィールの書き換えや削除、掲示板の削除、音楽のアップロード、YouTube分析のデータと **APIキー（`sv_config`）の読み取り**、ITニュースの収集元の追加までできる状態でした。掲示板の編集（`/api/bulletin`）だけは管理者のUIDで確かめているので対象外です。
+
+1. Supabase → **Authentication → Sign In / Providers** で **Allow new users to sign up をオフ**にします。どのページにも登録画面はないので、オフにして困ることはありません。
+2. `admin-only.sql` の `YOUR_ADMIN_USER_ID_HERE` を自分の User UID（Vercelの `BBS_ADMIN_USER_ID` と同じ値）に置き換えて、SQL Editorで全体を実行します。既存の権限はそのままに、「管理者の一覧（`site_admins`）に入っていないログインは何もできない」制限を重ねます。訪問者の読み取りや訪問の記録には影響しません。訪問の記録（`sv_site_visits`）には文字数の上限も付けます。
+3. 最後に出るアカウント一覧で、`is_site_admin` が false のアカウントがないか確かめます。覚えのないアカウントがあれば削除し、**YouTubeのAPIキーを作り直してください**（読まれた可能性があるため）。日記・音楽に覚えのない変更がないかも見てください。
+
+`docker` があれば、使い捨てのDBで `admin-only.sql` を確かめられます（本番には接続しません）。管理者・ほかのログイン・訪問者それぞれについて、読み書きできること／できないことを確認します。
+
+```sh
+docker run --rm --network none --tmpfs /var/lib/postgresql/data \
+  --mount "type=bind,source=$PWD,target=/work,readonly" \
+  -e POSTGRES_HOST_AUTH_METHOD=trust postgres:16 sh /work/tests/run-admin-only-db.sh
+```
+
+残っていること：`sync_youtube()`・`refresh_it_news()`・`restore_metrics_from_log()` などのRPCは `security definer` で、ログインしていれば管理者でなくても呼べます。管理者が設定した取り込みを動かすだけで、データを読み出したり収集元を足したりはできませんが、新規登録をオフにしておくことが前提です。
+
+### そのほかに直したこと
+
+- **音楽の再生ボタン**：曲のURLを `onclick` の文字列に埋め込んでいたため、`'` を含むURLが登録されるとスクリプトとして動く状態でした。URLは読み込んだ一覧から引き、`https:` 以外は再生しないようにしました。
+- **外部スクリプトの固定**：supabase-js を `@2.49`（中身が更新されうる指定）から `@2.49.10` に固定し、`integrity`（SRI）を付けました。CDNの中身が書き換わると、ブラウザが読み込みを止めます。`shorts.html` のTailwindも `cdn.tailwindcss.com/3.4.17` に固定しました（このCDNはCORSに対応していないためSRIは付けられません）。**supabase-js の版を上げるときは、`index.html`・`it-news.html`・`shorts.html`（と `../shorts-analytics/index.html`）・`tests/retro.cjs` の版と `integrity` をそろえて直してください。** ハッシュは `curl -s <URL> | openssl dgst -sha384 -binary | openssl base64 -A` で作れます。
+- **応答ヘッダー**（`vercel.json`）：ほかのサイトの枠（iframe）に埋め込ませない（`X-Frame-Options`・`frame-ancestors`）、種類の推測をさせない（`nosniff`）、`object`・`base` の差し込みを止める、カメラ・マイク・位置情報を使わない、を全ページに付けました。インラインのスクリプトが多いため、スクリプトの読み込み元を絞る指定（`script-src`）までは入れていません。
+- **YouTube分析**：動画IDを画像・リンクのURLに入れる前に、YouTubeのIDに使われる文字だけかを確かめるようにしました。
+- 訪問の記録で送る値を、DB側の上限と同じ長さに切ってから送るようにしました。
 
 ## 公開URLの切り替え
 
@@ -68,7 +99,7 @@ npm run build    # ../../tailwind.css を作り直す
 `node tests/tailwind-fresh.cjs` で、`tailwind.css` が今の `index.html` と合っているかを確かめられます。設定（色やアニメーション）は `tools/tailwind/tailwind.config.js` にあり、以前 `index.html` の中にあった設定と同じです。Tailwindのバージョンは、それまでCDNが配っていたのと同じ3.4.17に固定しています。
 切り替えの前後で、3つの画面幅・管理者/訪問者・各モーダルを開いた状態の全要素の計算済みスタイルを比べ、違いがないことを確かめました。`retro.css` より後に読み込むのは、CDNが差し込んでいた順番と同じにするためです。
 
-`shorts.html`（管理者用）はまだCDNのままです。`../shorts-analytics/index.html` と同じ内容に保つ必要があるため、別に対応します。
+`shorts.html`（管理者用）はまだCDNのままです（版は3.4.17に固定）。`../shorts-analytics/index.html` と同じ内容に保つ必要があるため、別に対応します。
 
 ## スマホを基準にした表示
 
@@ -159,7 +190,7 @@ create policy "admin_update" on blog_posts for update using (auth.role() = 'auth
 3. ソースをGitHubへプッシュし、Vercelで再デプロイします。VercelのFramework Presetは静的サイト用の **Other**、Output Directoryは従来のルートを使い、`api/bulletin.js` がFunctionとして配置されていることを確認します。Node.js 20以降が必要です。
 4. 自分の通常の挨拶を1件投稿し、返信・管理者編集も確認します。不適切な文の実験を公開掲示板で行う必要はありません。拒否・障害時の動作は下記の模擬テストで確認できます。
 
-SQLを適用せずフロントだけ更新すると、旧REST APIへの直接投稿を防げません。保護を止めずに調整するときは、SQLの権限・トリガーを解除せずAPI側を修正します。Supabaseの認証アカウントは従来どおり管理者専用とし、一般ユーザーのサインアップは無効にしてください（既存の日記・削除の権限もこの前提を使っています）。
+SQLを適用せずフロントだけ更新すると、旧REST APIへの直接投稿を防げません。保護を止めずに調整するときは、SQLの権限・トリガーを解除せずAPI側を修正します。Supabaseの認証アカウントは従来どおり管理者専用とし、一般ユーザーのサインアップは無効にしてください（既存の日記・削除の権限もこの前提を使っています。2026-10-03の点検では有効のままでした。上の「管理者だけに絞る」を参照）。
 
 ### 判定・連投制限・データの扱い
 

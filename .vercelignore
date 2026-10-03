@@ -6,3 +6,6 @@ docs/
 tests/
 tools/
 *.sql
+# 列車・ホテルの予約番号や最寄り駅が書かれた個人の旅程。
+# 管理者メニューから隠すだけでは URL を知っている人に読めてしまうため、公開しない。
+next-business-expo.html

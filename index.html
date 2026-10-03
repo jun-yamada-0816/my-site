@@ -26,7 +26,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.10/dist/umd/supabase.min.js" integrity="sha384-ARQ6JMpleHd1EQUxL9V4CSjKPqSyRfswRYBiVKcn1MT6zUD+BdOm/NYzic64PuF4" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="retro.css" />
   <!-- Tailwind は tools/tailwind で作ったファイルを読む（以前はブラウザで毎回組み立てていた）。
        Play CDN が retro.css のあとに差し込んでいたのと同じ順番にするため、retro.css より後に置く。 -->
@@ -923,7 +923,7 @@
 
   <dialog id="admin-menu" class="retro-dialog" aria-labelledby="admin-menu-title">
     <div class="dialog-title"><h2 id="admin-menu-title" style="font:inherit">管理者メニュー / CONTROL ROOM</h2><button onclick="closeAdminMenu()" aria-label="管理者メニューを閉じる">×</button></div>
-    <div class="dialog-body"><p>おかえりなさい。今日は、どこを更新しますか。</p><div class="admin-actions"><button class="retro-button" onclick="closeAdminMenu();openProfileEditor()">PROFILE / プロフィールを編集する</button><button class="retro-button" onclick="closeAdminMenu();openPostEditor()">DIARY / 日記を書く</button><button class="retro-button" onclick="closeAdminMenu();openUploadModal()">MUSIC / 音楽を追加する</button><a class="retro-button" href="#bulletin" onclick="closeAdminMenu()">BBS / 掲示板を管理する</a></div><div class="admin-tools"><a href="shorts.html" target="_blank" rel="noopener">YouTube分析 ↗</a><a href="it-news.html" target="_blank" rel="noopener">ITニュース ↗</a><a href="next-business-expo.html" target="_blank" rel="noopener">展示会 ↗</a><a href="niigata-cafes-list.html" target="_blank" rel="noopener">カフェ ↗</a></div><p id="admin-error" role="alert"></p><button class="retro-button" onclick="logoutFromMenu()">ログアウト</button></div>
+    <div class="dialog-body"><p>おかえりなさい。今日は、どこを更新しますか。</p><div class="admin-actions"><button class="retro-button" onclick="closeAdminMenu();openProfileEditor()">PROFILE / プロフィールを編集する</button><button class="retro-button" onclick="closeAdminMenu();openPostEditor()">DIARY / 日記を書く</button><button class="retro-button" onclick="closeAdminMenu();openUploadModal()">MUSIC / 音楽を追加する</button><a class="retro-button" href="#bulletin" onclick="closeAdminMenu()">BBS / 掲示板を管理する</a></div><div class="admin-tools"><a href="shorts.html" target="_blank" rel="noopener">YouTube分析 ↗</a><a href="it-news.html" target="_blank" rel="noopener">ITニュース ↗</a><a href="niigata-cafes-list.html" target="_blank" rel="noopener">カフェ ↗</a></div><p id="admin-error" role="alert"></p><button class="retro-button" onclick="logoutFromMenu()">ログアウト</button></div>
   </dialog>
   <dialog id="profile-editor" class="retro-dialog" aria-labelledby="profile-editor-title">
     <div class="dialog-title"><h2 id="profile-editor-title" style="font:inherit">PROFILE / プロフィール編集</h2><button onclick="closeProfileEditor()" aria-label="プロフィール編集を閉じる">×</button></div>
@@ -2166,7 +2166,7 @@
         <div id="track-card-${t.id}"
              class="glass rule-card">
           <div class="flex items-center gap-4">
-            <button onclick="toggleTrack('${t.id}','${esc(t.file_url)}')"
+            <button onclick="toggleTrack('${t.id}')"
                     id="play-btn-${t.id}"
                     class="shrink-0 w-11 h-11 rounded-full flex items-center justify-center
                            bg-aurora-indigo/15 border border-aurora-indigo/40
@@ -2211,7 +2211,17 @@
     }
 
     /* ── オーディオプレーヤー ── */
-    window.toggleTrack = function (id, url) {
+    // 再生するURLは読み込んだ一覧から引く（onclick の文字列に URL を埋め込むと、
+    // ' を含むURLがそのままスクリプトとして動いてしまうため）。https 以外は再生しない。
+    function trackUrl(id) {
+      const track = allTracks.find(t => t.id === id);
+      try {
+        const url = new URL(track?.file_url ?? '');
+        return url.protocol === 'https:' ? url.href : null;
+      } catch { return null; }
+    }
+
+    window.toggleTrack = function (id) {
       if (currentTrackId === id && currentAudio) {
         if (currentAudio.paused) { currentAudio.play(); setPlay(id, true); }
         else                     { currentAudio.pause(); setPlay(id, false); }
@@ -2221,6 +2231,8 @@
         currentAudio.pause();
         if (currentTrackId) { setPlay(currentTrackId, false); hidePlayer(currentTrackId); }
       }
+      const url = trackUrl(id);
+      if (!url) { currentAudio = null; currentTrackId = null; return; }
       currentAudio   = new Audio(url);
       currentTrackId = id;
       currentAudio.addEventListener('loadedmetadata', () => {
@@ -2970,7 +2982,9 @@
       if (!src) return;                       // 動画から来た人だけを記録する
       if (!window.supabase) return;           // 読み込めていなければ何もしない
 
-      var slug = q.get('utm_content') || null;
+      // 誰でも書き込める表なので、DB側の上限（admin-only.sql）に合わせて短くしてから送る
+      src = src.slice(0, 40);
+      var slug = (q.get('utm_content') || '').slice(0, 80) || null;
 
       // 同じ訪問中に再読み込みされても二重に数えないようにする
       var mark = 'hoshiumi_tracked_' + src + '_' + (slug || '');
@@ -2988,8 +3002,8 @@
       tracker.from('sv_site_visits').insert({
         source:     src,
         video_slug: slug,
-        path:       location.pathname,
-        referrer:   document.referrer || null
+        path:       location.pathname.slice(0, 300),
+        referrer:   (document.referrer || '').slice(0, 1000) || null
       }).then(function () {}, function () {});
     } catch (e) { /* 記録できなくてもサイトは普通に使えるようにする */ }
   })();
