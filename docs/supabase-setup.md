@@ -13,6 +13,7 @@
 掲示板の保護：最後に `bbs-moderation.sql` を実行し、README の「BBSの公開前チェック」の設定手順に従ってください。
 
 管理者だけに絞る：すべてのSQLのあとに `admin-only.sql`（管理者のUIDを入れて）を実行してください。README の「管理者だけに絞る」を参照。
+カフェ一覧を使う場合は、そのあとに `admin-cafes.sql` を実行します。
 
 > Supabase の SQL Editor は、関数の定義を途中で区切って `syntax error at end of input` を出すことがあります。そのときは1文ずつ実行してください。
 
