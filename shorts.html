@@ -751,7 +751,7 @@
           <label><span class="block text-[11px] text-slate-500 mb-1">尺(秒)</span><input id="vm-dur" type="number" inputmode="numeric" class="fld"></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">締め</span>
             <input id="vm-cta" list="dl-cta" class="fld" placeholder="リンクへ">
-            <datalist id="dl-cta"><option value="リンクへ"><option value="コメント促し"><option value="登録の約束"><option value="なし"></datalist></label>
+            <datalist id="dl-cta"><option value="ループ（1枚目へ戻る）"><option value="リンクへ"><option value="コメント促し"><option value="登録の約束"><option value="なし"></datalist></label>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <label><span class="block text-[11px] text-slate-500 mb-1">音</span>
@@ -934,6 +934,17 @@ const TEMPLATE_CHIPS = [
   { key:'dur',    text:'尺：17秒' },
   { key:'theme',  text:'テーマ：毎回変える（直近3本と別）' },
 ];
+
+/* 2026-10-11 から、終わり方を「ループ（最後の1秒で1カット目と1枚目のテロップに戻る）」に変えて試します。
+   ユーザーの「再生が1000回から増えない」への次の一手です。
+   公開ぶん48本を数えると、500回以上まで行った23本のうち21本が1,100回までで止まり、越えたのは 9/24・9/26 の2本だけでした。
+   窓と灯りに絞った 10/10〜10/11 の3本も 1,029／404／739回（どれも投稿から2日たっていない数字）。
+   最初の試し配信は半分以上通っているのに、その次で止まっています。
+   ショートの再生回数は、2025年3月からくり返し再生も1回として数えます（YouTube の発表）。
+   見終わった人がそのまま2周目に入る作りにすれば、止まっている理由が「最後まで・もう1周」なら動くはず、という推測にもとづく試しです。
+   ループの回が MIN_SAMPLE 本たまるまで、ほかは変えません（nextAxis）。数えるのは「動画」タブの締めに「ループ」と入っている回です。 */
+const LOOP_CTA = 'ループ（1枚目へ戻る）';
+const isLoop = v => /ループ/.test(v.cta_type || '');
 
 /* ========================= 状態 ========================= */
 let sb = null;
@@ -1705,10 +1716,14 @@ function evidenceOf(x){
    今回変えるもの（nx）は並べません。「固定」と「変える」の両方に同じ変数が出ると、どちらに従えばいいか分からなくなります。
    形式・冒頭の掴み・尺・テーマは「窓と灯り」の型で決めたので（TEMPLATE_AXES）、昔の記録のいちばん良い値をここに出すこともしません。 */
 function fixedCombo(states, nx){
-  return states.filter(x => x.best && !TEMPLATE_AXES.includes(x.axis.key) && x.axis.key !== nx?.axis.key).map(x => {
+  // ループの回を作りはじめたら、締めは loopPhase() の判定で決めます。
+  // 倍率で決めると、昔の文字だけの回まで混ざった平均と比べることになり、壁で止まったループの回でも「勝ち」に見えるためです。
+  const loopDecides = state.videos.some(isLoop);
+  return states.filter(x => x.best && !TEMPLATE_AXES.includes(x.axis.key) && x.axis.key !== nx?.axis.key
+                            && !(loopDecides && x.axis.key === 'cta')).map(x => {
     const ev = evidenceOf(x);
     return {
-      name: x.axis.name, value: x.best.key, avg: x.best.avg, n: x.best.n,
+      key: x.axis.key, name: x.axis.name, value: x.best.key, avg: x.best.avg, n: x.best.n,
       ret: x.best.ret, sub: x.best.sub,
       // 値が1種類しかないものは「いつもそうしている」だけで、比べた結果ではありません
       compared: x.solid.length >= 2,
@@ -1719,11 +1734,14 @@ function fixedCombo(states, nx){
 
 /* 今回変える1つ。AXES は効きやすい順に並べてあるので、
    まだ確定していないもののうち、いちばん上のものを選びます。
-   ただし「窓と灯り」に絞った直後は、その回が MIN_SAMPLE 本たまるまで形式だけを変えます（WINDOW_FORMAT の説明）。 */
+   ただしいまは、ループの回が MIN_SAMPLE 本たまるまで締め（終わり方）だけを変えます（LOOP_CTA の説明）。
+   10-10 に始めた「窓と灯り」への切り替えは、公開ずみ3本（10/10 朝・10/10 夜・10/11 朝）で済んだものとして、型の側に置きました。
+   （分析ページへの登録が遅れていても、ループの検証が始まらないことがないように、窓と灯りの本数は待ちません） */
 function nextAxis(states){
-  const fmt  = states.find(x => x.axis.key === 'format');
-  const made = state.videos.filter(isWindow).length;
-  if (fmt && made < MIN_SAMPLE) return Object.assign({}, fmt, { switching:true, made });
+  const cta = states.find(x => x.axis.key === 'cta');
+  const lp  = loopPhase();
+  if (cta && (lp.phase === 'testing' || lp.phase === 'waiting'))
+    return Object.assign({}, cta, { loopTest:true, made: lp.made, waiting: lp.phase === 'waiting' });
   // 形式・冒頭の掴み・尺・テーマは「窓と灯り」の型で決めてあるので（TEMPLATE_AXES）、ここから先は選び直しません
   const pool = states.filter(x => !TEMPLATE_AXES.includes(x.axis.key));
   const undecided = pool.filter(x => x.solid.length < 2);
@@ -1738,7 +1756,7 @@ function axisCandidates(x){
     // 無音の mp4 は出さない・読み上げ音声は使わない（2026-08-14 ユーザーの判断）ので、その2つは候補にしません
     audio:   ['BGM＋効果音','BGMのみ','効果音のみ'],
     format:  [WINDOW_FORMAT,VISUAL_FORMAT,'語り','テロップのみ','音楽メイン','対話'],
-    cta:     ['リンクへ','コメント促し','登録の約束','なし'],
+    cta:     [LOOP_CTA,'リンクへ','コメント促し','登録の約束','なし'],
     dur:     ['〜15秒','16〜30秒','31〜45秒','46〜60秒'],
     hour:    ['深夜 0〜6時','朝 6〜11時','昼 11〜15時','夕方 15〜19時','夜 19〜24時'],
     weekday: WEEKDAYS.map(d => d+'曜'),
@@ -1760,9 +1778,12 @@ function renderTestPlan(){
   const chip = t => `<span class="chip">${esc(t)}</span>`;
   const design = [];
 
-  // 型で決めてあるものは「固定するもの」の先頭に置きます（形式は、切り替えの途中なら「今回だけ変えるもの」に出します）
-  const fmtChip = TEMPLATE_CHIPS.filter(t => !(nx?.switching && t.key === 'format'))
-    .map(t => `<span class="chip" style="background:rgba(23,69,107,.10);color:#17456b">${esc(t.text)}（型で決めたもの）</span>`).join('');
+  // 型で決めてあるものは「固定するもの」の先頭に置きます。ループの検証が済んでいれば、その結果の締めも並べます
+  const lp = loopPhase();
+  const loopChip = lp.phase === 'kept' ? `締め：${LOOP_CTA}（壁を越えた回があった）`
+    : lp.phase === 'dropped' ? '締め：灯りの一言で止めて終える（ループは壁を越えなかった）' : null;
+  const fmtChip = [...TEMPLATE_CHIPS.map(t => `${t.text}（型で決めたもの）`), ...(loopChip ? [loopChip] : [])]
+    .map(t => `<span class="chip" style="background:rgba(23,69,107,.10);color:#17456b">${esc(t)}</span>`).join('');
   design.push(`<div class="rounded-2xl p-4" style="background:rgba(43,47,51,.06);border-left:3px solid #2b7f8c">
     <div class="text-xs font-semibold mb-2" style="color:#2b7f8c">固定するもの（変えない）</div>
     ${fmtChip || fixed.length
@@ -1773,15 +1794,20 @@ function renderTestPlan(){
           いまは固定するものを決める段階です。${MIN_SAMPLE}本ずつ同じ条件でそろえると、そこから型が見えてきます。</p>`}
   </div>`);
 
-  if (nx?.switching){
+  if (nx?.loopTest){
+    const w = wallCompare();
     design.push(`<div class="rounded-2xl p-4" style="background:rgba(43,47,51,.06);border-left:3px solid #9a7420">
       <div class="text-xs font-semibold mb-2" style="color:#9a7420">今回だけ変えるもの</div>
-      <p class="text-xs text-slate-300 mb-2"><b>形式</b>：${esc(VISUAL_FORMAT)}（場面いろいろ） → <b>${esc(WINDOW_FORMAT)}</b></p>
-      <div class="flex flex-wrap gap-1.5 mb-2">${chip(`窓と灯りの回 ${nx.made}／${MIN_SAMPLE}本`)}</div>
+      <p class="text-xs text-slate-300 mb-2"><b>締め（終わり方）</b>：灯りの一言＋「毎晩1本、置いてます。」で終える → <b>${esc(LOOP_CTA)}</b></p>
+      <div class="flex flex-wrap gap-1.5 mb-2">${chip(`ループの回 ${nx.made}／${MIN_SAMPLE}本${nx.waiting ? '・結果待ち' : ''}`)}${w ? chip(`壁の線 ${num(w.line)}回`) : ''}</div>
       <p class="text-[11px] text-slate-400 leading-relaxed">
-        いちばん伸びた「向かいの窓に、まだ灯りがある。」（2,985回）の型で作ります。窓と灯りの回が${MIN_SAMPLE}本そろうまでは、型のほかは何も変えません。
-        一緒に変えると、型にしたから通ったのか（落ちたのか）が分からなくなるためです。
-        できた動画は「動画」タブで、形式を「${esc(WINDOW_FORMAT)}」にして登録してください。その本数をここで数えています。
+        ${w && w.wall ? `直近${w.n}本のうち、最初の試し配信を通った${w.passN}本の${w.wall.n}本が、${num(w.wall.max)}回までで止まっています。` : ''}
+        通る割合より、通ったあとに止まらないことを狙います。最後の2行と灯りの場面は残したまま、最後の1秒で1カット目に戻し、
+        見終わった人にそのまま2周目に入ってもらう作りです（推測にもとづく試し）。${nx.waiting
+          ? `ループの回は${nx.made}本できました。投稿から2日たった回が${MIN_SAMPLE}本そろうまでは、ループのまま、ほかは何も変えません。`
+          : `ループの回が${MIN_SAMPLE}本そろうまでは、ほかは何も変えません。`}
+        ${MIN_SAMPLE}本のうち1本でも壁の線を越えればループを残し、1本も越えなければ、これまでの終わり方に戻します。
+        できた動画は「動画」タブで、締めを「${esc(LOOP_CTA)}」にして登録してください。その本数をここで数えています。
       </p>
     </div>`);
   } else if (nx){
@@ -1826,7 +1852,7 @@ function renderTestPlan(){
    形式ごとに、通った割合と数字を並べます。
    窓と灯り（2026-10-10〜）／それ以外の映像（09-23〜）／ともり（10-02〜10-09）／文字だけ（〜09-23）の4つです。
    投稿から2日たっていない回は、まだ数字が動いているので外します。
-   「通った」の線は、指示文の「通ったか、通らなかったか」と同じ決め方（直近30本の中央値の半分・最低300回）です。 */
+   「通った」の線は、指示文の「1000回の壁」と同じ決め方（直近30本の中央値の半分・最低300回）です。 */
 const passGate = views => {
   const vs = views.slice().sort((a,b) => a - b);
   const m = vs.length ? vs[Math.floor((vs.length-1)/2)] : 0;
@@ -1863,6 +1889,60 @@ function formatCompare(){
   });
   fc.any = FORMAT_GROUPS.some(g => fc[g.key]);
   return fc;
+}
+
+/* ========================= 1000回の壁 =========================
+   2026-10-11、ユーザー「再生が1000回から増えない」。
+   通った回（passGate 以上）の中でも、ほとんどが1,100回前後で止まり、越えたのは2本だけでした。
+   直近30本（投稿から2日たった回）を「通らなかった／通ったが止まった／壁を越えた」に分け、
+   越えた回と止まった回で Studio の数字（視聴を選択・最後まで・登録・コメント）を比べます。
+   壁の線は、通った回の再生の中央値の1.5倍（100回単位・最低1,200回）。2026-10-11 の公開データでは1,400回です。 */
+const wallLineOf = views => Math.max(1200, Math.round(median(views) * 1.5 / 100) * 100);
+function wallCompare(){
+  const cur = currentValues();
+  const dated = cur.withViews.filter(s => s.postedAt)
+    .sort((a,b) => new Date(b.postedAt) - new Date(a.postedAt));
+  const settled = dated.filter(s => Date.now() - new Date(s.postedAt) >= 2*864e5);
+  const recent = settled.slice(0, 30);
+  if (recent.length < 8) return null;
+  const gate = passGate(dated.slice(0, 30).map(s => s.views));   // 「形式を変えてから」の表と同じ線
+  const passed = recent.filter(s => s.views >= gate);
+  if (!passed.length) return null;
+  const line = wallLineOf(passed.map(s => s.views));
+  const mid = xs => { const a = xs.filter(n => n != null && isFinite(n)); return a.length ? median(a) : null; };
+  const sum = arr => arr.length ? {
+    n: arr.length, list: arr,
+    med: mid(arr.map(s => s.views)),
+    max: Math.max(...arr.map(s => s.views)),
+    stayed: mid(arr.map(s => s.stayed)),
+    ret: mid(arr.map(s => s.retention)),
+    sub: mid(arr.map(s => s.subRate)),
+    comment: mid(arr.map(s => s.commentRate != null ? s.commentRate * 10 : null)),   // 1000再生あたりのコメント
+  } : null;
+  const young = s => !settled.includes(s);
+  return {
+    gate, line, n: recent.length, passN: passed.length,
+    fail: sum(recent.filter(s => s.views < gate)),
+    wall: sum(passed.filter(s => s.views < line)),
+    over: sum(passed.filter(s => s.views >= line)),
+    // 窓と灯り・ループの回は、まだ2日たっていない回も並べます（いま作っている型なので）
+    windows: dated.filter(s => isWindow(s.v)).slice(0, 6).map(s => ({ s, young: young(s) })),
+    loops:   dated.filter(s => isLoop(s.v)).map(s => ({ s, young: young(s) })),
+  };
+}
+
+/* ループの検証がどこまで進んだか。
+   testing＝まだ MIN_SAMPLE 本できていない／waiting＝できたが、投稿から2日たった回が MIN_SAMPLE 本そろっていない（ループのまま続ける）
+   kept＝2日たった回のうち1本でも壁を越えた（締めの型として残す）／dropped＝1本も越えなかった（これまでの終わり方に戻す）。
+   ねらいは「壁を越えること」なので、判定も壁の線で行います。再生の倍率では決めません。 */
+function loopPhase(){
+  const made = state.videos.filter(isLoop).length;
+  if (made < MIN_SAMPLE) return { phase:'testing', made };
+  const w = wallCompare();
+  const settled = w ? w.loops.filter(o => !o.young) : [];
+  if (!w || settled.length < MIN_SAMPLE) return { phase:'waiting', made, settledN: settled.length };
+  const over = settled.filter(o => o.s.views >= w.line).length;
+  return { phase: over ? 'kept' : 'dropped', made, over, settledN: settled.length, line: w.line };
 }
 function renderFormatCompare(){
   const box = $('#format-compare'); if (!box) return;
@@ -2764,6 +2844,10 @@ function buildPrompt(){
   const slug   = nextSlug();
   const url    = trackUrl(slug);
   const ch     = state.channel.length ? state.channel[state.channel.length-1] : null;
+  /* 終わり方をループにする回か。検証中・結果待ち（nx.loopTest）か、検証で壁を越えてループが残ったとき（loopPhase） */
+  const lp     = loopPhase();
+  const loopOn = !!nx?.loopTest || lp.phase === 'kept';
+  const wall   = wallCompare();
   const L = [];
 
   L.push('あなたは YouTube ショート動画の構成作家であり、映像を作って書き出す担当でもあります。');
@@ -2786,6 +2870,10 @@ function buildPrompt(){
   L.push('向かいの窓に灯りがついて、最後に自分の部屋のスタンドも灯る。人もキャラクターも出てこない、17秒の映像です。');
   L.push('この型はそのままにして、テーマと場面の中身だけを変えた次の1本を作ってください。型の中身は、下の「今回の型」の章に書きました。');
   L.push('狙いは2つです。**冒頭の3秒で指を止めてもらうこと**と、**最後まで見てもらうこと**。');
+  if (loopOn){
+    L.push('今回はそこにもう1つ、**見終わった人に、そのまま2周目に入ってもらうこと**を足します。');
+    L.push(`再生が1,000回前後で止まる回が続いているためです（下の${wall ? '「1000回の壁」と' : ''}「終わり方：2周目に入る作り」の章）。`);
+  }
   L.push('');
   L.push('## 実行環境と受け渡し（Claude・Codex 共通）');
   L.push('- この指示文だけで作業できるように進めてください。過去の会話・専用ツール・特定のフォルダがあることを前提にしないでください。');
@@ -2829,36 +2917,103 @@ function buildPrompt(){
   if (bn){
     const shown = bn.g.range ? `${num(Math.round(bn.v))}${bn.g.unit}` : `${dec(bn.v, bn.v < 10 ? 1 : 0)}${bn.g.unit}`;
     L.push('');
-    L.push(`**いま一番詰まっているのは「${bn.g.name}」です（${shown}）。今回の1本は、まずここを動かすことを狙ってください。**`);
-    L.push(`（${bn.g.why} 直し方の定石：${bn.g.fix}）`);
+    if (loopOn && wall){
+      // 今回の狙いは「1000回の壁」に絞っています。狙いが2つ並ぶと、どちらに寄せるかを受け取った側が迷うためです。
+      L.push(`目安からいちばん遠いのは「${bn.g.name}」です（${shown}）。ただし今回の1本で狙うのは、下の「1000回の壁」です。`);
+    } else {
+      L.push(`**いま一番詰まっているのは「${bn.g.name}」です（${shown}）。今回の1本は、まずここを動かすことを狙ってください。**`);
+      L.push(`（${bn.g.why} 直し方の定石：${bn.g.fix}）`);
+    }
   }
   L.push('');
 
-  /* ── 2.5 通ったか、通らなかったか ──
-     公開ぶん105本を実測したところ、再生数は「通った回（900〜2200回）」と
-     「通らなかった回（130〜500回）」の二つの山に割れていました。あいだの数字がほとんどありません。
-     つまり1本ずつを少しずつ伸ばす話ではなく、最初の試し配信を抜けられるかどうかで
-     ほぼ決まっています。狙うのは最高記録ではなく、**通る割合**です。 */
-  /* 昔の低調期まで混ぜると割合がぼやけるので、直近30本だけで見ます。 */
-  const recentScored = withViews.filter(s => s.postedAt)
-    .sort((a,b) => new Date(b.postedAt) - new Date(a.postedAt)).slice(0, 30);
-  const base  = recentScored.length >= 8 ? recentScored : withViews;
-  const vlist = base.map(s => s.views).sort((a,b) => a - b);
-  if (vlist.length >= 8){
-    const gate = passGate(vlist);   // 「形式を変えてから」の表と同じ線
-    const pass = vlist.filter(v => v >= gate);
-    const fail = vlist.filter(v => v <  gate);
-    const medOf = a => a.length ? a[Math.floor((a.length-1)/2)] : null;
-    L.push('## 通ったか、通らなかったか（今回いちばん動かしてほしいところ）');
-    L.push(`- 直近${vlist.length}本の再生数は、二つの山に割れています。**${num(gate)}回以上まで行った回が${pass.length}本、届かなかった回が${fail.length}本**です。`);
-    if (pass.length && fail.length){
-      L.push(`  通った回の中央値は${num(medOf(pass))}回、通らなかった回の中央値は${num(medOf(fail))}回。あいだの数字はほとんどありません。`);
+  /* ── 2.5 1000回の壁 ──
+     2026-09-10 に105本を数えたときは、再生数が「通った回」と「通らなかった回」の二つの山に割れていて、
+     狙うのは通る割合だと書いていました（この章の旧名「通ったか、通らなかったか」）。
+     2026-10-11 に数え直すと、通る割合は6割まで来た一方で、通った回のほとんどが1,100回前後で止まっていました
+     （ユーザー「1000回から増えない」）。詰まっているのは、最初の試し配信のその次です。
+     三つに分けて見せ、狙いを「通ったあとに止まらないこと」に移します。区切りの線は wallCompare() と同じです。 */
+  if (wall){
+    const titled = s => `「${String(s.v.title || '（題名なし）').replace(/\s+#.*$/, '')}」${num(s.views)}回`;
+    const pct = Math.round(wall.passN / wall.n * 100);
+    L.push('## 1000回の壁（今回いちばん動かしてほしいところ）');
+    L.push(`- 直近${wall.n}本（投稿から2日たった回）の再生数は、三つに分かれています。`);
+    if (wall.fail) L.push(`  - 通らなかった（${num(wall.gate)}回未満）：${wall.fail.n}本・中央値${num(Math.round(wall.fail.med))}回`);
+    if (wall.wall) L.push(`  - 通ったが、そこで止まった（${num(wall.gate)}〜${num(wall.line - 1)}回）：${wall.wall.n}本・中央値${num(Math.round(wall.wall.med))}回・いちばん多くて${num(wall.wall.max)}回`);
+    L.push(wall.over
+      ? `  - 壁を越えた（${num(wall.line)}回以上）：${wall.over.n}本（${wall.over.list.slice(0, 3).map(titled).join('、')}）`
+      : `  - 壁を越えた（${num(wall.line)}回以上）：0本`);
+    L.push(`- **最初の試し配信は、いま${pct}%が通っています。止まっているのは、その次です。**`);
+    if (wall.wall) L.push(`  通った${wall.passN}本のうち${wall.wall.n}本が、${num(wall.wall.max)}回までで止まりました。`);
+    L.push('- ですので今回の狙いは、通る割合を上げることではなく、**通ったあとに止まらないこと**です。');
+    if (wall.windows.length){
+      const overW = wall.windows.filter(o => !o.young && o.s.views >= wall.line).length;
+      L.push('- 窓と灯りの型にしてからの回：' + wall.windows.map(o => titled(o.s) + (o.young ? '（投稿から2日たっていない）' : '')).join(' ／ '));
+      L.push(overW ? `  このうち${overW}本は壁を越えています。` : '  型に絞っただけでは、まだ壁を越えていません。');
     }
-    L.push(`- 最高は${num(vlist[vlist.length-1])}回です。**1本を大きく伸ばすより、通る割合（いまは${Math.round(pass.length/vlist.length*100)}%）を上げてください。**`);
+    if (wall.loops.length){
+      const tag = o => o.young ? '（投稿から2日たっていない）'
+        : o.s.views >= wall.line ? '（越えた）' : o.s.views >= wall.gate ? '（止まった）' : '（通らなかった）';
+      L.push('- 終わり方をループにした回：' + wall.loops.slice(0, 6).map(o => titled(o.s) + tag(o)).join(' ／ '));
+      if (lp.phase === 'kept')    L.push(`  投稿から2日たった${lp.settledN}本のうち${lp.over}本が壁を越えました。終わり方はループのまま続けます。`);
+      if (lp.phase === 'dropped') L.push(`  投稿から2日たった${lp.settledN}本は、どれも壁を越えませんでした。終わり方は、これまでの形（灯りの一言＋「毎晩1本、置いてます。」で止めて終える）に戻します。`);
+    }
+    // 越えた回と止まった回を、Studio の数字で比べる（書き写してある回だけ）
+    const ov = wall.over, st = wall.wall;
+    const both = k => ov && st && ov[k] != null && st[k] != null;
+    if (both('ret') || both('stayed')){
+      const row = (label, x) => `  - ${label}（${x.n}本）：` + [
+        x.stayed  != null ? `視聴を選択 ${dec(x.stayed,0)}%` : null,
+        x.ret     != null ? `最後まで ${dec(x.ret,0)}%` : null,
+        x.sub     != null ? `1000再生あたりの登録 ${dec(x.sub)}人` : null,
+        x.comment != null ? `1000再生あたりのコメント ${dec(x.comment)}件` : null,
+      ].filter(Boolean).join('・');
+      L.push('- 越えた回と止まった回の、Studio の数字（中央値）：');
+      L.push(row('越えた回', ov));
+      L.push(row('止まった回', st));
+      const diffs = [];
+      if (both('ret')    && Math.abs(ov.ret - st.ret) >= 5)       diffs.push(`最後まで（${dec(ov.ret,0)}% 対 ${dec(st.ret,0)}%）`);
+      if (both('stayed') && Math.abs(ov.stayed - st.stayed) >= 5) diffs.push(`視聴を選択（${dec(ov.stayed,0)}% 対 ${dec(st.stayed,0)}%）`);
+      L.push(diffs.length
+        ? `  5ポイント以上の差があるのは：${diffs.join('、')}。越えた回は${ov.n}本しかないので、言い切らずに手がかりとして使ってください。`
+        : '  どちらも差は5ポイント未満です。この数字からは、越えた理由はまだ見えていません。');
+    } else if (loopOn){
+      L.push('- 越えた回と止まった回を Studio の数字（視聴を選択・最後まで）で比べるには、まだ書き写しが足りません。下の推測は、数字では確かめていません。');
+    }
+    if (loopOn){
+      L.push('- 配信の仕組みは公開されていないので、ここからはこちらの推測です。');
+      L.push('  最初の試しで反応がよいと、もう一段広い人たちに出される。そこで止まるのは、その人たちが最後まで見なかった・もう1周見なかったからではないか、と見ています。');
+      L.push('  YouTube の発表では、2025年3月から、ショートの再生回数はくり返し再生も1回として数えます。2周目に入った人がいれば、それも数に出ます。');
+      L.push(nx?.loopTest
+        ? '  そこで今回は、終わり方だけを変えます（下の「今回の検証設計」と「終わり方：2周目に入る作り」）。'
+        : '  終わり方をループにした回で壁を越えた回があったので、この作りを続けます（下の「終わり方：2周目に入る作り」）。');
+    }
     L.push('- 通らなかった回にも、いいねやコメントは付いています。むしろ通らなかった回のほうが、見た人あたりの反応は多いことがあります。');
-    L.push('  ですので**いいねの少なさを原因にしないでください**。反応が足りないのではなく、そもそも人に見せてもらえていない回があるという形です。');
-    L.push('- 以上は再生数の分布から言えることだけです。配信の仕組みそのものは分かりません。下の実測メモは事実、その理由づけは仮説として扱ってください。');
+    L.push('  ですので**いいねの少なさを原因にしないでください**。');
+    L.push('- 以上は再生数の分布から言えることと、その上での推測です。下の実測メモは事実、その理由づけは仮説として扱ってください。');
     L.push('');
+  } else {
+    /* 壁を数えられるだけの本数（投稿から2日たった回が8本）がないときは、これまでの二つの山の見方で出します */
+    const recentScored = withViews.filter(s => s.postedAt)
+      .sort((a,b) => new Date(b.postedAt) - new Date(a.postedAt)).slice(0, 30);
+    const base  = recentScored.length >= 8 ? recentScored : withViews;
+    const vlist = base.map(s => s.views).sort((a,b) => a - b);
+    if (vlist.length >= 8){
+      const gate = passGate(vlist);   // 「形式を変えてから」の表と同じ線
+      const pass = vlist.filter(v => v >= gate);
+      const fail = vlist.filter(v => v <  gate);
+      const medOf = a => a.length ? a[Math.floor((a.length-1)/2)] : null;
+      L.push('## 通ったか、通らなかったか（今回いちばん動かしてほしいところ）');
+      L.push(`- 直近${vlist.length}本の再生数は、二つの山に割れています。**${num(gate)}回以上まで行った回が${pass.length}本、届かなかった回が${fail.length}本**です。`);
+      if (pass.length && fail.length){
+        L.push(`  通った回の中央値は${num(medOf(pass))}回、通らなかった回の中央値は${num(medOf(fail))}回。あいだの数字はほとんどありません。`);
+      }
+      L.push(`- 最高は${num(vlist[vlist.length-1])}回です。**1本を大きく伸ばすより、通る割合（いまは${Math.round(pass.length/vlist.length*100)}%）を上げてください。**`);
+      L.push('- 通らなかった回にも、いいねやコメントは付いています。むしろ通らなかった回のほうが、見た人あたりの反応は多いことがあります。');
+      L.push('  ですので**いいねの少なさを原因にしないでください**。反応が足りないのではなく、そもそも人に見せてもらえていない回があるという形です。');
+      L.push('- 以上は再生数の分布から言えることだけです。配信の仕組みそのものは分かりません。下の実測メモは事実、その理由づけは仮説として扱ってください。');
+      L.push('');
+    }
   }
 
   /* ── 2.55 形式ごとの結果。型がうまくいっているかを、作る側にも返します ── */
@@ -2891,10 +3046,18 @@ function buildPrompt(){
      13秒に短くした5本がそろって通りませんでした。同じ間違いを繰り返さないため、
      日付と本数を明記して残します。
      2026-10-10 のぶんは、チャンネルページと各動画のページから再生数・投稿日時を取り、
-     YouTube のサムネイル（動画の25%・50%・75%の位置のコマ）で、どの形式で作った回かを見分けて数えました。 */
-  L.push('## 実測メモ（2026-10-10・9/10〜10/9 の公開ぶんをYouTubeから数え直しました）');
+     YouTube のサムネイル（動画の25%・50%・75%の位置のコマ）で、どの形式で作った回かを見分けて数えました。
+     2026-10-11 のぶんは、チャンネルのショート一覧（公開ぶん48本）の再生数と、新しい回の各ページの投稿日時・登録者数です。 */
+  L.push('## 実測メモ（2026-10-11・公開ぶん48本をYouTubeから数え直しました）');
   L.push('数えた事実だけを書きます。理由づけはこちらの推測なので、そのまま信じないでください。テーマや投稿時刻の違いも混ざっています。');
   L.push('');
+  L.push('- **再生は1,100回あたりで止まっています。** 500回以上まで行った23本のうち、21本が1,100回まで（うち20本が739〜1,100回）で止まりました。');
+  L.push('  越えたのは「向かいの窓に、まだ灯りがある。」2,985回（9/24）と「夕方、部屋の電気をつけられない。」2,475回（9/26）の2本だけで、9/26 のあとは1本もありません。');
+  L.push('- **窓と灯りの型に絞った3本**（10/10 朝・10/10 夜・10/11 朝）：「3時12分、また目が覚めた。」1,029回 ／「22時、まだ誰とも話していない。」404回 ／「朝から、同じ場所に座っている。」739回。');
+  L.push('  どれも投稿から2日たっていない数字です。型の作り（窓辺・外の灯り・最後にスタンドが灯る・「毎晩1本、置いてます。」）は、3本とも守れていました。');
+  L.push('- **チャンネル登録者は20人**です（総再生 約31,000回に対して、1000再生あたり約0.6人）。');
+  L.push('');
+  L.push('### 2026-10-10 の実測（9/10〜10/9 の公開ぶん）');
   L.push('- **いちばん伸びた2本は、同じ作りでした。**');
   L.push('  - 「向かいの窓に、まだ灯りがある。」2,985回（9/24・17秒・テーマ 孤独）');
   L.push('  - 「夕方、部屋の電気をつけられない。」2,475回（9/26・17秒・テーマ うつ）');
@@ -2998,11 +3161,14 @@ function buildPrompt(){
   L.push('1本ごとに何もかも変えると、伸びても伸びなくても理由が残りません。');
   L.push('**効いている型は固定し、変えるのは1つだけ**にしてください。');
   L.push('');
-  if (nx?.switching){
-    L.push('**今回変えるのは「形式」です。場面をいろいろ描いてきた映像から、下の「今回の型」（窓と灯り）に絞ります。**');
-    L.push(`窓と灯りの回が${MIN_SAMPLE}本たまるまでは（いまは${nx.made}本）、型に合わせること以外は変えないでください。`);
-    L.push('尺・テロップの枚数と字数・文字の位置・題名の決まり・音は、これまでどおりです。');
-    L.push('ここで一緒に何かを変えると、型にしたから通ったのか（落ちたのか）が分からなくなります。');
+  if (nx?.loopTest){
+    L.push('**今回変えるのは「締め（終わり方）」です。最後の1秒で1カット目と1枚目のテロップに戻し、そのまま2周目に入ってもらう作り（ループ）にします。**');
+    L.push(nx.waiting
+      ? `ループの回は${nx.made}本できました。投稿から2日たった回が${MIN_SAMPLE}本そろって結果が出るまでは、ループのまま、終わり方のほかは変えないでください。`
+      : `ループの回が${MIN_SAMPLE}本たまるまでは（いまは${nx.made}本）、終わり方のほかは変えないでください。`);
+    L.push('型（窓と灯り）・冒頭の3秒・尺17秒・テロップの枚数と字数・文字の位置・題名の決まり・音は、これまでどおりです。');
+    L.push('最後の2行（自分の灯りの一言／「毎晩1本、置いてます。」）とスタンドが灯る場面も、そのまま残します。足すのは、そのあとの「戻り」の1秒だけです。');
+    L.push('ここで一緒に何かを変えると、終わり方を変えたから壁を越えたのか（止まったのか）が分からなくなります。');
     L.push('');
   }
   L.push('（以前、型を推測で大きく作り変えたところ、それまで6割通っていたものが5本続けて通らなくなりました。');
@@ -3013,10 +3179,14 @@ function buildPrompt(){
   fixed.forEach(f => L.push(f.compared
     ? `- ${f.name}：${f.value}（${dec(f.avg)}倍・${f.n}本で確定）`
     : `- ${f.name}：${f.value}（${f.n}本・ただし他の値と比べたことはまだありません）`));
+  if (lp.phase === 'kept')    L.push(`- 締め（終わり方）：${LOOP_CTA}（ループにした回が壁を越えたので残しています。下の「終わり方：2周目に入る作り」の章）`);
+  if (lp.phase === 'dropped') L.push('- 締め（終わり方）：自分の灯りの一言＋「毎晩1本、置いてます。」で止めて終える（ループにした回は壁を越えなかったので、元に戻しました）');
   L.push('');
-  if (nx?.switching){
+  if (nx?.loopTest){
     L.push('### 今回だけ変えるもの');
-    L.push(`- **形式**：${VISUAL_FORMAT}（場面いろいろ） → **${WINDOW_FORMAT}**（窓と灯りの回は、いま${nx.made}本。${MIN_SAMPLE}本そろうと、ほかの形式と比べられます）`);
+    L.push(`- **締め（終わり方）**：自分の灯りの一言＋「毎晩1本、置いてます。」で終える → **${LOOP_CTA}**（ループの回は、いま${nx.made}本。`
+      + (nx.waiting ? `投稿から2日たった回が${MIN_SAMPLE}本そろうと、結果が出ます）` : `${MIN_SAMPLE}本そろうと、結果が出ます）`));
+    L.push('- やり方は、下の「終わり方：2周目に入る作り」の章のとおりです。');
     L.push('');
   } else if (nx){
     const c = axisCandidates(nx);
@@ -3202,6 +3372,7 @@ function buildPrompt(){
   L.push('  雨が弱くなる・外の灯りがもうひとつつく・カメラが窓のほうを向く、くらいの静かな変化で十分です。');
   L.push('- **最後から1枚目へ、そのままつながるようにしてください。** ショート動画は自動でくり返し再生されます。');
   L.push('  つながっていれば2周目に入ります。2周目まで見られた動画は、最後まで見られた割合が100%を超えて数えられます。');
+  if (loopOn) L.push('  今回は、ここを下の「終わり方：2周目に入る作り」の章で、秒まで決めました。そちらに合わせてください。');
   L.push('  - 文字：最後の1枚の言葉が、1枚目の頭に戻っていく言葉にする。言い切って終わるより、静かに1枚目へ戻れる終わり方のほうが、このチャンネルには合っています。');
   L.push('  - 画：最後のカットは、1カット目と同じ窓辺・近い構図で終える。変わっているのはスタンドの灯りと時刻くらいにして、2周目の頭で画が大きく跳ばないようにする。');
   L.push('- 最後を黒画面・ロゴ・「ご視聴ありがとうございました」で終わらせない。最後のフレームにも、文字と場面が残っていること。');
@@ -3218,6 +3389,40 @@ function buildPrompt(){
   L.push('- **ただし、その問いを題名にしないでください。** 題名を問いかけの形にした3本は中央285回、言い切りの31本は中央1011回でした。');
   L.push('  問いは中にいる人に向けた言葉です。まだ知らない人には、まず場面を見せてください。');
   L.push('');
+
+  /* ── 8.5 終わり方：2周目に入る作り（2026-10-11〜、LOOP_CTA の説明） ──
+     最後の2行とスタンドが灯る場面は型のまま残し、そのあとに1秒の「戻り」を足すだけにしています。
+     「毎晩1本、置いてます。」まで消すと、変えたものが2つ（ループと、登録につながる一言）になり、結果が読めなくなるためです。
+     2周目の頭で灯りが消えるのは、型（最後にスタンドが灯る）を残す以上さけられないので、明るさの差だけを抑えます。 */
+  if (loopOn){
+    L.push(nx?.loopTest ? '## 終わり方：2周目に入る作り（今回ただ1つ変えるところ）' : '## 終わり方：2周目に入る作り（ループの検証で残した作り）');
+    L.push('いまの動画は、最後に自分のスタンドが灯り、「毎晩1本、置いてます。」のまま止まって終わります。きれいに終わるぶん、見た人はそこで次の動画へ移ります。');
+    L.push('今回は、その2行とスタンドが灯る場面はそのまま残し、**そのあと最後の1秒で1カット目に戻して、気づいたら2周目に入っている**作りにします。');
+    L.push(nx?.loopTest
+      ? `（止まっている理由が「最後まで・もう1周」にあるかは、まだ推測です。この作りで${MIN_SAMPLE}本出して確かめます）`
+      : `（この作りにした回のうち${lp.over}本が壁を越えたので、残しています。理由が「もう1周」だったとまでは、まだ言い切れません）`);
+    L.push('');
+    L.push('### 秒の割りふり（全体17秒のまま）');
+    L.push('- **0.0〜16.0秒：これまでどおり。** テロップ5〜6枚（1枚2.5〜3.5秒）。最後から2枚目が問い、最後の1枚が「自分の灯りの一言／毎晩1本、置いてます。」で、そこでスタンドが灯る。');
+    L.push('  最後の1枚は遅くとも13.5秒までに出して、16.0秒まで見せる（2.5秒以上）。');
+    L.push('- **16.0〜17.0秒：戻り。** 最後の1枚のカットは、1カット目と同じ向き・近い構図で撮っておく。');
+    L.push('  そこからカメラを、0.0秒のフレームとまったく同じ位置・同じ大きさまでゆっくり戻す（最後は止まりかけの速さで着地させる）。');
+    L.push('  テロップは、最後の1枚から**1枚目のテロップ（文字も位置も0.0秒と同じ）**へ、0.3〜0.5秒で重ねながら切り替える。');
+    L.push('- **最後のフレームは、0.0秒のフレームとカメラの位置・テロップが同じ**になるようにする。雨や粒の位置は違ってかまいません。');
+    L.push('  灯り（外の灯りと自分のスタンド）は、物語の終わりの状態のままでかまいません。2周目の頭で灯りが消えて、もう一度その夜が始まります。');
+    L.push('  明るさが跳ばないように、最後のフレームと0.0秒のフレームの平均の明るさの差は12以下にする（灯りが小さければ、自然にこの範囲に入ります）。');
+    L.push('');
+    L.push('### 言葉');
+    L.push('- 1枚目のテロップは、最後の1枚のすぐあとに読んでも意味が通る文にしてください。');
+    L.push('  例：「私も、灯りをつけた。／毎晩1本、置いてます。」→「23時。向かいの窓に、灯りがついた。」');
+    L.push('- 「おわり」「また明日」「ご視聴ありがとう」など、終わったと知らせる言葉や画は入れない。');
+    L.push('  「毎晩1本、置いてます。」は終わりの挨拶ではなく、型の言葉としてそのまま残します。');
+    L.push('');
+    L.push('### 音');
+    L.push('- BGM は止めない。最後の1秒で、0.0秒のフェードインの入口に近い音量（-36〜-40dB くらい）までゆっくり下げて終える。2周目の頭のフェードインと段差なくつなげるためです。');
+    L.push('- 最後のカットの余韻の効果音は、16.0秒より前に鳴らし始める。戻りの1秒には新しい音を足さない。');
+    L.push('');
+  }
 
   /* ── 9. この1本の役割 ── */
   L.push('## この1本の役割');
@@ -3377,7 +3582,9 @@ function buildPrompt(){
   L.push('5. **点滅していないか。** フレームごとの平均の明るさ（0〜255）を並べ、となりのフレームとの差が12を超えるところがないこと。');
   L.push('6. 音声トラックが入っていて、無音でないか（ffprobe と volumedetect）');
   L.push('7. 冒頭0.2秒の平均の音量（mean_volume）が -40dB 以下か（フェードインが効いているか）');
-  L.push('8. **最後のフレームに文字と場面が残っていて、1フレーム目とつながるか**（2枚を並べて見て、構図が大きく跳ばないこと）');
+  L.push(loopOn
+    ? '8. **2周目につながるか。** 最後のフレームと0.0秒のフレームを並べ、テロップの文字と位置が同じか、カメラの位置のずれが画面の幅の1%（約11px）以内か、平均の明るさの差が12以下か'
+    : '8. **最後のフレームに文字と場面が残っていて、1フレーム目とつながるか**（2枚を並べて見て、構図が大きく跳ばないこと）');
   L.push('');
 
   /* ── 11. 出してほしいもの ──
@@ -3428,10 +3635,14 @@ function buildPrompt(){
   L.push('');
   L.push('### 4. 記録用の1行');
   L.push('作ったものを分析ページに登録するので、最後にこの形で出してください。');
-  L.push(`識別子: ${slug} ／ テーマ: ___ ／ 冒頭の掴み: 場面描写 ／ 音: ${audioBest || 'BGM＋効果音'} ／ 形式: ${WINDOW_FORMAT} ／ 尺: ___（実際に書き出した秒数）／ 締め: ___ ／ 役割: ${role.role} ／ 今回変えたもの: ${nx ? nx.axis.name : '変えていない'}`);
-  L.push('（音は BGM＋効果音・BGMのみ・効果音のみ から、');
-  L.push('　締めは リンクへ・コメント促し・登録の約束・なし から選んでください。');
-  L.push(`　形式は「${WINDOW_FORMAT}」のまま書き換えないでください。分析ページは、この言葉で窓と灯りの回を数えています）`);
+  L.push(`識別子: ${slug} ／ テーマ: ___ ／ 冒頭の掴み: 場面描写 ／ 音: ${audioBest || 'BGM＋効果音'} ／ 形式: ${WINDOW_FORMAT} ／ 尺: ___（実際に書き出した秒数）／ 締め: ${loopOn ? LOOP_CTA : '___'} ／ 役割: ${role.role} ／ 今回変えたもの: ${nx ? nx.axis.name : '変えていない'}`);
+  L.push('（音は BGM＋効果音・BGMのみ・効果音のみ から選んでください。');
+  if (loopOn){
+    L.push(`　形式は「${WINDOW_FORMAT}」、締めは「${LOOP_CTA}」のまま書き換えないでください。分析ページは、この言葉で窓と灯りの回とループの回を数えています）`);
+  } else {
+    L.push('　締めは リンクへ・コメント促し・登録の約束・なし から選んでください。');
+    L.push(`　形式は「${WINDOW_FORMAT}」のまま書き換えないでください。分析ページは、この言葉で窓と灯りの回を数えています）`);
+  }
   L.push('');
   L.push('**このほかの説明・構成案・次の案は要りません。** 返すのは、mp4 のダウンロードリンク・題名・説明文・記録用の1行・自己点検の1行だけにしてください。');
 
