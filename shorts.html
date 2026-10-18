@@ -412,8 +412,8 @@
     <div class="glass rounded-2xl p-5">
       <div class="flex items-center justify-between gap-3">
         <p class="text-[11px] text-slate-500 leading-relaxed">
-          ここに書いたことは<b class="text-slate-400">この端末の中だけ</b>に残ります。
-          数字とちがって、他の人に見せるものではないからです。
+          入力中はこの端末に控えを残します。「保存する」で<b class="text-slate-400">管理者専用のクラウド</b>にも保存します。
+          保存済みの内容は、サイトの更新後や別の端末でも読み込めます。
         </p>
         <button id="base-save" class="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-900 whitespace-nowrap" style="background:#17456b">保存する</button>
       </div>
@@ -617,6 +617,7 @@
       </p>
       <p class="text-[11px] text-slate-500 mb-3">
         <b class="text-slate-400">分かるところだけで大丈夫です。</b>空欄のまま保存できます。
+        日付が変わると入力欄はその日の記録になります。過去の数字は「前回」に表示され、分析にも残ります。
         タイトルが同じ動画は、サムネイル・投稿日時・動画IDで見分けてください。
         「Studio でこの動画の数字を見る」を押すと、その動画の画面がそのまま開きます。
       </p>
@@ -829,8 +830,8 @@ const MIN_SAMPLE = 3;   // これ未満の本数は「参考」扱い
 /* 伸びているショート動画の目安。
    数字そのものより、「どこがいちばん足りないか」を見るために置いています。 */
 const GOALS = [
-  { key:'retention', name:'最後まで見られた割合', unit:'%', goal:70,
-    why:'ショート動画がおすすめに乗るかは、ほぼここで決まります。平均視聴時間 ÷ 尺。',
+  { key:'retention', name:'平均視聴率', unit:'%', goal:70,
+    why:'平均視聴時間 ÷ 尺。見続けられた長さの目安です。完走率やおすすめ配信の理由は、この数字だけでは分かりません。',
     fix:'尺を短くする。冒頭の2秒に説明を入れず、いきなり本題から始める。',
     need:'平均視聴時間と、動画の尺' },
   { key:'sub', name:'1000再生あたりの登録', unit:'人', goal:3,
@@ -865,8 +866,11 @@ const GOALS = [
 
 /* ── 土台（なぜやるのか・どこまで行けるのか） ──────────────
    数字からは出てこないので、ここだけは自分の言葉で置いておきます。
-   この端末の中にだけ残します（他人に見せる種類のものではないため）。 */
+   端末の下書きと、管理者専用の sv_config の両方に残します。 */
 const STRATEGY_KEY = 'sv-strategy-v1';
+const STRATEGY_SYNC_KEY = STRATEGY_KEY + '-synced';
+const STRATEGY_CLOUD_KEY = 'shorts_strategy_v1';
+let strategyMemory = null, strategyRemote = undefined;
 const STRATEGY_DEFAULT = {
   purpose:'', goal:'', keep:'',
   rivals:[{name:'',url:'',views:'',subs:''}],
@@ -874,6 +878,7 @@ const STRATEGY_DEFAULT = {
   minutes:30,    // 1本にかける時間の上限(分)
 };
 function readStrategy(){
+  if (strategyMemory) return structuredClone(strategyMemory);
   try {
     const o = JSON.parse(localStorage.getItem(STRATEGY_KEY) || '{}');
     const st = Object.assign({}, STRATEGY_DEFAULT, o);
@@ -882,7 +887,34 @@ function readStrategy(){
   } catch { return Object.assign({}, STRATEGY_DEFAULT); }
 }
 function writeStrategy(st){
-  try { localStorage.setItem(STRATEGY_KEY, JSON.stringify(st)); } catch {}
+  strategyMemory = structuredClone(st);
+  try { localStorage.setItem(STRATEGY_KEY, JSON.stringify(st)); return true; }
+  catch { return false; }
+}
+async function loadStrategy(){
+  const msg = $('#base-msg');
+  try {
+    const { data, error } = await sb.from('sv_config').select('value').eq('key', STRATEGY_CLOUD_KEY).maybeSingle();
+    if (error) throw error;
+    strategyRemote = data?.value ?? null;
+    const local = localStorage.getItem(STRATEGY_KEY);
+    const synced = localStorage.getItem(STRATEGY_SYNC_KEY);
+    if (strategyRemote !== null){
+      const remote = JSON.parse(strategyRemote);
+      if (!remote || typeof remote !== 'object' || !Array.isArray(remote.rivals)) throw new Error('土台の保存形式を確認できません');
+      if (!local || local === synced || local === strategyRemote){
+        if (!writeStrategy({ ...STRATEGY_DEFAULT, ...remote })) throw new Error('端末の控えを保存できません');
+        localStorage.setItem(STRATEGY_SYNC_KEY, JSON.stringify(readStrategy()));
+        msg.textContent = 'クラウドに保存した土台を読み込みました。';
+      } else {
+        msg.textContent = 'この端末の入力を残しています。クラウドとは内容が異なるため、確認して「保存する」を押してください。';
+      }
+    } else if (local){
+      msg.textContent = '以前この端末に保存した土台を引き継ぎました。「保存する」でクラウドにも保存できます。';
+    }
+  } catch {
+    msg.textContent = 'クラウドの土台を読み込めませんでした。端末の入力は残しています。通信を確認して再読み込みしてください。';
+  }
 }
 const rivalMax = st => {
   const ns = (st.rivals||[]).map(r => Number(r.views)).filter(n => isFinite(n) && n > 0);
@@ -957,15 +989,21 @@ let state = {
    通信でも Supabase でも何かあったときに、打ち直さずに済むようにするためです。
    保存が「本当に入った」と確かめられたときだけ消します。 */
 const draftKey = date => 'sv-entry-draft-' + date;
+const draftMemory = new Map();
+const draftStorageFailed = new Set();
 function readDraft(date){
+  if (draftMemory.has(date)) return structuredClone(draftMemory.get(date));
   try { return JSON.parse(localStorage.getItem(draftKey(date)) || '{}'); }
   catch { return {}; }
 }
 function writeDraft(date, d){
+  draftMemory.set(date, structuredClone(d));
   try {
     if (d && Object.keys(d).length) localStorage.setItem(draftKey(date), JSON.stringify(d));
     else localStorage.removeItem(draftKey(date));
-  } catch {}
+    draftStorageFailed.delete(date);
+    return true;
+  } catch { draftStorageFailed.add(date); return false; }
 }
 
 const $  = s => document.querySelector(s);
@@ -998,88 +1036,112 @@ $('#logout-btn').addEventListener('click', async () => { await sb.auth.signOut()
 async function enterApp(){
   $('#app-view').classList.remove('hidden');
   $('#yt-channel').href = CHANNEL_URL;
-  $('#entry-date').value = todayStr();
+  try { $('#entry-date').value = localStorage.getItem('sv-entry-selected-date') || todayStr(); }
+  catch { $('#entry-date').value = todayStr(); }
+  if (!$('#entry-date').value) $('#entry-date').value = todayStr();
   // 星の海のサイトに置いたときだけ「サイトへ戻る」を出す。
   if (location.protocol !== 'file:') $('#back-site').classList.remove('hidden');
+  await loadStrategy();
   await loadAll();
   showTab('home');
 }
 
 /* ========================= 読み込み ========================= */
+async function readAllRows(query){
+  const rows = [];
+  for (;;) {
+    const { data, error } = await query().range(rows.length, rows.length + 999);
+    if (error) return { data:null, error };
+    if (!data?.length) return { data:rows, error:null };
+    rows.push(...data);
+  }
+}
 async function loadAll(){
-  const [v, p, m, s, c, probe, logProbe, roleProbe, stayedProbe] = await Promise.all([
-    sb.from('sv_videos').select('*'),
-    sb.from('sv_posts').select('*').eq('platform', YT),
-    // 新しいほうから取って、あとで古い順に並べ替えます
-    // （古い順で件数を切ると、最近の数字が落ちてしまうため）
-    sb.from('sv_metrics').select('*').order('measured_on', { ascending:false }).limit(20000),
-    sb.from('sv_site_visits').select('*').order('visited_at', { ascending:false }).limit(5000),
-    sb.from('sv_channel_daily').select('*').order('measured_on', { ascending:true }).limit(2000),
-    sb.from('sv_metrics').select('subs_gained').limit(1),
-    sb.from('sv_metrics_log').select('id').limit(1),
-    sb.from('sv_videos').select('role,audio_type').limit(1),
-    sb.from('sv_metrics').select('stayed_pct').limit(1),
-  ]);
+  try {
+    const [v, p, m, s, c, probe, logProbe, roleProbe, stayedProbe] = await Promise.all([
+      readAllRows(() => sb.from('sv_videos').select('*').order('id')),
+      readAllRows(() => sb.from('sv_posts').select('*').eq('platform', YT).order('id')),
+      // 新しいほうから取って、あとで古い順に並べ替えます
+      // （古い順で件数を切ると、最近の数字が落ちてしまうため）
+      readAllRows(() => sb.from('sv_metrics').select('*').order('measured_on', { ascending:false }).order('post_id')),
+      sb.from('sv_site_visits').select('*').order('visited_at', { ascending:false }).limit(5000),
+      readAllRows(() => sb.from('sv_channel_daily').select('*').order('measured_on')),
+      sb.from('sv_metrics').select('subs_gained').limit(1),
+      sb.from('sv_metrics_log').select('id').limit(1),
+      sb.from('sv_videos').select('role,audio_type').limit(1),
+      sb.from('sv_metrics').select('stayed_pct').limit(1),
+    ]);
 
-  if ([v,p,m,s].some(r => r.error && missing.test(r.error.message||''))) {
-    state.ready = false;
+    if ([v,p,m,s].some(r => r.error) || [c,probe,logProbe,roleProbe,stayedProbe].some(r => r.error && !missing.test(r.error.message||''))) {
+      state.loadError = true;
+      $('#setup-warn').classList.remove('hidden');
+      $('#setup-warn').textContent = 'データを読み込めませんでした。表示中の記録と入力中の控えは残しています。通信・ログイン状態・テーブルの設定を確認して再読み込みしてください。';
+      return false;
+    }
+    state.loadError = false;
+    state.ready = true;
+
+    state.hasSubs    = !probe.error;
+    state.hasChannel = !c.error;
+    state.hasLog     = !logProbe.error;
+    state.hasStrategy = !roleProbe.error;
+    state.hasStayed   = !stayedProbe.error;
+    state.videos  = v.data || [];
+    state.posts   = p.data || [];
+    state.metrics = (m.data || []).slice().sort((a,b) => a.measured_on < b.measured_on ? -1 : a.measured_on > b.measured_on ? 1 : 0);
+    state.channel = c.data || [];
+    state.visits  = (s.data || []).filter(x => x.source === YT);
+
+    // 各投稿の「いちばん新しい数字」を作る（並びは日付の昇順なので上書きしていけばよい）。
+    // ただし行ごと差し替えてはいけません。自動取り込みは「再生数だけ」の行を毎朝つくるので、
+    // 行ごと入れ替えると、手で入れたいいね・コメント・登録の増加が消えたように見えてしまいます。
+    // そこで項目ごとに、いちばん新しい「入っている値」を残していきます。
+    state.latest = {};
+    state.metricDates = {};
+    state.metrics.forEach(x => {
+      const dates = state.metricDates[x.post_id] ||= {};
+      ENTRY_FIELDS.forEach(({key}) => { if (x[key] != null) dates[key] = x.measured_on; });
+      const cur = state.latest[x.post_id];
+      if (!cur) { state.latest[x.post_id] = Object.assign({}, x); return; }
+      Object.keys(x).forEach(k => { if (x[k] !== null && x[k] !== undefined) cur[k] = x[k]; });
+    });
+
+    // 新しい順（投稿日時があればそれ、なければ作った日）
+    state.videos.sort((a,b) => postedTime(b) - postedTime(a));
+
+    $('#dl-theme').innerHTML = [...new Set(state.videos.map(x=>x.theme).filter(Boolean))]
+      .map(t => `<option value="${esc(t)}">`).join('');
+
+    // まだ足りない準備があれば、やさしく知らせる
+    const todo = [];
+    if (!state.hasSubs || !state.hasChannel)
+      todo.push('登録者の記録を使うには、Supabase の SQL Editor で <code>sync-youtube.sql</code> を実行してください。（実行しなくても、ほかの機能はそのまま使えます）');
+    if (!state.hasLog)
+      todo.push('<b>入力した数字の控えがまだ作られていません。</b>Supabase の SQL Editor で <code>保存を守る.sql</code> を実行してください。実行すると、保存した数字が別の場所にも残り、消えても戻せるようになります。');
+    if (!state.hasStrategy)
+      todo.push('1本ごとの「音」「役割（間口・奥座敷）」「今回変えたもの」を残すには、Supabase の SQL Editor で <code>youtube-strategy.sql</code> を実行してください。<b>一度実行した方も、もう一度実行してください</b>（音を記録する列が増えています。同じSQLを何度実行しても壊れません）。');
+    if (!state.hasStayed)
+      todo.push('冒頭の3秒が効いたか（Studio の「視聴を選択したユーザー」の割合）を残すには、Supabase の SQL Editor で <code>youtube-hook.sql</code> を実行してください。（実行しなくても、ほかの機能はそのまま使えます）');
+    if (todo.length){
+      $('#setup-warn').classList.remove('hidden');
+      $('#setup-warn').innerHTML = todo.join('<br>');
+    } else {
+      $('#setup-warn').classList.add('hidden');
+    }
+
+    const lastSubs = state.channel.length ? state.channel[state.channel.length-1] : null;
+    $('#subs-input').value = '';
+    $('#subs-input').placeholder = lastSubs ? '例 ' + lastSubs.subscribers : '例 128';
+
+    renderHome(); renderBase(); renderAdvice(); renderGrow(); renderVideos(); renderEntry(); renderLinkOptions();
+    renderApiKey();
+    return true;
+  } catch {
+    state.loadError = true;
     $('#setup-warn').classList.remove('hidden');
-    $('#setup-warn').innerHTML = '<b>テーブルがまだありません。</b><br>Supabase の SQL Editor で <code>schema.sql</code> を実行してください。';
-    return;
+    $('#setup-warn').textContent = '通信できませんでした。表示中の記録と入力中の控えは残しています。通信を確認して再読み込みしてください。';
+    return false;
   }
-  state.ready = true;
-
-  state.hasSubs    = !probe.error;
-  state.hasChannel = !c.error;
-  state.hasLog     = !logProbe.error;
-  state.hasStrategy = !roleProbe.error;
-  state.hasStayed   = !stayedProbe.error;
-  state.videos  = v.data || [];
-  state.posts   = p.data || [];
-  state.metrics = (m.data || []).slice().sort((a,b) => a.measured_on < b.measured_on ? -1 : a.measured_on > b.measured_on ? 1 : 0);
-  state.channel = c.data || [];
-  state.visits  = (s.data || []).filter(x => x.source === YT);
-
-  // 各投稿の「いちばん新しい数字」を作る（並びは日付の昇順なので上書きしていけばよい）。
-  // ただし行ごと差し替えてはいけません。自動取り込みは「再生数だけ」の行を毎朝つくるので、
-  // 行ごと入れ替えると、手で入れたいいね・コメント・登録の増加が消えたように見えてしまいます。
-  // そこで項目ごとに、いちばん新しい「入っている値」を残していきます。
-  state.latest = {};
-  state.metrics.forEach(x => {
-    const cur = state.latest[x.post_id];
-    if (!cur) { state.latest[x.post_id] = Object.assign({}, x); return; }
-    Object.keys(x).forEach(k => { if (x[k] !== null && x[k] !== undefined) cur[k] = x[k]; });
-  });
-
-  // 新しい順（投稿日時があればそれ、なければ作った日）
-  state.videos.sort((a,b) => postedTime(b) - postedTime(a));
-
-  $('#dl-theme').innerHTML = [...new Set(state.videos.map(x=>x.theme).filter(Boolean))]
-    .map(t => `<option value="${esc(t)}">`).join('');
-
-  // まだ足りない準備があれば、やさしく知らせる
-  const todo = [];
-  if (!state.hasSubs || !state.hasChannel)
-    todo.push('登録者の記録を使うには、Supabase の SQL Editor で <code>sync-youtube.sql</code> を実行してください。（実行しなくても、ほかの機能はそのまま使えます）');
-  if (!state.hasLog)
-    todo.push('<b>入力した数字の控えがまだ作られていません。</b>Supabase の SQL Editor で <code>保存を守る.sql</code> を実行してください。実行すると、保存した数字が別の場所にも残り、消えても戻せるようになります。');
-  if (!state.hasStrategy)
-    todo.push('1本ごとの「音」「役割（間口・奥座敷）」「今回変えたもの」を残すには、Supabase の SQL Editor で <code>youtube-strategy.sql</code> を実行してください。<b>一度実行した方も、もう一度実行してください</b>（音を記録する列が増えています。同じSQLを何度実行しても壊れません）。');
-  if (!state.hasStayed)
-    todo.push('冒頭の3秒が効いたか（Studio の「視聴を選択したユーザー」の割合）を残すには、Supabase の SQL Editor で <code>youtube-hook.sql</code> を実行してください。（実行しなくても、ほかの機能はそのまま使えます）');
-  if (todo.length){
-    $('#setup-warn').classList.remove('hidden');
-    $('#setup-warn').innerHTML = todo.join('<br>');
-  } else {
-    $('#setup-warn').classList.add('hidden');
-  }
-
-  const lastSubs = state.channel.length ? state.channel[state.channel.length-1] : null;
-  $('#subs-input').value = '';
-  $('#subs-input').placeholder = lastSubs ? '例 ' + lastSubs.subscribers : '例 128';
-
-  renderHome(); renderBase(); renderAdvice(); renderGrow(); renderVideos(); renderEntry(); renderLinkOptions();
-  renderApiKey();
 }
 
 /* ========================= 取り込み ========================= */
@@ -1238,10 +1300,10 @@ function statsOf(v, med, vv){
   const subs  = (state.hasSubs ? (m?.subs_gained ?? null) : null);
   const visits = vv[v.slug] || 0;
   return {
-    v, post:p, metrics:m, views, likes, comments, shares, subs, visits,
+    v, post:p, metrics:m, metricDates:state.metricDates?.[p?.id] || {}, views, likes, comments, shares, subs, visits,
     id: ytIdOf(v),
     postedAt: p?.posted_at || null,
-    retention: (m?.avg_watch_sec && v.duration_sec) ? (m.avg_watch_sec / v.duration_sec * 100) : null,
+    retention: (m?.avg_watch_sec != null && v.duration_sec > 0) ? (m.avg_watch_sec / v.duration_sec * 100) : null,
     stayed:    (state.hasStayed && m?.stayed_pct != null) ? Number(m.stayed_pct) : null,   // 冒頭で「見る」を選んだ割合
     likeRate:    (views && likes    != null) ? likes/views*100    : null,
     commentRate: (views && comments != null) ? comments/views*100 : null,
@@ -1271,7 +1333,7 @@ function groupBy(list, keyFn){
     m.get(k).push(s);
   });
   // 再生の倍率だけを見ていると、「よく回ったが誰も残らなかった型」を勝ちだと勘違いします。
-  // 最後まで見られた割合・登録・サイト到達も、同じ粒度で並べて出します。
+  // 平均視聴率・登録・サイト到達も、同じ粒度で並べて出します。
   const midOf = (arr, key) => {
     const xs = arr.map(x => x[key]).filter(n => n != null && isFinite(n));
     return xs.length ? median(xs) : null;
@@ -1656,19 +1718,49 @@ function renderMix(st){
       間口 ${front}本 ／ 奥座敷 ${roled.length-front}本（役割を入れた ${roled.length}本ぶん）。${esc(msg)}</p>`;
 }
 
-$('#base-save').addEventListener('click', () => {
-  writeStrategy(collectStrategy());
+function stashStrategy(){
+  const ok = writeStrategy(collectStrategy());
+  $('#base-msg').textContent = ok
+    ? '入力をこの端末に控えました。「保存する」でクラウドにも保存してください。'
+    : 'この端末に控えを残せません。画面を閉じずに「保存する」でクラウドに保存してください。';
+}
+$('#tab-base').addEventListener('input', stashStrategy);
+$('#tab-base').addEventListener('change', stashStrategy);
+$('#base-save').addEventListener('click', async () => {
+  const st = collectStrategy();
+  writeStrategy(st);
+  const value = JSON.stringify(st);
   const msg = $('#base-msg');
-  msg.className = 'text-[11px] mt-2'; msg.style.color = '#2b7f8c';
-  msg.textContent = '保存しました。次の1本を頼む指示文に、そのまま入ります。';
-  renderBase(); renderAdvice();
-  setTimeout(()=>{ msg.textContent=''; }, 4000);
+  $('#base-save').disabled = true;
+  try {
+    if (strategyRemote === undefined) throw new Error('クラウドの内容を確認できていません。再読み込みしてから保存してください。');
+    const row = { key:STRATEGY_CLOUD_KEY, value, updated_at:new Date().toISOString() };
+    // 読み込んだあと別の画面で更新された土台を、古い内容で上書きしない。
+    const result = strategyRemote === null
+      ? await sb.from('sv_config').insert(row).select('value')
+      : await sb.from('sv_config').update(row).eq('key', STRATEGY_CLOUD_KEY).eq('value', strategyRemote).select('value');
+    if (result.error) throw result.error;
+    if (!result.data?.length) throw new Error('別の画面で土台が更新されています。再読み込みして内容を確認してください。');
+    const back = await sb.from('sv_config').select('value').eq('key', STRATEGY_CLOUD_KEY).maybeSingle();
+    if (back.error || back.data?.value !== value) throw new Error('保存した内容を確認できませんでした。');
+    strategyRemote = value;
+    try { localStorage.setItem(STRATEGY_SYNC_KEY, value); } catch {}
+    msg.style.color = '#2b7f8c';
+    msg.textContent = JSON.stringify(readStrategy()) === value
+      ? 'クラウドへの保存と読み直しを確認しました。サイト更新後もこの内容を使えます。'
+      : '保存を確認しました。その後に入力した変更は、もう一度「保存する」を押してください。';
+    renderAdvice();
+  } catch (error){
+    msg.style.color = '#b7472a';
+    msg.textContent = 'クラウドに保存できませんでした：' + error.message + ' 入力内容は画面に残しています。';
+  } finally { $('#base-save').disabled = false; }
 });
 $('#base-rival-add').addEventListener('click', () => {
   const st = collectStrategy();
   st.rivals.push({name:'',url:'',views:'',subs:''});
-  writeStrategy(st);
+  const ok = writeStrategy(st);
   renderBase();
+  $('#base-msg').textContent = ok ? '入力をこの端末に控えました。「保存する」でクラウドにも保存してください。' : '端末に控えを残せません。「保存する」でクラウドに保存してください。';
 });
 
 /* ========================= 検証設計（変数を1つだけ変える） =========================
@@ -1691,7 +1783,7 @@ function axisStates(scored){
 
 /* その変数の差が、どれくらい信じられるか。
    再生の倍率だけで決めると「回ったが誰も残らなかった型」を勝ちだと勘違いします。
-   最後まで見られた割合・登録・サイト到達も見て、
+   平均視聴率・登録・サイト到達も見て、
    2つ以上の指標で差が出ているものだけを「確実」と呼びます。 */
 function evidenceOf(x){
   if (x.solid.length < 2) return { level:'まだ推測', reasons:[], best:x.best||null, worst:null };
@@ -1700,7 +1792,7 @@ function evidenceOf(x){
   if (b.avg >= w.avg * 1.3)
     reasons.push(`再生 ${dec(b.avg)}倍 対 ${dec(w.avg)}倍`);
   if (b.ret != null && w.ret != null && b.ret >= w.ret + 5)
-    reasons.push(`最後まで ${dec(b.ret,0)}% 対 ${dec(w.ret,0)}%`);
+    reasons.push(`平均視聴率 ${dec(b.ret,0)}% 対 ${dec(w.ret,0)}%`);
   // どちらも 0 のときに「0 >= 0」で差が出たことにしないよう、良いほうが 0 より大きいことを条件にします
   if (b.sub > 0 && w.sub != null && b.sub >= w.sub * 1.3)
     reasons.push(`1000再生あたりの登録 ${dec(b.sub)}人 対 ${dec(w.sub)}人`);
@@ -1865,11 +1957,16 @@ const FORMAT_GROUPS = [
   { key:'chr', label:'ともり',             test: v => isCharacter(v) },
 ];
 const isTextOnly = v => !isVisual(v) && !isCharacter(v);
+// 日付しかない計測はその日の開始時刻で判定し、48時間未満の記録を成熟済みにしない。
+function hasMatureMeasurement(s){
+  const measured = s.metricDates?.views;
+  return !!(s.postedAt && measured && new Date(measured + 'T00:00:00+09:00') - new Date(s.postedAt) >= 2*864e5);
+}
 function formatCompare(){
   const cur = currentValues();
   const dated = cur.withViews.filter(s => s.postedAt)
     .sort((a,b) => new Date(b.postedAt) - new Date(a.postedAt));
-  const settled = dated.filter(s => Date.now() - new Date(s.postedAt) >= 2*864e5);
+  const settled = dated.filter(s => hasMatureMeasurement(s));
   const gate = passGate(dated.slice(0, 30).map(s => s.views));
   const mid = xs => { const a = xs.filter(n => n != null && isFinite(n)); return a.length ? median(a) : null; };
   const sum = arr => arr.length ? {
@@ -1895,14 +1992,14 @@ function formatCompare(){
    2026-10-11、ユーザー「再生が1000回から増えない」。
    通った回（passGate 以上）の中でも、ほとんどが1,100回前後で止まり、越えたのは2本だけでした。
    直近30本（投稿から2日たった回）を「通らなかった／通ったが止まった／壁を越えた」に分け、
-   越えた回と止まった回で Studio の数字（視聴を選択・最後まで・登録・コメント）を比べます。
+   越えた回と止まった回で Studio の数字（視聴を選択・平均視聴率・登録・コメント）を比べます。
    壁の線は、通った回の再生の中央値の1.5倍（100回単位・最低1,200回）。2026-10-11 の公開データでは1,400回です。 */
 const wallLineOf = views => Math.max(1200, Math.round(median(views) * 1.5 / 100) * 100);
 function wallCompare(){
   const cur = currentValues();
   const dated = cur.withViews.filter(s => s.postedAt)
     .sort((a,b) => new Date(b.postedAt) - new Date(a.postedAt));
-  const settled = dated.filter(s => Date.now() - new Date(s.postedAt) >= 2*864e5);
+  const settled = dated.filter(s => hasMatureMeasurement(s));
   const recent = settled.slice(0, 30);
   if (recent.length < 8) return null;
   const gate = passGate(dated.slice(0, 30).map(s => s.views));   // 「形式を変えてから」の表と同じ線
@@ -1959,7 +2056,7 @@ function renderFormatCompare(){
     [`通った割合（${num(fc.gate)}回以上）`, x => `${pct(x.pass, x.n)}（${x.pass}/${x.n}）`],
     ['再生の中央値',                 x => `${num(Math.round(x.med))}回`],
     ['視聴を選択（冒頭の3秒）',      x => x.stayed != null ? `${dec(x.stayed,0)}%` : '—'],
-    ['最後まで見られた割合',         x => x.ret != null ? `${dec(x.ret,0)}%` : '—'],
+    ['平均視聴率',         x => x.ret != null ? `${dec(x.ret,0)}%` : '—'],
     ['1000再生あたりの登録',         x => x.sub != null ? `${dec(x.sub)}人` : '—'],
   ];
   // 窓と灯りの列は、まだ1本もなくても出します（いま作っている型なので）
@@ -2245,7 +2342,7 @@ function renderAdvice(){
   renderFormatCompare();
 
   /* 属性ごとの比較。
-     再生の倍率だけでなく、最後まで見られた割合と登録も同じ行に並べます。
+     再生の倍率だけでなく、平均視聴率と登録も同じ行に並べます。
      「よく回ったのに誰も残らなかった型」を勝ちだと勘違いしないためです。 */
   const groupsHtml = AXES.map(a => {
     const g = groupBy(scored, a.of);
@@ -2260,7 +2357,7 @@ function renderAdvice(){
       <h3 class="text-[11px] font-semibold text-slate-400 mb-2 flex items-center gap-2">${a.name} ${badge}</h3>` +
       hbars(g.map(x => {
         const extra = [];
-        if (x.ret != null) extra.push(`最後まで ${dec(x.ret,0)}%`);
+        if (x.ret != null) extra.push(`平均視聴率 ${dec(x.ret,0)}%`);
         if (x.sub != null) extra.push(`登録 ${dec(x.sub)}人`);
         return {
           label: x.key, sub: `（${x.n}本${x.n<MIN_SAMPLE?'・参考':''}）`,
@@ -2487,7 +2584,7 @@ function openVideo(id){
     ['いいね',   num(s.likes)],
     ['コメント', num(s.comments)],
     ['登録の増加', s.subs != null ? num(s.subs) : '—'],
-    ['最後まで', s.retention != null ? dec(s.retention,0)+'%' : '—'],
+    ['平均視聴率', s.retention != null ? dec(s.retention,0)+'%' : '—'],
     ['サイト到達', s.visits ? num(s.visits)+'人' : '—'],
   ] : [];
   $('#vm-stats').innerHTML = tiles.map(([l,x]) => `<div class="rounded-xl p-2.5 text-center" style="background:rgba(43,47,51,.07)">
@@ -2586,7 +2683,10 @@ $('#vm-delete').addEventListener('click', async () => {
 
 /* ========================= 数字を入力 ========================= */
 $('#entry-unfilled').addEventListener('change', renderEntry);
-$('#entry-date').addEventListener('change', renderEntry);
+$('#entry-date').addEventListener('change', () => {
+  try { localStorage.setItem('sv-entry-selected-date', $('#entry-date').value); } catch {}
+  renderEntry();
+});
 // 入力画面からでも取り込めるように（上の「取り込む」と同じ処理を呼びます）
 $('#entry-sync').addEventListener('click', () => $('#sync-btn').click());
 
@@ -2613,7 +2713,7 @@ function renderEntry(){
 
   const html = rows.map(({v,p}) => {
     const ex = on[p.id];
-    if (only && ex) return '';
+    if (only && fields.every(f => ex?.[f.key] != null) && !draft[p.id]) return '';
 
     // タイトルが同じ動画が並ぶので、サムネイル・投稿日時・動画IDで見分けます。
     const id = ytIdOf(v);
@@ -2660,7 +2760,7 @@ function renderEntry(){
           return `<label><span class="block text-[10px] text-slate-500 mb-1">${f.label}${
             auto ? ' <span style="color:#2b7f8c">自動</span>' : ''}</span>
           <input type="number" inputmode="decimal" step="any" min="0" data-post="${p.id}" data-metric="${f.key}"${ph}
-            value="${val}" class="entry-in fld py-1.5 text-sm"></label>`;
+            value="${esc(val)}" class="entry-in fld py-1.5 text-sm"></label>`;
         }).join('')}
       </div></div>`;
   }).join('');
@@ -2669,106 +2769,105 @@ function renderEntry(){
     `<div class="glass rounded-2xl p-8 text-center text-xs text-slate-500">
       ${rows.length ? 'この日はすべて入力済みです。' : '「取り込む」か「動画」タブから動画を登録してください。'}</div>`;
 
+  $('#entry-msg').textContent = '';
   if (Object.keys(draft).length){
     $('#entry-msg').className = 'text-center text-xs mt-2 text-amber-400';
-    $('#entry-msg').textContent = 'まだ保存できていない数字がこの端末に残っています。「保存する」を押してください。';
+    $('#entry-msg').textContent = draftStorageFailed.has(date)
+      ? '端末に控えを残せません。画面を閉じずに「保存する」を押してください。'
+      : 'まだ保存できていない数字がこの端末に残っています。「保存する」を押してください。';
   }
 }
 
-/* 打ち込んだそばから端末に控えます（保存を押す前に閉じても消えません） */
-function stashDraft(){
+/* 変更した欄だけを控えます。非表示の行や保存中の追加編集も残します。 */
+function stashDraft(event){
   const date = $('#entry-date').value || todayStr();
-  const d = {};
-  $$('.entry-in').forEach(i => {
-    const v = i.value.trim(); if (v === '') return;
-    (d[i.dataset.post] = d[i.dataset.post] || {})[i.dataset.metric] = Number(v);
-  });
-  const subs = $('#entry-subs-total').value.trim();
-  if (subs !== '') d.subs = Number(subs);
-  writeDraft(date, d);
+  const d = readDraft(date), input = event.target;
+  if (input.matches('.entry-in')) {
+    (d[input.dataset.post] ||= {})[input.dataset.metric] = input.value.trim();
+  } else if (input.id === 'entry-subs-total') d.subs = input.value.trim();
+  const ok = writeDraft(date, d);
+  $('#entry-msg').textContent = ok ? '入力をこの端末に控えました。「保存する」で確定してください。'
+    : '端末に控えを残せません。画面を閉じずに「保存する」を押してください。';
 }
 $('#entry-list').addEventListener('input', stashDraft);
 $('#entry-subs-total').addEventListener('input', stashDraft);
 
 $('#entry-save').addEventListener('click', async () => {
   const date = $('#entry-date').value || todayStr();
+  const snapshot = readDraft(date);
   const msg = $('#entry-msg');
-  const by = {};
-  $$('.entry-in').forEach(i => {
-    const val = i.value.trim(); if (val==='') return;
-    const n = Number(val); if (!isFinite(n)) return;
-    const id = i.dataset.post;
-    by[id] = by[id] || { post_id:id, measured_on:date };
-    by[id][i.dataset.metric] = n;
-  });
-
-  // まとめて送るとき、どれかの行に無い項目は null で埋められて保存されます。
-  // そのままだと「今回は入れなかった項目」が消えてしまうので、
-  // すべての行に同じ項目をそろえ、空欄にはいまの値を入れ直します。
   const keys = entryFields().map(f => f.key);
-  const on = metricsOn(date);
-  const rows = Object.values(by).map(r => {
-    const cur = on[r.post_id] || {};
-    const out = { post_id:r.post_id, measured_on:date };
-    keys.forEach(k => { out[k] = (k in r) ? r[k] : (cur[k] ?? null); });
-    return out;
-  });
-  const subsTotal = $('#entry-subs-total').value.trim();
-
-  if (!rows.length && subsTotal===''){ msg.className='text-center text-xs mt-2 text-amber-400'; msg.textContent='数字が入っていません。'; return; }
-
-  const fail = t => { $('#entry-save').disabled=false;
-    msg.className='text-center text-xs mt-2 text-rose-400'; msg.style.color='';
-    msg.innerHTML = t + '<br>打ち込んだ数字はこの端末に残してあります。もう一度「保存する」を押せます。'; };
-
+  const rows = [];
+  const validNumber = (value, key) => value !== '' && value !== null && value !== undefined
+    && Number.isFinite(Number(value)) && Number(value) >= 0
+    && (key !== 'stayed_pct' || Number(value) <= 100);
   $('#entry-save').disabled = true;
-  msg.className='text-center text-xs mt-2 text-slate-400'; msg.style.color=''; msg.textContent='保存しています…';
-
-  // 1. まず控えに残します。ここは足すだけなので、あとで何が起きても消えません。
-  //    先に控えてから本体を書くので、途中で失敗しても打ち直しにはなりません。
-  if (state.hasLog && rows.length){
-    const { error } = await sb.from('sv_metrics_log').insert(rows.map(r => ({
-      post_id: r.post_id, measured_on: r.measured_on,
-      payload: Object.fromEntries(keys.map(k => [k, r[k]]).filter(([,v]) => v !== null && v !== undefined)),
-    })));
-    if (error) return fail('控えに残せませんでした：' + esc(error.message));
-  }
-
-  // 2. 本体に書きます。
-  if (rows.length){
-    const { error } = await sb.from('sv_metrics').upsert(rows, { onConflict:'post_id,measured_on' });
-    if (error) return fail('保存できませんでした：' + esc(error.message));
-  }
-  if (subsTotal !== '' && state.hasChannel){
-    const { error } = await sb.from('sv_channel_daily').upsert(
-      { measured_on: date, subscribers: Number(subsTotal) }, { onConflict:'measured_on' });
-    if (error) return fail('登録者数を保存できませんでした：' + esc(error.message));
-  }
-
-  // 3. 書けたつもりで書けていないことがあるので、読み直して数字が合うか確かめます。
-  //    ここを通らないかぎり、端末に残した控えは消しません。
-  if (rows.length){
-    const { data:back, error } = await sb.from('sv_metrics')
-      .select(['post_id','measured_on', ...keys].join(','))
-      .eq('measured_on', date).in('post_id', rows.map(r => r.post_id));
-    if (error) return fail('保存を確かめられませんでした：' + esc(error.message));
-
-    const got = {}; (back||[]).forEach(r => { got[r.post_id] = r; });
-    const bad = [];
-    Object.values(by).forEach(r => {
-      const g = got[r.post_id];
-      if (!g) { bad.push(r.post_id); return; }
-      // 入力した項目だけを見ます（触っていない項目はここでは問いません）
-      keys.forEach(k => { if (k in r && Number(g[k]) !== Number(r[k])) bad.push(r.post_id); });
+  msg.textContent = '保存しています…';
+  try {
+    for (const [id, fields] of Object.entries(snapshot)) {
+      if (id === 'subs') continue;
+      if (!state.posts.some(p => p.id === id)) throw new Error('入力した動画の記録を確認できません。再読み込みしてください。');
+      const row = { post_id:id, measured_on:date };
+      for (const [key, value] of Object.entries(fields)) {
+        if (value === '') continue; // 空欄は既存の数字を消す指示にしない。
+        if (!keys.includes(key) || !validNumber(value, key)) throw new Error('数字または保存先の項目を確認してください。');
+        row[key] = Number(value);
+      }
+      if (Object.keys(row).length > 2) rows.push(row);
+    }
+    const hasSubs = snapshot.subs !== undefined && snapshot.subs !== '';
+    if (hasSubs && (!state.hasChannel || !validNumber(snapshot.subs, 'subs') || !Number.isInteger(Number(snapshot.subs))))
+      throw new Error('登録者総数または保存先を確認してください。');
+    if (!rows.length && !hasSubs) throw new Error('変更した数字がありません。空欄で保存済みの値は削除されません。');
+    if (state.hasLog && rows.length) {
+      const { error } = await sb.from('sv_metrics_log').insert(rows.map(({post_id, measured_on, ...payload}) => ({post_id, measured_on, payload})));
+      if (error) throw error;
+    }
+    // 同じ項目を変更した行だけをまとめる。未編集の列を null や古い値で上書きしない。
+    const groups = new Map();
+    rows.forEach(row => {
+      const signature = Object.keys(row).sort().join(',');
+      if (!groups.has(signature)) groups.set(signature, []);
+      groups.get(signature).push(row);
     });
-    if (bad.length) return fail(`${new Set(bad).size}本ぶんが入っていませんでした。`);
-  }
-
-  writeDraft(date, {});          // ここで初めて端末の控えを消します
-  $('#entry-save').disabled = false;
-  await loadAll();
-  msg.className='text-center text-xs mt-2'; msg.style.color='#2b7f8c';
-  msg.textContent = `${rows.length}件を保存しました。読み直して数字も合っています。`;
+    for (const group of groups.values()) {
+      const { error } = await sb.from('sv_metrics').upsert(group, { onConflict:'post_id,measured_on', defaultToNull:false });
+      if (error) throw error;
+    }
+    if (hasSubs) {
+      const { error } = await sb.from('sv_channel_daily').upsert(
+        { measured_on:date, subscribers:Number(snapshot.subs) }, { onConflict:'measured_on' });
+      if (error) throw error;
+      const back = await sb.from('sv_channel_daily').select('subscribers').eq('measured_on', date).maybeSingle();
+      if (back.error || back.data?.subscribers == null || Number(back.data.subscribers) !== Number(snapshot.subs))
+        throw new Error('登録者総数の保存を確認できませんでした。');
+    }
+    // 1行ずつ読み直し、APIの返却上限にも依存しない。null と 0 は区別する。
+    for (const row of rows) {
+      const back = await sb.from('sv_metrics').select(Object.keys(row).join(','))
+        .eq('measured_on', date).eq('post_id', row.post_id).maybeSingle();
+      if (back.error || !back.data || Object.entries(row).some(([k,v]) =>
+        !['post_id','measured_on'].includes(k) && (back.data[k] == null || Number(back.data[k]) !== v)))
+        throw new Error('入力した数字の保存を確認できませんでした。');
+    }
+    const remaining = readDraft(date);
+    for (const row of rows) {
+      for (const key of Object.keys(row).filter(k => keys.includes(k))) {
+        if (remaining[row.post_id]?.[key] === snapshot[row.post_id][key]) delete remaining[row.post_id][key];
+      }
+      if (remaining[row.post_id] && !Object.keys(remaining[row.post_id]).length) delete remaining[row.post_id];
+    }
+    if (hasSubs && remaining.subs === snapshot.subs) delete remaining.subs;
+    writeDraft(date, remaining);
+    const refreshed = await loadAll();
+    msg.style.color = '#2b7f8c';
+    msg.textContent = `${date}の${rows.length}件${hasSubs ? 'と登録者総数' : ''}の保存と読み直しを確認しました。`
+      + (Object.keys(remaining).length ? ' 追加の入力は端末に残っています。' : '')
+      + (!refreshed ? ' 一覧は再読み込みできていません。通信を確認してください。' : '');
+  } catch (error) {
+    msg.style.color = '#b7472a';
+    msg.textContent = '保存を完了できませんでした：' + error.message + ' 入力は画面に残しています。もう一度保存できます。';
+  } finally { $('#entry-save').disabled = false; }
 });
 
 /* ダッシュボードから登録者数だけを記録する */
@@ -2796,10 +2895,12 @@ const trackUrl = slug =>
 /* 1本ぶんを1行にまとめる（プロンプトに並べるため） */
 function promptLineOf(s){
   const bits = [`${dec(s.index)}倍`, `再生${num(s.views)}回`];
+  const dates = ENTRY_FIELDS.filter(f => s.metricDates?.[f.key]).map(f => `${f.label}:${s.metricDates[f.key]}`);
+  if (dates.length) bits.push(`計測日 ${dates.join('／')}`);
   if (s.subs  != null) bits.push(`登録${num(s.subs)}人（1000再生あたり${dec(s.subRate)}人）`);
   if (s.visits)        bits.push(`サイト到達${num(s.visits)}人（1000再生あたり${dec(s.visitRate)}人）`);
   if (s.stayed != null)    bits.push(`視聴を選択${dec(s.stayed,0)}%`);
-  if (s.retention != null) bits.push(`最後まで見られた割合${dec(s.retention,0)}%`);
+  if (s.retention != null) bits.push(`平均視聴率${dec(s.retention,0)}%`);
   if (s.v.duration_sec) bits.push(`${s.v.duration_sec}秒`);
   if (s.v.theme)     bits.push(`テーマ:${s.v.theme}`);
   if (s.v.hook_type) bits.push(`掴み:${s.v.hook_type}`);
@@ -2865,8 +2966,8 @@ function buildPrompt(){
   L.push('音なしの mp4・音だけの wav・コマの画像・絵コンテの表・試しの書き出し・制作コードは、渡さないでください（作業の途中で、あなたが確かめるために使うのはかまいません）。');
   L.push('文字で返してほしいのは、最後の「出してほしいもの」に書いた、投稿に使う題名・説明文と、記録用の1行だけです。');
   L.push('');
-  L.push('**作るのは、このチャンネルでいちばん伸びた動画と同じ型の「映像」です。**');
-  L.push('「向かいの窓に、まだ灯りがある。」（2,985回）。暗い自分の部屋から、窓ごしに雨の夜の向かいの建物を見ている。');
+  L.push('**作るのは、これまでの制作方針で選んだ「窓と灯り」の型の映像です。**');
+  L.push('制作の基準にしている「向かいの窓に、まだ灯りがある。」の型：暗い自分の部屋から、窓ごしに雨の夜の向かいの建物を見ている。最新の順位と再生数は下の記録を優先してください。');
   L.push('向かいの窓に灯りがついて、最後に自分の部屋のスタンドも灯る。人もキャラクターも出てこない、17秒の映像です。');
   L.push('この型はそのままにして、テーマと場面の中身だけを変えた次の1本を作ってください。型の中身は、下の「今回の型」の章に書きました。');
   L.push('狙いは2つです。**冒頭の3秒で指を止めてもらうこと**と、**最後まで見てもらうこと**。');
@@ -2901,12 +3002,12 @@ function buildPrompt(){
   L.push('');
 
   /* ── 2. いまの数字 ── */
-  L.push(`## いまの数字（${todayStr()} 時点・${state.videos.length}本ぶん）`);
+  L.push(`## 保存済みの数字（${todayStr()} に読み込み・${state.videos.length}本ぶん）`);
   if (ch) L.push(`- チャンネル登録者：${num(ch.subscribers)}人（${ch.measured_on} 時点）`);
   L.push(`- 総再生数：${num(cur.totalViews)}回 ／ 1本あたりの中央値：${num(Math.round(cur.med))}回`);
-  if (values.stayed != null) L.push(`- 冒頭で「見る」を選んだ割合（Studio の「視聴を選択したユーザー」）：${dec(values.stayed,0)}%（${values.stayedN}本の中央値。冒頭の3秒の効き目です）`);
-  if (values.retention != null) L.push(`- 最後まで見られた割合：${dec(values.retention,0)}%（伸びているチャンネルの目安は70%）`);
-  if (values.like    != null) L.push(`- いいね率：${dec(values.like)}%（目安4%）`);
+  if (values.stayed != null) L.push(`- 冒頭で「見る」を選んだ割合（Studio の「視聴を選択したユーザー」）：${dec(values.stayed,0)}%（${values.stayedN}本の中央値。スワイプせず視聴した割合です）`);
+  if (values.retention != null) L.push(`- 平均視聴率：${dec(values.retention,0)}%（平均視聴秒数÷尺。完走率ではありません）`);
+  if (values.like    != null) L.push(`- いいね率：${dec(values.like)}%（比較用の目安2%）`);
   if (values.comment != null) L.push(`- コメント率：${dec(values.comment,2)}%（目安0.3%）`);
   if (values.sub     != null) L.push(`- 1000回再生あたりの登録：${dec(values.sub)}人（目安3人）`);
   if (values.visit   != null) L.push(`- 1000回再生あたりのサイト到達：${dec(values.visit)}人（目安5人）`);
@@ -2921,7 +3022,7 @@ function buildPrompt(){
       // 今回の狙いは「1000回の壁」に絞っています。狙いが2つ並ぶと、どちらに寄せるかを受け取った側が迷うためです。
       L.push(`目安からいちばん遠いのは「${bn.g.name}」です（${shown}）。ただし今回の1本で狙うのは、下の「1000回の壁」です。`);
     } else {
-      L.push(`**いま一番詰まっているのは「${bn.g.name}」です（${shown}）。今回の1本は、まずここを動かすことを狙ってください。**`);
+      L.push(`比較用の目安からいちばん離れているのは「${bn.g.name}」です（${shown}）。原因の断定ではありません。下の最新記録と検証設計を合わせて、今回の改善候補にしてください。`);
       L.push(`（${bn.g.why} 直し方の定石：${bn.g.fix}）`);
     }
   }
@@ -2943,9 +3044,9 @@ function buildPrompt(){
     L.push(wall.over
       ? `  - 壁を越えた（${num(wall.line)}回以上）：${wall.over.n}本（${wall.over.list.slice(0, 3).map(titled).join('、')}）`
       : `  - 壁を越えた（${num(wall.line)}回以上）：0本`);
-    L.push(`- **最初の試し配信は、いま${pct}%が通っています。止まっているのは、その次です。**`);
+    L.push(`- このページの比較用の線を超えたのは${pct}%です。配信の段階や停止原因を示す数字ではありません。`);
     if (wall.wall) L.push(`  通った${wall.passN}本のうち${wall.wall.n}本が、${num(wall.wall.max)}回までで止まりました。`);
-    L.push('- ですので今回の狙いは、通る割合を上げることではなく、**通ったあとに止まらないこと**です。');
+    L.push('- この分布を改善の手がかりにします。低再生・中間・高再生のどこに課題があるかは、入力された視聴・登録の指標と合わせて判断してください。');
     if (wall.windows.length){
       const overW = wall.windows.filter(o => !o.young && o.s.views >= wall.line).length;
       L.push('- 窓と灯りの型にしてからの回：' + wall.windows.map(o => titled(o.s) + (o.young ? '（投稿から2日たっていない）' : '')).join(' ／ '));
@@ -2964,7 +3065,7 @@ function buildPrompt(){
     if (both('ret') || both('stayed')){
       const row = (label, x) => `  - ${label}（${x.n}本）：` + [
         x.stayed  != null ? `視聴を選択 ${dec(x.stayed,0)}%` : null,
-        x.ret     != null ? `最後まで ${dec(x.ret,0)}%` : null,
+        x.ret     != null ? `平均視聴率 ${dec(x.ret,0)}%` : null,
         x.sub     != null ? `1000再生あたりの登録 ${dec(x.sub)}人` : null,
         x.comment != null ? `1000再生あたりのコメント ${dec(x.comment)}件` : null,
       ].filter(Boolean).join('・');
@@ -2972,13 +3073,13 @@ function buildPrompt(){
       L.push(row('越えた回', ov));
       L.push(row('止まった回', st));
       const diffs = [];
-      if (both('ret')    && Math.abs(ov.ret - st.ret) >= 5)       diffs.push(`最後まで（${dec(ov.ret,0)}% 対 ${dec(st.ret,0)}%）`);
+      if (both('ret')    && Math.abs(ov.ret - st.ret) >= 5)       diffs.push(`平均視聴率（${dec(ov.ret,0)}% 対 ${dec(st.ret,0)}%）`);
       if (both('stayed') && Math.abs(ov.stayed - st.stayed) >= 5) diffs.push(`視聴を選択（${dec(ov.stayed,0)}% 対 ${dec(st.stayed,0)}%）`);
       L.push(diffs.length
         ? `  5ポイント以上の差があるのは：${diffs.join('、')}。越えた回は${ov.n}本しかないので、言い切らずに手がかりとして使ってください。`
         : '  どちらも差は5ポイント未満です。この数字からは、越えた理由はまだ見えていません。');
     } else if (loopOn){
-      L.push('- 越えた回と止まった回を Studio の数字（視聴を選択・最後まで）で比べるには、まだ書き写しが足りません。下の推測は、数字では確かめていません。');
+      L.push('- 越えた回と止まった回を Studio の数字（視聴を選択・平均視聴率）で比べるには、まだ書き写しが足りません。下の推測は、数字では確かめていません。');
     }
     if (loopOn){
       L.push('- 配信の仕組みは公開されていないので、ここからはこちらの推測です。');
@@ -3021,7 +3122,7 @@ function buildPrompt(){
   if (fc.any){
     const line = (label, x) => `- ${label}：${x.n}本・通った ${x.pass}/${x.n}本・再生の中央値 ${num(Math.round(x.med))}回`
       + (x.stayed != null ? `・視聴を選択 ${dec(x.stayed,0)}%` : '')
-      + (x.ret != null ? `・最後まで ${dec(x.ret,0)}%` : '');
+      + (x.ret != null ? `・平均視聴率 ${dec(x.ret,0)}%` : '');
     L.push('## 形式ごとの結果（投稿から2日たった回だけ）');
     FORMAT_GROUPS.forEach(g => { if (fc[g.key]) L.push(line(g.label, fc[g.key])); });
     if (fc.txt) L.push(line(`文字だけ（直近${fc.txt.n}本）`, fc.txt));
@@ -3040,57 +3141,31 @@ function buildPrompt(){
     L.push('');
   }
 
-  /* ── 2.6 実測メモ。公開ぶん全本をYouTubeから取り直して数えた結果です ──
-     ここは推測ではなく、その日に数えた数字だけを書いています。
-     前回（2026-09-05）の改訂は「20秒は長い」という推測を事実のように書いてしまい、
-     13秒に短くした5本がそろって通りませんでした。同じ間違いを繰り返さないため、
-     日付と本数を明記して残します。
-     2026-10-10 のぶんは、チャンネルページと各動画のページから再生数・投稿日時を取り、
-     YouTube のサムネイル（動画の25%・50%・75%の位置のコマ）で、どの形式で作った回かを見分けて数えました。
-     2026-10-11 のぶんは、チャンネルのショート一覧（公開ぶん48本）の再生数と、新しい回の各ページの投稿日時・登録者数です。 */
-  L.push('## 実測メモ（2026-10-11・公開ぶん48本をYouTubeから数え直しました）');
-  L.push('数えた事実だけを書きます。理由づけはこちらの推測なので、そのまま信じないでください。テーマや投稿時刻の違いも混ざっています。');
+  /* 過去の固定値で現在の判断を上書きしない。毎回、読み込んだ記録から作る。 */
+  L.push('## 更新した記録からの分析');
+  const latestRecorded = withViews.filter(s => s.postedAt)
+    .sort((a,b) => new Date(b.postedAt) - new Date(a.postedAt)).slice(0, 10);
+  const measuredDates = state.metrics.map(m => m.measured_on).filter(Boolean).sort();
+  L.push(`- 数字の記録期間：${measuredDates[0] || '未記録'}〜${measuredDates.at(-1) || '未記録'}。生成日と計測日は別です。`);
+  L.push('- 各項目は最新の入力済み値を使います。項目ごとに計測日が違う場合があるので、同じ経過時間の数字を比べてください。');
+  L.push('- 平均視聴率＝平均視聴秒数÷尺です。完走した人数の割合ではなく、100%を超えても再視聴率そのものは分かりません。');
+  L.push('- 「視聴を選択」はスワイプせず視聴した割合です。特定の3秒の効果や、おすすめ配信の段階を直接測った値ではありません。');
+  L.push('- 未入力は0に置き換えず、判断保留にしてください。少数の動画や異なる計測日の差から、原因を断定しないでください。');
   L.push('');
-  L.push('- **再生は1,100回あたりで止まっています。** 500回以上まで行った23本のうち、21本が1,100回まで（うち20本が739〜1,100回）で止まりました。');
-  L.push('  越えたのは「向かいの窓に、まだ灯りがある。」2,985回（9/24）と「夕方、部屋の電気をつけられない。」2,475回（9/26）の2本だけで、9/26 のあとは1本もありません。');
-  L.push('- **窓と灯りの型に絞った3本**（10/10 朝・10/10 夜・10/11 朝）：「3時12分、また目が覚めた。」1,029回 ／「22時、まだ誰とも話していない。」404回 ／「朝から、同じ場所に座っている。」739回。');
-  L.push('  どれも投稿から2日たっていない数字です。型の作り（窓辺・外の灯り・最後にスタンドが灯る・「毎晩1本、置いてます。」）は、3本とも守れていました。');
-  L.push('- **チャンネル登録者は20人**です（総再生 約31,000回に対して、1000再生あたり約0.6人）。');
+  L.push('### 直近の投稿と、今回読み込んだ数字');
+  L.push(...latestRecorded.map(promptLineOf));
+  const mature = withViews.filter(hasMatureMeasurement);
+  if (mature.length) {
+    L.push('### 投稿から48時間以降の再生記録がある動画の上位');
+    L.push(...mature.slice().sort((a,b) => b.views-a.views).slice(0,5).map(promptLineOf));
+  }
   L.push('');
-  L.push('### 2026-10-10 の実測（9/10〜10/9 の公開ぶん）');
-  L.push('- **いちばん伸びた2本は、同じ作りでした。**');
-  L.push('  - 「向かいの窓に、まだ灯りがある。」2,985回（9/24・17秒・テーマ 孤独）');
-  L.push('  - 「夕方、部屋の電気をつけられない。」2,475回（9/26・17秒・テーマ うつ）');
-  L.push('  どちらも、暗い自分の部屋から窓ごしに外を見る1つの場所だけで作られていて、序盤のテロップが「23時。」「夕方6時。」と時刻から始まり、');
-  L.push('  最後に自分の部屋のスタンドが灯って「毎晩1本、置いてます。」で終わります。人の姿も、キャラクターも出てきません。');
-  L.push('  （2本ともこの型だった、というところまでが事実です。この型だから伸びたとは、まだ言い切れません。だから、この型で本数を重ねて確かめます）');
-  L.push('- **形式ごと**（再生数の中央値と、900回以上まで行った本数）：');
-  L.push('  - 映像＋テロップ（キャラクターなし・9/24〜10/8）14本：中央903回・900回以上が7本');
-  L.push('  - キャラクター「ともり」（10/2〜10/9）7本：中央350回・900回以上が1本');
-  L.push('  - 文字だけ（9/10〜9/23）13本：中央756回・900回以上が4本');
-  L.push('  → **キャラクターは使いません。** 人の姿も描きません。');
-  L.push('- **テーマ**（9/10〜10/9 の34本）：うつ9本 中央907回 ／ 孤独4本 中央895回 ／ 不安6本 中央356回 ／ 休職3本 中央350回 ／');
-  L.push('  どれとも決めなかった回（メンタルヘルス）6本 中央225回。');
-  L.push('  → 孤独・うつの場面が通りやすく、不安・休職は通りにくい傾向です（本数が少ないので参考）。テーマがぼんやりした回がいちばん通っていません。');
-  L.push('- **題名**：伸びた2本は、どちらも「場所か時刻 ＋ 、 ＋ 目に入ったもの・やってしまうことの言い切り」で、本体15〜16字・ハッシュタグ4個でした。');
-  L.push('');
-  L.push('### それより前の実測（2026-09-10・公開ぶん105本）');
-  L.push('- **尺**：13秒の5本は中央317回で、1本も通りませんでした（0/5）。');
-  L.push('  14〜16秒の13本は中央1028回・10本が通過。17〜20秒の15本は中央1061回・10本が通過。');
-  L.push('  → **13秒は失敗でした。今回から15〜20秒に戻します。**');
-  L.push('  （2026-09-05に「20秒は長すぎる」と書いて13秒に縮めたのは、こちらの推測でした。実測では逆でした。訂正します）');
-  L.push('- **題名**：問いかけの形にした3本は中央285回。言い切りの31本は中央1011回。');
-  L.push('  → 問いは動画の中と説明文に置き、**題名は言い切り**にしてください。');
-  L.push('- **題名の長さ**：ハッシュタグを除いた本体13〜18字の16本が中央1044回。19字以上の5本は中央497回。');
-  L.push('- **テーマ**：不眠の9本は中央317回（うち5本が連続投稿）。うつの8本は中央1102回。');
-  L.push('  同じテーマを続けた後半で落ちています。→ **同じテーマを3本以上続けないでください。**');
-  L.push('- **投稿時刻**：19〜20時台の21本が中央1011回でいちばん本数があります。ここは動かさないでください。');
-  L.push('- **0秒目の黒画面**：0秒目が真っ黒だった昔の回でも、1700回・2154回と通っています。');
-  L.push('  → 「黒い1フレーム目が原因」というのは外れでした。ただし1フレーム目に文字がある作りは損ではないので、そのまま続けます。');
-  L.push('- **文字の位置**：公開ぶんのフレームを測ったところ、文字のかたまりの中心が画面中央（x=540）より');
-  L.push('  25〜87pxだけ左にずれていました。原因は前回の指示にあった「右から200pxを空ける」です。');
-  L.push('  → この決まりは廃止します。下の「動画の作り方」のとおり、左右まんなかに置いてください。');
-  L.push('- この105本は、どれも暗い背景に文字を並べた動画です。尺・題名・テーマの実測は、映像でもそのまま守ってください。');
+  L.push('### 今回の改善に使う手順');
+  L.push('- まず上の「発信の土台」にある目的・ゴール・続けたい部分を満たすテーマを選んでください。');
+  L.push('- 同じ形式・近い投稿時期で、視聴を選択／平均視聴率／登録の増加が入力された回を比較してください。比較できた本数と計測日を確認し、足りない値は推測で埋めないでください。');
+  L.push('- 視聴を選択が相対的に低い場合は最初の画と一言、平均視聴率が低い場合は途中の展開、登録につながらない場合は次回の約束を候補にします。ただし因果関係は未確認です。');
+  L.push('- 下の検証設計で指定する変更を1つだけ試してください。残りは比較条件として維持し、直近3本と同じテーマの繰り返しを避けてください。');
+  L.push('- 投稿24時間後・72時間後に、再生数、視聴を選択、平均視聴秒数、登録増加を記録して、同じ経過時間で比較してください。再生数だけで成功や失敗を決めないでください。');
   L.push('');
 
   /* ── 3. この分野の上限と現在地 ── */
@@ -3121,7 +3196,7 @@ function buildPrompt(){
     return `- ${x.axis.name}（${ev.level}）：` + g.map(y => {
       const ex = [];
       if (y.stayed != null) ex.push(`視聴を選択${dec(y.stayed,0)}%`);
-      if (y.ret != null) ex.push(`最後まで${dec(y.ret,0)}%`);
+      if (y.ret != null) ex.push(`平均視聴率${dec(y.ret,0)}%`);
       if (y.sub != null) ex.push(`登録${dec(y.sub)}人`);
       return `${y.key} ${dec(y.avg)}倍${ex.length ? '・'+ex.join('・') : ''}（${y.n}本${y.n < MIN_SAMPLE ? '・参考' : ''}）`;
     }).join(' ／ ');
@@ -3129,7 +3204,7 @@ function buildPrompt(){
   if (dimLines.length){
     L.push('## 何が効いているか');
     L.push('再生数を、このチャンネルの中央値で割った「倍率」です。1.0倍がふつう。');
-    L.push(`あわせて${state.hasStayed ? '「視聴を選択」（冒頭で見るのを選んだ割合）・' : ''}「最後まで見られた割合」と「1000再生あたりの登録」も並べてあります。`);
+    L.push(`あわせて${state.hasStayed ? '「視聴を選択」（冒頭で見るのを選んだ割合）・' : ''}「平均視聴率」と「1000再生あたりの登録」も並べてあります。`);
     L.push('**再生の倍率だけを見ないでください。** よく回ったのに誰も残らなかった型は、このチャンネルでは負けです。');
     L.push(`${MIN_SAMPLE}本に満たないものは「参考」です。まだ言い切れない数字として扱ってください。`);
     L.push('見出しの（確実／たぶん／差がない／まだ推測）は、指標がいくつ同じ向きに出たかです。');
@@ -3175,7 +3250,7 @@ function buildPrompt(){
   L.push('　キャラクターを入れた回も、同じように通らなくなりました。通っている型を推測で壊さない、というのがいちばんの反省点です）');
   L.push('');
   L.push('### 固定するもの（変えないでください）');
-  L.push('- 型：窓と灯り（下の「今回の型」の章。2,985回の動画の作りです。冒頭は「時刻。＋いまの場面」、尺は17秒。テーマだけは直近3本と別のものに毎回変えます）');
+  L.push('- 型：窓と灯り（下の「今回の型」の章。以前選んだ制作方針です。冒頭は「時刻。＋いまの場面」、尺は17秒。テーマだけは直近3本と別のものに毎回変えます）');
   fixed.forEach(f => L.push(f.compared
     ? `- ${f.name}：${f.value}（${dec(f.avg)}倍・${f.n}本で確定）`
     : `- ${f.name}：${f.value}（${f.n}本・ただし他の値と比べたことはまだありません）`));
@@ -3264,16 +3339,16 @@ function buildPrompt(){
      描かせるのは、コードで無理なく描ける範囲（切り絵のような平らな層・灯り・天気・カメラの動き）に絞り、
      画風は毎回そろえます。写実や人物はコードで描くと不自然になるので描かせません。
      見る人にはしんどい夜の途中の人がいるので、危うい場所や道具を連想させる画も描かせません。 */
-  L.push('## 今回の型（いちばん伸びた2本の作り。ここが今回の土台です）');
-  L.push('このチャンネルでいちばん伸びた2本は、同じ作りでした。動画の4分の1・半分・4分の3の位置のコマを見て、読み取れたテロップを書き出します。');
+  L.push('## 今回の型（制作方針として選んだ窓と灯り）');
+  L.push('以前の制作で参考にした2本の場面とテロップを示します。現在の順位や数値の根拠ではありません。比較には上の最新記録を使ってください。');
   L.push('');
-  L.push('**1本目「向かいの窓に、まだ灯りがある。」2,985回（テーマ 孤独）**');
+  L.push('**1本目「向かいの窓に、まだ灯りがある。」（テーマ 孤独）**');
   L.push('- 場面：雨の夜。暗い自分の部屋の窓（手前に窓枠の格子）から、向かいの建物を見ている。部屋の左下には、消えたままのスタンド。');
   L.push('- 序盤「23時。向かいの窓に、灯りがついた。」');
   L.push('- 半分「いつのまにか、雨が弱くなっていた。」（向かいの窓はカーテン越しに暖かく光り、窓辺に鉢植えの影。人の姿はない）');
   L.push('- 終盤「私も、灯りをつけた。／毎晩1本、置いてます。」（自分の部屋のスタンドが灯っている）');
   L.push('');
-  L.push('**2本目「夕方、部屋の電気をつけられない。」2,475回（テーマ うつ）**');
+  L.push('**2本目「夕方、部屋の電気をつけられない。」（テーマ うつ）**');
   L.push('- 場面：夕方から夜へ。カーテンを開けた自分の部屋の窓から、街並みと街灯を見ている。窓辺に、消えたままのスタンド。');
   L.push('- 序盤「夕方6時。電気を、つけられずにいる。」');
   L.push('- 半分「暗くなっていくのを、ただ見ていた。」（空が暗くなり、外の街灯だけが先に灯っている）');
@@ -3371,7 +3446,7 @@ function buildPrompt(){
   L.push('- **真ん中（8〜10秒あたり）に、2つ目の小さな出来事を置く。** いちばん離れられやすいところです。');
   L.push('  雨が弱くなる・外の灯りがもうひとつつく・カメラが窓のほうを向く、くらいの静かな変化で十分です。');
   L.push('- **最後から1枚目へ、そのままつながるようにしてください。** ショート動画は自動でくり返し再生されます。');
-  L.push('  つながっていれば2周目に入ります。2周目まで見られた動画は、最後まで見られた割合が100%を超えて数えられます。');
+  L.push('  つながっていれば2周目に入ります。2周目まで見られた動画は、平均視聴率が100%を超えて数えられます。');
   if (loopOn) L.push('  今回は、ここを下の「終わり方：2周目に入る作り」の章で、秒まで決めました。そちらに合わせてください。');
   L.push('  - 文字：最後の1枚の言葉が、1枚目の頭に戻っていく言葉にする。言い切って終わるより、静かに1枚目へ戻れる終わり方のほうが、このチャンネルには合っています。');
   L.push('  - 画：最後のカットは、1カット目と同じ窓辺・近い構図で終える。変わっているのはスタンドの灯りと時刻くらいにして、2周目の頭で画が大きく跳ばないようにする。');
@@ -3649,20 +3724,29 @@ function buildPrompt(){
   return { text: L.join('\n'), slug };
 }
 
-function showPrompt(){
-  $('#prompt-copy').disabled = !state.videos.length;
-  $('#prompt-msg').textContent = '';
-  if (!state.videos.length){
+async function showPrompt(){
+  $('#prompt-build').disabled = true;
+  $('#prompt-build2').disabled = true;
+  $('#prompt-copy').disabled = true;
+  try {
+    if (!await loadAll()) {
+      $('#prompt-msg').textContent = '最新の数字を読み込めないため、作成を止めました。入力内容は残っています。';
+      return;
+    }
+    $('#prompt-copy').disabled = !state.videos.length;
+    $('#prompt-msg').textContent = '';
+    if (!state.videos.length){
+      $('#prompt-box').classList.remove('hidden');
+      $('#prompt-out').value = 'まだ動画が1本も登録されていません。右上の「取り込む」から始めてください。';
+      $('#prompt-slug').textContent = '—';
+      return;
+    }
+    const { text, slug } = buildPrompt();
     $('#prompt-box').classList.remove('hidden');
-    $('#prompt-out').value = 'まだ動画が1本も登録されていません。右上の「取り込む」から始めてください。';
-    $('#prompt-slug').textContent = '—';
-    return;
-  }
-  const { text, slug } = buildPrompt();
-  $('#prompt-box').classList.remove('hidden');
-  $('#prompt-out').value = text;
-  $('#prompt-slug').textContent = slug;
-  $('#prompt-msg').textContent = '';
+    $('#prompt-out').value = text;
+    $('#prompt-slug').textContent = slug;
+    $('#prompt-msg').textContent = '保存済みの数字と、現在入力している土台から作成しました。未保存の数字は含みません。';
+  } finally { $('#prompt-build').disabled = false; $('#prompt-build2').disabled = false; }
 }
 $('#prompt-build').addEventListener('click', showPrompt);
 $('#prompt-build2').addEventListener('click', showPrompt);
