@@ -459,7 +459,7 @@ const assets = [
     const xUrl = new URL((await xRequest).url());
     const newDiaryId = createdDiaries[0].id;
     assert(
-      xUrl.searchParams.get("text").includes(`https://hoshinoumi.vercel.app/?diary=${newDiaryId}`),
+      xUrl.searchParams.get("text").includes(`https://hoshinoumi.org/?diary=${newDiaryId}`),
       "X post links to the new diary",
     );
     await page.locator("#post-modal").waitFor({ state: "hidden" });
@@ -801,7 +801,7 @@ const assets = [
     await linked.waitForFunction(() => document.querySelector("#detail-link-note").textContent.includes("コピーしました"));
     assert.equal(
       await linked.evaluate(() => navigator.clipboard.readText()),
-      "https://hoshinoumi.vercel.app/?diary=" + oldest.id,
+      "https://hoshinoumi.org/?diary=" + oldest.id,
     );
     await linked.screenshot({ path: path.join(output, "diary-link.png") });
     await linked.keyboard.press("Escape");
@@ -816,8 +816,11 @@ const assets = [
     assert.equal(await linked.evaluate(() => location.search), "");
     manyDiaries = false;
     // Share card: large image tags point at a real 1200×630 PNG in the site.
+    assert.equal(await page.locator('link[rel="canonical"]').getAttribute("href"), "https://hoshinoumi.org/");
+    assert.equal(await page.locator('meta[property="og:url"]').getAttribute("content"), "https://hoshinoumi.org/");
+    assert.equal(await page.locator('meta[name="twitter:image"]').getAttribute("content"), "https://hoshinoumi.org/assets/og-image.png");
     const ogImage = await page.locator('meta[property="og:image"]').getAttribute("content");
-    assert.equal(ogImage, "https://hoshinoumi.vercel.app/assets/og-image.png");
+    assert.equal(ogImage, "https://hoshinoumi.org/assets/og-image.png");
     assert.equal(await page.locator('meta[name="twitter:card"]').getAttribute("content"), "summary_large_image");
     const png = await fs.readFile(path.join(root, new URL(ogImage).pathname));
     assert.equal(png.toString("ascii", 1, 4), "PNG");

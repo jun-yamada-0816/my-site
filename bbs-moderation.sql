@@ -83,7 +83,7 @@ begin
       'from', 'Hoshi no Umi <onboarding@resend.dev>',
       'to', jsonb_build_array('jun_yamada_0816@yahoo.co.jp'),
       'subject', '【星の海】掲示板に新しい書き込みがありました',
-      'html', '<p>掲示板に新しい書き込みがあります。</p><p>通知にはお名前や本文を載せていません。</p><p><a href="https://hoshinoumi.vercel.app/#bulletin">掲示板をひらく</a></p>'
+      'html', '<p>掲示板に新しい書き込みがあります。</p><p>通知にはお名前や本文を載せていません。</p><p><a href="https://hoshinoumi.org/#bulletin">掲示板をひらく</a></p>'
     )
   );
   return new;

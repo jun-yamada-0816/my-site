@@ -14,6 +14,7 @@ reset role;
 reset request.jwt.claim.role;
 do $$ begin
   assert (select count(*) from public.test_emails) = 1, 'Published post notification';
+  assert (select body->>'html' like '%https://hoshinoumi.org/#bulletin%' from public.test_emails), 'Notification links to canonical domain';
   assert (select body::text not like '%PRIVATE%' from public.test_emails), 'No name or body in email';
 end $$;
 
