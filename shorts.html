@@ -438,7 +438,7 @@
         <li><span>02</span>プロンプトをコピー</li>
         <li><span>03</span>使いたいAIに渡す</li>
       </ol>
-      <p class="prompt-note">いちばん伸びた「向かいの窓に、まだ灯りがある。」（2,985回）と同じ型で作ってもらいます。暗い部屋の窓から外の灯りを見て、最後に自分の部屋の灯りがつく17秒の映像です。
+      <p class="prompt-note">違う見た目の型を試し、手応えが出た型を磨き、また別の型を探します。昼の切り絵・動く文字・物のコマ撮り・二分割の会話から始め、夜の窓辺や17秒には固定しません。
         受け取るファイルは<b>音入りの mp4 1本だけ</b>。ほかに返ってくるのは、投稿に使う題名・説明文と、登録用の1行（文字だけ）です。
         映像はAIがコードで描いて書き出すので、コードを実行できる環境が必要です。</p>
       <button type="button" id="prompt-base-hint" class="hidden text-[11px] mb-3 rounded-lg px-3 py-2 leading-relaxed cursor-pointer"
@@ -473,8 +473,8 @@
         <h2 class="font-bold">今回の検証設計</h2>
       </div>
       <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">
-        1本ごとに何もかも変えると、伸びても伸びなくても<b class="text-slate-300">理由が分かりません</b>。
-        効いた型は固定して、<b class="text-slate-300">1本につき1つだけ</b>変えます。
+        <b class="text-slate-300">探索では、見た目と構成を大きく変えます。</b>手応えのある型を再検証する回だけ、変更を1つに絞ります。
+        有望な型でも2本続けたら、別の型を試します。
         上の指示文にも、この設計がそのまま入ります。
       </p>
       <div id="test-design" class="space-y-3"></div>
@@ -483,11 +483,11 @@
     <div class="glass rounded-3xl p-6">
       <div class="flex items-center gap-2 mb-1">
         <span class="text-lg" aria-hidden="true">🎞️</span>
-        <h2 class="font-bold">形式を変えてから</h2>
+        <h2 class="font-bold">これまでの形式の比較</h2>
       </div>
       <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">
-        2026-09-23 に「映像＋テロップ」、10-02 にキャラクター「ともり」、10-10 に「窓と灯り」の型へ切り替えました。
-        それぞれの回を文字を並べていたころの回と並べて、<b class="text-slate-300">通る割合</b>と<b class="text-slate-300">冒頭の3秒</b>が変わったかを見ます。
+        過去の型と新しい型の最新記録を並べます。計測期間が異なる参考集計です。
+        次の型を選ぶ判定には、上の「今回の検証設計」を使います。
       </p>
       <div id="format-compare"></div>
     </div>
@@ -495,7 +495,7 @@
     <div class="glass rounded-2xl p-5">
       <h2 class="font-semibold text-sm mb-1">どこまで試したか</h2>
       <p class="text-[11px] text-slate-500 mb-4">
-        3本たまると「確定」、それ未満は「まだ分からない」です。灰色のところが、これから試す余地です。
+        各型2本を目安に試します。直近3本の同じ投稿後日数の数字を比べ、複数回で手応えがあれば再検証します。本数だけで「確定」にはしません。
       </p>
       <div id="test-matrix" class="space-y-4"></div>
     </div>
@@ -505,7 +505,7 @@
         <span class="text-lg">🧭</span>
         <h2 class="font-bold">次に作る動画</h2>
       </div>
-      <p class="text-[11px] text-slate-500 mb-5">数字から自動で導いた提案です。上にあるものほど効き目が大きいと見ています。</p>
+      <p class="text-[11px] text-slate-500 mb-5">保存した記録から、今回の探索と計測の進め方を提案します。効果や原因を断定するものではありません。</p>
       <div id="advice-list" class="space-y-3"></div>
     </div>
 
@@ -747,8 +747,8 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <label><span class="block text-[11px] text-slate-500 mb-1">形式</span>
-            <input id="vm-format" list="dl-format" class="fld" placeholder="映像＋テロップ（窓と灯り）">
-            <datalist id="dl-format"><option value="映像＋テロップ（窓と灯り）"><option value="映像＋テロップ"><option value="語り"><option value="テロップのみ"><option value="音楽メイン"><option value="対話"></datalist></label>
+            <input id="vm-format" list="dl-format" class="fld" placeholder="プロンプトの形式名をそのまま入力">
+            <datalist id="dl-format"><option value="探索1｜昼の切り絵"><option value="探索1｜動くことば"><option value="探索1｜身近な物のコマ撮り"><option value="探索1｜二分割のひとり会話"><option value="映像＋テロップ（窓と灯り）"><option value="映像＋テロップ"><option value="語り"><option value="テロップのみ"><option value="音楽メイン"><option value="対話"></datalist></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">尺(秒)</span><input id="vm-dur" type="number" inputmode="numeric" class="fld"></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">締め</span>
             <input id="vm-cta" list="dl-cta" class="fld" placeholder="リンクへ">
@@ -850,7 +850,7 @@ const GOALS = [
     why:'まとめて出すより、毎日少しずつのほうが届きます。止まると戻すのに時間がかかります。',
     fix:'完璧をやめる。20秒・テロップ5枚なら、しんどい日でも出せます。',
     need:'投稿した日時' },
-  { key:'dur', name:'尺', unit:'秒', range:[15,35],
+  { key:'dur', name:'尺', unit:'秒', range:[10,35],
     why:'長いほど最後まで見られにくくなります。短すぎると内容が残りません。',
     fix:'言いたいことを1つに絞ると、自然とこの範囲に収まります。',
     need:'動画の尺' },
@@ -940,43 +940,10 @@ const AXES = [
   { key:'weekday', name:'投稿した曜日',   of: s => s.postedAt ? WEEKDAYS[new Date(s.postedAt).getDay()]+'曜' : null },
 ];
 
-/* 2026-09-23 から、動画は文字を並べたものではなく「映像＋テロップ」で作ります（ユーザーの判断）。
-   形式を丸ごと変えるので、映像の回が MIN_SAMPLE 本たまるまでは「今回だけ変えるもの」を形式にして、
-   ほかは動かしません。一緒に何かを変えると、映像にしたから通った（落ちた）のかが分からなくなります。
-   数えるのは「動画」タブの形式に「映像」と入っている回です。 */
-const VISUAL_FORMAT = '映像＋テロップ';
+/* 過去の形式は履歴の比較用に残す。今後の制作条件には固定しない。 */
 const isVisual = v => /映像/.test(v.format || '');
-
-/* 2026-10-10 から、映像の中でも「窓と灯り」の型に絞って作ります（ユーザーの判断）。
-   いちばん伸びた v122「向かいの窓に、まだ灯りがある。」（2,985回）と、2番目の v124「夕方、部屋の電気をつけられない。」（2,475回）が
-   どちらも「暗い自分の部屋から窓ごしに外を見る → 最後に自分の灯りがつく」作りだったためです。
-   10-02〜10-09 に試したキャラクター「ともり」の回は伸びなかったので、作り方の選択ごとやめました（ユーザーの判断）。
-   形式の名前に「映像」を含めてあるので、窓と灯りの回も isVisual で映像の回として数えられます。 */
-const WINDOW_FORMAT = '映像＋テロップ（窓と灯り）';
 const isWindow = v => /窓と灯り/.test(v.format || '');
-/* ともりの回は、映像の回とも文字だけの回とも混ぜずに数えます（どちらに入れても比べる数字が狂います） */
 const isCharacter = v => /ともり/.test(v.format || '');
-/* 型で決めてある変数。「今回だけ変えるもの」にも「固定するもの（昔の記録のいちばん）」にも出しません。
-   昔の記録で別の値がよく見えても、型と食い違う指示を出さないためです。
-   テーマは型の中で「直近3本と別のものに毎回変える」と決めているので、固定にも検証にもしません。 */
-const TEMPLATE_AXES = ['format', 'hook', 'dur', 'theme'];
-const TEMPLATE_CHIPS = [
-  { key:'format', text:'形式：窓と灯り' },
-  { key:'hook',   text:'冒頭：時刻＋いまの場面' },
-  { key:'dur',    text:'尺：17秒' },
-  { key:'theme',  text:'テーマ：毎回変える（直近3本と別）' },
-];
-
-/* 2026-10-11 から、終わり方を「ループ（最後の1秒で1カット目と1枚目のテロップに戻る）」に変えて試します。
-   ユーザーの「再生が1000回から増えない」への次の一手です。
-   公開ぶん48本を数えると、500回以上まで行った23本のうち21本が1,100回までで止まり、越えたのは 9/24・9/26 の2本だけでした。
-   窓と灯りに絞った 10/10〜10/11 の3本も 1,029／404／739回（どれも投稿から2日たっていない数字）。
-   最初の試し配信は半分以上通っているのに、その次で止まっています。
-   ショートの再生回数は、2025年3月からくり返し再生も1回として数えます（YouTube の発表）。
-   見終わった人がそのまま2周目に入る作りにすれば、止まっている理由が「最後まで・もう1周」なら動くはず、という推測にもとづく試しです。
-   ループの回が MIN_SAMPLE 本たまるまで、ほかは変えません（nextAxis）。数えるのは「動画」タブの締めに「ループ」と入っている回です。 */
-const LOOP_CTA = 'ループ（1枚目へ戻る）';
-const isLoop = v => /ループ/.test(v.cta_type || '');
 
 /* ========================= 状態 ========================= */
 let sb = null;
@@ -1763,28 +1730,8 @@ $('#base-rival-add').addEventListener('click', () => {
   $('#base-msg').textContent = ok ? '入力をこの端末に控えました。「保存する」でクラウドにも保存してください。' : '端末に控えを残せません。「保存する」でクラウドに保存してください。';
 });
 
-/* ========================= 検証設計（変数を1つだけ変える） =========================
-   演者・題材・フォーマット…と要素を分けて、組み合わせで試します。
-   ここで大事なのは「1本で1つしか変えない」ことです。
-   まとめて変えると、伸びても伸びなくても理由が分かりません。 */
-
-function axisStates(scored){
-  return AXES.map(a => {
-    const groups = groupBy(scored, a.of);
-    const solid  = groups.filter(x => x.n >= MIN_SAMPLE);
-    const thin   = groups.filter(x => x.n <  MIN_SAMPLE);
-    return {
-      axis: a, groups, solid, thin,
-      best: solid[0] || null,
-      spread: solid.length >= 2 ? solid[0].avg / Math.max(solid[solid.length-1].avg, 0.01) : null,
-    };
-  });
-}
-
-/* その変数の差が、どれくらい信じられるか。
-   再生の倍率だけで決めると「回ったが誰も残らなかった型」を勝ちだと勘違いします。
-   平均視聴率・登録・サイト到達も見て、
-   2つ以上の指標で差が出ているものだけを「確実」と呼びます。 */
+/* 過去の属性別集計の差。探索の選定には、下の計測期間をそろえた比較を使う。
+   複数の指標に差があっても、因果関係の確定とは呼ばない。 */
 function evidenceOf(x){
   if (x.solid.length < 2) return { level:'まだ推測', reasons:[], best:x.best||null, worst:null };
   const b = x.solid[0], w = x.solid[x.solid.length-1];
@@ -1800,144 +1747,124 @@ function evidenceOf(x){
     reasons.push(`サイト到達 ${dec(b.visit)}人 対 ${dec(w.visit)}人`);
   if (b.stayed != null && w.stayed != null && b.stayed >= w.stayed + 5)
     reasons.push(`視聴を選択 ${dec(b.stayed,0)}% 対 ${dec(w.stayed,0)}%`);
-  const level = reasons.length >= 2 ? '確実' : reasons.length === 1 ? 'たぶん' : '差がない';
+  const level = reasons.length >= 2 ? '複数指標に差' : reasons.length === 1 ? 'たぶん' : '差がない';
   return { level, reasons, best:b, worst:w };
 }
 
-/* 固定する型＝すでに確定している「いちばん良かった値」だけ。
-   今回変えるもの（nx）は並べません。「固定」と「変える」の両方に同じ変数が出ると、どちらに従えばいいか分からなくなります。
-   形式・冒頭の掴み・尺・テーマは「窓と灯り」の型で決めたので（TEMPLATE_AXES）、昔の記録のいちばん良い値をここに出すこともしません。 */
-function fixedCombo(states, nx){
-  // ループの回を作りはじめたら、締めは loopPhase() の判定で決めます。
-  // 倍率で決めると、昔の文字だけの回まで混ざった平均と比べることになり、壁で止まったループの回でも「勝ち」に見えるためです。
-  const loopDecides = state.videos.some(isLoop);
-  return states.filter(x => x.best && !TEMPLATE_AXES.includes(x.axis.key) && x.axis.key !== nx?.axis.key
-                            && !(loopDecides && x.axis.key === 'cta')).map(x => {
-    const ev = evidenceOf(x);
-    return {
-      key: x.axis.key, name: x.axis.name, value: x.best.key, avg: x.best.avg, n: x.best.n,
-      ret: x.best.ret, sub: x.best.sub,
-      // 値が1種類しかないものは「いつもそうしている」だけで、比べた結果ではありません
-      compared: x.solid.length >= 2,
-      level: ev.level, reasons: ev.reasons,
-    };
-  });
+/* 探索は型ごと変え、手応えのある型の再検証だけ変更を1つに絞る。
+   形式名を記録に使うので、クリック回数や端末内の乱数では進めない。 */
+const EXPERIMENT_RECIPES = [
+  { name:'昼の切り絵', seconds:'18〜28秒',
+    brief:'昼の公園・バス停・商店街など、屋外の明るい紙の切り絵。小さな出来事を「予想→変化→余韻」の3場面で見せる。窓辺や点灯を結末にしない。' },
+  { name:'動くことば', seconds:'10〜18秒',
+    brief:'余白のある単色背景と大きな動く文字。文字が詰まる・ほどける・別の意味に組み替わる動きで気持ちを見せる。風景は不要。文字だけでも完成形にできる。' },
+  { name:'身近な物のコマ撮り', seconds:'12〜22秒',
+    brief:'明るい机を真上から見るコマ撮り風。カップ、靴、メモなど身近な物の意外な動きで、小さな困りごとと変化を表す。灯りの点灯は使わない。' },
+  { name:'二分割のひとり会話', seconds:'20〜35秒',
+    brief:'画面を二分割し、外に見せる言葉と心の中の言葉を短い吹き出しで交互に見せる。明るい配色・簡単な図形やシルエット。読み上げは使わず、文字と効果音で間を作る。' },
+];
+const experimentFormat = (round, name) => `探索${round}｜${name}`;
+const isExperiment = v => /^探索[1-9]\d*｜.+/.test(v.format || '');
+
+// 日単位の記録から、投稿72〜120時間後（4日後が目安）の行を1本につき1つ選ぶ。
+// 別の日の再生数と登録増加を混ぜない。欠測は0にせず、候補判定を保留する。
+function experimentObservation(s){
+  if (!s.postedAt || !s.post) return null;
+  const rows = seriesOf(s.post.id).map(m => ({ m,
+    time: +new Date(m.measured_on + 'T00:00:00+09:00'),
+    age: (new Date(m.measured_on + 'T00:00:00+09:00') - new Date(s.postedAt)) / 36e5,
+  })).filter(x => x.age >= 72 && x.age <= 120 && x.time <= Date.now()
+    && typeof x.m.views === 'number' && Number.isFinite(x.m.views) && x.m.views >= 0)
+    .sort((a,b) => Math.abs(a.age-96) - Math.abs(b.age-96) || a.age-b.age);
+  if (!rows.length) return null;
+  const {m, age} = rows[0];
+  const nonnegative = x => typeof x === 'number' && Number.isFinite(x) && x >= 0;
+  return { s, date:m.measured_on, age, views:m.views,
+    stayed: state.hasStayed && nonnegative(m.stayed_pct) && m.stayed_pct <= 100 ? m.stayed_pct : null,
+    retention: nonnegative(m.avg_watch_sec) && s.v.duration_sec > 0 ? m.avg_watch_sec/s.v.duration_sec*100 : null,
+    subRate: state.hasSubs && nonnegative(m.subs_gained) && m.views > 0 ? m.subs_gained/m.views*1000 : null,
+  };
 }
-
-/* 今回変える1つ。AXES は効きやすい順に並べてあるので、
-   まだ確定していないもののうち、いちばん上のものを選びます。
-   ただしいまは、ループの回が MIN_SAMPLE 本たまるまで締め（終わり方）だけを変えます（LOOP_CTA の説明）。
-   10-10 に始めた「窓と灯り」への切り替えは、公開ずみ3本（10/10 朝・10/10 夜・10/11 朝）で済んだものとして、型の側に置きました。
-   （分析ページへの登録が遅れていても、ループの検証が始まらないことがないように、窓と灯りの本数は待ちません） */
-function nextAxis(states){
-  const cta = states.find(x => x.axis.key === 'cta');
-  const lp  = loopPhase();
-  if (cta && (lp.phase === 'testing' || lp.phase === 'waiting'))
-    return Object.assign({}, cta, { loopTest:true, made: lp.made, waiting: lp.phase === 'waiting' });
-  // 形式・冒頭の掴み・尺・テーマは「窓と灯り」の型で決めてあるので（TEMPLATE_AXES）、ここから先は選び直しません
-  const pool = states.filter(x => !TEMPLATE_AXES.includes(x.axis.key));
-  const undecided = pool.filter(x => x.solid.length < 2);
-  if (undecided.length) return undecided[0];
-  return pool.slice().sort((a,b) => (b.spread||0) - (a.spread||0))[0];
-}
-
-/* その変数で、まだ試せていない／本数が足りない値 */
-function axisCandidates(x){
-  const known = {
-    hook:    ['問いかけ','共感','断言','数字','体験談','場面描写'],
-    // 無音の mp4 は出さない・読み上げ音声は使わない（2026-08-14 ユーザーの判断）ので、その2つは候補にしません
-    audio:   ['BGM＋効果音','BGMのみ','効果音のみ'],
-    format:  [WINDOW_FORMAT,VISUAL_FORMAT,'語り','テロップのみ','音楽メイン','対話'],
-    cta:     [LOOP_CTA,'リンクへ','コメント促し','登録の約束','なし'],
-    dur:     ['〜15秒','16〜30秒','31〜45秒','46〜60秒'],
-    hour:    ['深夜 0〜6時','朝 6〜11時','昼 11〜15時','夕方 15〜19時','夜 19〜24時'],
-    weekday: WEEKDAYS.map(d => d+'曜'),
-  }[x.axis.key] || [];
-  const tried = new Set(x.groups.map(g => g.key));   // 1本でも出していれば「未検証」ではない
-  const untried = known.filter(k => !tried.has(k));
-  const thin = x.thin.map(g => `${g.key}（あと${MIN_SAMPLE - g.n}本）`);
-  return { untried, thin };
-}
-
-function renderTestPlan(){
-  const cur = currentValues();
-  const scored = scoredOnly(cur.list);
-  const states = axisStates(scored);
-  const nx = nextAxis(states);
-  const fixed = fixedCombo(states, nx);
-
-  /* ① 今回の設計 */
-  const chip = t => `<span class="chip">${esc(t)}</span>`;
-  const design = [];
-
-  // 型で決めてあるものは「固定するもの」の先頭に置きます。ループの検証が済んでいれば、その結果の締めも並べます
-  const lp = loopPhase();
-  const loopChip = lp.phase === 'kept' ? `締め：${LOOP_CTA}（壁を越えた回があった）`
-    : lp.phase === 'dropped' ? '締め：灯りの一言で止めて終える（ループは壁を越えなかった）' : null;
-  const fmtChip = [...TEMPLATE_CHIPS.map(t => `${t.text}（型で決めたもの）`), ...(loopChip ? [loopChip] : [])]
-    .map(t => `<span class="chip" style="background:rgba(23,69,107,.10);color:#17456b">${esc(t)}</span>`).join('');
-  design.push(`<div class="rounded-2xl p-4" style="background:rgba(43,47,51,.06);border-left:3px solid #2b7f8c">
-    <div class="text-xs font-semibold mb-2" style="color:#2b7f8c">固定するもの（変えない）</div>
-    ${fmtChip || fixed.length
-      ? `<div class="flex flex-wrap gap-1.5">${fmtChip}${fixed.map(f =>
-          `<span class="chip" style="background:${f.level==='確実'?'rgba(43,127,140,.14)':f.compared?'rgba(154,116,32,.11)':'rgba(43,47,51,.07)'};color:${f.level==='確実'?'#2b7f8c':f.compared?'#9a7420':'#6f757b'}">${esc(f.name)}：${esc(f.value)} ${dec(f.avg)}倍・${f.compared?esc(f.level):'比較まだ'}</span>`).join('')}</div>`
-      : ''}
-    ${fixed.length ? '' : `<p class="text-[11px] text-slate-400 leading-relaxed${fmtChip ? ' mt-2' : ''}">まだ確定した型がありません。
-          いまは固定するものを決める段階です。${MIN_SAMPLE}本ずつ同じ条件でそろえると、そこから型が見えてきます。</p>`}
-  </div>`);
-
-  if (nx?.loopTest){
-    const w = wallCompare();
-    design.push(`<div class="rounded-2xl p-4" style="background:rgba(43,47,51,.06);border-left:3px solid #9a7420">
-      <div class="text-xs font-semibold mb-2" style="color:#9a7420">今回だけ変えるもの</div>
-      <p class="text-xs text-slate-300 mb-2"><b>締め（終わり方）</b>：灯りの一言＋「毎晩1本、置いてます。」で終える → <b>${esc(LOOP_CTA)}</b></p>
-      <div class="flex flex-wrap gap-1.5 mb-2">${chip(`ループの回 ${nx.made}／${MIN_SAMPLE}本${nx.waiting ? '・結果待ち' : ''}`)}${w ? chip(`壁の線 ${num(w.line)}回`) : ''}</div>
-      <p class="text-[11px] text-slate-400 leading-relaxed">
-        ${w && w.wall ? `直近${w.n}本のうち、最初の試し配信を通った${w.passN}本の${w.wall.n}本が、${num(w.wall.max)}回までで止まっています。` : ''}
-        通る割合より、通ったあとに止まらないことを狙います。最後の2行と灯りの場面は残したまま、最後の1秒で1カット目に戻し、
-        見終わった人にそのまま2周目に入ってもらう作りです（推測にもとづく試し）。${nx.waiting
-          ? `ループの回は${nx.made}本できました。投稿から2日たった回が${MIN_SAMPLE}本そろうまでは、ループのまま、ほかは何も変えません。`
-          : `ループの回が${MIN_SAMPLE}本そろうまでは、ほかは何も変えません。`}
-        ${MIN_SAMPLE}本のうち1本でも壁の線を越えればループを残し、1本も越えなければ、これまでの終わり方に戻します。
-        できた動画は「動画」タブで、締めを「${esc(LOOP_CTA)}」にして登録してください。その本数をここで数えています。
-      </p>
-    </div>`);
-  } else if (nx){
-    const c = axisCandidates(nx);
-    const list = [...c.untried, ...c.thin].slice(0, 6);
-    design.push(`<div class="rounded-2xl p-4" style="background:rgba(43,47,51,.06);border-left:3px solid #9a7420">
-      <div class="text-xs font-semibold mb-2" style="color:#9a7420">今回だけ変えるもの</div>
-      <p class="text-xs text-slate-300 mb-2"><b>${esc(nx.axis.name)}</b></p>
-      ${list.length
-        ? `<div class="flex flex-wrap gap-1.5 mb-2">${list.map(chip).join('')}</div>`
-        : ''}
-      <p class="text-[11px] text-slate-400 leading-relaxed">
-        ${nx.solid.length < 2
-          ? `${nx.axis.name}は、まだ比べられるだけの本数がありません。ここを${MIN_SAMPLE}本ずつそろえるのが、いちばん早い近道です。`
-          : `${nx.axis.name}は、いちばん良い値といちばん悪い値で${dec(nx.spread)}倍の差が出ています。差が大きいところほど、寄せるだけで結果が変わります。`}
-      </p>
-    </div>`);
+function experimentSummary(rows){
+  const summary = { n:rows.length };
+  for (const key of ['views','stayed','retention','subRate']) {
+    const values = rows.map(r => r[key]).filter(v => v != null && Number.isFinite(v));
+    summary[key] = values.length ? median(values) : null;
+    summary[key+'N'] = values.length;
   }
-
-  $('#test-design').innerHTML = design.join('');
-
-  /* ② どこまで試したか */
-  $('#test-matrix').innerHTML = states.map(x => {
-    const cands = axisCandidates(x);
-    const cells = x.groups.map(g => {
-      const solid = g.n >= MIN_SAMPLE;
-      const good  = solid && g.avg >= 1.3;
-      const bg = good ? 'rgba(43,127,140,.14)' : solid ? 'rgba(43,47,51,.09)' : 'rgba(43,47,51,.045)';
-      const co = good ? '#2b7f8c' : solid ? 'var(--sumi)' : '#8b9096';
-      return `<span class="chip" style="background:${bg};color:${co}">${esc(g.key)} ${dec(g.avg)}倍・${g.n}本${solid?'':'?'}</span>`;
-    }).join('');
-    const rest = cands.untried.slice(0,5).map(k =>
-      `<span class="chip" style="background:transparent;border:1px dashed var(--line);color:#8b9096">${esc(k)} 未検証</span>`).join('');
-    return `<div>
-      <h3 class="text-[11px] font-semibold text-slate-400 mb-2">${esc(x.axis.name)}</h3>
-      <div class="flex flex-wrap gap-1.5">${cells || '<span class="text-[11px] text-slate-600">まだ記録がありません</span>'}${rest}</div>
-    </div>`;
-  }).join('');
+  return summary;
+}
+function experimentPlan(){
+  const published = allStats().list.filter(s => s.postedAt && +new Date(s.postedAt) <= Date.now())
+    .sort((a,b) => new Date(b.postedAt)-new Date(a.postedAt) || String(a.v.id).localeCompare(String(b.v.id)));
+  // 90日より古い成功だけを理由に、今も同じ型へ戻し続けない。
+  const recent = published.filter(s => Date.now()-new Date(s.postedAt) <= 90*864e5);
+  const observations = recent.map(experimentObservation).filter(Boolean);
+  const groups = [...new Set(published.filter(s => isExperiment(s.v)).map(s => s.v.format))].map(format => {
+    const made = published.filter(s => s.v.format === format);
+    // 最近の制作3本を対象にする。記録がない回を飛ばして昔の成功3本に戻らない。
+    const last = recent.filter(s => s.v.format === format).slice(0,3);
+    const samples = last.map(experimentObservation).filter(Boolean);
+    const baselineRows = observations.filter(o => o.s.v.format !== format).slice(0,30);
+    const baseline = experimentSummary(baselineRows);
+    const summary = experimentSummary(samples);
+    const signal = o => baseline.views > 0 && o.views >= baseline.views*1.3 && (
+      baseline.stayedN >= 3 && o.stayed != null && o.stayed >= baseline.stayed+5 ||
+      baseline.retentionN >= 3 && o.retention != null && o.retention >= baseline.retention+5 ||
+      baseline.subRateN >= 3 && o.subRate != null && o.subRate > 0 && o.subRate >= baseline.subRate*1.3
+    );
+    const strong = samples.filter(signal);
+    const promising = baseline.n >= 3 && samples.length >= 2 && strong.length >= 2
+      && summary.views >= baseline.views*1.3;
+    const pending = last.filter(s => !experimentObservation(s)).length;
+    return { format, made:made.length, last, samples, baseline, summary, strong, promising, pending };
+  });
+  const recentFormats = published.filter(s => isExperiment(s.v)).slice(0,2).map(s => s.v.format);
+  const candidate = groups.filter(g => g.promising && g.pending < 2
+    && !(recentFormats.length === 2 && recentFormats.every(f => f === g.format)))
+    .sort((a,b) => b.summary.views/b.baseline.views - a.summary.views/a.baseline.views || a.format.localeCompare(b.format))[0];
+  if (candidate){
+    const example = candidate.strong[0].s;
+    const recipe = EXPERIMENT_RECIPES.find(r => candidate.format.endsWith('｜'+r.name));
+    return { mode:'refine', label:'手応えのある型を再検証', format:candidate.format,
+      brief:recipe?.brief || '同じ形式名で記録した直近の好調な回の画風と構成を再現する。',
+      seconds:example.v.duration_sec ? `${example.v.duration_sec}秒前後` : '10〜35秒',
+      axis:['冒頭の掴み','尺','締めの誘導'][candidate.made % 3], example, candidate, groups,
+      reason:`直近${candidate.summary.n}本のうち${candidate.strong.length}本で、同じ計測期間の別形式${candidate.baseline.n}本の再生中央値を1.3倍以上上回り、視聴または登録の指標にも差がありました。成功の確定ではなく、再検証する候補です。`,
+    };
+  }
+  // 4つの違う見た目を1本ずつ回し、各2本を目安に探索。終われば新しい企画の周へ進む。
+  const options = EXPERIMENT_RECIPES.map((recipe, index) => {
+    let round = 1;
+    while (groups.some(g => g.format === experimentFormat(round, recipe.name) && g.made >= 2)) round++;
+    const format = experimentFormat(round, recipe.name);
+    return { recipe, index, round, format, made:groups.find(g => g.format === format)?.made || 0 };
+  }).sort((a,b) => a.round-b.round || a.made-b.made || a.index-b.index);
+  const next = options.find(o => !recentFormats.length || o.format !== recentFormats[0]) || options[0];
+  const hadCandidate = groups.some(g => g.promising);
+  return { mode:'explore', label:'新しい型を探索', format:next.format, brief:next.recipe.brief,
+    seconds:next.recipe.seconds, axis:'形式', round:next.round, groups,
+    reason:hadCandidate
+      ? '手応えのある型に集中しすぎないよう、別の見た目を試します。結果待ちの間も同じ型を量産しません。'
+      : 'まだ複数回で手応えを確認できた型がないため、場面・画風・構成の異なる企画を試します。記録不足は不成功と決めつけません。',
+  };
+}
+function renderTestPlan(){
+  const plan = experimentPlan();
+  $('#test-design').innerHTML = `<div class="rounded-2xl p-4" style="background:rgba(23,69,107,.06)">
+    <h3 class="text-sm font-bold">${esc(plan.label)}：${esc(plan.format)}</h3>
+    <p class="text-xs mt-2">${esc(plan.reason)}</p>
+    <p class="text-xs mt-2">${esc(plan.brief)}</p>
+    <p class="text-xs mt-2">${plan.mode === 'explore'
+      ? '探索では見た目・構成・尺をまとめて変えて構いません。どの要素が効いたかの断定は、後の再検証まで保留します。'
+      : `今回は「${esc(plan.axis)}」だけを変え、ほかは参考にした回にそろえます。2本続けたら別の型も探索します。`}</p>
+    <p class="text-xs mt-2">制作後は「形式」に <b>${esc(plan.format)}</b> と記録してください。生成ボタンを押すだけでは探索は進みません。</p>
+  </div>`;
+  $('#test-matrix').innerHTML = plan.groups.length ? plan.groups.map(g => `<div class="text-xs mb-3">
+    <b>${esc(g.format)}</b>：投稿${g.made}本 ／ 直近3本の比較可能な記録${g.summary.n}本 ／ 他の形式の比較対象${g.baseline.n}本
+    ／ 再生中央値${num(g.summary.views)}回 ／ ${g.promising ? '手応えあり・再検証候補' : '判断保留・探索を継続'}
+    <span class="block text-slate-500">視聴を選択 ${dec(g.summary.stayed)}%（${g.summary.stayedN}本）、平均視聴率 ${dec(g.summary.retention)}%（${g.summary.retentionN}本）、1000再生あたり登録 ${dec(g.summary.subRate)}人（${g.summary.subRateN}本）</span>
+  </div>`).join('') : emptyNote('新しい型の記録はこれからです。過去の動画と数字はそのまま残ります。');
 }
 
 /* ========================= 形式を変えてから =========================
@@ -1952,11 +1879,12 @@ const passGate = views => {
 };
 /* 表と指示文で同じ並び・同じ呼び名を使います */
 const FORMAT_GROUPS = [
-  { key:'win', label:'窓と灯り',           test: v => isWindow(v) },
-  { key:'vis', label:'映像（ほかの場面）', test: v => isVisual(v) && !isWindow(v) },
-  { key:'chr', label:'ともり',             test: v => isCharacter(v) },
+  { key:'exp', label:'新しい型（内訳は検証設計）', test: v => isExperiment(v) },
+  { key:'win', label:'窓と灯り',           test: v => isWindow(v) && !isExperiment(v) },
+  { key:'vis', label:'映像（ほかの場面）', test: v => isVisual(v) && !isWindow(v) && !isExperiment(v) },
+  { key:'chr', label:'ともり',             test: v => isCharacter(v) && !isExperiment(v) },
 ];
-const isTextOnly = v => !isVisual(v) && !isCharacter(v);
+const isTextOnly = v => !isVisual(v) && !isCharacter(v) && !isExperiment(v);
 // 日付しかない計測はその日の開始時刻で判定し、48時間未満の記録を成熟済みにしない。
 function hasMatureMeasurement(s){
   const measured = s.metricDates?.views;
@@ -1988,82 +1916,28 @@ function formatCompare(){
   return fc;
 }
 
-/* ========================= 1000回の壁 =========================
-   2026-10-11、ユーザー「再生が1000回から増えない」。
-   通った回（passGate 以上）の中でも、ほとんどが1,100回前後で止まり、越えたのは2本だけでした。
-   直近30本（投稿から2日たった回）を「通らなかった／通ったが止まった／壁を越えた」に分け、
-   越えた回と止まった回で Studio の数字（視聴を選択・平均視聴率・登録・コメント）を比べます。
-   壁の線は、通った回の再生の中央値の1.5倍（100回単位・最低1,200回）。2026-10-11 の公開データでは1,400回です。 */
-const wallLineOf = views => Math.max(1200, Math.round(median(views) * 1.5 / 100) * 100);
-function wallCompare(){
-  const cur = currentValues();
-  const dated = cur.withViews.filter(s => s.postedAt)
-    .sort((a,b) => new Date(b.postedAt) - new Date(a.postedAt));
-  const settled = dated.filter(s => hasMatureMeasurement(s));
-  const recent = settled.slice(0, 30);
-  if (recent.length < 8) return null;
-  const gate = passGate(dated.slice(0, 30).map(s => s.views));   // 「形式を変えてから」の表と同じ線
-  const passed = recent.filter(s => s.views >= gate);
-  if (!passed.length) return null;
-  const line = wallLineOf(passed.map(s => s.views));
-  const mid = xs => { const a = xs.filter(n => n != null && isFinite(n)); return a.length ? median(a) : null; };
-  const sum = arr => arr.length ? {
-    n: arr.length, list: arr,
-    med: mid(arr.map(s => s.views)),
-    max: Math.max(...arr.map(s => s.views)),
-    stayed: mid(arr.map(s => s.stayed)),
-    ret: mid(arr.map(s => s.retention)),
-    sub: mid(arr.map(s => s.subRate)),
-    comment: mid(arr.map(s => s.commentRate != null ? s.commentRate * 10 : null)),   // 1000再生あたりのコメント
-  } : null;
-  const young = s => !settled.includes(s);
-  return {
-    gate, line, n: recent.length, passN: passed.length,
-    fail: sum(recent.filter(s => s.views < gate)),
-    wall: sum(passed.filter(s => s.views < line)),
-    over: sum(passed.filter(s => s.views >= line)),
-    // 窓と灯り・ループの回は、まだ2日たっていない回も並べます（いま作っている型なので）
-    windows: dated.filter(s => isWindow(s.v)).slice(0, 6).map(s => ({ s, young: young(s) })),
-    loops:   dated.filter(s => isLoop(s.v)).map(s => ({ s, young: young(s) })),
-  };
-}
-
-/* ループの検証がどこまで進んだか。
-   testing＝まだ MIN_SAMPLE 本できていない／waiting＝できたが、投稿から2日たった回が MIN_SAMPLE 本そろっていない（ループのまま続ける）
-   kept＝2日たった回のうち1本でも壁を越えた（締めの型として残す）／dropped＝1本も越えなかった（これまでの終わり方に戻す）。
-   ねらいは「壁を越えること」なので、判定も壁の線で行います。再生の倍率では決めません。 */
-function loopPhase(){
-  const made = state.videos.filter(isLoop).length;
-  if (made < MIN_SAMPLE) return { phase:'testing', made };
-  const w = wallCompare();
-  const settled = w ? w.loops.filter(o => !o.young) : [];
-  if (!w || settled.length < MIN_SAMPLE) return { phase:'waiting', made, settledN: settled.length };
-  const over = settled.filter(o => o.s.views >= w.line).length;
-  return { phase: over ? 'kept' : 'dropped', made, over, settledN: settled.length, line: w.line };
-}
 function renderFormatCompare(){
   const box = $('#format-compare'); if (!box) return;
   const fc = formatCompare();
   if (!fc.any){
     box.innerHTML = `<p class="text-[11px] text-slate-400 leading-relaxed">
-      まだ映像の回の数字がありません${fc.young ? `（投稿から2日たっていない回が${fc.young}本あります）` : ''}。
-      「動画」タブで形式を「${esc(WINDOW_FORMAT)}」にして登録すると、投稿から2日たったところで、ここに文字だけの回と並べて出ます。</p>`;
+      まだ形式別に比較できる数字がありません${fc.young ? `（投稿から2日たっていない回が${fc.young}本あります）` : ''}。
+      「動画」タブで実際に作った形式を記録してください。この表は過去の傾向用で、今回の型の選択には上の検証設計を使います。</p>`;
     return;
   }
   const pct = (a, b) => b ? `${Math.round(a/b*100)}%` : '—';
   const rows = [
     ['本数',                         x => `${x.n}本`],
-    [`通った割合（${num(fc.gate)}回以上）`, x => `${pct(x.pass, x.n)}（${x.pass}/${x.n}）`],
+    [`比較用の線以上（${num(fc.gate)}回）`, x => `${pct(x.pass, x.n)}（${x.pass}/${x.n}）`],
     ['再生の中央値',                 x => `${num(Math.round(x.med))}回`],
-    ['視聴を選択（冒頭の3秒）',      x => x.stayed != null ? `${dec(x.stayed,0)}%` : '—'],
+    ['視聴を選択',      x => x.stayed != null ? `${dec(x.stayed,0)}%` : '—'],
     ['平均視聴率',         x => x.ret != null ? `${dec(x.ret,0)}%` : '—'],
     ['1000再生あたりの登録',         x => x.sub != null ? `${dec(x.sub)}人` : '—'],
   ];
-  // 窓と灯りの列は、まだ1本もなくても出します（いま作っている型なので）
-  const cols = FORMAT_GROUPS.filter(g => g.key === 'win' || fc[g.key])
-    .map((g, i) => ({ label: g.label, x: fc[g.key], strong: i === 0 }));
+  // 過去の形式と探索の記録を対等に表示する。
+  const cols = FORMAT_GROUPS.filter(g => fc[g.key])
+    .map(g => ({ label: g.label, x: fc[g.key], strong: false }));
   cols.push({ label: `文字だけ（直近${fc.txt ? fc.txt.n : 0}本）`, x: fc.txt, strong: false });
-  const winN = fc.win ? fc.win.n : 0;
   box.innerHTML = `<div class="scroll-x"><table class="w-full text-[11px]">
     <thead><tr class="text-slate-500">
       <th class="text-left font-normal py-1.5" style="min-width:8.5em"></th>
@@ -2073,31 +1947,13 @@ function renderFormatCompare(){
       ${cols.map(c => `<td class="py-1.5 text-right num pl-3 whitespace-nowrap ${c.strong ? 'font-semibold' : 'text-slate-400'}">${esc(c.x ? f(c.x) : '—')}</td>`).join('')}</tr>`).join('')}</tbody>
   </table></div>
   <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">
-    ${winN < MIN_SAMPLE
-      ? `窓と灯りの回はまだ${winN}本です。${MIN_SAMPLE}本そろうまでは、差があっても参考として見てください。`
-      : `窓と灯りの回が${winN}本になりました。テーマや投稿時刻の違いも混ざっているので、1本ごとの差より、続けて同じ向きに出るかを見てください。`}
-    投稿から2日たっていない回は、まだ数字が動いているので入れていません${fc.young ? `（いま${fc.young}本）` : ''}。
+    この表は計測日の異なる最新値を含む過去の傾向です。形式の優劣や因果関係を確定するものではありません。
+    投稿から48時間以降の再生記録がない回は含めません。新しい型の選定は、上の検証設計で同じ投稿後日数の数字を比べます。
     ${state.hasStayed ? '' : '<br>「視聴を選択」を出すには、<code>youtube-hook.sql</code> の実行と、「数字を入力」タブでの書き写しが要ります。'}
   </p>`;
 }
 
 /* ========================= 次に作る動画 ========================= */
-/* いちばん足りていない目安を1つだけ返す。
-   同時に全部を直そうとすると、どれも中途半端になります。 */
-function bottleneck(values){
-  const scored = GOALS.map(g => {
-    const v = values[g.key];
-    if (v == null) return null;
-    if (g.range) {
-      if (v >= g.range[0] && v <= g.range[1]) return { g, v, r:1 };
-      const d = v < g.range[0] ? g.range[0]/v : v/g.range[1];
-      return { g, v, r: 1/d };
-    }
-    return { g, v, r: g.goal > 0 ? v/g.goal : 1 };
-  }).filter(Boolean).filter(x => x.r < 0.8);
-  return scored.sort((a,b) => a.r - b.r)[0] || null;
-}
-
 function card(tone, icon, title, body){
   const c = { good:'#2b7f8c', warn:'#9a7420', info:'#17456b', flat:'#6f757b' }[tone];
   return `<div class="rounded-2xl p-4" style="background:rgba(43,47,51,.06);border-left:3px solid ${c}">
@@ -2108,235 +1964,17 @@ function card(tone, icon, title, body){
 
 function renderAdvice(){
   const cur = currentValues();
-  const { list, withViews, med } = cur;
+  const { list, withViews } = cur;
   const scored = scoredOnly(list);
   const out = [];
 
-  /* ⓪ 詰まっているところを1つだけ名指しする。
-     ショート動画は、いちばん低い段が全体の天井になります。
-     そこを直さないまま本数だけ増やしても、同じところで止まります。 */
-  const bn = bottleneck(cur.values);
-  if (bn){
-    const shown = bn.g.range ? num(Math.round(bn.v)) + bn.g.unit : dec(bn.v, bn.v < 10 ? 1 : 0) + bn.g.unit;
-    const goalTxt = bn.g.range ? `${bn.g.range[0]}〜${bn.g.range[1]}${bn.g.unit}` : `${bn.g.goal}${bn.g.unit}`;
-    out.push({ p:99, html: card('warn','🧱','いま詰まっているのは、ここ1つです',
-      `<b>${esc(bn.g.name)}</b>が<b class="num">${shown}</b>（目安 ${goalTxt}）。
-       いくつも目安を並べていますが、今週直すのはここだけで十分です。<br>
-       <span class="text-slate-400">${esc(bn.g.why)}<br>
-       直し方：${esc(bn.g.fix)}</span>`) });
-  }
-
-  /* ① タイトルの使い回し。本数が少なくても言い切れるので最優先。 */
-  const titles = state.videos.map(v=>v.title).filter(Boolean);
-  if (titles.length >= 4){
-    const uniq = new Set(titles).size;
-    if (uniq <= Math.max(2, titles.length * 0.5)){
-      out.push({ p:100, html: card('warn','✍️','タイトルを1本ずつ変える',
-        `${titles.length}本のうちタイトルが <b>${uniq}種類</b>しかありません。
-         YouTube はタイトルと説明文で「この動画は誰に見せるか」を決めています。
-         同じタイトルが並ぶと、どの動画も同じものとして扱われ、別々の視聴者に届く機会を失います。<br>
-         <span class="text-slate-400">その回のいちばん刺さる一言を、そのままタイトルにしてください。
-         「眠れない夜にやっていること」「診断が出た日のこと」のように、中身が違えばタイトルも違うはずです。
-         検索されそうな言葉（不眠・パニック・障害年金など）が入っていると、投稿後も長く見られます。</span>`) });
-    }
-  }
-
-  /* ② 登録の数字が測れているか（このチャンネルにとって最重要） */
-  const withSubs = withViews.filter(s => s.subs != null);
-  if (!state.hasSubs || !state.hasChannel){
-    out.push({ p:97, html: card('warn','📈','登録者を記録できるようにする',
-      `いま見えているのは再生数だけです。
-       <b>Supabase の SQL Editor で sync-youtube.sql</b> を実行すると、
-       登録者数と「動画ごとの登録の増加」を残せるようになります。<br>
-       <span class="text-slate-400">再生数は増えたのに登録が増えない、という状態を早く見つけるための数字です。</span>`) });
-  } else if (!withSubs.length && withViews.length){
-    out.push({ p:96, html: card('warn','📈','登録の増加を入れてください',
-      `YouTube Studio の「アナリティクス → コンテンツ」に、動画ごとの<b>チャンネル登録者の増加数</b>があります。
-       「数字を入力」タブに書き写してください。<br>
-       <span class="text-slate-400">1000回再生あたり何人が登録したか——これが、次に何を作るかを決める一番の手がかりになります。</span>`) });
-  } else {
-    const best = withSubs.slice().sort((a,b)=>b.subRate-a.subRate)[0];
-    if (best && best.subRate > 0){
-      out.push({ p:90, html: card('good','⭐️','登録につながった型を増やす',
-        `<b>${esc(best.v.title)}</b>が、1000回再生あたり<b class="num">${dec(best.subRate)}人</b>の登録につながっています
-         （再生${num(best.views)}回・登録${num(best.subs)}人）。
-         ${best.v.theme ? `テーマは「${esc(best.v.theme)}」。` : ''}
-         <span class="text-slate-400">再生数がいちばん多い動画とは限りません。
-         この1本と同じ入り口・同じ締め方で、もう2本作ってみてください。</span>`) });
-    }
-  }
-
-  /* ③ 最後まで見られているか */
-  if (cur.values.retention != null){
-    if (cur.values.retention < 60){
-      out.push({ p:93, html: card('warn','⏱','最後まで見られていません',
-        `平均で<b class="num">${dec(cur.values.retention,0)}%</b>のところで離れています（目安は70%以上）。
-         ショート動画は、ここが伸びないとおすすめに乗りません。<br>
-         <span class="text-slate-400">直し方は2つだけです。<b>尺を短くする</b>ことと、
-         <b>冒頭の説明をやめる</b>こと。「今日は◯◯について話します」は要りません。1枚目のテロップから本題に入ってください。</span>`) });
-    } else if (cur.values.retention >= 80){
-      out.push({ p:60, html: card('good','⏱','最後まで見られています',
-        `平均<b class="num">${dec(cur.values.retention,0)}%</b>。とても良い状態です。
-         <span class="text-slate-400">この形は変えずに、本数を増やすほうが効きます。</span>`) });
-    }
-  }
-
-  /* ④ 計測リンク */
-  if (!state.visits.length && withViews.length){
-    out.push({ p:94, html: card('warn','🎯','まだサイトに届いた人が測れていません',
-      `<b>「リンク」タブで作ったURL</b>を、各動画の<b>説明文</b>に入れてください。
-       サイト案内も説明文にまとめます。<br>
-       <span class="text-slate-400">再生数が伸びても相談ページに誰も来なければ、星の海にとっては前に進んでいません。
-       この計測が入って初めて「どの動画が本当に効いたか」が分かります。</span>`) });
-  } else {
-    const cand = withViews.filter(s => s.visits > 0).sort((a,b)=>b.visitRate-a.visitRate)[0];
-    if (cand) out.push({ p:88, html: card('good','🎯','サイトに届いた動画',
-      `<b>${esc(cand.v.title)}</b>が1000回再生あたり<b class="num">${dec(cand.visitRate)}人</b>をホームページに送っています。
-       <span class="text-slate-400">この動画の締めの言い方を、ほかの動画にも使ってみてください。</span>`) });
-  }
-
-  /* ⑤ 投稿のペース */
-  if (state.posts.some(p=>p.posted_at)){
-    const pace = cur.values.pace;
-    const gaps = state.posts.map(p=>p.posted_at).filter(Boolean).map(t=>+new Date(t)).sort((a,b)=>a-b);
-    const diffs = gaps.slice(1).map((t,i)=> (t-gaps[i])/864e5);
-    const gapMed = diffs.length ? median(diffs) : null;
-    if (pace < 5){
-      out.push({ p:85, html: card('info','🗓','出す本数を少し増やす',
-        `この7日で<b class="num">${pace}本</b>です${gapMed!=null?`（ふだんの間隔は${dec(gapMed)}日）`:''}。
-         ショート動画は、本数がそのまま「試行回数」になります。週5本を目安にすると、当たりを引く確率が上がります。<br>
-         <span class="text-slate-400">がんばって長い動画を作るより、20秒・テロップ5枚を毎日のほうが届きます。
-         しんどい日は、前に作った台本の言い換えでもかまいません。</span>`) });
-    } else {
-      out.push({ p:35, html: card('good','🗓','ペースは保てています',
-        `この7日で<b class="num">${pace}本</b>。この調子で続けてください。`) });
-    }
-  }
-
-  /* ⑥ 時間帯 */
-  const byHour = groupBy(scored, s => hourBucket(s.postedAt));
-  const strongHour = byHour.filter(g => g.n >= MIN_SAMPLE);
-  if (strongHour.length >= 2 && strongHour[0].avg >= strongHour[strongHour.length-1].avg * 1.3){
-    const b = strongHour[0], w = strongHour[strongHour.length-1];
-    out.push({ p:80, html: card('good','🕐','投稿する時間を寄せる',
-      `<b>${esc(b.key)}</b>が平均<b class="num">${dec(b.avg)}倍</b>（${b.n}本・中央値${num(Math.round(b.med))}回）で最も伸びています。
-       いちばん低い${esc(w.key)}は${dec(w.avg)}倍（${w.n}本）。この時間帯に寄せるだけで差がつきます。`) });
-  } else if (byHour.length >= 2){
-    const b = byHour[0];
-    out.push({ p:55, html: card('info','🕐','時間帯に手応えの兆しがあります',
-      `いまのところ<b>${esc(b.key)}</b>が${dec(b.avg)}倍と最も高いですが、まだ${b.n}本ぶんの結果です。
-       判断するには各時間帯${MIN_SAMPLE}本ほしいところです。
-       <span class="text-slate-400">しばらく同じ時間に投稿して確かめるか、2つの時間帯を交互に試すと早く分かります。</span>`) });
-  }
-
-  /* ⑦ 飛び抜けた1本 */
-  if (scored.length >= 4){
-    const top = scored.slice().sort((a,b)=>b.index-a.index)[0];
-    if (top && top.index >= 1.8){
-      const d = top.postedAt ? new Date(top.postedAt) : null;
-      out.push({ p:75, html: card('good','🚀','飛び抜けた1本を調べる',
-        `<b>${esc(top.v.title)}</b>が<b class="num">${dec(top.index)}倍</b>（${num(top.views)}回）と突出しています。
-         ${d ? `${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} の投稿。` : ''}
-         <span class="text-slate-400">この1本の最初の2秒と、話題の切り口を見直してください。
-         同じ型でもう1本作って、2本目も伸びれば「型」、伸びなければ「たまたま」です。</span>`) });
-    }
-  }
-
-  /* ⑧ 尺 */
-  const byDur = groupBy(scored, s => durationBucket(s.v.duration_sec)).filter(g=>g.n>=MIN_SAMPLE);
-  if (byDur.length >= 2){
-    out.push({ p:65, html: card('info','📏','伸びている尺',
-      `<b>${esc(byDur[0].key)}</b>が平均<b class="num">${dec(byDur[0].avg)}倍</b>（${byDur[0].n}本）でいちばん良い結果です。
-       <span class="text-slate-400">迷ったらこの長さで作ってください。</span>`) });
-  } else if (cur.values.dur != null && cur.values.dur > 40){
-    out.push({ p:64, html: card('info','📏','少し短くしてみる',
-      `いまの尺は中央値<b class="num">${num(Math.round(cur.values.dur))}秒</b>です。
-       同じ内容でも、20〜30秒に詰めるほうが最後まで見てもらえます。`) });
-  }
-
-  /* ⑨ 冒頭の掴み */
-  const byHook = groupBy(scored, s => s.v.hook_type).filter(g=>g.n>=MIN_SAMPLE);
-  if (byHook.length >= 2){
-    out.push({ p:62, html: card('good','🪝','効いている掴み',
-      `<b>${esc(byHook[0].key)}</b>で始めた動画が平均<b class="num">${dec(byHook[0].avg)}倍</b>（${byHook[0].n}本）。
-       <span class="text-slate-400">冒頭の1秒は、内容よりも「自分に関係がある」と思わせられるかで決まります。</span>`) });
-  }
-
-  /* ⑩ いいね率 */
-  if (cur.values.like != null && cur.values.like < 3 && withViews.length >= 3){
-    out.push({ p:58, html: card('info','💬','反応をもらう一言を足す',
-      `いいね率は<b class="num">${dec(cur.values.like)}%</b>です（目安は4%）。
-       <span class="text-slate-400">最後のテロップを、言い切りではなく問いにしてみてください。
-       「あなたはどうですか」の一行があるだけで、コメントといいねは変わります。</span>`) });
-  }
-
-  /* ⑪ 記録が足りない項目 */
-  const noTheme = state.videos.filter(v => !v.theme).length;
-  if (state.videos.length >= 5 && noTheme >= state.videos.length * 0.6){
-    out.push({ p:50, html: card('info','🏷️','テーマを入れると提案が鋭くなります',
-      `${state.videos.length}本のうち${noTheme}本にテーマが入っていません。
-       テーマ・冒頭の掴み・尺が入ると、「どの話題が届いているか」まで踏み込めます。
-       <span class="text-slate-400">5〜7種類にまとめるのがコツです。細かく分けると比べられなくなります。</span>`) });
-  }
-
-  /* ⑫ 初速 */
-  const speeds = withViews.map(s => ({ s, first: firstDay(s) })).filter(x => x.first != null);
-  if (speeds.length >= 3){
-    const fm = median(speeds.map(x=>x.first));
-    const b = speeds.slice().sort((a,b2)=>b2.first-a.first)[0];
-    out.push({ p:45, html: card('info','⚡️','最初の1日の勢い',
-      `投稿の翌日までに回るのは、ふだん<b class="num">${num(Math.round(fm))}回</b>ほどです。
-       いちばん勢いがあったのは「${esc(b.s.v.title)}」の<b class="num">${num(b.first)}回</b>。
-       <span class="text-slate-400">ショート動画は最初の24時間の反応で、その先どこまで広げるかが決まります。
-       出したあとしばらくは、コメントに返事をすると伸びやすくなります。</span>`) });
-  }
-
-  /* ⑬ 間口と奥座敷のバランス。
-     新しい人が入ってくる動画と、深いところへ連れていく動画は、役割がちがいます。 */
-  if (state.hasStrategy){
-    const st = readStrategy();
-    const roled = state.videos.filter(v => v.role);
-    if (roled.length >= 4){
-      const front = roled.filter(v => v.role === '間口').length;
-      const pct = front / roled.length * 100;
-      if (pct - st.mix > 12){
-        out.push({ p:72, html: card('info','🚪','奥座敷の1本を挟む',
-          `役割を入れた${roled.length}本のうち<b class="num">${dec(pct,0)}%</b>が間口です（決めた割合は${st.mix}%）。
-           新しい人には届いていますが、その人たちが次に行く場所がありません。<br>
-           <span class="text-slate-400">長めに1本、あるいは「相談ページで待っています」まで踏み込む1本を入れてください。
-           登録とサイト到達は、こちら側の動画から生まれます。</span>`) });
-      } else if (st.mix - pct > 12){
-        out.push({ p:72, html: card('info','🚪','間口の1本を足す',
-          `間口が<b class="num">${dec(pct,0)}%</b>しかありません（決めた割合は${st.mix}%）。
-           いま見てくれている人には届いていますが、新しい人が入ってくる入口が細くなっています。<br>
-           <span class="text-slate-400">同じ話でも「精神障害の方へ」ではなく「眠れない夜がある人へ」のように、
-           一段だけ広い言い方にすると間口になります。</span>`) });
-      }
-    } else if (state.videos.length >= 5){
-      out.push({ p:48, html: card('info','🚪','1本ずつ役割を決める',
-        `「動画」タブで、1本ごとに<b>間口</b>（新しい人に届ける）か<b>奥座敷</b>（深く連れていく）かを入れてください。<br>
-         <span class="text-slate-400">再生数が伸びているのに登録が増えないときは、たいてい間口ばかりになっています。</span>`) });
-    }
-  }
-
-  /* ⑭ 変数を1つずつ変えているか */
-  if (state.hasStrategy){
-    const axed = state.videos.filter(v => v.test_axis).length;
-    if (state.videos.length >= 6 && axed < state.videos.length * 0.4){
-      out.push({ p:46, html: card('info','🧪','「今回変えたもの」を残す',
-        `${state.videos.length}本のうち、変えた点を書き残しているのは${axed}本です。
-         1本ごとに全部を変えると、伸びても伸びなくても理由が分かりません。<br>
-         <span class="text-slate-400">効いた型は固定して、1本につき1つだけ変える。それを書き残しておくと、
-         このページが「何が効いたか」を代わりに覚えていてくれます。</span>`) });
-    }
-  }
-
-  if (!out.length){
-    out.push({ p:0, html: card('flat','🌙','まだ判断できる材料がありません',
-      `右上の「取り込む」で YouTube の数字を取り込むところから始めてください。`) });
-  }
-
-  $('#advice-list').innerHTML = out.sort((a,b)=>b.p-a.p).map(x=>x.html).join('');
+  const plan = experimentPlan();
+  out.push(card('info','🧪',esc(plan.label),esc(plan.reason)));
+  out.push(card('info','📊','投稿4日後の数字を記録する',
+    '比較は投稿72〜120時間後の同じ行の数字で行います。再生数に加え、視聴を選択・平均視聴秒数・登録の増加を記録してください。未入力は0ではありません。'));
+  out.push(card('flat','🌱','一度の当たりを固定化しない',
+    '有望な型でも2本続けたら別の型を試します。直近の反応が落ちた場合や計測が不足する場合は、再検証候補から外して探索を続けます。伸びることを保証する基準ではありません。'));
+  $('#advice-list').innerHTML = out.join('');
 
   renderTestPlan();
   renderFormatCompare();
@@ -2349,7 +1987,7 @@ function renderAdvice(){
     if (!g.length) return '';
     const st = { axis:a, groups:g, solid:g.filter(x=>x.n>=MIN_SAMPLE), thin:g.filter(x=>x.n<MIN_SAMPLE), best:g.filter(x=>x.n>=MIN_SAMPLE)[0]||null };
     const ev = evidenceOf(st);
-    const badge = ev.level === '確実'   ? `<span class="chip" style="background:rgba(43,127,140,.14);color:#2b7f8c">確実</span>`
+    const badge = ev.level === '複数指標に差'   ? `<span class="chip" style="background:rgba(43,127,140,.14);color:#2b7f8c">複数指標に差（参考）</span>`
                 : ev.level === 'たぶん' ? `<span class="chip" style="background:rgba(154,116,32,.13);color:#9a7420">たぶん</span>`
                 : ev.level === '差がない' ? `<span class="chip">差がない</span>`
                 : `<span class="chip">まだ推測</span>`;
@@ -2409,20 +2047,20 @@ const RULES = [
   { t:'最初の3秒に「なんだろう」を置く',
     d:'見る人は最初の数秒で、指を止めるか流すかを決めています。必要なのは煽りではなく、小さな謎です。「この人は何を見ているんだろう」「この続きはどうなるんだろう」。文字が読めなくても、画だけで「あれ？」と思える状態がいちばん強いです。',
     key:'retention' },
-  { t:'音のない動画は、最後まで残らない',
-    d:'ショート動画は音のあるものとして見られています。無音だと、それだけで離脱します。ただし出だしでいきなり鳴らすのも同じくらい嫌われます。冒頭2秒はほぼ無音からフェードインし、BGMは「言われて初めて気づく」音量（-28〜-32dBFS）で。冒頭に効果音は置かない。波・雨・鈴のような、角のない音だけを小さく。',
+  { t:'企画に合う音を付ける',
+    d:'音入りの動画を基本に、BGMや物の動きに合わせた効果音を選びます。小さい音から実際に聴き、音割れや急な大音量を避けます。音だけで伸びるとは断定しません。',
     key:'retention' },
-  { t:'1本につき、変えるのは1つだけ',
-    d:'掴み・テーマ・尺・形式・時間帯を一度に変えると、伸びても伸びなくても理由が残りません。効いた型は固定して、1つだけ変える。それを3本ずつ積むと、消去法で勝ち筋が出ます。',
+  { t:'探索では大きく変え、再検証では1つ変える',
+    d:'新しい型の探索では、画風・場面・構成をまとめて変えて構いません。複数回で手応えがあった型を再検証するときだけ、変える要素を1つに絞ります。',
     key:null },
   { t:'間口で出会い、奥座敷で深める',
     d:'広く届く動画（間口）と、深く連れていく動画（奥座敷）は別物です。間口ばかりだと通り過ぎられ、奥座敷ばかりだと新しい人が来ません。間口で出会って、奥座敷で登録と相談につなげます。',
     key:'visit' },
-  { t:'20〜35秒に収める',
-    d:'長いほど最後まで見られません。言いたいことが1つに絞れていれば、自然とこの長さになります。',
+  { t:'型に合う尺で試す',
+    d:'探索では10〜35秒を目安に、読める時間と展開から決めます。17秒を正解とせず、手応えのある型では尺だけ変える比較も行います。',
     key:'dur' },
-  { t:'終わりが始まりに戻る（もう一度見たくなる）',
-    d:'最後のテロップが最初の問いの答えになっていると、そのままもう一周されます。この「二周目」がいちばん効きます。',
+  { t:'内容に合う終わり方を選ぶ',
+    d:'答えを見せる、問いを残す、短く終える、自然にループするなどを試します。点灯やループを毎回の必須条件にしません。',
     key:null },
   { t:'1本に伝えることは1つだけ',
     d:'2つ入れると、どちらも残りません。迷ったら、削るほうを選びます。',
@@ -2439,8 +2077,8 @@ const RULES = [
   { t:'締めで「次の約束」を伝える',
     d:'「登録してください」ではなく「毎晩、眠れない人へ1本出しています」。次に何が来るか分かると、登録は約束の受け取りになります。',
     key:'sub' },
-  { t:'シリーズにする（#1、#2…）',
-    d:'続きものは、1本見た人がもう1本見てくれます。同じ形・同じ入り方で続けるのがコツです。',
+  { t:'手応えのある型でも、探索の枠を残す',
+    d:'同じ型が2本続いたら別の型を試します。直近の数字が弱まったときは、昔の成功だけを理由に量産を続けません。',
     key:null },
   { t:'説明文に次の一歩をまとめる',
     d:'動画の紹介・答えやすい問い・相談ページへの案内と計測リンクを、ひとつの説明文にまとめます。',
@@ -2448,8 +2086,8 @@ const RULES = [
   { t:'最後に問いを置いて、返事をする',
     d:'コメントが付くと滞在時間が伸びます。出したあとの30分だけでも返事をすると、伸び方が変わります。',
     key:'comment' },
-  { t:'伸びた1本を型として、もう2本作る',
-    d:'当たりを引いたら、そこで満足せずに繰り返します。2本目も伸びたら、それがこのチャンネルの型です。',
+  { t:'単発のヒットは仮説として残す',
+    d:'同じ投稿後日数で再生と視聴・登録を比べます。複数回で手応えがあっても成功の確定とはせず、次の再検証候補とします。',
     key:'like' },
   { t:'1本にかける時間を決めて、その中で作る',
     d:'気合いで続くのは最初の2週間だけです。テロップ5枚・20秒のように型を決めておけば、しんどい日でも出せます。手をかけるところは、型そのものを見直すときだけに絞ります。',
@@ -2930,798 +2568,109 @@ function roleForNext(st){
 
 function buildPrompt(){
   const cur = currentValues();
-  const { withViews, values } = cur;
-  const all    = scoredOnly(cur.list);
-  const scored = all.slice().sort((a,b) => b.index - a.index);
-  const st     = readStrategy();
-  const states = axisStates(all);
-  const nx     = nextAxis(states);
-  const fixed  = fixedCombo(states, nx);
-  const role   = roleForNext(st);
-  /* 音。ショート動画でいちばん効くのに、いままで記録すらしていなかった変数です。 */
-  const audioX  = states.find(x => x.axis.key === 'audio');
-  const audioEv = audioX ? evidenceOf(audioX) : null;
-  const audioBest = (audioX && audioX.best) ? audioX.best.key : null;
-  const slug   = nextSlug();
-  const url    = trackUrl(slug);
-  const ch     = state.channel.length ? state.channel[state.channel.length-1] : null;
-  /* 終わり方をループにする回か。検証中・結果待ち（nx.loopTest）か、検証で壁を越えてループが残ったとき（loopPhase） */
-  const lp     = loopPhase();
-  const loopOn = !!nx?.loopTest || lp.phase === 'kept';
-  const wall   = wallCompare();
-  const L = [];
-
-  L.push('あなたは YouTube ショート動画の構成作家であり、映像を作って書き出す担当でもあります。');
-  L.push('「星の海」というチャンネルの、次の1本を作ってください。');
-  L.push('');
-  L.push('**いちばん大事なお願い：提案で終わらせず、必ず音入りの mp4 の動画ファイルまで作ってください。**');
-  L.push('構成案や題名案だけを出して「あとはこれで作ってください」と返すのは、今回はなしです。');
-  L.push('この会話の中でコードを書いて動かし、実際に再生できる mp4 を書き出して、');
-  L.push('ダウンロードできる形で渡すところまでを、ひとつづきの仕事としてやってください。');
-  L.push('');
-  /* 2026-10-10、ユーザーの希望で、受け取るファイルを音入りの mp4 1本に絞りました。
-     それまでは音なしの mp4・BGM と効果音の wav・冒頭3秒のコマ画像・絵コンテの表・次の2本の設計まで頼んでいて、
-     ダウンロードするものが多すぎました。題名・説明文・記録用の1行は投稿と計測に要るので、文字で残しています。 */
-  L.push('**こちらが受け取るファイルは、音入りの mp4 の1本だけです。**');
-  L.push('音なしの mp4・音だけの wav・コマの画像・絵コンテの表・試しの書き出し・制作コードは、渡さないでください（作業の途中で、あなたが確かめるために使うのはかまいません）。');
-  L.push('文字で返してほしいのは、最後の「出してほしいもの」に書いた、投稿に使う題名・説明文と、記録用の1行だけです。');
-  L.push('');
-  L.push('**作るのは、これまでの制作方針で選んだ「窓と灯り」の型の映像です。**');
-  L.push('制作の基準にしている「向かいの窓に、まだ灯りがある。」の型：暗い自分の部屋から、窓ごしに雨の夜の向かいの建物を見ている。最新の順位と再生数は下の記録を優先してください。');
-  L.push('向かいの窓に灯りがついて、最後に自分の部屋のスタンドも灯る。人もキャラクターも出てこない、17秒の映像です。');
-  L.push('この型はそのままにして、テーマと場面の中身だけを変えた次の1本を作ってください。型の中身は、下の「今回の型」の章に書きました。');
-  L.push('狙いは2つです。**冒頭の3秒で指を止めてもらうこと**と、**最後まで見てもらうこと**。');
-  if (loopOn){
-    L.push('今回はそこにもう1つ、**見終わった人に、そのまま2周目に入ってもらうこと**を足します。');
-    L.push(`再生が1,000回前後で止まる回が続いているためです（下の${wall ? '「1000回の壁」と' : ''}「終わり方：2周目に入る作り」の章）。`);
-  }
-  L.push('');
-  L.push('## 実行環境と受け渡し（Claude・Codex 共通）');
-  L.push('- この指示文だけで作業できるように進めてください。過去の会話・専用ツール・特定のフォルダがあることを前提にしないでください。');
-  L.push('- 最初に利用できるコード実行環境、ffmpeg / ffprobe、日本語フォント、出力先を確認し、利用できる道具で制作してください。');
-  L.push('- ローカルで制作する場合は、作業フォルダ内に識別子ごとの出力フォルダを作り、既存ファイルを上書きしないでください。');
-  L.push('- 音入りの mp4 は、この環境で開けるファイルリンクまたは保存先のパスで渡してください。添付できる環境では、ダウンロードリンクをその1つだけ付けてください。');
-  L.push('- 実行環境や権限が足りない場合は、未実行の内容と不足条件を明示し、再現できる制作コードと実行手順を渡してください。未生成の動画や未測定の結果を完成済みと報告しないでください。');
-  L.push('- 通常の制作は最後まで進めてください。有料サービスの利用や外部への公開が必要な場合は、先に確認してください。');
-  L.push('- 下記の実測値と仮説を区別してください。過去の観測や目安は、現在の原因・効果を証明するものではありません。');
-  L.push('');
-
-  /* ── 1. 土台。数字より先に、これを外さないこと ── */
-  L.push('## この発信の土台（数字より先に、ここを外さないでください）');
-  if (st.purpose) L.push(`- 何のためにやっているか：${st.purpose}`);
-  if (st.goal)    L.push(`- 最後にたどり着きたいところ：${st.goal}`);
-  if (st.keep)    L.push(`- 続けられる理由（ここを削らないでください）：${st.keep}`);
-  L.push('- 精神障害の当事者に向けた発信です。見る人の多くは、しんどい夜に「自分だけじゃない」と思いたくて開きます。');
-  L.push('- **このチャンネルも、相談ページ「星の海」も、精神障害の当事者本人がひとりで運営しています。**');
-  L.push('  支援する側の人が作っているのではありません。見ている人がいちばん知りたがっているのは、そこです。');
-  L.push('  （等級や病名は書きません。「当事者が作っている」という事実だけで十分です）');
-  L.push('- ですから語り口は「〜の方へ」ではなく「私も」です。一人称で、同じ夜に起きている一人として書いてください。');
-  L.push('- 励ましません。教えません。同じところに立って、同じ景色を言葉にします。');
-  L.push('- ゴールは再生数ではなく、チャンネル登録と、相談ページ（星の海）まで来てもらうことです。');
-  L.push('- 再生数が伸びる案と、この土台からずれる案が両立しないときは、**土台のほうを選んでください**。');
-  L.push('');
-
-  /* ── 2. いまの数字 ── */
-  L.push(`## 保存済みの数字（${todayStr()} に読み込み・${state.videos.length}本ぶん）`);
-  if (ch) L.push(`- チャンネル登録者：${num(ch.subscribers)}人（${ch.measured_on} 時点）`);
-  L.push(`- 総再生数：${num(cur.totalViews)}回 ／ 1本あたりの中央値：${num(Math.round(cur.med))}回`);
-  if (values.stayed != null) L.push(`- 冒頭で「見る」を選んだ割合（Studio の「視聴を選択したユーザー」）：${dec(values.stayed,0)}%（${values.stayedN}本の中央値。スワイプせず視聴した割合です）`);
-  if (values.retention != null) L.push(`- 平均視聴率：${dec(values.retention,0)}%（平均視聴秒数÷尺。完走率ではありません）`);
-  if (values.like    != null) L.push(`- いいね率：${dec(values.like)}%（比較用の目安2%）`);
-  if (values.comment != null) L.push(`- コメント率：${dec(values.comment,2)}%（目安0.3%）`);
-  if (values.sub     != null) L.push(`- 1000回再生あたりの登録：${dec(values.sub)}人（目安3人）`);
-  if (values.visit   != null) L.push(`- 1000回再生あたりのサイト到達：${dec(values.visit)}人（目安5人）`);
-  L.push(`- この7日で出した本数：${values.pace}本（目安は週5本）`);
-  if (values.dur   != null) L.push(`- 尺の中央値：${Math.round(values.dur)}秒（目安15〜35秒）`);
-  if (values.title != null) L.push(`- タイトルの種類：${dec(values.title,0)}%（100%＝全部ちがう。低いほど不利です）`);
-  const bn = bottleneck(values);
-  if (bn){
-    const shown = bn.g.range ? `${num(Math.round(bn.v))}${bn.g.unit}` : `${dec(bn.v, bn.v < 10 ? 1 : 0)}${bn.g.unit}`;
-    L.push('');
-    if (loopOn && wall){
-      // 今回の狙いは「1000回の壁」に絞っています。狙いが2つ並ぶと、どちらに寄せるかを受け取った側が迷うためです。
-      L.push(`目安からいちばん遠いのは「${bn.g.name}」です（${shown}）。ただし今回の1本で狙うのは、下の「1000回の壁」です。`);
-    } else {
-      L.push(`比較用の目安からいちばん離れているのは「${bn.g.name}」です（${shown}）。原因の断定ではありません。下の最新記録と検証設計を合わせて、今回の改善候補にしてください。`);
-      L.push(`（${bn.g.why} 直し方の定石：${bn.g.fix}）`);
-    }
-  }
-  L.push('');
-
-  /* ── 2.5 1000回の壁 ──
-     2026-09-10 に105本を数えたときは、再生数が「通った回」と「通らなかった回」の二つの山に割れていて、
-     狙うのは通る割合だと書いていました（この章の旧名「通ったか、通らなかったか」）。
-     2026-10-11 に数え直すと、通る割合は6割まで来た一方で、通った回のほとんどが1,100回前後で止まっていました
-     （ユーザー「1000回から増えない」）。詰まっているのは、最初の試し配信のその次です。
-     三つに分けて見せ、狙いを「通ったあとに止まらないこと」に移します。区切りの線は wallCompare() と同じです。 */
-  if (wall){
-    const titled = s => `「${String(s.v.title || '（題名なし）').replace(/\s+#.*$/, '')}」${num(s.views)}回`;
-    const pct = Math.round(wall.passN / wall.n * 100);
-    L.push('## 1000回の壁（今回いちばん動かしてほしいところ）');
-    L.push(`- 直近${wall.n}本（投稿から2日たった回）の再生数は、三つに分かれています。`);
-    if (wall.fail) L.push(`  - 通らなかった（${num(wall.gate)}回未満）：${wall.fail.n}本・中央値${num(Math.round(wall.fail.med))}回`);
-    if (wall.wall) L.push(`  - 通ったが、そこで止まった（${num(wall.gate)}〜${num(wall.line - 1)}回）：${wall.wall.n}本・中央値${num(Math.round(wall.wall.med))}回・いちばん多くて${num(wall.wall.max)}回`);
-    L.push(wall.over
-      ? `  - 壁を越えた（${num(wall.line)}回以上）：${wall.over.n}本（${wall.over.list.slice(0, 3).map(titled).join('、')}）`
-      : `  - 壁を越えた（${num(wall.line)}回以上）：0本`);
-    L.push(`- このページの比較用の線を超えたのは${pct}%です。配信の段階や停止原因を示す数字ではありません。`);
-    if (wall.wall) L.push(`  通った${wall.passN}本のうち${wall.wall.n}本が、${num(wall.wall.max)}回までで止まりました。`);
-    L.push('- この分布を改善の手がかりにします。低再生・中間・高再生のどこに課題があるかは、入力された視聴・登録の指標と合わせて判断してください。');
-    if (wall.windows.length){
-      const overW = wall.windows.filter(o => !o.young && o.s.views >= wall.line).length;
-      L.push('- 窓と灯りの型にしてからの回：' + wall.windows.map(o => titled(o.s) + (o.young ? '（投稿から2日たっていない）' : '')).join(' ／ '));
-      L.push(overW ? `  このうち${overW}本は壁を越えています。` : '  型に絞っただけでは、まだ壁を越えていません。');
-    }
-    if (wall.loops.length){
-      const tag = o => o.young ? '（投稿から2日たっていない）'
-        : o.s.views >= wall.line ? '（越えた）' : o.s.views >= wall.gate ? '（止まった）' : '（通らなかった）';
-      L.push('- 終わり方をループにした回：' + wall.loops.slice(0, 6).map(o => titled(o.s) + tag(o)).join(' ／ '));
-      if (lp.phase === 'kept')    L.push(`  投稿から2日たった${lp.settledN}本のうち${lp.over}本が壁を越えました。終わり方はループのまま続けます。`);
-      if (lp.phase === 'dropped') L.push(`  投稿から2日たった${lp.settledN}本は、どれも壁を越えませんでした。終わり方は、これまでの形（灯りの一言＋「毎晩1本、置いてます。」で止めて終える）に戻します。`);
-    }
-    // 越えた回と止まった回を、Studio の数字で比べる（書き写してある回だけ）
-    const ov = wall.over, st = wall.wall;
-    const both = k => ov && st && ov[k] != null && st[k] != null;
-    if (both('ret') || both('stayed')){
-      const row = (label, x) => `  - ${label}（${x.n}本）：` + [
-        x.stayed  != null ? `視聴を選択 ${dec(x.stayed,0)}%` : null,
-        x.ret     != null ? `平均視聴率 ${dec(x.ret,0)}%` : null,
-        x.sub     != null ? `1000再生あたりの登録 ${dec(x.sub)}人` : null,
-        x.comment != null ? `1000再生あたりのコメント ${dec(x.comment)}件` : null,
-      ].filter(Boolean).join('・');
-      L.push('- 越えた回と止まった回の、Studio の数字（中央値）：');
-      L.push(row('越えた回', ov));
-      L.push(row('止まった回', st));
-      const diffs = [];
-      if (both('ret')    && Math.abs(ov.ret - st.ret) >= 5)       diffs.push(`平均視聴率（${dec(ov.ret,0)}% 対 ${dec(st.ret,0)}%）`);
-      if (both('stayed') && Math.abs(ov.stayed - st.stayed) >= 5) diffs.push(`視聴を選択（${dec(ov.stayed,0)}% 対 ${dec(st.stayed,0)}%）`);
-      L.push(diffs.length
-        ? `  5ポイント以上の差があるのは：${diffs.join('、')}。越えた回は${ov.n}本しかないので、言い切らずに手がかりとして使ってください。`
-        : '  どちらも差は5ポイント未満です。この数字からは、越えた理由はまだ見えていません。');
-    } else if (loopOn){
-      L.push('- 越えた回と止まった回を Studio の数字（視聴を選択・平均視聴率）で比べるには、まだ書き写しが足りません。下の推測は、数字では確かめていません。');
-    }
-    if (loopOn){
-      L.push('- 配信の仕組みは公開されていないので、ここからはこちらの推測です。');
-      L.push('  最初の試しで反応がよいと、もう一段広い人たちに出される。そこで止まるのは、その人たちが最後まで見なかった・もう1周見なかったからではないか、と見ています。');
-      L.push('  YouTube の発表では、2025年3月から、ショートの再生回数はくり返し再生も1回として数えます。2周目に入った人がいれば、それも数に出ます。');
-      L.push(nx?.loopTest
-        ? '  そこで今回は、終わり方だけを変えます（下の「今回の検証設計」と「終わり方：2周目に入る作り」）。'
-        : '  終わり方をループにした回で壁を越えた回があったので、この作りを続けます（下の「終わり方：2周目に入る作り」）。');
-    }
-    L.push('- 通らなかった回にも、いいねやコメントは付いています。むしろ通らなかった回のほうが、見た人あたりの反応は多いことがあります。');
-    L.push('  ですので**いいねの少なさを原因にしないでください**。');
-    L.push('- 以上は再生数の分布から言えることと、その上での推測です。下の実測メモは事実、その理由づけは仮説として扱ってください。');
-    L.push('');
-  } else {
-    /* 壁を数えられるだけの本数（投稿から2日たった回が8本）がないときは、これまでの二つの山の見方で出します */
-    const recentScored = withViews.filter(s => s.postedAt)
-      .sort((a,b) => new Date(b.postedAt) - new Date(a.postedAt)).slice(0, 30);
-    const base  = recentScored.length >= 8 ? recentScored : withViews;
-    const vlist = base.map(s => s.views).sort((a,b) => a - b);
-    if (vlist.length >= 8){
-      const gate = passGate(vlist);   // 「形式を変えてから」の表と同じ線
-      const pass = vlist.filter(v => v >= gate);
-      const fail = vlist.filter(v => v <  gate);
-      const medOf = a => a.length ? a[Math.floor((a.length-1)/2)] : null;
-      L.push('## 通ったか、通らなかったか（今回いちばん動かしてほしいところ）');
-      L.push(`- 直近${vlist.length}本の再生数は、二つの山に割れています。**${num(gate)}回以上まで行った回が${pass.length}本、届かなかった回が${fail.length}本**です。`);
-      if (pass.length && fail.length){
-        L.push(`  通った回の中央値は${num(medOf(pass))}回、通らなかった回の中央値は${num(medOf(fail))}回。あいだの数字はほとんどありません。`);
-      }
-      L.push(`- 最高は${num(vlist[vlist.length-1])}回です。**1本を大きく伸ばすより、通る割合（いまは${Math.round(pass.length/vlist.length*100)}%）を上げてください。**`);
-      L.push('- 通らなかった回にも、いいねやコメントは付いています。むしろ通らなかった回のほうが、見た人あたりの反応は多いことがあります。');
-      L.push('  ですので**いいねの少なさを原因にしないでください**。反応が足りないのではなく、そもそも人に見せてもらえていない回があるという形です。');
-      L.push('- 以上は再生数の分布から言えることだけです。配信の仕組みそのものは分かりません。下の実測メモは事実、その理由づけは仮説として扱ってください。');
-      L.push('');
-    }
-  }
-
-  /* ── 2.55 形式ごとの結果。型がうまくいっているかを、作る側にも返します ── */
-  const fc = formatCompare();
-  if (fc.any){
-    const line = (label, x) => `- ${label}：${x.n}本・通った ${x.pass}/${x.n}本・再生の中央値 ${num(Math.round(x.med))}回`
-      + (x.stayed != null ? `・視聴を選択 ${dec(x.stayed,0)}%` : '')
-      + (x.ret != null ? `・平均視聴率 ${dec(x.ret,0)}%` : '');
-    L.push('## 形式ごとの結果（投稿から2日たった回だけ）');
-    FORMAT_GROUPS.forEach(g => { if (fc[g.key]) L.push(line(g.label, fc[g.key])); });
-    if (fc.txt) L.push(line(`文字だけ（直近${fc.txt.n}本）`, fc.txt));
-    if (fc.win){
-      L.push('窓と灯りの回（新しい順）：');
-      L.push(...fc.winList.slice(0, 5).map(promptLineOf));
-    }
-    L.push(!fc.win || fc.win.n < MIN_SAMPLE
-      ? `- 窓と灯りの型で作った回は、まだ${fc.win ? fc.win.n : 0}本です。差があっても、まだ言い切らないでください。`
-      : '- テーマや投稿時刻の違いも混ざっています。1本ごとの差より、同じ向きに続けて出ているかで読んでください。');
-    const anyStayed = FORMAT_GROUPS.some(g => fc[g.key] && fc[g.key].stayed != null);
-    if (anyStayed){
-      L.push('- 冒頭の3秒が効いたかは「視聴を選択」の割合がいちばんまっすぐな手がかりです。');
-      L.push('  高かった回と低かった回で、1カット目の画と0.8〜1.5秒の出来事がどう違ったかを比べて、今回に生かしてください。');
-    }
-    L.push('');
-  }
-
-  /* 過去の固定値で現在の判断を上書きしない。毎回、読み込んだ記録から作る。 */
-  L.push('## 更新した記録からの分析');
-  const latestRecorded = withViews.filter(s => s.postedAt)
-    .sort((a,b) => new Date(b.postedAt) - new Date(a.postedAt)).slice(0, 10);
-  const measuredDates = state.metrics.map(m => m.measured_on).filter(Boolean).sort();
-  L.push(`- 数字の記録期間：${measuredDates[0] || '未記録'}〜${measuredDates.at(-1) || '未記録'}。生成日と計測日は別です。`);
-  L.push('- 各項目は最新の入力済み値を使います。項目ごとに計測日が違う場合があるので、同じ経過時間の数字を比べてください。');
-  L.push('- 平均視聴率＝平均視聴秒数÷尺です。完走した人数の割合ではなく、100%を超えても再視聴率そのものは分かりません。');
-  L.push('- 「視聴を選択」はスワイプせず視聴した割合です。特定の3秒の効果や、おすすめ配信の段階を直接測った値ではありません。');
-  L.push('- 未入力は0に置き換えず、判断保留にしてください。少数の動画や異なる計測日の差から、原因を断定しないでください。');
-  L.push('');
-  L.push('### 直近の投稿と、今回読み込んだ数字');
-  L.push(...latestRecorded.map(promptLineOf));
-  const mature = withViews.filter(hasMatureMeasurement);
-  if (mature.length) {
-    L.push('### 投稿から48時間以降の再生記録がある動画の上位');
-    L.push(...mature.slice().sort((a,b) => b.views-a.views).slice(0,5).map(promptLineOf));
-  }
-  L.push('');
-  L.push('### 今回の改善に使う手順');
-  L.push('- まず上の「発信の土台」にある目的・ゴール・続けたい部分を満たすテーマを選んでください。');
-  L.push('- 同じ形式・近い投稿時期で、視聴を選択／平均視聴率／登録の増加が入力された回を比較してください。比較できた本数と計測日を確認し、足りない値は推測で埋めないでください。');
-  L.push('- 視聴を選択が相対的に低い場合は最初の画と一言、平均視聴率が低い場合は途中の展開、登録につながらない場合は次回の約束を候補にします。ただし因果関係は未確認です。');
-  L.push('- 下の検証設計で指定する変更を1つだけ試してください。残りは比較条件として維持し、直近3本と同じテーマの繰り返しを避けてください。');
-  L.push('- 投稿24時間後・72時間後に、再生数、視聴を選択、平均視聴秒数、登録増加を記録して、同じ経過時間で比較してください。再生数だけで成功や失敗を決めないでください。');
-  L.push('');
-
-  /* ── 3. この分野の上限と現在地 ── */
-  const rMax = rivalMax(st), rSubs = rivalSubsMax(st);
-  if (rMax != null || rSubs != null){
-    const myMax = withViews.length ? Math.max(...withViews.map(s => s.views)) : null;
-    L.push('## この分野の上限と、いまの現在地');
-    if (rMax != null){
-      L.push(`- 同じジャンルで伸びているアカウントの最高再生数：${num(rMax)}回`);
-      if (myMax != null) L.push(`- こちらの最高再生数：${num(myMax)}回（上限の ${dec(myMax/rMax*100,0)}%）`);
-    }
-    if (rSubs != null){
-      L.push(`- 同ジャンルの登録者数（最大）：${num(rSubs)}人`);
-      if (ch) L.push(`- こちらの登録者数：${num(ch.subscribers)}人（${dec(ch.subscribers/rSubs*100,0)}%）`);
-    }
-    const names = (st.rivals||[]).filter(r => r.name).map(r => r.name);
-    if (names.length) L.push(`- 参考にしているアカウント：${names.join(' ／ ')}`);
-    L.push('- この差は「この分野に人がいない」からではありません。同じ場所で上限まで行った人がいる以上、届く相手は確実にいます。');
-    L.push('- ですので提案するときは、「ニッチすぎて伸びない切り口」ではなく、**同じ内容のまま、もう一段多くの人が「自分のことだ」と思える言い方**を探してください。');
-    L.push('');
-  }
-
-  /* ── 4. 何が効いているか（確定と、まだ参考） ── */
-  const dimLines = states.map(x => {
-    const g = x.groups.slice(0, 4);
-    if (!g.length) return null;
-    const ev = evidenceOf(x);
-    return `- ${x.axis.name}（${ev.level}）：` + g.map(y => {
-      const ex = [];
-      if (y.stayed != null) ex.push(`視聴を選択${dec(y.stayed,0)}%`);
-      if (y.ret != null) ex.push(`平均視聴率${dec(y.ret,0)}%`);
-      if (y.sub != null) ex.push(`登録${dec(y.sub)}人`);
-      return `${y.key} ${dec(y.avg)}倍${ex.length ? '・'+ex.join('・') : ''}（${y.n}本${y.n < MIN_SAMPLE ? '・参考' : ''}）`;
-    }).join(' ／ ');
-  }).filter(Boolean);
-  if (dimLines.length){
-    L.push('## 何が効いているか');
-    L.push('再生数を、このチャンネルの中央値で割った「倍率」です。1.0倍がふつう。');
-    L.push(`あわせて${state.hasStayed ? '「視聴を選択」（冒頭で見るのを選んだ割合）・' : ''}「平均視聴率」と「1000再生あたりの登録」も並べてあります。`);
-    L.push('**再生の倍率だけを見ないでください。** よく回ったのに誰も残らなかった型は、このチャンネルでは負けです。');
-    L.push(`${MIN_SAMPLE}本に満たないものは「参考」です。まだ言い切れない数字として扱ってください。`);
-    L.push('見出しの（確実／たぶん／差がない／まだ推測）は、指標がいくつ同じ向きに出たかです。');
-    L.push('確実＝2つ以上の指標で差が出ている。たぶん＝1つだけ。差がない＝比べたが差が出ていない（好きに選んでよい）。');
-    L.push(...dimLines);
-    L.push('');
-  }
-
-  /* 確実なものと、まだ確かめていないものを、はっきり分けて渡す。
-     型で決めたもの（TEMPLATE_AXES）は、昔の記録で「確実」でも「動かさないで」とは書きません（数字は上の一覧に出ています）。 */
-  const sure = states.map(x => ({ x, ev: evidenceOf(x) }))
-    .filter(o => o.ev.level === '確実' && !TEMPLATE_AXES.includes(o.x.axis.key));
-  if (sure.length){
-    L.push('## いちばん確実に効いている条件（ここは動かさないでください）');
-    sure.forEach(o => L.push(
-      `- ${o.x.axis.name}は「${o.ev.best.key}」（${o.ev.best.n}本）。「${o.ev.worst.key}」と比べて ${o.ev.reasons.join(' ／ ')}`));
-    L.push('');
-  }
-  const unsure = states.filter(x => x.solid.length < 2 && !TEMPLATE_AXES.includes(x.axis.key)).map(x => x.axis.name);
-  if (unsure.length){
-    L.push('## まだ確かめられていないこと（推測で断言しないでください）');
-    L.push(`- ${unsure.join(' ／ ')}`);
-    L.push(`  それぞれ、まだ${MIN_SAMPLE}本ずつの比較ができていません。ここについては「こうだ」と言い切らず、試す案として出してください。`);
-    L.push('');
-  }
-
-  /* ── 5. 今回の検証設計。ここがこの指示文の背骨です ── */
-  L.push('## 今回の検証設計（ここが今回いちばん大事な決まりです）');
-  L.push('1本ごとに何もかも変えると、伸びても伸びなくても理由が残りません。');
-  L.push('**効いている型は固定し、変えるのは1つだけ**にしてください。');
-  L.push('');
-  if (nx?.loopTest){
-    L.push('**今回変えるのは「締め（終わり方）」です。最後の1秒で1カット目と1枚目のテロップに戻し、そのまま2周目に入ってもらう作り（ループ）にします。**');
-    L.push(nx.waiting
-      ? `ループの回は${nx.made}本できました。投稿から2日たった回が${MIN_SAMPLE}本そろって結果が出るまでは、ループのまま、終わり方のほかは変えないでください。`
-      : `ループの回が${MIN_SAMPLE}本たまるまでは（いまは${nx.made}本）、終わり方のほかは変えないでください。`);
-    L.push('型（窓と灯り）・冒頭の3秒・尺17秒・テロップの枚数と字数・文字の位置・題名の決まり・音は、これまでどおりです。');
-    L.push('最後の2行（自分の灯りの一言／「毎晩1本、置いてます。」）とスタンドが灯る場面も、そのまま残します。足すのは、そのあとの「戻り」の1秒だけです。');
-    L.push('ここで一緒に何かを変えると、終わり方を変えたから壁を越えたのか（止まったのか）が分からなくなります。');
-    L.push('');
-  }
-  L.push('（以前、型を推測で大きく作り変えたところ、それまで6割通っていたものが5本続けて通らなくなりました。');
-  L.push('　キャラクターを入れた回も、同じように通らなくなりました。通っている型を推測で壊さない、というのがいちばんの反省点です）');
-  L.push('');
-  L.push('### 固定するもの（変えないでください）');
-  L.push('- 型：窓と灯り（下の「今回の型」の章。以前選んだ制作方針です。冒頭は「時刻。＋いまの場面」、尺は17秒。テーマだけは直近3本と別のものに毎回変えます）');
-  fixed.forEach(f => L.push(f.compared
-    ? `- ${f.name}：${f.value}（${dec(f.avg)}倍・${f.n}本で確定）`
-    : `- ${f.name}：${f.value}（${f.n}本・ただし他の値と比べたことはまだありません）`));
-  if (lp.phase === 'kept')    L.push(`- 締め（終わり方）：${LOOP_CTA}（ループにした回が壁を越えたので残しています。下の「終わり方：2周目に入る作り」の章）`);
-  if (lp.phase === 'dropped') L.push('- 締め（終わり方）：自分の灯りの一言＋「毎晩1本、置いてます。」で止めて終える（ループにした回は壁を越えなかったので、元に戻しました）');
-  L.push('');
-  if (nx?.loopTest){
-    L.push('### 今回だけ変えるもの');
-    L.push(`- **締め（終わり方）**：自分の灯りの一言＋「毎晩1本、置いてます。」で終える → **${LOOP_CTA}**（ループの回は、いま${nx.made}本。`
-      + (nx.waiting ? `投稿から2日たった回が${MIN_SAMPLE}本そろうと、結果が出ます）` : `${MIN_SAMPLE}本そろうと、結果が出ます）`));
-    L.push('- やり方は、下の「終わり方：2周目に入る作り」の章のとおりです。');
-    L.push('');
-  } else if (nx){
-    const c = axisCandidates(nx);
-    L.push('### 今回だけ変えるもの');
-    L.push(`- **${nx.axis.name}**`);
-    if (c.untried.length) L.push(`- まだ試していない値：${c.untried.slice(0,6).join(' ／ ')}`);
-    if (c.thin.length)    L.push(`- あと少しで確定する値：${c.thin.slice(0,4).join(' ／ ')}`);
-    L.push(nx.solid.length < 2
-      ? `- ${nx.axis.name}は、まだ比べられるだけの本数がありません。ここを${MIN_SAMPLE}本ずつそろえるのが近道です。`
-      : `- ${nx.axis.name}は、いちばん良い値と悪い値で${dec(nx.spread)}倍の差が出ています。差が大きいところほど、寄せるだけで結果が変わります。`);
-    L.push(`- この1本では、${nx.axis.name}の値を1つ選んで、**それ以外は上の「固定するもの」と「今回の型」から変えないでください**。`);
-    L.push('');
-  }
-
-  /* ── 6. 実際の動画 ── */
-  if (scored.length){
-    L.push('## 伸びた動画');
-    L.push(...scored.slice(0, 5).map(promptLineOf));
-    L.push('');
-    if (scored.length >= 6){
-      L.push('## 伸びなかった動画（この形は避けたい）');
-      L.push(...scored.slice(-3).map(promptLineOf));
-      L.push('');
-    }
-  }
-  const subBest = withViews.filter(s => s.subs > 0).sort((a,b) => b.subRate - a.subRate).slice(0,3);
-  if (subBest.length){
-    L.push('## 登録につながった動画（このチャンネルでいちばん大事な順番）');
-    L.push(...subBest.map(promptLineOf));
-    L.push('');
-  }
-  const visitBest = withViews.filter(s => s.visits > 0).sort((a,b) => b.visitRate - a.visitRate).slice(0,3);
-  if (visitBest.length){
-    L.push('## 相談ページまで人を連れてきた動画（最終ゴールに直結した型）');
-    L.push(...visitBest.map(promptLineOf));
-    L.push('');
-  }
-
-  /* ── 7. すでに使ったタイトル ── */
-  const titles = [...new Set(state.videos.map(v => v.title).filter(Boolean))];
-  if (titles.length){
-    L.push('## すでに使ったタイトル（重複させないでください）');
-    L.push(...titles.slice(0, 30).map(t => `- ${t}`));
-    L.push('');
-  }
-
-  /* 直近に出した5本。同じテーマを続けた後半で数字が落ちていたので、
-     ここに並べて見せ、今回は別のテーマを選ばせます。 */
+  const st = readStrategy();
+  const plan = experimentPlan();
+  const role = roleForNext(st);
+  const slug = nextSlug();
+  const url = trackUrl(slug);
   const recent = cur.list.filter(s => s.postedAt)
-    .sort((a,b) => new Date(b.postedAt) - new Date(a.postedAt)).slice(0, 5);
-  if (recent.length >= 3){
-    L.push('## 直近に出した5本（新しい順・テーマを続けないでください）');
-    recent.forEach(s => {
-      const d = new Date(s.postedAt);
-      const bits = [`${d.getMonth()+1}/${d.getDate()}`];
-      if (s.v.theme) bits.push(`テーマ:${s.v.theme}`);
-      if (s.views) bits.push(`再生${num(s.views)}回`);
-      L.push(`- ${s.v.title || '（題名なし）'}（${bits.join(' ／ ')}）`);
-    });
-    const themes = recent.map(s => s.v.theme).filter(Boolean);
-    if (themes.length >= 3 && themes[0] === themes[1] && themes[1] === themes[2]){
-      L.push(`**直近3本が「${themes[0]}」で続いています。今回は必ず別のテーマにしてください。**`);
-    } else {
-      L.push('**直近3本と同じテーマは選ばないでください。**');
-    }
-    L.push('同じテーマを続けると、同じ人に同じ話が並んで届きます。実測でも、続けた後半から落ちていました。');
-    L.push('題名の言葉が似ているだけでも続いていると数えてください（「眠れない」「午前◯時」など）。');
-    L.push('');
+    .sort((a,b) => new Date(b.postedAt)-new Date(a.postedAt)).slice(0,10);
+  const ch = state.channel.at(-1);
+  const dates = state.metrics.map(m => m.measured_on).filter(Boolean).sort();
+  const L = [];
+  L.push('あなたは「星の海」のYouTubeショート動画を企画し、映像と音を作って書き出す担当です。次の1本を制作してください。');
+  L.push('企画案だけで終わらず、音入りのmp4を1本完成させ、ダウンロードできる形で渡してください。候補の動画を全部作る必要はありません。');
+  L.push('');
+  L.push('## この発信の土台');
+  if (st.purpose) L.push(`- 目的：${st.purpose}`);
+  if (st.goal) L.push(`- ゴール：${st.goal}`);
+  if (st.keep) L.push(`- 続けたい部分：${st.keep}`);
+  L.push('- 精神障害の当事者本人が、チャンネルと相談ページ「星の海」をひとりで運営しています。同じ立場から「私も」と語れる言葉を使ってください。');
+  L.push('- 診断・治療効果・相談対応を約束せず、病名や等級を勝手に加えないでください。煽りや説教、つらさの見世物にせず、共感と小さな発見を大切にします。');
+  L.push('- 再生だけでなく、次も見たいと思うことや星の海への関心につながるかを見ます。数字のために上の土台を変えないでください。');
+  L.push(`- 制作負担の目安は1本${st.minutes}分。複雑すぎる表現は簡素化して、完了できる作りを選んでください。`);
+  L.push(`- 今回の役割：${role.role}。${role.why}`);
+  const rivals = (st.rivals || []).filter(r => r.name || r.views || r.subs);
+  if (rivals.length) {
+    L.push('- 入力された参考アカウント（調査済みと装わず、比較の参考として扱う）：');
+    rivals.forEach(r => L.push(`  ${r.name || '名称未入力'}：最高再生${r.views || '未入力'}／登録者${r.subs || '未入力'}${r.url ? '／'+r.url : ''}`));
   }
-
-  /* ── 8. 今回の型・映像にする・冒頭の3秒・最後まで見てもらう作り ──
-     2026-09-23、ユーザーの判断で「暗い背景に文字を並べる動画」から「映像＋テロップ」に切り替えました。
-     2026-10-10、その中でもいちばん伸びた2本（v122・v124）の作りに絞りました（WINDOW_FORMAT の説明）。
-     型の中身は、2本のサムネイル（25%・50%・75%のコマ）と説明文から読み取ったものです。
-     描かせるのは、コードで無理なく描ける範囲（切り絵のような平らな層・灯り・天気・カメラの動き）に絞り、
-     画風は毎回そろえます。写実や人物はコードで描くと不自然になるので描かせません。
-     見る人にはしんどい夜の途中の人がいるので、危うい場所や道具を連想させる画も描かせません。 */
-  L.push('## 今回の型（制作方針として選んだ窓と灯り）');
-  L.push('以前の制作で参考にした2本の場面とテロップを示します。現在の順位や数値の根拠ではありません。比較には上の最新記録を使ってください。');
   L.push('');
-  L.push('**1本目「向かいの窓に、まだ灯りがある。」（テーマ 孤独）**');
-  L.push('- 場面：雨の夜。暗い自分の部屋の窓（手前に窓枠の格子）から、向かいの建物を見ている。部屋の左下には、消えたままのスタンド。');
-  L.push('- 序盤「23時。向かいの窓に、灯りがついた。」');
-  L.push('- 半分「いつのまにか、雨が弱くなっていた。」（向かいの窓はカーテン越しに暖かく光り、窓辺に鉢植えの影。人の姿はない）');
-  L.push('- 終盤「私も、灯りをつけた。／毎晩1本、置いてます。」（自分の部屋のスタンドが灯っている）');
+  L.push('## 制作方針：探索 → 手応えのある型を再検証 → また探索');
+  L.push('- 同じ部屋で灯りがともる動画を続ける方針から、見た目と構成の違う型を探す方針へ切り替えました。窓辺・夜・点灯の結末・17秒を必須条件にしません。');
+  L.push('- 探索では、場面・画風・明暗・構成・尺をまとめて変えてよいです。この段階は企画全体の比較で、どの要素が効いたかは断定しません。');
+  L.push('- 手応えのある型を磨く回だけ、参考回の特徴をそろえて1要素を変えます。単発のヒットを永続的な正解にせず、別の型の探索も続けます。');
+  L.push('- 「1000回を超えたら成功」という絶対基準は使いません。同じ投稿後日数の自分の他の動画と比べ、視聴や登録も確認します。');
   L.push('');
-  L.push('**2本目「夕方、部屋の電気をつけられない。」（テーマ うつ）**');
-  L.push('- 場面：夕方から夜へ。カーテンを開けた自分の部屋の窓から、街並みと街灯を見ている。窓辺に、消えたままのスタンド。');
-  L.push('- 序盤「夕方6時。電気を、つけられずにいる。」');
-  L.push('- 半分「暗くなっていくのを、ただ見ていた。」（空が暗くなり、外の街灯だけが先に灯っている）');
-  L.push('- 終盤「ひとつだけ、灯した。／毎晩1本、置いてます。」（窓辺のスタンドが灯っている）');
-  L.push('');
-  L.push('### 型として変えないもの');
-  L.push('- **場所はひとつ。暗い自分の部屋の窓辺だけです。** カメラは部屋の中から、窓ごしに外を見る（その人の目から見た景色）。');
-  L.push('  手前に窓枠かカーテン、部屋の中に**消えたままのスタンド（卓上の小さな灯り）**を置く。カットは、この窓辺を引き・寄り・角度違いで見せて作る。');
-  L.push('- **窓の外に、灯りがひとつある。** 向かいの建物の窓・街灯・遠くの家の窓など。外の灯りは、誰かが同じ時間に起きている気配です。');
-  L.push('- **画の中で時間が進む。** 雨が弱くなる・空が暗くなっていく・向かいの窓に灯りがつく・夜が少し白む。');
-  L.push('- **最後に、自分の部屋のスタンドがゆっくり灯る。** これが画の答えです。0.5秒以上かけて明るくし、最後の1枚のテロップと同じ瞬間に見せる。');
-  L.push('- **人の姿・顔・手、キャラクターは描かない。** 灯りだけで、そこに人がいることを伝える。');
-  L.push('- **1枚目のテロップは「時刻。」から始めて、いまの場面を言う（15〜18字）。** 例の2本の時刻のテロップは、どちらもちょうど18字です。');
-  L.push('- **最後の1枚は2行。** 1行目は、自分の灯りについての短い言い切り（「私も、灯りをつけた。」「ひとつだけ、灯した。」のように10字前後）。');
-  L.push('  2行目は「毎晩1本、置いてます。」。この2行目は毎回同じ言葉にしてください。');
-  L.push('');
-  L.push('### 毎回変えるもの（ここで、1本ずつ違う動画にします）');
-  L.push('- テーマと、その人がやってしまうこと・目に入ったもの（直近3本と同じテーマにしない。上の「直近に出した5本」を見てください）');
-  L.push('- 時刻（夕方6時・23時・深夜2時・明け方5時 など。直近の回と同じ時刻にしない）');
-  L.push('- 天気と空（雨・霧・小雨のあと・月の出ている晴れた夜・風の強い夜）');
-  L.push('- 外の灯り（向かいの窓・街灯・遠くの家の窓・自動販売機の明かり・月）。読める看板や店の名前は描かない。');
-  L.push('- 窓辺や部屋にあるもの（スタンドのほかに、マグカップ・閉じたノート・光る四角だけのスマホ など、1〜2個まで）');
-  L.push('- 最後の1行目の言い回し。「私も、灯りをつけた。」「ひとつだけ、灯した。」をそのまま使い回さない。');
-  L.push('');
-  L.push('### テーマとの合わせ方（例。この中から選ばなくてかまいません）');
-  L.push('- 孤独 → 23時、向かいの窓に灯りがつく。同じ夜に起きている人がいる。');
-  L.push('- うつ → 夕方、暗くなっていく部屋で電気をつけられない。外の街灯のほうが先に灯る。');
-  L.push('- 休職 → 平日の夕方、向かいの部屋の灯りが、帰ってきた順にひとつずつついていく。');
-  L.push('- 不眠 → 深夜3時、向かいのマンションで灯りがひとつだけ残っている。');
-  L.push('- 人づきあいの疲れ → 帰ってきて上着のまま座っている。窓の外は雨、スマホの光る四角だけが部屋の灯り。');
-  L.push('');
-
-  L.push('## 映像にする');
-  L.push('テロップが言っている場面を画にして動かします。文字は、その映像の上に置く案内役です。');
-  L.push('');
-  L.push('### 何を描くか');
-  L.push('- **上の「今回の型」の窓辺を描いてください。** 見ている人が「これは自分の部屋の窓だ」と思える、どこにでもある景色にします。');
-  L.push('- 窓から下の地面や道路を見下ろす画にはしない。窓の外は、向かいの建物・空・遠くの街並みを、ほぼ同じ高さから見る画にします。');
-  L.push('- スマホを描くなら、光る四角だけにする。実在のアプリ画面・ロゴ・商品名・読める看板は描かない。');
-  L.push('');
-  L.push('### 画風（毎回そろえます。これがチャンネルの顔になります）');
-  L.push('- 切り絵のように、平らな形を3〜5枚重ねて奥行きを作る。輪郭線は描かない。');
-  L.push('  写真のような写実は狙わない（コードで写実をやると、どこか不気味になります）。');
-  L.push('- 色は夜の藍色の濃淡が土台（例：#0b1626・#13243b・#1d3557・#2b4a6f）。');
-  L.push('  そこに**あたたかい灯りの色を1つだけ**（例：#f2c879）。灯りを置くのは、外の灯りと、最後に灯る自分のスタンドの2か所まで。');
-  L.push('- 灯りのまわりに、やわらかい光のにじみ。画面全体に、ごく薄いフィルムの粒（3フレームごとに少しずつ変わる）と、四隅がわずかに暗くなる周辺減光。');
-  L.push('- 雨やほこりの細かい粒が、最初から最後までゆっくり動いている。');
-  L.push('- 夜にスマホで見てまぶしくない明るさ。いちばん明るい灯りでも、真っ白に飛ばさない。');
-  L.push('');
-  L.push('### 描かないもの（ここは必ず守ってください）');
-  L.push('見ている人の中には、いちばんしんどい夜の途中にいる人がいます。');
-  L.push('- 薬・お酒・刃物・ロープ・血や傷は、画に入れない。');
-  L.push('- 高い場所（ベランダの手すり・屋上・橋）、駅のホーム、線路は描かない。');
-  L.push('- 海は、水平線や波打ち際を遠くから見る画まで。水の中へ入っていく画・沈んでいく画は描かない。');
-  L.push('- 怖く見せない。人影・ドアのすき間の闇・急に現れるもの・画面が乱れるノイズ・赤い光は使わない。');
-  L.push('- 点滅させない。明るさを急に変えない（灯りがつくときも、0.5秒以上かけてゆっくり）。');
-  L.push('');
-  L.push('### 素材');
-  L.push('- 写真・動画・イラストの素材をダウンロードしてこないでください。権利の分からない素材は使えません。');
-  L.push('- すべてコードで描いて動かしてください（例：Python の Pillow と numpy で1枚ずつ描き、ffmpeg で mp4 にする）。');
-  L.push('');
-
-  L.push('## 冒頭の3秒（ここで指を止めてもらう）');
-  L.push('ショート動画は、流すか見るかを最初の数秒で決められます。');
-  L.push('このチャンネルで効くのは驚かせることではなく、**「これは自分のことだ」と「あれ、なんだろう」が同時に来ること**です。');
-  L.push('そのための組み立てを、秒で決めておきます。');
-  L.push('');
-  L.push('- **0.0秒：もう窓辺にいる。** 1フレーム目から、窓辺の場面と1枚目のテロップの両方が写っていること。');
-  L.push('  黒からのフェードイン・タイトルカード・ロゴから始めない。');
-  L.push('- **0.0秒から、もう動いている。** カメラは最初から窓のほうへ寄り始めている（最初の3秒で6〜8%寄る。はじめ少し速く、だんだんゆっくり）。');
-  L.push('  あわせて、雨粒・ほこりの粒・光のゆらぎなど、止まっていないものが最初から見えていること。');
-  L.push('- **0.8〜1.5秒：窓の外で、小さな出来事を1つ起こす。** これが「なんだろう」になります。');
-  L.push('  例：向かいの建物で、窓の灯りがひとつだけつく／街灯がふっと灯る／雨粒が窓ガラスをひとすじ流れ落ちる／遠くの窓の灯りがひとつ消える');
-  L.push('  音は付けません（出だしは BGM のフェードインだけ。下の「音」の章のとおり）。');
-  L.push('- **1枚目のテロップは「時刻。」から始まる15〜18字。** 3秒かからずに読み切れる長さにして、画と同じ場面を言う。');
-  L.push('  例：「23時。向かいの窓に、灯りがついた。」「夕方6時。電気を、つけられずにいる。」');
-  L.push('  画と文字が同じことを言うと、見ている人は一瞬で「自分の夜だ」と分かります。');
-  L.push('- **2.5〜3.2秒：1回目の切り替え。** ここで2枚目のテロップとカットに変わる。新しいものが見えることが、続きを見る理由になります。');
-  L.push('- 1枚目は説明でも挨拶でもなく、いきなり相手のいる場面から始める。「今日は◯◯について」のような前置きは書かない。');
-  L.push('- 必要なのは煽りではなく、**小さな謎**です。効果音・大きすぎる文字・煽る言葉は合いません。');
-  L.push('  効くのは静けさ・間・具体的な場面です。「不安なとき」より「23時、向かいの窓を見ているとき」のほうが届きます。');
-  L.push('');
-
-  L.push('## 最後まで見てもらう作り');
-  L.push('映像では、**画のほうにも「続き」を作ります**。尺は17秒のまま、中身で引っぱります（13秒に詰めた回は、そろって通りませんでした）。');
-  L.push('');
-  L.push('- **1枚目で問いを立てて、最後の1枚でそれに答える。** 途中で答えを言わない。');
-  L.push('  「この人は結局どうするんだろう」と思わせる一行を、1枚目に置いてください。');
-  L.push('- **画の答えは、自分のスタンドが灯ること。** 最後のカットで1カット目と同じ窓辺に戻ってきたとき、変わっているのは「自分の部屋の灯り」だけ。');
-  L.push('  最後の一行と、スタンドが灯るのが同じ瞬間に見えるようにしてください。');
-  L.push('- **テロップ1枚ごとにカットを変える（2.5〜3.5秒ごと）。** カットが変わるたびに、新しいものが1つ見えること。');
-  L.push('  同じ画を同じ動きのまま続けない。寄る → 横に流れる → 引く、のように、カメラの動きもカットごとに変える。');
-  L.push('- **画の中で、時間を少しずつ進める。** 雨が弱まる・空が暗くなる・時計が進む・湯気が消えていく。');
-  L.push('  見ている人は、その変化の行き先を見届けたくなります。');
-  L.push('- **真ん中（8〜10秒あたり）に、2つ目の小さな出来事を置く。** いちばん離れられやすいところです。');
-  L.push('  雨が弱くなる・外の灯りがもうひとつつく・カメラが窓のほうを向く、くらいの静かな変化で十分です。');
-  L.push('- **最後から1枚目へ、そのままつながるようにしてください。** ショート動画は自動でくり返し再生されます。');
-  L.push('  つながっていれば2周目に入ります。2周目まで見られた動画は、平均視聴率が100%を超えて数えられます。');
-  if (loopOn) L.push('  今回は、ここを下の「終わり方：2周目に入る作り」の章で、秒まで決めました。そちらに合わせてください。');
-  L.push('  - 文字：最後の1枚の言葉が、1枚目の頭に戻っていく言葉にする。言い切って終わるより、静かに1枚目へ戻れる終わり方のほうが、このチャンネルには合っています。');
-  L.push('  - 画：最後のカットは、1カット目と同じ窓辺・近い構図で終える。変わっているのはスタンドの灯りと時刻くらいにして、2周目の頭で画が大きく跳ばないようにする。');
-  L.push('- 最後を黒画面・ロゴ・「ご視聴ありがとうございました」で終わらせない。最後のフレームにも、文字と場面が残っていること。');
-  L.push('');
-  L.push('### 反応をひとつだけもらう');
-  L.push(`いいね率は${values.like != null ? dec(values.like) + '%' : '1%未満'}です。`);
-  L.push('ただし実測では、**通らなかった回のほうが見た人あたりの反応は多い**ことがありました。');
-  L.push('ですので「いいねを増やせば伸びる」とは考えないでください。ここでの問いは、伸ばすためではなく、答えたい人が答えられるように置くものです。');
-  L.push('このチャンネルで「いいねお願いします」は言わないこと。しんどい夜に見ている人に、お願いごとをしないでください。');
-  L.push('- かわりに、**答えが一行で書ける問いを、最後から2枚目に置いてください。**');
-  L.push('  例：「今日は、何時に横になりましたか。」「今日、いちばん静かだったのは何時ごろでしたか。」');
-  L.push('- 「はい／いいえ」で終わらない問いにする。ただし考えこませない。答えるのに5秒かからないもの。');
-  L.push('- 同じ問いを説明文にも自然に入れてください。答えたい人がコメントできるように、短い一文にします。');
-  L.push('- **ただし、その問いを題名にしないでください。** 題名を問いかけの形にした3本は中央285回、言い切りの31本は中央1011回でした。');
-  L.push('  問いは中にいる人に向けた言葉です。まだ知らない人には、まず場面を見せてください。');
-  L.push('');
-
-  /* ── 8.5 終わり方：2周目に入る作り（2026-10-11〜、LOOP_CTA の説明） ──
-     最後の2行とスタンドが灯る場面は型のまま残し、そのあとに1秒の「戻り」を足すだけにしています。
-     「毎晩1本、置いてます。」まで消すと、変えたものが2つ（ループと、登録につながる一言）になり、結果が読めなくなるためです。
-     2周目の頭で灯りが消えるのは、型（最後にスタンドが灯る）を残す以上さけられないので、明るさの差だけを抑えます。 */
-  if (loopOn){
-    L.push(nx?.loopTest ? '## 終わり方：2周目に入る作り（今回ただ1つ変えるところ）' : '## 終わり方：2周目に入る作り（ループの検証で残した作り）');
-    L.push('いまの動画は、最後に自分のスタンドが灯り、「毎晩1本、置いてます。」のまま止まって終わります。きれいに終わるぶん、見た人はそこで次の動画へ移ります。');
-    L.push('今回は、その2行とスタンドが灯る場面はそのまま残し、**そのあと最後の1秒で1カット目に戻して、気づいたら2周目に入っている**作りにします。');
-    L.push(nx?.loopTest
-      ? `（止まっている理由が「最後まで・もう1周」にあるかは、まだ推測です。この作りで${MIN_SAMPLE}本出して確かめます）`
-      : `（この作りにした回のうち${lp.over}本が壁を越えたので、残しています。理由が「もう1周」だったとまでは、まだ言い切れません）`);
-    L.push('');
-    L.push('### 秒の割りふり（全体17秒のまま）');
-    L.push('- **0.0〜16.0秒：これまでどおり。** テロップ5〜6枚（1枚2.5〜3.5秒）。最後から2枚目が問い、最後の1枚が「自分の灯りの一言／毎晩1本、置いてます。」で、そこでスタンドが灯る。');
-    L.push('  最後の1枚は遅くとも13.5秒までに出して、16.0秒まで見せる（2.5秒以上）。');
-    L.push('- **16.0〜17.0秒：戻り。** 最後の1枚のカットは、1カット目と同じ向き・近い構図で撮っておく。');
-    L.push('  そこからカメラを、0.0秒のフレームとまったく同じ位置・同じ大きさまでゆっくり戻す（最後は止まりかけの速さで着地させる）。');
-    L.push('  テロップは、最後の1枚から**1枚目のテロップ（文字も位置も0.0秒と同じ）**へ、0.3〜0.5秒で重ねながら切り替える。');
-    L.push('- **最後のフレームは、0.0秒のフレームとカメラの位置・テロップが同じ**になるようにする。雨や粒の位置は違ってかまいません。');
-    L.push('  灯り（外の灯りと自分のスタンド）は、物語の終わりの状態のままでかまいません。2周目の頭で灯りが消えて、もう一度その夜が始まります。');
-    L.push('  明るさが跳ばないように、最後のフレームと0.0秒のフレームの平均の明るさの差は12以下にする（灯りが小さければ、自然にこの範囲に入ります）。');
-    L.push('');
-    L.push('### 言葉');
-    L.push('- 1枚目のテロップは、最後の1枚のすぐあとに読んでも意味が通る文にしてください。');
-    L.push('  例：「私も、灯りをつけた。／毎晩1本、置いてます。」→「23時。向かいの窓に、灯りがついた。」');
-    L.push('- 「おわり」「また明日」「ご視聴ありがとう」など、終わったと知らせる言葉や画は入れない。');
-    L.push('  「毎晩1本、置いてます。」は終わりの挨拶ではなく、型の言葉としてそのまま残します。');
-    L.push('');
-    L.push('### 音');
-    L.push('- BGM は止めない。最後の1秒で、0.0秒のフェードインの入口に近い音量（-36〜-40dB くらい）までゆっくり下げて終える。2周目の頭のフェードインと段差なくつなげるためです。');
-    L.push('- 最後のカットの余韻の効果音は、16.0秒より前に鳴らし始める。戻りの1秒には新しい音を足さない。');
-    L.push('');
-  }
-
-  /* ── 9. この1本の役割 ── */
-  L.push('## この1本の役割');
-  L.push(`**${role.role}** として作ってください。`);
-  L.push(`（${role.why}）`);
-  L.push('');
-  L.push('- **間口**：まだこのチャンネルを知らない人に届けるための1本です。');
-  L.push('  内側の言葉（診断名・制度の名前・当事者どうしにしか通じない言い方）を入り口に置かない。');
-  L.push('  「精神障害の方へ」ではなく「眠れない夜がある人へ」のように、一段だけ広い入口にします。');
-  L.push('  ここでは登録も相談ページも急がず、最後の「毎晩1本、置いてます。」だけで伝えます。');
-  L.push('- **奥座敷**：すでに見てくれている人を、深いところへ連れていく1本です。');
-  L.push('  ここでは踏み込んでいい。具体的な体験、名前のついた制度、長めの間。');
-  L.push('  ただし最後の1枚は型のまま（自分の灯りの一言＋「毎晩1本、置いてます。」）にして、次の一歩（相談ページ・登録）へは説明文ではっきり誘導します。');
-  L.push('- どちらの回でも、**間口 → 奥座敷 → 相談ページ**という順路のどこにこの1本が置かれるのかを意識してください。');
-  L.push('');
-
-  /* ── 9.5 音。無音のまま出し続けていたのを、ここで止めます ── */
-  L.push('## 音（無音のまま出さないこと）');
-  L.push('**無音の mp4 は不可です。必ず音声トラックの入った mp4 を書き出してください。**');
-  L.push('これまでの指示文が「音はあとで載せる」と書いていたせいで、文字だけの静かな動画が続いていました。');
-  L.push('ショート動画は音のあるものとして見られています。音がないと、それだけで最後まで残りません。');
-  L.push('');
-  if (audioBest && audioEv && audioEv.level !== 'まだ推測'){
-    L.push(`このチャンネルの記録では、音は「${audioBest}」がいちばん良い結果です（${audioEv.level}）。`);
-    if (audioEv.reasons.length) L.push(`根拠：「${audioEv.worst.key}」と比べて ${audioEv.reasons.join(' ／ ')}`);
-    L.push(`今回も **${audioBest}** で作ってください。`);
-  } else if (audioBest){
-    L.push(`いまのところ音は「${audioBest}」で作った回が最も良い数字ですが、まだ比べられるだけの本数がありません。`);
-    L.push(`今回も **${audioBest}** で作って、本数を積んでください。`);
+  L.push(`## 今回：${plan.label}`);
+  L.push(`- 記録する形式名：${plan.format}`);
+  L.push(`- 選んだ理由：${plan.reason}`);
+  L.push(`- 今回の見た目と構成：${plan.brief}`);
+  L.push(`- 尺の設計目安：${plan.seconds}。内容と読める速さから決めて、実際の書き出し秒数を記録してください。`);
+  if (plan.mode === 'explore') {
+    L.push('- 最初の1秒を見ただけで、最近の夜の窓辺とは違う企画だと分かる画にしてください。昼の明るさ、余白、グラフィック、物の動きなど、選んだ形式の特徴を前面に出します。');
+    L.push('- この形式で違う題材を2本ほど試します。失敗と決めつけて毎回すべてを捨てることも、結果待ちの間に同じものを量産することもしません。');
+    L.push('- 過去に同じ系列を試している場合は、場面・配色・動きの仕掛けを刷新し、単なるタイトルの言い換えにしないでください。新しい周の形式名は上に指定した名前を使います。');
+    L.push('- 制作前に作業用として異なる3案を考え、冒頭の見やすさ・具体性・既存動画との差から1案を選び、その1本だけを完成させてください。');
   } else {
-    L.push('音についての記録はまだ1本もありません。だからこそ、ここを今日から固定します。');
-    L.push('今回は **BGM＋効果音** で作ってください。');
+    const g = plan.candidate;
+    L.push(`- 参考にする回：${promptLineOf(plan.example)}`);
+    L.push(`- 今回だけ変えるもの：${plan.axis}。画風・場所・音・テーマ・投稿時刻など、それ以外は参考回にできるだけそろえます。`);
+    L.push('- 尺を変える回は参考回の約±20%を目安に、内容を削る／間を作る仮説を1つだけ試します。冒頭や締めの回は、尺をむやみに変えません。');
+    L.push(`- 同じ計測期間の再生中央値：この型${num(g.summary.views)}回（${g.summary.n}本）／他の形式${num(g.baseline.views)}回（${g.baseline.n}本）。小標本の仮説で、因果関係や再現性の証明ではありません。`);
+    L.push('- 比較に使えたこの型の記録：');
+    g.samples.forEach(o => L.push(`  ${o.s.v.slug}「${o.s.v.title}」計測日${o.date}（投稿後約${dec(o.age,0)}時間）：再生${num(o.views)}回／視聴を選択${dec(o.stayed)}%／平均視聴率${dec(o.retention)}%／1000再生あたり登録${dec(o.subRate)}人`));
   }
   L.push('');
-  L.push('### BGM（出だしがうるさいと、そこで閉じられます）');
-  L.push('- **BGM は、あなたがコードで作って敷いてください。** こちらは受け取った mp4 をそのまま投稿します（あとで曲を差し替えることはしません）。無音にはしないこと。');
-  L.push('- ただし今回から、**音を一段ぶん静かに**します。これまでの出だしは音が大きく、最初の1秒で閉じられていました。');
-  L.push('- **冒頭0.8秒でフェードインしてください。** -40dBFS くらいの小さな音から始めて、0.8秒で定常の音量まで上げる。');
-  L.push('  いきなり鳴らさない。夜、イヤホンを着けたままの人が驚かない入り方にしてください。');
-  L.push('  （以前は2秒かけていましたが、それでは長すぎます。狙いは音を消すことではなく、立ち上がりの角を取ることです）');
-  L.push('- 静かなアンビエントにしてください。遠い波、細かい雨、低い持続音（ドローン）、ゆっくりした脈。');
-  L.push('- リズム（ビート・打楽器・刻み）は入れない。メロディも作らない。和音がゆっくり滲むだけで十分です。');
-  L.push('- 定常の音量は **-28〜-32dBFS**。（これまでの -20〜-24dBFS は、このチャンネルには大きすぎました）');
-  L.push('  テロップを読む邪魔をしない、「言われて初めて音に気づく」くらいの、部屋の空気のような音量にしてください。');
-  L.push('- 耳につく帯域を削る：8kHz より上と 80Hz より下は落としてください。シャリつきと重い低音は、小さい音量でも刺さります。');
-  L.push('- 音の変化はゆっくり。2秒より短い間に音量や音色が動かないようにしてください。');
-  L.push('- 最後まで鳴らし続ける。**無音で終わらせないでください。**最後の0.5秒だけ少し落として、1枚目の頭の音量とつながるようにする。');
-  L.push('  （ショート動画はくり返し再生されます。ぷつっと切れると、そこで抜けられます）');
+  L.push('## 今回読み込んだ数字（記録と仮説を分ける）');
+  L.push(`- 読み込み日：${todayStr()}。記録の計測日：${dates[0] || '未記録'}〜${dates.at(-1) || '未記録'}。`);
+  if (ch) L.push(`- 登録者総数：${num(ch.subscribers)}人（${ch.measured_on}）。`);
+  L.push(`- 最新値を集めた総再生：${num(cur.totalViews)}回／1本の中央値：${cur.withViews.length ? num(cur.med) : '未記録'}回。計測日と公開からの期間が異なるので、これだけで型の優劣を決めません。`);
+  L.push('- 平均視聴率は平均視聴秒数÷尺です。完走した人数の割合ではなく、再視聴率そのものでもありません。');
+  L.push('- 視聴を選択した割合から特定の3秒や配信段階の原因は断定できません。未入力は0ではなく判断保留とし、記録のない映像内容や原因を作り話で補わないでください。');
+  L.push('### 直近10本（最新の入力済み値・項目ごとの計測日）');
+  if (!recent.length) L.push('投稿日時のある動画は未登録です。まず探索から始めます。');
+  L.push(...recent.map(promptLineOf));
+  L.push('### 新しい型の試行状況');
+  if (!plan.groups.length) L.push('新しい型の記録はまだありません。以前の動画と数字は比較用の履歴です。');
+  plan.groups.forEach(g => L.push(`- ${g.format}：投稿${g.made}本／直近3本の比較可能記録${g.summary.n}本／再生中央値${num(g.summary.views)}回／${g.promising ? '手応えあり・再検証候補' : '判断保留'}。`));
   L.push('');
-  L.push('### 効果音');
-  L.push('- **冒頭に効果音は置かないでください。** 0.8〜1.5秒の「小さな出来事」にも付けません。');
-  L.push('  出だしは BGM のフェードインだけです。掴みは音ではなく、1枚目のテロップと画で作ってください。');
-  L.push('- 3秒より後のカットの切り替わりのうち2〜3か所だけ、画の中の出来事（灯りがつく・カーテンが揺れる・雨が弱まる）に合わせて、ごく小さく1つずつ。');
-  L.push('  毎回入れるとうるさくなります。BGM より小さいくらいで十分です。');
-  L.push('- 最後のカット（画の答えが見えるところ）に、余韻の残る音を1つ。');
-  L.push('- 合計4つまで。これ以上は入れないでください。うるさい動画は、このチャンネルでは逆効果です。');
-  L.push('- どの効果音も、立ち上がりに 50ms 以上かけてゆるやかに。「コツン」と鳴る音は使わない。');
+  L.push('## 次の判断に必要な計測');
+  L.push('- 投稿24時間後と投稿4日後に、再生数・視聴を選択・平均視聴秒数・登録増加を記録します。選定は、日単位の記録から投稿72〜120時間後の同じ行を使います。');
+  L.push('- 直近90日の他の形式を最大30本比較対象にします。候補の直近3本のうち2本以上で、他形式の再生中央値の1.3倍以上と、視聴を選択または平均視聴率の+5ポイント、あるいは登録率の改善が重なれば、再検証候補とします。');
+  L.push('- 他形式は3本以上の比較可能な記録を必要とし、補助指標も3本以上ある項目だけ使います。1.3倍や5ポイントは運用上の目安で、統計的有意差や伸びる保証ではありません。');
+  L.push('- 有望な型でも2本続けたら別の型を試します。直近の結果が弱まった場合や記録が足りない場合は候補から外し、別の型を探します。記録不足は、その型が失敗したという意味ではありません。');
+  L.push('- サイトへの到達は別の成果として見ます。再生と計測期間がそろわない到達数を、今回の再生期間の成果と混同しないでください。');
   L.push('');
-  L.push('### 音の方向（ここを外すとチャンネルごと壊れます）');
-  L.push('- 使わない音：通知音、ポップ、キラキラ、ドゥン系の重い衝撃音、テレビのような効果音、ビート。');
-  L.push('  煽る音は、しんどい夜に見ている人をそのまま追い出します。');
-  L.push('- 使う音：波、雨、紙、鈴、遠い雷、風、低く短い余韻。減衰の長い、角のない音。');
-  L.push('- 目安は「夜、イヤホンで音量を上げずに聞いても痛くないか」。痛ければ音量か音色が間違っています。');
-  L.push('- 効果音は -30〜-36dBFS。全体は **-20 LUFS** にそろえてください。');
-  L.push('  （SNS標準は -14 LUFS ですが、それだと出だしで敬遠されます。このチャンネルは、あえて静かめに出します。）');
-  L.push('- 書き出したあと、**冒頭0.2秒の平均の音量**（volumedetect の mean_volume）を測ってください。-40dB より大きければ、フェードインが効いていません。作り直してください。');
+  L.push('## 構成・画・音');
+  L.push('- 冒頭から、その回の具体的な出来事や問いが伝わるようにします。時刻から始める決まり、暗い部屋、最後の点灯、5〜7枚のテロップには固定しません。');
+  L.push('- 動く文字なら文字の変形、コマ撮りなら物の移動、二分割なら会話の食い違いなど、その型で続きを見たくなる変化を作ります。意味のない装飾の動きで引き延ばさないでください。');
+  L.push('- 人物・シルエット・簡単なキャラクターは企画に合えば使えます。夜色・写実・コードの多層風景に縛りません。利用できる素材や描画手段で一貫した画風にしてください。');
+  L.push('- ループは内容に合う場合だけ使います。自然に終わる、答えを見せる、短い問いを残す、といった締め方も可能です。「毎晩1本」の約束は自動で入れません。');
+  L.push('- 音声トラックは必須。BGM＋効果音・BGMのみ・効果音のみから選び、読み上げナレーションは入れません。権利を確認できる音または自作の音を使い、急な大音量を避けます。');
+  L.push('- テロップはスマホで読める太さと大きさにし、背景との明暗差を確保します。1〜2行を基本にし、文章の長さに合った表示時間を取ります。');
+  L.push('- 文字は実際の文字の輪郭の中心で中央に置き、句読点で左右にずらさないでください。右のボタン列と下の題名に重要な文字や物が隠れないよう確認します。');
+  L.push('- 投稿する時間帯や説明文の基本条件はできるだけそろえます。探索段階でまとめて変えた要素は記録し、どれが原因かは後の再検証で確かめます。');
   L.push('');
-  L.push('### 音の作り方');
-  L.push('- 音源をどこかからダウンロードしてこないでください。権利の分からない音は使えません。');
-  L.push('- コードで合成してください（例：numpy で正弦波・ノイズを作り、包絡線をかけて wav に書き出し、ffmpeg で映像と合わせる）。');
-  L.push('  雨や波はホワイトノイズにフィルタをかければ作れます。鈴や余韻は減衰する正弦波の重ね合わせで作れます。');
-  L.push('- フェードインは音を作ったあとで包絡線をかけるだけです（冒頭0.8秒に、0から1へ上がるカーブを掛ける）。忘れないでください。');
-  L.push('- 書き出したら、**音が本当に入っているか確認してください**（ffprobe でストリームを見る、長さと音量を測るなど）。');
-  L.push('  無音のまま「できました」と返さないこと。ここが今回いちばん守ってほしいところです。');
-  L.push('- あわせて、**冒頭0.2秒だけを切り出して、平均の音量を測ってください**。ここが大きいと、中身を見てもらう前に閉じられます。');
-  L.push('  （いちばん大きい瞬間の値 max_volume ではなく、平均 mean_volume で見ます。0から1へ2乗の曲線で上げれば、平均は -50dB 前後になります）');
+  L.push('## 制作・書き出しと自己点検');
+  L.push('- 利用できる実行環境、ffmpeg / ffprobe、日本語フォント、素材と出力先を確認して制作を進めてください。過去の会話や特定のキットの存在を前提にしません。');
+  L.push(`- 出力フォルダは識別子${slug}ごとに分け、既存ファイルを上書きしません。`);
+  L.push('- 縦1080×1920、30fps、mp4（H.264・yuv420p）、音声AAC 48kHz。尺は今回の企画に合わせ、17秒に固定しません。');
+  L.push('- 作業用の短い試写で冒頭・中間・終盤の画を確認し、誤字、はみ出し、読める時間、音割れ、映像と音の長さを確かめてから本番を書き出します。点検用のコマや試写ファイルは納品しません。');
+  L.push('- ffprobeで解像度・実際の尺・映像と音声トラックを確認します。音声トラックがあっても無音ではないか、実際に聴くかレベルも測って確認します。未測定の値や未実行の確認を、確認済みと書かないでください。');
+  L.push('- 実行環境や権限が不足して生成できなければ、不足条件と未実行の内容を伝えてください。通常は完成まで進め、有料サービスの利用や公開は別途確認します。');
   L.push('');
-  L.push('- 渡すのは**音入りの mp4 だけ**です。音なしの mp4 や、BGM・効果音だけの wav は渡さなくていいです。');
-  L.push('');
-
-  /* ── 10. 作り方（仕組み化） ── */
-  L.push('## 動画の作り方（尺とテロップは実測のまま。画を映像にします）');
-  L.push('前回は13秒に縮めましたが、その5本はそろって通りませんでした。尺とテロップは、通っている帯のまま変えません。');
-  L.push('- 縦1080×1920 ／ **全体17秒**（15〜20秒の範囲。通った回はほぼこの帯です。13秒には縮めないでください）');
-  L.push('- **テロップ5〜7枚。1枚は2.5〜3.5秒。テロップ1枚＝1カット。** 読み終わって少し間があってから次へ行く速さにする');
-  L.push('- テロップ1枚は**15〜24字**（1枚目は15〜18字）。1行か2行で収める。3行になったら文を割ってください');
-  L.push('- 読み上げ音声（ナレーション）は入れません。音は BGM と効果音だけです（上の「音」の章のとおり）');
-  L.push('- 1枚目のテロップから本題に入る。「今日は◯◯について話します」のような前置きは書かない');
-  L.push('');
-  L.push('### 作る順番（この順で進めると、書き出しまでたどり着けます）');
-  L.push('1. **先に絵コンテを決める。** カットごとに「秒・何が見えるか・カメラの動き・画の中で起きること・テロップ・音」を決める（あなたの作業用です。こちらには渡さなくていいです）。');
-  L.push('2. **動かないものは、先に層ごとに1枚ずつ描いておく。** 奥の空・向かいの建物・部屋の壁・手前の物、のように3〜5層。');
-  L.push('   カメラが動いても端が切れないよう、画面より2割ほど大きく描く。手前の層ほど大きく動くので、端の余白は多めに');
-  L.push('   （切り取る範囲が絵の外に出ると、そこで止まります。切り取る位置は絵の内側に収めてください）。');
-  L.push('3. **毎フレームは、層をずらして重ねるだけにする。** 手前の層ほど大きく動かす（奥0.3・中1・手前1.6くらいの割合）と、奥行きが出ます。');
-  L.push('   動きは必ず、ゆっくり始まってゆっくり止まる曲線（イージング）で。等速で動かすと機械っぽく見えます。');
-  L.push('   カメラはどのカットでも止めない。寄る・引く・横に流すのどれかで、1カットのあいだに画面の4〜8%ぶん動かす。');
-  L.push('   **寄るときは、画の主役に向かって寄る。** 画面のまんなかに向かって寄ると、主役が画面の端へ逃げていきます。');
-  L.push('   主役は小さくしない。スマホで見て、何なのかすぐ分かる大きさ（目安は画面の幅の3分の1以上）にしてください。');
-  L.push('4. 雨・ほこり・星・湯気のような細かいものは、毎フレーム描く。光のにじみは、小さく縮めた画像をぼかしてから拡大すると速く作れます。');
-  L.push('   フィルムの粒は**ごく薄く**（明るさの揺れ±2〜3くらい）。数枚ぶんを先に作っておき、3フレームに1回入れ替えれば十分です。');
-  L.push('   強い粒を毎フレーム変えると圧縮が効かなくなり、書き出しが10倍以上遅く、ファイルも何倍も重くなります');
-  L.push('   （こちらの試作では、粒を薄くしただけで 11分・91MB が 40秒・17MB になりました）。');
-  L.push('5. フレームは PNG で保存せず、ffmpeg に直接流しこむ（生の画素をパイプで渡す）。ffmpeg は -preset veryfast -crf 20 前後で十分です。');
-  L.push('   1回の実行に時間の制限がある環境なら、カットごとに書き出して、最後につなぐ。');
-  L.push('6. 本番の前に、冒頭3秒だけを小さく（540×960）書き出して、コマを見て確かめると、やり直しが少なくて済みます（この試しのファイルも渡さなくていいです）。');
-  L.push('');
-  L.push('**凝りすぎて書き出せないのが、いちばんの失敗です。** 重くて間に合いそうにないときは、描く場所の数や細部を減らしてください。');
-  L.push('凝った未完成より、簡素でも最後まで書き出した1本のほうが、ずっと価値があります。');
-  L.push(`この型は、しんどい日でも${st.minutes}分あれば出せるように決めたものです。こちらがするのは、この指示文を貼って、できたものを投稿するところまでにしたい。`);
-  L.push('途中で止まって聞き返さず、最後まで進めてください。続かないほうが、質が低いことよりずっと痛いです。');
-  L.push('');
-  L.push('## mp4 の書き出し方');
-  L.push('- 形式は mp4（H.264・yuv420p）／ 1080×1920 ／ 30fps ／ 15〜20秒');
-  L.push('- **音声トラックは必須**（AAC 48kHz ステレオ）。上の「音」の章のとおりに作ってください');
-  L.push('- **0フレーム目から、場面とテロップの両方が写っていること。** 黒からのフェードインで始めないでください');
-  L.push('- 画は上の「画風」のとおり、夜の藍色が土台。文字は白。夜にスマホで見てまぶしくない明るさにする');
-  L.push('- **文字ははっきり大きく。** 1行の横幅が画面幅の80%くらいになる大きさ（1080px幅なら、およそ84〜110pxのフォント）。太めの字を使う。');
-  L.push('- **映像の上でも文字が読めるように。** 文字には、ぼかした黒い影を付ける（ずらさず、にじませるだけ）。');
-  L.push('  明るいカットでは、文字の帯の後ろだけを少し暗くする。くっきりした縁取りは使わない（テレビのテロップのように見えます）。');
-  L.push('- **画の主役（外の灯り・窓など、見てほしいもの）は、文字と重ならない位置に置く。** 目安は画面の上側（y=250〜700px）。');
-  L.push('  最後に灯る自分の部屋のスタンドは、画面の左下寄り（x=120〜420・y=1250〜1500px）に置く。');
-  L.push('  y=1550 より下は題名とチャンネル名に、右下（x=900〜1050）はボタン列に隠れます。');
-  L.push('');
-  L.push('  **文字の置き場所（前回いちばん直したところです。映像にしても、ここは変えません）**');
-  L.push('  いまの動画は、文字が左に寄っています。フレームを測ると、文字のかたまりの中心が');
-  L.push('  画面の中心（x=540）より25〜87px左にありました。原因は前の指示にあった「右から200pxを空ける」です。');
-  L.push('  右だけを避けると、そのぶん文字が左半分に押し込まれます。**この決まりは廃止します。**');
-  L.push('');
-  L.push('  - **文字のかたまりの中心を、必ず x=540（画面の左右まんなか）に置いてください。**');
-  L.push('  - **左の余白と右の余白を同じ幅にしてください。**1行の最大幅は880px（両側100pxずつ空ける）。');
-  L.push('  - 2行以上のときは、行ごとに**中央そろえ**にしてください。左そろえにすると、行の長さの差がそのまま左寄りに見えます。');
-  L.push('  - **行末の「、」「。」に気をつけてください。** この2つは字の枠の左下に描かれていて、右側が空いています（86pxの字で約50px）。');
-  L.push('    字の枠（フォントの幅）で中央にそろえると、その半分の**約27px、左に寄ります**（これまでの動画で測った25px前後の左寄りも、これかもしれません。推測です）。');
-  L.push('    中央は、実際に描かれた字の画素の左端と右端で合わせてください。');
-  L.push('  - 縦は、文字のかたまりの中心を **y=760〜1100px**（画面の上から4〜6割）に置いてください。');
-  L.push('    ショート動画の右下のボタン列（およそ x=900〜1050 / y=1150〜1750）と、下の題名・チャンネル名（y=1550より下）は、');
-  L.push('    **縦の位置で避けます。横にずらして避けないでください。**');
-  L.push('  - 画面を左右2つに割ったとき、白い文字の量が左右でほぼ同じになるのが正解です。');
-  L.push('- 日本語が豆腐（□）にならないよう、日本語が入ったフォントを指定してください。');
-  L.push('  見つからないときは、使えるフォントを探してから描いてください。文字化けしたまま書き出さないこと');
-  L.push('- テロップとカットの切り替えは同じ瞬間に。0.2〜0.3秒で重ねながら切り替える（白や黒を挟まない）');
-  L.push('- **最後のフレームにも、文字と場面が残っていること。** 黒画面やロゴで終わらせない（そのまま1周目の頭につながります）');
-  L.push('- 書き出したら、必ず**この環境で開けるファイルリンクまたは保存先のパスを渡してください**。');
-  L.push('  作れなかったときは、黙って構成案だけ返さずに、どこで詰まったかを書いてください');
-  L.push('');
-  L.push('### 書き出したあとの自己点検（ここまでやって完成です）');
-  L.push('次の8つを実際に測ってください。ひとつでも外れていたら、直してから渡してください。');
-  L.push('測った数字の報告は要りません。渡すときに「自己点検 8/8 通過」のように1行だけ書いてください。');
-  L.push('1. 長さが15〜20秒に入っているか（ffprobe）');
-  L.push('2. **文字が左右まんなかにあるか。** 映像の明るいところと混ざらないよう、**文字の層だけ**（透明の上に文字だけを描いたもの）で測ります。');
-  L.push('   テロップ3枚ぶんについて、文字の画素がある範囲の左端と右端を取り、その中心が **540±30px** に入っていること。');
-  L.push('   左の余白と右の余白の差が60pxより大きければ、寄っています。直してください。');
-  L.push('3. **0.0秒のフレームに、場面とテロップの両方が写っているか**（静止画を1枚書き出して見る。真っ黒や一色だけになっていないか）');
-  L.push('4. **最初の3秒で、画が動いているか。** 0.0秒・1.0秒・2.0秒・3.0秒のフレームを書き出し、となり同士の画素の差の平均がゼロでないこと。');
-  L.push('   0.8〜1.5秒の「小さな出来事」が、コマを見て分かること。');
-  L.push('5. **点滅していないか。** フレームごとの平均の明るさ（0〜255）を並べ、となりのフレームとの差が12を超えるところがないこと。');
-  L.push('6. 音声トラックが入っていて、無音でないか（ffprobe と volumedetect）');
-  L.push('7. 冒頭0.2秒の平均の音量（mean_volume）が -40dB 以下か（フェードインが効いているか）');
-  L.push(loopOn
-    ? '8. **2周目につながるか。** 最後のフレームと0.0秒のフレームを並べ、テロップの文字と位置が同じか、カメラの位置のずれが画面の幅の1%（約11px）以内か、平均の明るさの差が12以下か'
-    : '8. **最後のフレームに文字と場面が残っていて、1フレーム目とつながるか**（2枚を並べて見て、構図が大きく跳ばないこと）');
-  L.push('');
-
-  /* ── 11. 出してほしいもの ──
-     2026-10-10 から、ファイルは音入りの mp4 だけ。文字で返してもらうのは、投稿に使う題名・説明文と、登録用の1行だけです。 */
-  L.push('## 出してほしいもの（これだけです）');
-  L.push('');
-  L.push('### 1. 音入りの mp4（ファイルはこれ1つだけ）');
-  L.push('上の「今回の型」「映像にする」「音」「mp4 の書き出し方」のとおりに書き出した、17秒（15〜20秒）の縦動画を、ダウンロードできる形で渡してください。');
-  L.push('**音が入っていない mp4 と、場面が描かれていない（文字だけの）mp4 は、未完成として扱います。**');
-  L.push('ほかのファイル（音なしの mp4・音だけの wav・コマの画像・絵コンテ・試しの書き出し・制作コード）は渡さないでください。');
-  L.push('');
-  L.push('### 2. 題名（1つ）');
-  L.push('題名とハッシュタグをひと続きにした形で、そのまま題名欄に貼れる1行を出してください。');
-  L.push('例：向かいの窓に、まだ灯りがある。 #ショート #孤独 #ひとりじゃない #居場所');
-  L.push('');
-  L.push('- 上の「すでに使ったタイトル」と重ならないこと');
-  L.push('- **題名の本体は13〜18文字**（伸びた2本は15字と16字）。ショート動画の画面では題名の1行目しか見えません。ハッシュタグを先に置くと、肝心の一言が隠れます');
-  L.push('  実測では、本体13〜18字の16本が中央1044回、19字以上の5本は中央497回でした。');
-  L.push('- **ハッシュタグは4個**。1つ目は #ショート、2つ目はテーマ（#孤独・#うつ・#不眠・#休職 など中身に合うもの）、最後は #居場所。');
-  L.push('  4個の11本が中央1002回、5個以上の23本が中央905回でした。');
-  L.push('- **言い切りの形にする。問いかけの形（「〜ましたか」「〜ですか」）は使わないでください。**');
-  L.push('- 気持ちの説明ではなく、**目に入ったもの・やってしまうこと**を言う。「場所か時刻 ＋ 、 ＋ 言い切り」が伸びた2本の形です。');
-  L.push('  伸びた例：「向かいの窓に、まだ灯りがある。」「夕方、部屋の電気をつけられない。」「お風呂に入れない日が、ある。」「休職して、曜日がわからなくなった。」');
-  L.push('  通らなかった例：「今夜は、眠れましたか」「今日、ごはん食べましたか」「眠れない夜、天井を見ているあなたへ」');
-  L.push('- 題名とハッシュタグを合わせて100文字以内（YouTube の題名欄の上限）。');
-  L.push('- 煽らないこと。支援者の言い方（「〜の方へ」「〜を応援します」「〜してあげる」）にしないこと。');
-  L.push('  同じ側にいる人の言葉にしてください。「私も」で始められるかどうかが目安です。');
-  L.push('');
-  L.push('### 3. 説明文');
-  L.push('**説明文は、そのまま概要欄へ一度でコピーできる完成文を1つだけ出してください。**');
-  L.push('問いかけ・サイト案内・計測リンクも、すべてこの説明文の本文に含めます。固定コメントを別に出したり、「固定コメント」という見出しを付けたりしないでください。');
-  L.push('本文は5〜7行を目安に、次の内容を自然につないでください（リンク・ハッシュタグの行は別に数えます）。');
-  L.push('- 冒頭の1〜2行で、動画の中身がそのまま伝わる言葉を置く。');
-  L.push('- 動画の最後から2枚目に置いた、答えが一行で書ける問いを1つ入れる。');
-  L.push('- **チャンネルと相談ページ「星の海」を当事者本人がひとりで運営していること**を、1行で短く伝える。');
-  L.push('  例：「この動画も、相談ページ『星の海』も、精神障害の当事者がひとりで作っています。」');
-  L.push('  肩書きも等級も書かないこと。ひとことで十分です。');
-  L.push('- 星の海への短い案内と、下の計測リンクを本文に1回入れる。');
-  L.push('  「相談に乗ります」とは書かないこと。約束できるのは、同じ側にいることだけです。');
-  L.push('- ハッシュタグは末尾に5つまで。説明欄なので、題名の100文字には数えません。');
-  L.push('');
-  L.push('説明文に含める計測リンク（このまま貼ってください。作り変えないでください）：');
+  L.push('## 返してほしいもの');
+  L.push('1. 完成した音入りのmp4を1本。ダウンロードリンクまたは保存先を示します。音だけ・音なし・絵コンテ・制作コードなどの別ファイルは不要です。');
+  L.push('2. 題名を1つ。具体的な内容が伝わり、最近の題名と重複しない言葉にします。言い切り／問いかけは企画に合う方を選び、ハッシュタグ込み100文字以内。');
+  L.push('3. 概要欄へ一度でコピーできる完成した説明文を1つ。動画の紹介・答えやすい問い・当事者本人が運営していること・星の海の案内を自然につなぎます。固定コメントは別に出しません。');
+  L.push('   次の計測リンクを本文に1回、そのまま入れてください。URLやUTMのパラメータを変更せず、識別子の解説は貼り付け用の説明文に含めません。');
   L.push(url);
-  L.push('');
-  L.push(`この末尾の \`utm_content=${slug}\` が、あとで「どの動画から相談ページに来たか」を数える印になります。`);
-  L.push('短縮したり、パラメータを足し引きすると数えられなくなります。');
-  L.push('この計測の説明や識別子の解説は、貼り付け用の説明文には含めないでください。');
-  L.push('');
-  L.push('### 4. 記録用の1行');
-  L.push('作ったものを分析ページに登録するので、最後にこの形で出してください。');
-  L.push(`識別子: ${slug} ／ テーマ: ___ ／ 冒頭の掴み: 場面描写 ／ 音: ${audioBest || 'BGM＋効果音'} ／ 形式: ${WINDOW_FORMAT} ／ 尺: ___（実際に書き出した秒数）／ 締め: ${loopOn ? LOOP_CTA : '___'} ／ 役割: ${role.role} ／ 今回変えたもの: ${nx ? nx.axis.name : '変えていない'}`);
-  L.push('（音は BGM＋効果音・BGMのみ・効果音のみ から選んでください。');
-  if (loopOn){
-    L.push(`　形式は「${WINDOW_FORMAT}」、締めは「${LOOP_CTA}」のまま書き換えないでください。分析ページは、この言葉で窓と灯りの回とループの回を数えています）`);
-  } else {
-    L.push('　締めは リンクへ・コメント促し・登録の約束・なし から選んでください。');
-    L.push(`　形式は「${WINDOW_FORMAT}」のまま書き換えないでください。分析ページは、この言葉で窓と灯りの回を数えています）`);
-  }
-  L.push('');
-  L.push('**このほかの説明・構成案・次の案は要りません。** 返すのは、mp4 のダウンロードリンク・題名・説明文・記録用の1行・自己点検の1行だけにしてください。');
-
-  return { text: L.join('\n'), slug };
+  L.push('4. 記録用の1行（下の形式）。実際に作った内容を書き、形式名は正確に引き継いでください。');
+  L.push(`識別子: ${slug} ／ テーマ: ___ ／ 冒頭の掴み: ___ ／ 音: ___ ／ 形式: ${plan.format} ／ 尺: ___（実測秒）／ 締め: ___ ／ 役割: ${role.role} ／ 今回変えたもの: ${plan.axis} ／ メモ: ${plan.label}・画風と場面___・仮説___${plan.example ? '・参考:'+plan.example.v.slug : ''}`);
+  L.push('   「動画」タブの形式欄は自由入力できます。上のメモも残してください。YouTubeのURLと投稿日時を登録しないと、投稿後日数をそろえて比較できません。');
+  L.push('5. 自己点検を1行。実測した尺・解像度・音声の確認と、今回はどんな仮説を試したかを簡潔に記します。');
+  return { text:L.join('\n'), slug };
 }
 
 async function showPrompt(){
