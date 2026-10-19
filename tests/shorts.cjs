@@ -259,3 +259,150 @@ test('unavailable local storage shows a warning and keeps edits in memory during
     assert.equal(await a.page.locator('.entry-in[data-post="post-1"][data-metric="likes"]').inputValue(),'44');
   }finally{await a.context.close();}
 });
+
+function experimentFixture(){
+  return {...fixture(),sv_videos:[],sv_posts:[],sv_metrics:[]};
+}
+function addExperiment(db, format, daysAgo, values={}, measuredDays=4){
+  const n=db.sv_videos.length+1, id='experiment-'+n, pid='experiment-post-'+n;
+  const posted=new Date(Date.now()-daysAgo*864e5);
+  const measured=new Date(+posted+measuredDays*864e5).toLocaleDateString('sv-SE',{timeZone:'Asia/Tokyo'});
+  db.sv_videos.push({id,slug:'v'+n,title:'別の企画'+n,format,duration_sec:20,theme:'日常',hook_type:'共感',cta_type:'なし',audio_type:'BGMのみ'});
+  db.sv_posts.push({id:pid,video_id:id,platform:'youtube',posted_at:posted.toISOString()});
+  db.sv_metrics.push({post_id:pid,measured_on:measured,views:500,avg_watch_sec:8,stayed_pct:40,subs_gained:0,...values});
+  return {id,pid};
+}
+function baselineFixture(){
+  const db=experimentFixture();
+  [24,23,22].forEach(age=>addExperiment(db,'映像＋テロップ（窓と灯り）',age));
+  return db;
+}
+const goodExperiment={views:900,avg_watch_sec:12,stayed_pct:60,subs_gained:2};
+
+test('new prompt explores a different visual, keeps deliverables and tracking, and makes no writes',async()=>{
+  const db=baselineFixture(),a=await open(db);
+  try {
+    await a.tab('advice');await a.page.locator('#prompt-build').click();
+    await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
+    const first=await a.page.locator('#prompt-out').inputValue();
+    assert.match(first,/今回：新しい型を探索/);
+    assert.match(first,/形式: 探索1｜昼の切り絵/);
+    assert.match(first,/昼の公園/);assert.match(first,/場面・画風・明暗・構成・尺をまとめて変えてよい/);
+    assert.match(first,/音入りのmp4を1本/);assert.match(first,/固定コメントは別に出しません/);
+    assert.match(first,/utm_source=youtube&utm_medium=short&utm_content=v004/);
+    assert.doesNotMatch(first,/全体17秒|場所はひとつ。暗い自分の部屋|形式: 映像＋テロップ（窓と灯り）|画の答えは、自分のスタンド/);
+    await a.page.locator('#prompt-build2').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build2').disabled);
+    assert.equal(await a.page.locator('#prompt-out').inputValue(),first);
+    assert.match(await a.page.locator('#test-design').textContent(),/探索1｜昼の切り絵/);
+    assert.deepEqual(a.writes,[]);assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
+
+test('recorded experiments rotate visual families and start a new round after two per family',async()=>{
+  const db=baselineFixture(),a=await open(db);
+  try {
+    const names=['昼の切り絵','動くことば','身近な物のコマ撮り','二分割のひとり会話'];
+    for(let n=0;n<8;n++){
+      const plan=await a.page.evaluate(()=>experimentPlan());
+      assert.equal(plan.mode,'explore');assert.equal(plan.format,'探索1｜'+names[n%4]);
+      addExperiment(db,plan.format,20-n,{views:100});
+      assert.equal(await a.page.evaluate(()=>loadAll()),true);
+    }
+    const next=await a.page.evaluate(()=>experimentPlan());
+    assert.equal(next.format,'探索2｜昼の切り絵');
+    // New visual families must not be misclassified as the old text-only videos.
+    assert.equal(await a.page.evaluate(()=>formatCompare().txt),null);
+    assert.equal(await a.page.evaluate(()=>formatCompare().exp.n),8);
+  }finally{await a.context.close();}
+});
+
+test('repeated evidence promotes a candidate, with exploration after two consecutive videos',async()=>{
+  const db=baselineFixture();
+  addExperiment(db,'探索1｜昼の切り絵',15,goodExperiment);
+  addExperiment(db,'探索1｜昼の切り絵',14,goodExperiment);
+  const a=await open(db);
+  try {
+    let plan=await a.page.evaluate(()=>experimentPlan());
+    assert(plan.groups[0].promising);assert.equal(plan.mode,'explore');
+    addExperiment(db,'探索1｜動くことば',12,{views:200});await a.page.evaluate(()=>loadAll());
+    plan=await a.page.evaluate(()=>experimentPlan());
+    assert.equal(plan.mode,'refine');assert.equal(plan.format,'探索1｜昼の切り絵');
+    const prompt=await a.page.evaluate(()=>buildPrompt().text);
+    assert.match(prompt,/今回だけ変えるもの：締めの誘導/);
+    assert.match(prompt,/形式: 探索1｜昼の切り絵/);assert.match(prompt,/参考:v/);
+    assert.match(await a.page.locator('#test-design').textContent(),/手応えのある型を再検証/);
+    // Once the recent results weaken, old hits do not keep the format selected.
+    addExperiment(db,'探索1｜昼の切り絵',10,{views:80});
+    addExperiment(db,'探索1｜昼の切り絵',9,{views:90});await a.page.evaluate(()=>loadAll());
+    plan=await a.page.evaluate(()=>experimentPlan());
+    assert.equal(plan.mode,'explore');assert(!plan.groups.find(g=>g.format==='探索1｜昼の切り絵').promising);
+  }finally{await a.context.close();}
+});
+
+test('one hit, missing auxiliary metrics, and unmatched ages cannot promote a format',async()=>{
+  const db=baselineFixture();
+  addExperiment(db,'探索1｜昼の切り絵',15,{...goodExperiment,views:9000});
+  addExperiment(db,'探索1｜昼の切り絵',14,{views:80});
+  addExperiment(db,'探索1｜動くことば',12,{views:5000,avg_watch_sec:null,stayed_pct:null,subs_gained:null});
+  addExperiment(db,'探索1｜動くことば',11,{views:6000,avg_watch_sec:null,stayed_pct:null,subs_gained:null});
+  addExperiment(db,'探索1｜身近な物のコマ撮り',10,goodExperiment,1);
+  addExperiment(db,'探索1｜身近な物のコマ撮り',9,goodExperiment,8);
+  const a=await open(db);
+  try {
+    const plan=await a.page.evaluate(()=>experimentPlan());
+    assert.equal(plan.mode,'explore');assert(plan.groups.every(g=>!g.promising));
+    assert.equal(plan.groups.find(g=>g.format.endsWith('身近な物のコマ撮り')).summary.n,0);
+    assert.equal(plan.groups.find(g=>g.format.endsWith('動くことば')).summary.stayedN,0);
+    assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
+
+test('comparison uses a single age-matched row, preserves zero and excludes old/future data',async()=>{
+  const db=baselineFixture();
+  const {pid}=addExperiment(db,'探索1｜昼の切り絵',15,{views:0,stayed_pct:0,avg_watch_sec:0,subs_gained:0});
+  db.sv_metrics.push({post_id:pid,measured_on:date,views:99999,stayed_pct:99,avg_watch_sec:99,subs_gained:999});
+  addExperiment(db,'探索1｜動くことば',120,goodExperiment);
+  addExperiment(db,'探索1｜動くことば',119,goodExperiment);
+  addExperiment(db,'探索1｜身近な物のコマ撮り',-10,goodExperiment);
+  const a=await open(db);
+  try {
+    const observation=await a.page.evaluate(pid=>experimentObservation(allStats().list.find(s=>s.post?.id===pid)),pid);
+    assert.equal(observation.views,0);assert.equal(observation.stayed,0);assert.equal(observation.retention,0);
+    const plan=await a.page.evaluate(()=>experimentPlan());
+    assert.equal(plan.groups.find(g=>g.format.endsWith('動くことば')).summary.n,0);
+    assert(!plan.groups.some(g=>g.format.endsWith('身近な物のコマ撮り')));
+    assert.equal(plan.mode,'explore');
+  }finally{await a.context.close();}
+});
+
+test('awaiting measurements does not repeatedly reuse old successful videos',async()=>{
+  const db=baselineFixture();
+  addExperiment(db,'探索1｜昼の切り絵',15,goodExperiment);
+  addExperiment(db,'探索1｜昼の切り絵',14,goodExperiment);
+  addExperiment(db,'探索1｜昼の切り絵',2,goodExperiment,0);
+  addExperiment(db,'探索1｜昼の切り絵',1,goodExperiment,0);
+  addExperiment(db,'探索1｜動くことば',0.5,{views:10},0);
+  const a=await open(db);
+  try {
+    const plan=await a.page.evaluate(()=>experimentPlan());
+    assert.equal(plan.mode,'explore');
+    assert.equal(plan.groups.find(g=>g.format.endsWith('昼の切り絵')).summary.n,1);
+  }finally{await a.context.close();}
+});
+
+test('unpublished records do not advance exploration and custom format names are escaped',async()=>{
+  const db=baselineFixture();
+  const unposted=addExperiment(db,'探索1｜昼の切り絵',10,goodExperiment);
+  db.sv_posts=db.sv_posts.filter(p=>p.id!==unposted.pid);
+  const custom='探索1｜<img src=x onerror=alert(1)>';
+  addExperiment(db,custom,9,{views:50});
+  const a=await open(db);
+  try {
+    const plan=await a.page.evaluate(()=>experimentPlan());
+    assert.equal(plan.format,'探索1｜昼の切り絵');
+    assert(!plan.groups.some(g=>g.format==='探索1｜昼の切り絵'));
+    assert.match(await a.page.locator('#test-matrix').textContent(),/探索1｜<img/);
+    assert.equal(await a.page.locator('#test-matrix img').count(),0);
+    assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
