@@ -289,7 +289,7 @@ test('new prompt explores a different visual, keeps deliverables and tracking, a
     assert.match(first,/形式: 探索1｜昼の切り絵/);
     assert.match(first,/昼の公園/);assert.match(first,/場面・画風・明暗・構成・尺をまとめて変えてよい/);
     assert.match(first,/音入りのmp4を1本/);assert.match(first,/固定コメントは別に出しません/);
-    assert.match(first,/utm_source=youtube&utm_medium=short&utm_content=v004/);
+    assert.ok(first.includes("https://hoshinoumi.org/?utm_source=youtube&utm_medium=short&utm_content=v004"));
     assert.doesNotMatch(first,/全体17秒|場所はひとつ。暗い自分の部屋|形式: 映像＋テロップ（窓と灯り）|画の答えは、自分のスタンド/);
     await a.page.locator('#prompt-build2').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build2').disabled);
     assert.equal(await a.page.locator('#prompt-out').inputValue(),first);

@@ -3,7 +3,7 @@
 1995年頃の個人ホームページをイメージした、静的HTMLとSupabaseのサイトです。
 トップページは `index.html`、共通のレトロな見た目は `retro.css`、海のドット絵は `assets/starlit-sea.svg` にあります。
 
-公開URLは https://hoshinoumi.vercel.app/ です。
+公開URLは https://hoshinoumi.org/ です。
 
 ## 公開サイトに載せないファイル
 
@@ -49,20 +49,23 @@ docker run --rm --network none --tmpfs /var/lib/postgresql/data \
 - **YouTube分析**：動画IDを画像・リンクのURLに入れる前に、YouTubeのIDに使われる文字だけかを確かめるようにしました。
 - 訪問の記録で送る値を、DB側の上限と同じ長さに切ってから送るようにしました。
 
-## 公開URLの切り替え
+## 独自ドメインへの切り替え（hoshinoumi.org）
 
-コードの変更とGitHubへのプッシュだけでは、Vercelのドメイン設定は変わりません。新URLを有効にするには、Vercelにログインして次を設定してください。
+正規URLは **https://hoshinoumi.org/**（wwwなし）です。サイト内の共有・計測リンク、canonical・OGP、共有画像、掲示板通知、ニュース取得のUser-AgentをこのURLに統一しています。Supabaseの接続先・テーブル・保存キーは変更しません。
 
-1. 現在このサイトを公開しているプロジェクトの **Settings → Domains → Add Domain** で `hoshinoumi.vercel.app` を追加し、Productionに接続します。
-2. 新URLでトップページと `/shorts.html` が開けることを確認します。YouTubeの計測リンクも、新URLに `utm_source`・`utm_medium`・`utm_content` が付いた状態で開けることを確認してください。
-3. 旧ドメインは削除せず、**Edit → Redirect to** で新ドメインへの恒久リダイレクトを設定します。旧URLの `/shorts.html` や計測パラメーター付きリンクでも、パスとパラメーターが引き継がれることを確認してください。
-4. YouTubeのプロフィールや投稿済み動画の説明文など、手動で掲載したURLも新URLに更新してください。
+GitHubへのプッシュだけでは、DNS・Vercel・Supabaseの設定や既存のDB関数は更新されません。次の順で設定してください。
 
-ドメイン追加で「使用済み」と表示された場合は、Vercel側でそのドメインの利用状況を確認する必要があります。
+1. **旧ドメインから転送する前に**、入力に使ったブラウザーで https://hoshinoumi.vercel.app/shorts.html を開き、「分析の土台」と各動画・各計測日の未保存の数字を保存してください。ブラウザー内の控えとログイン状態はドメインごとに別です。新ドメインではログインし直し、クラウドの保存内容を読み込みます。確認が終わるまで旧ドメインを利用可能にしてください。
+2. Vercelの既存のmy-siteプロジェクトで **Settings → Domains → Add Domain** から `hoshinoumi.org` を追加し、Productionに接続します。`www.hoshinoumi.org` も使う場合は追加します。
+3. ドメインを取得したサービスのDNS設定で、**Vercelが表示するレコードの種類・名前・値**を登録します。既存のメール用MX・TXTなどは残してください。VercelでDNS検証とHTTPS証明書の発行完了を確認します。
+4. Supabaseの **Authentication → URL Configuration** の **Site URL** を `https://hoshinoumi.org` に変更し、**Redirect URLs** に確認メール・パスワード再設定などで使う新URLの戻り先を登録します。同じSupabaseプロジェクトを使い、DBの作り直しやデータ削除は不要です。
+5. 新URLでトップページ、日記の共有リンク、`/shorts.html`、`/it-news.html`、`/niigata-cafes-list.html`、`/assets/og-image.png` を確認します。管理者としてログインし、保存済みデータ、共有URL、UTMパラメーター付き計測リンクも確認してください。
+6. 保存内容と新ドメインの動作を確認してから、Vercelで旧 `hoshinoumi.vercel.app` と任意の `www.hoshinoumi.org` を、正規ドメインへの恒久リダイレクトに設定します。旧ドメインは削除せず、パス・日記のクエリー・UTM・`#bulletin` が引き継がれることを確認してください。未保存データの回収を妨げないよう、リポジトリーには即時転送を追加していません。
+7. YouTubeのプロフィールや投稿済み動画の説明文など、手動で掲載したURLも変更してください。動画識別子とUTMパラメーターは維持します。
 
-Supabaseの **Authentication → URL Configuration** に旧URLを設定している場合は、**Site URL** と該当する **Redirect URLs** を新URLに更新してください。現在のログインはメール・パスワード方式ですが、確認メールやパスワード再設定の戻り先にはこの設定が使われます。
+掲示板通知SQLを導入済みの場合は、`bbs-moderation.sql` の `create or replace function public.notify_new_bulletin_message()` から対応する `$$;` までをSupabaseのSQL Editorで再実行してください。ニュース取得SQLを導入済みの場合も、`it-news.sql` の `create or replace function it_news_fetch_source(p_id uuid)` から対応する `$fn$;` までを再実行してください。既存の通知先・認証情報・トリガー設定は変更せず、関数内のURLを更新します。
 
-掲示板通知メールのSQLを導入済みの場合は、`bbs-moderation.sql` をSupabaseのSQL Editorで実行すると、メール内のリンクも新URLになり、通知に名前・本文を含めなくなります。ニュース取得SQLを導入済みの場合も、`it-news.sql` の `create or replace function it_news_fetch_source(p_id uuid)` から対応する `$fn$;` までを再実行するとUser-AgentのURLが更新されます。GitHubへのプッシュでは、データベースに保存済みの関数は更新されません。
+訪問済み判定などのブラウザー内キャッシュもドメインごとに別なので、切り替え時に一度追加で訪問が数えられる場合があります。DBに保存済みの累積値はリセットしません。
 
 参考: [Vercelのドメイン追加](https://vercel.com/docs/domains/working-with-domains/add-a-domain)、[ドメインのリダイレクト](https://vercel.com/docs/domains/working-with-domains/deploying-and-redirecting)、[SupabaseのURL設定](https://supabase.com/docs/guides/auth/redirect-urls)。
 
@@ -72,10 +75,11 @@ XやLINEにリンクを貼ると、`assets/og-image.png`（1200×630）が大き
 
 ```sh
 cd tools/og-image
+npm ci
 PLAYWRIGHT_PATH=<playwrightの場所> node render.cjs
 ```
 
-XやLINEは画像を覚えておくことがあるので、作り直してもすぐには変わらない場合があります。
+フォントは固定バージョンのnpmパッケージからローカルで読み込みます。クラウド環境のChromiumを使う場合は `CHROMIUM_PATH=/usr/bin/chromium` も指定してください。XやLINEは画像を覚えておくことがあるので、作り直してもすぐには変わらない場合があります。
 
 ## YouTube分析のプロンプト
 
@@ -176,7 +180,7 @@ create policy "admin_update" on blog_posts for update using (auth.role() = 'auth
 
 ### 日記ごとのリンク
 
-`https://hoshinoumi.vercel.app/?diary=<日記のID>` を開くと、その日記が開いた状態で表示されます（最新100件より古い日記でも開けます）。日記を開くとアドレス欄もこの形になり、閉じると元に戻ります。詳細画面の「この日記へのリンクをコピー」でもコピーできます。
+`https://hoshinoumi.org/?diary=<日記のID>` を開くと、その日記が開いた状態で表示されます（最新100件より古い日記でも開けます）。日記を開くとアドレス欄もこの形になり、閉じると元に戻ります。詳細画面の「この日記へのリンクをコピー」でもコピーできます。
 新しく日記を書いたときにXの投稿画面へ入れるリンクも、トップページではなくその日記へのリンクになりました。Xの文字数では、URLは長さに関わらず23字として数えます。
 
 ### 過去ログ（月ごと）

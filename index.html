@@ -7,20 +7,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="description" content="星の海は、精神障害を抱える方が安心して気持ちを話せる、当事者による相互サポートの場です。" />
   <!-- X や LINE にリンクを貼ったときの見え方。計測用の ?utm_… が付いていても同じページとして扱われるよう canonical を置きます -->
-  <link rel="canonical" href="https://hoshinoumi.vercel.app/" />
+  <link rel="canonical" href="https://hoshinoumi.org/" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="星の海" />
   <meta property="og:title" content="星の海 — こころを休める場所" />
   <meta property="og:description" content="精神障害の当事者がひとりで運営している、相互サポートの場です。読むだけでも、音楽を聴くだけでも。言葉にならない夜も、ここにいていい。" />
-  <meta property="og:url" content="https://hoshinoumi.vercel.app/" />
+  <meta property="og:url" content="https://hoshinoumi.org/" />
   <meta property="og:locale" content="ja_JP" />
   <!-- 共有したときの画像（1200×630）。元は tools/og-image/og-image.html、作り直しは同じフォルダの render.cjs -->
-  <meta property="og:image" content="https://hoshinoumi.vercel.app/assets/og-image.png" />
+  <meta property="og:image" content="https://hoshinoumi.org/assets/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="三日月と星が浮かぶ夜の海のドット絵と、「星の海　眠れない夜に、ふらっと立ち寄れる場所。」の文字" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:image" content="https://hoshinoumi.vercel.app/assets/og-image.png" />
+  <meta name="twitter:image" content="https://hoshinoumi.org/assets/og-image.png" />
   <meta name="theme-color" content="#0b1626" />
   <title>星の海</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -533,7 +533,7 @@
     </div>
   </section>
 
-  <section id="links" aria-labelledby="links-title"><div class="glass-panel"><div class="sec-head"><span class="sec-no">LINK</span><h2 id="links-title" class="sec-title">インターネットの小さな道しるべ</h2></div><p class="lead">このホームページの、もうひとつの入口と、お役立ちリンク。</p><div class="links-grid"><a class="link-item" href="https://www.youtube.com/@jenjenjenjun" target="_blank" rel="noopener noreferrer"><span class="link-label">YouTube ↗</span><div><h3>星の海の動画</h3><p>眠れない夜に。毎晩、短い動画を置いています。</p></div></a><a class="link-item" href="#music"><span class="link-label">MUSIC ROOM</span><div><h3>星の海の音楽室</h3><p>言葉を探さず、音に耳をすます時間。</p></div></a><a class="link-item" href="https://www.mhlw.go.jp/mamorouyokokoro/" target="_blank" rel="noopener noreferrer"><span class="link-label">こころの窓口 ↗</span><div><h3>まもろうよ こころ</h3><p>厚生労働省による、電話・SNSの相談窓口のご案内。</p></div></a></div><div class="banner-guide"><a class="site-banner" href="https://hoshinoumi.vercel.app/">星の海</a><p style="margin-top:10px">当サイトはリンクフリーです。リンク先はこちら。ご報告はBBSへ、お気軽にどうぞ。</p><code>https://hoshinoumi.vercel.app/</code></div></div></section>
+  <section id="links" aria-labelledby="links-title"><div class="glass-panel"><div class="sec-head"><span class="sec-no">LINK</span><h2 id="links-title" class="sec-title">インターネットの小さな道しるべ</h2></div><p class="lead">このホームページの、もうひとつの入口と、お役立ちリンク。</p><div class="links-grid"><a class="link-item" href="https://www.youtube.com/@jenjenjenjun" target="_blank" rel="noopener noreferrer"><span class="link-label">YouTube ↗</span><div><h3>星の海の動画</h3><p>眠れない夜に。毎晩、短い動画を置いています。</p></div></a><a class="link-item" href="#music"><span class="link-label">MUSIC ROOM</span><div><h3>星の海の音楽室</h3><p>言葉を探さず、音に耳をすます時間。</p></div></a><a class="link-item" href="https://www.mhlw.go.jp/mamorouyokokoro/" target="_blank" rel="noopener noreferrer"><span class="link-label">こころの窓口 ↗</span><div><h3>まもろうよ こころ</h3><p>厚生労働省による、電話・SNSの相談窓口のご案内。</p></div></a></div><div class="banner-guide"><a class="site-banner" href="https://hoshinoumi.org/">星の海</a><p style="margin-top:10px">当サイトはリンクフリーです。リンク先はこちら。ご報告はBBSへ、お気軽にどうぞ。</p><code>https://hoshinoumi.org/</code></div></div></section>
     <div id="support" class="support-section">
       <div class="glass-panel px-6 md:px-10 py-10">
         <div class="sec-head" style="margin-bottom:1.75rem;">
@@ -1459,8 +1459,8 @@
     }
 
     /* ── 日記ごとのリンク ──
-       https://hoshinoumi.vercel.app/?diary=<id> で、その日記を開いた状態で表示する。 */
-    const SITE_URL = 'https://hoshinoumi.vercel.app';
+       https://hoshinoumi.org/?diary=<id> で、その日記を開いた状態で表示する。 */
+    const SITE_URL = 'https://hoshinoumi.org';
     const DIARY_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const diaryUrl = id => `${SITE_URL}/?diary=${encodeURIComponent(id)}`;
 
