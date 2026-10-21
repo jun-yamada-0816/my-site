@@ -285,31 +285,43 @@ test('new prompt explores a different visual, keeps deliverables and tracking, a
     await a.tab('advice');await a.page.locator('#prompt-build').click();
     await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
     const first=await a.page.locator('#prompt-out').inputValue();
-    assert.match(first,/今回：新しい型を探索/);
-    assert.match(first,/形式: 探索1｜昼の切り絵/);
-    assert.match(first,/昼の公園/);assert.match(first,/場面・画風・明暗・構成・尺をまとめて変えてよい/);
+    assert.match(first,/今回：毎回違う実写アプローチを探索/);
+    assert.match(first,/形式: 探索1｜実写・一人称の小さな冒険/);
+    assert.match(first,/朝の市場/);assert.match(first,/少なくとも4項目/);
+    assert.match(first,/自然な実写映像に限りなく近い質感/);
+    assert.match(first,/動画生成機能も適切な実写動画素材も使えない場合/);
+    assert.match(first,/静止画のズームやパンだけで完成させることは禁止/);
     assert.match(first,/音入りのmp4を1本/);assert.match(first,/固定コメントは別に出しません/);
     assert.ok(first.includes("https://hoshinoumi.org/?utm_source=youtube&utm_medium=short&utm_content=v004"));
     assert.doesNotMatch(first,/全体17秒|場所はひとつ。暗い自分の部屋|形式: 映像＋テロップ（窓と灯り）|画の答えは、自分のスタンド/);
     await a.page.locator('#prompt-build2').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build2').disabled);
-    assert.equal(await a.page.locator('#prompt-out').inputValue(),first);
-    assert.match(await a.page.locator('#test-design').textContent(),/探索1｜昼の切り絵/);
+    const second=await a.page.locator('#prompt-out').inputValue();
+    assert.notEqual(second,first);
+    assert.match(second,/形式: 探索1｜実写・手仕事の接写/);
+    assert.match(second,/朝の市場/); // The prior concept is included only as avoidance history.
+    assert.match(await a.page.locator('#test-design').textContent(),/探索1｜実写・手仕事の接写/);
+    assert.equal(await a.page.evaluate(()=>experimentPlan().groups.length),0);
+    assert.equal(await a.page.locator('#prompt-slug').textContent(),'v004');
+    await a.page.reload();await a.page.waitForFunction(()=>state.ready);await a.tab('advice');
+    await a.page.locator('#prompt-build').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
+    assert.match(await a.page.locator('#prompt-out').inputValue(),/形式: 探索1｜実写・屋外の短いドラマ/);
     assert.deepEqual(a.writes,[]);assert.deepEqual(a.errors,[]);
   }finally{await a.context.close();}
 });
 
-test('recorded experiments rotate visual families and start a new round after two per family',async()=>{
+test('recorded experiments rotate eight camera and story approaches and refresh the scene next round',async()=>{
   const db=baselineFixture(),a=await open(db);
   try {
-    const names=['昼の切り絵','動くことば','身近な物のコマ撮り','二分割のひとり会話'];
+    const names=['実写・一人称の小さな冒険','実写・手仕事の接写','実写・屋外の短いドラマ','実写・自然の観察','実写・街のドキュメンタリー','実写・視点が変わる発見','実写・体を動かす解放感','実写・小さな可笑しさ'];
     for(let n=0;n<8;n++){
       const plan=await a.page.evaluate(()=>experimentPlan());
-      assert.equal(plan.mode,'explore');assert.equal(plan.format,'探索1｜'+names[n%4]);
+      assert.equal(plan.mode,'explore');assert.equal(plan.format,'探索1｜'+names[n%8]);
       addExperiment(db,plan.format,20-n,{views:100});
       assert.equal(await a.page.evaluate(()=>loadAll()),true);
     }
     const next=await a.page.evaluate(()=>experimentPlan());
-    assert.equal(next.format,'探索2｜昼の切り絵');
+    assert.equal(next.format,'探索2｜実写・一人称の小さな冒険');
+    assert.match(next.brief,/海辺の遊歩道/);
     // New visual families must not be misclassified as the old text-only videos.
     assert.equal(await a.page.evaluate(()=>formatCompare().txt),null);
     assert.equal(await a.page.evaluate(()=>formatCompare().exp.n),8);
@@ -326,15 +338,23 @@ test('repeated evidence promotes a candidate, with exploration after two consecu
     assert(plan.groups[0].promising);assert.equal(plan.mode,'explore');
     addExperiment(db,'探索1｜動くことば',12,{views:200});await a.page.evaluate(()=>loadAll());
     plan=await a.page.evaluate(()=>experimentPlan());
+    assert.equal(plan.mode,'explore'); // Strong metrics never switch the default mode.
+    await a.tab('advice');await a.page.locator('#prompt-mode').selectOption('refine');
+    plan=await a.page.evaluate(()=>experimentPlan());
     assert.equal(plan.mode,'refine');assert.equal(plan.format,'探索1｜昼の切り絵');
     const prompt=await a.page.evaluate(()=>buildPrompt().text);
     assert.match(prompt,/今回だけ変えるもの：締めの誘導/);
     assert.match(prompt,/形式: 探索1｜昼の切り絵/);assert.match(prompt,/参考:v/);
     assert.match(await a.page.locator('#test-design').textContent(),/手応えのある型を再検証/);
+    await a.page.locator('#prompt-build').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
+    assert.match(await a.page.locator('#prompt-out').inputValue(),/今回：手応えのある型を再検証/);
+    await a.page.locator('#prompt-build2').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build2').disabled);
+    assert.equal(await a.page.locator('#prompt-mode').inputValue(),'explore');
+    assert.match(await a.page.locator('#prompt-out').inputValue(),/今回：毎回違う実写アプローチを探索/);
     // Once the recent results weaken, old hits do not keep the format selected.
     addExperiment(db,'探索1｜昼の切り絵',10,{views:80});
     addExperiment(db,'探索1｜昼の切り絵',9,{views:90});await a.page.evaluate(()=>loadAll());
-    plan=await a.page.evaluate(()=>experimentPlan());
+    plan=await a.page.evaluate(()=>experimentPlan('refine'));
     assert.equal(plan.mode,'explore');assert(!plan.groups.find(g=>g.format==='探索1｜昼の切り絵').promising);
   }finally{await a.context.close();}
 });
@@ -349,7 +369,7 @@ test('one hit, missing auxiliary metrics, and unmatched ages cannot promote a fo
   addExperiment(db,'探索1｜身近な物のコマ撮り',9,goodExperiment,8);
   const a=await open(db);
   try {
-    const plan=await a.page.evaluate(()=>experimentPlan());
+    const plan=await a.page.evaluate(()=>experimentPlan('refine'));
     assert.equal(plan.mode,'explore');assert(plan.groups.every(g=>!g.promising));
     assert.equal(plan.groups.find(g=>g.format.endsWith('身近な物のコマ撮り')).summary.n,0);
     assert.equal(plan.groups.find(g=>g.format.endsWith('動くことば')).summary.stayedN,0);
@@ -368,7 +388,7 @@ test('comparison uses a single age-matched row, preserves zero and excludes old/
   try {
     const observation=await a.page.evaluate(pid=>experimentObservation(allStats().list.find(s=>s.post?.id===pid)),pid);
     assert.equal(observation.views,0);assert.equal(observation.stayed,0);assert.equal(observation.retention,0);
-    const plan=await a.page.evaluate(()=>experimentPlan());
+    const plan=await a.page.evaluate(()=>experimentPlan('refine'));
     assert.equal(plan.groups.find(g=>g.format.endsWith('動くことば')).summary.n,0);
     assert(!plan.groups.some(g=>g.format.endsWith('身近な物のコマ撮り')));
     assert.equal(plan.mode,'explore');
@@ -384,25 +404,75 @@ test('awaiting measurements does not repeatedly reuse old successful videos',asy
   addExperiment(db,'探索1｜動くことば',0.5,{views:10},0);
   const a=await open(db);
   try {
-    const plan=await a.page.evaluate(()=>experimentPlan());
+    const plan=await a.page.evaluate(()=>experimentPlan('refine'));
     assert.equal(plan.mode,'explore');
     assert.equal(plan.groups.find(g=>g.format.endsWith('昼の切り絵')).summary.n,1);
   }finally{await a.context.close();}
 });
 
-test('unpublished records do not advance exploration and custom format names are escaped',async()=>{
+test('unpublished plans reserve their concept without being counted as performance and custom names are escaped',async()=>{
   const db=baselineFixture();
-  const unposted=addExperiment(db,'探索1｜昼の切り絵',10,goodExperiment);
+  const unposted=addExperiment(db,'探索1｜実写・一人称の小さな冒険',10,goodExperiment);
   db.sv_posts=db.sv_posts.filter(p=>p.id!==unposted.pid);
   const custom='探索1｜<img src=x onerror=alert(1)>';
   addExperiment(db,custom,9,{views:50});
   const a=await open(db);
   try {
     const plan=await a.page.evaluate(()=>experimentPlan());
-    assert.equal(plan.format,'探索1｜昼の切り絵');
-    assert(!plan.groups.some(g=>g.format==='探索1｜昼の切り絵'));
+    assert.equal(plan.format,'探索1｜実写・手仕事の接写');
+    assert(!plan.groups.some(g=>g.format==='探索1｜実写・一人称の小さな冒険'));
     assert.match(await a.page.locator('#test-matrix').textContent(),/探索1｜<img/);
     assert.equal(await a.page.locator('#test-matrix img').count(),0);
     assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
+
+
+test('generation rotates 24 different scene briefs without changing published results or saved inputs',async()=>{
+  const db=baselineFixture(), before=structuredClone(db), old=strategy('大切な目的');
+  old.keep='毎回、夜の窓辺をコードで描く';
+  const a=await open(db,{'sv-strategy-v1':JSON.stringify(old),['sv-entry-draft-'+date]:JSON.stringify({'experiment-post-1':{views:'777'}})});
+  try {
+    const briefs=[],formats=[];
+    // Exercise the same handler as both UI buttons, with no new video registration.
+    for(let n=0;n<25;n++){
+      const result=await a.page.evaluate(async()=>{
+        const plan=experimentPlan();await showPrompt();
+        return {brief:plan.brief,format:plan.format,copy:document.querySelector('#prompt-out').value};
+      });
+      briefs.push(result.brief);formats.push(result.format);
+      assert.match(result.copy,/今回の探索・実写方針を、入力された土台/);
+    }
+    assert.equal(new Set(briefs.slice(0,24)).size,24);
+    assert.equal(new Set(formats).size,25);
+    assert.match(briefs[24],/履歴にない別の具体的な企画/);
+    assert.doesNotMatch(briefs[24],/朝の市場/);
+    const history=await a.page.evaluate(()=>readPromptHistory());
+    assert.equal(history.recent.length,24);
+    assert.equal(await a.page.locator('#base-keep').inputValue(),old.keep);
+    assert.deepEqual(db,before);assert.deepEqual(a.writes,[]);assert.deepEqual(a.errors,[]);
+    assert.equal(await a.page.evaluate(date=>JSON.parse(localStorage.getItem('sv-entry-draft-'+date))['experiment-post-1'].views,date),'777');
+  }finally{await a.context.close();}
+});
+
+test('failed refresh does not consume an approach and unavailable history storage still advances in memory',async()=>{
+  const a=await open(baselineFixture());
+  try {
+    await a.tab('advice');
+    a.flags.failMetrics=true;
+    await a.page.locator('#prompt-build').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
+    assert.equal(await a.page.evaluate(()=>readPromptHistory().recent.length),0);
+    a.flags.failMetrics=false;
+    await a.page.evaluate(()=>{
+      const original=Storage.prototype.setItem;
+      Storage.prototype.setItem=function(key,value){if(key==='sv-prompt-exploration-v2')throw new Error('quota');return original.call(this,key,value);};
+    });
+    await a.page.locator('#prompt-build').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
+    assert.match(await a.page.locator('#prompt-msg').textContent(),/生成履歴を端末に保存できません/);
+    const first=await a.page.locator('#prompt-out').inputValue();
+    await a.page.locator('#prompt-build2').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build2').disabled);
+    const second=await a.page.locator('#prompt-out').inputValue();
+    assert.notEqual(second,first);assert.match(second,/形式: 探索1｜実写・手仕事の接写/);
+    assert.deepEqual(a.writes,[]);assert.deepEqual(a.errors,[]);
   }finally{await a.context.close();}
 });

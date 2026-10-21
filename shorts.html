@@ -438,14 +438,20 @@
         <li><span>02</span>プロンプトをコピー</li>
         <li><span>03</span>使いたいAIに渡す</li>
       </ol>
-      <p class="prompt-note">違う見た目の型を試し、手応えが出た型を磨き、また別の型を探します。昼の切り絵・動く文字・物のコマ撮り・二分割の会話から始め、夜の窓辺や17秒には固定しません。
+      <p class="prompt-note">生成するたびに、場所・被写体・動き・撮り方・物語を変えて探索します。実写に近い自然な動画を優先し、夜の窓辺や文字だけの動画には固定しません。
         受け取るファイルは<b>音入りの mp4 1本だけ</b>。ほかに返ってくるのは、投稿に使う題名・説明文と、登録用の1行（文字だけ）です。
-        映像はAIがコードで描いて書き出すので、コードを実行できる環境が必要です。</p>
+        実際の制作には、動画生成機能または利用許諾のある実写動画素材と編集環境が必要です。プロンプトだけでは実写品質を保証できません。生成履歴はこのブラウザーに保存し、別の端末では登録済みの動画を参考にします。</p>
       <button type="button" id="prompt-base-hint" class="hidden text-[11px] mb-3 rounded-lg px-3 py-2 leading-relaxed cursor-pointer"
          style="background:rgba(154,116,32,.09);color:#9a7420">
         「土台」タブがまだ空です。<b>なぜやるのか</b>と<b>この分野の上限</b>を入れておくと、
         指示文が「数字を追うだけの提案」にならずに済みます。
       </button>
+      <label class="block text-xs mb-3" for="prompt-mode">今回の作り方
+        <select id="prompt-mode" class="fld mt-1">
+          <option value="explore">毎回違うアプローチで探索する</option>
+          <option value="refine">数字に手応えのある型を再検証する</option>
+        </select>
+      </label>
       <button id="prompt-build" class="w-full rounded-2xl py-3.5 font-medium text-slate-900 shadow-2xl"
               style="background:#17456b">分析してプロンプトを作る</button>
 
@@ -456,7 +462,7 @@
         <div class="flex gap-2 mt-2">
           <button id="prompt-copy" class="flex-1 rounded-xl py-2.5 text-sm font-medium text-slate-900"
                   style="background:#2b7f8c">コピーする</button>
-          <button id="prompt-build2" class="glass rounded-xl px-4 text-xs whitespace-nowrap">作り直す</button>
+          <button id="prompt-build2" class="glass rounded-xl px-4 text-xs whitespace-nowrap">別のアプローチを作る</button>
         </div>
         <p id="prompt-msg" role="status" aria-live="polite" class="text-[11px] mt-2"></p>
         <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">
@@ -748,7 +754,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <label><span class="block text-[11px] text-slate-500 mb-1">形式</span>
             <input id="vm-format" list="dl-format" class="fld" placeholder="プロンプトの形式名をそのまま入力">
-            <datalist id="dl-format"><option value="探索1｜昼の切り絵"><option value="探索1｜動くことば"><option value="探索1｜身近な物のコマ撮り"><option value="探索1｜二分割のひとり会話"><option value="映像＋テロップ（窓と灯り）"><option value="映像＋テロップ"><option value="語り"><option value="テロップのみ"><option value="音楽メイン"><option value="対話"></datalist></label>
+            <datalist id="dl-format"><option value="探索1｜実写・一人称の小さな冒険"><option value="探索1｜実写・手仕事の接写"><option value="探索1｜実写・屋外の短いドラマ"><option value="探索1｜実写・自然の観察"><option value="探索1｜実写・街のドキュメンタリー"><option value="探索1｜実写・視点が変わる発見"><option value="探索1｜実写・体を動かす解放感"><option value="探索1｜実写・小さな可笑しさ"></datalist></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">尺(秒)</span><input id="vm-dur" type="number" inputmode="numeric" class="fld"></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">締め</span>
             <input id="vm-cta" list="dl-cta" class="fld" placeholder="リンクへ">
@@ -1751,20 +1757,58 @@ function evidenceOf(x){
   return { level, reasons, best:b, worst:w };
 }
 
-/* 探索は型ごと変え、手応えのある型の再検証だけ変更を1つに絞る。
-   形式名を記録に使うので、クリック回数や端末内の乱数では進めない。 */
+/* 生成履歴は投稿実績と分離する。数字の比較は投稿・計測済みの記録だけを使う。 */
 const EXPERIMENT_RECIPES = [
-  { name:'昼の切り絵', seconds:'18〜28秒',
-    brief:'昼の公園・バス停・商店街など、屋外の明るい紙の切り絵。小さな出来事を「予想→変化→余韻」の3場面で見せる。窓辺や点灯を結末にしない。' },
-  { name:'動くことば', seconds:'10〜18秒',
-    brief:'余白のある単色背景と大きな動く文字。文字が詰まる・ほどける・別の意味に組み替わる動きで気持ちを見せる。風景は不要。文字だけでも完成形にできる。' },
-  { name:'身近な物のコマ撮り', seconds:'12〜22秒',
-    brief:'明るい机を真上から見るコマ撮り風。カップ、靴、メモなど身近な物の意外な動きで、小さな困りごとと変化を表す。灯りの点灯は使わない。' },
-  { name:'二分割のひとり会話', seconds:'20〜35秒',
-    brief:'画面を二分割し、外に見せる言葉と心の中の言葉を短い吹き出しで交互に見せる。明るい配色・簡単な図形やシルエット。読み上げは使わず、文字と効果音で間を作る。' },
+  { name:'実写・一人称の小さな冒険', seconds:'15〜25秒', camera:'目線の高さの一人称・歩行の連続ショット', story:'小さな迷い→自分で選ぶ→予想外の発見', sound:'足音と現場の環境音',
+    scenes:['朝の市場で手に取る果物を迷い、香りを確かめて選ぶ', '海辺の遊歩道で分かれ道を選び、岩陰の潮だまりを発見する', '植物園で葉の影をたどり、小さな新芽に近づく'] },
+  { name:'実写・手仕事の接写', seconds:'12〜22秒', camera:'手元のマクロ接写・浅い被写界深度', story:'ほころび→ゆっくり手を動かす→小さな完成', sound:'道具と素材が触れる音',
+    scenes:['作業台でほつれた布を針と糸で一針ずつ繕う', '陶芸工房で指先が粘土のふちを整える', 'キッチンで不揃いの生地を手で丸める'] },
+  { name:'実写・屋外の短いドラマ', seconds:'20〜35秒', camera:'人物のミディアムと引きの切り返し', story:'日常のすれ違い→小さな行動→表情で伝わる結末', sound:'環境音と控えめな音楽',
+    scenes:['昼の公園で落ちたハンカチを拾い、持ち主にそっと手渡す', '広場で風に飛ばされた帽子を追い、立ち止まった人が受け止める', 'バス停で荷物を持ち替える人に、隣の人がベンチの場所を空ける'] },
+  { name:'実写・自然の観察', seconds:'15〜30秒', camera:'地面近くの固定カメラ・望遠の観察', story:'見落とす動き→じっと待つ→自然に起こる変化', sound:'現地の自然音',
+    scenes:['雨上がりの庭で葉の水滴が揺れ、重さで落ちる瞬間を待つ', '川岸で小鳥が浅瀬に入り、水しぶきを上げる', '草原で風が穂を順番に揺らし、波が遠くへ走る'] },
+  { name:'実写・街のドキュメンタリー', seconds:'20〜30秒', camera:'広角の移動撮影と仕事のディテールをつなぐ', story:'場所の全景→誰かの日常の仕事→街とのつながり', sound:'街の音と仕事の音',
+    scenes:['開店前の花屋で店員が鉢を外に並べ、通りが色づく', '自転車修理店で職人が車輪を回して調整する', '港で漁具を整える手と行き交う船を追う'] },
+  { name:'実写・視点が変わる発見', seconds:'10〜20秒', camera:'極端な寄りからゆっくり引くワンショット', story:'何だろうという疑問→視野が広がる→身近な正体が分かる', sound:'対象の音から周囲の環境音へ広げる',
+    scenes:['断面の模様から引くと、朝食用に切った赤キャベツだと分かる', '光る小さな粒から引くと、砂浜の貝殻の内側だと分かる', '複雑な網目から引くと、逆光の木の葉だと分かる'] },
+  { name:'実写・体を動かす解放感', seconds:'12〜24秒', camera:'横からの追従撮影・足元と全身の切り替え', story:'ためらう姿勢→一歩動く→体と景色が変わる', sound:'呼吸と動きの音を軸にした軽いリズム',
+    scenes:['河川敷で立ち止まっていた人がゆっくり自転車をこぎ出す', '砂浜で靴を脱ぎ、波打ち際に素足で入る', '木陰の遊歩道で肩を伸ばし、自分のペースで歩き始める'] },
+  { name:'実写・小さな可笑しさ', seconds:'15〜25秒', camera:'正面の固定ワイド・動きの間を見せる', story:'思いどおりにいかない→もう一度試す→笑える着地', sound:'具体的な動作音と短い間',
+    scenes:['テラスで畳もうとしたピクニックシートが風でふわりと広がる', '台所で長い麺を皿に盛ろうとすると端がするりと戻る', '玄関で靴ひもを結ぶと猫がおもちゃと勘違いして寄ってくる'] },
 ];
 const experimentFormat = (round, name) => `探索${round}｜${name}`;
 const isExperiment = v => /^探索[1-9]\d*｜.+/.test(v.format || '');
+const PROMPT_HISTORY_KEY = 'sv-prompt-exploration-v2';
+let promptHistoryMemory = { rounds:{}, recent:[] }, promptHistoryStorageFailed = false;
+function readPromptHistory(){
+  if (promptHistoryStorageFailed) return promptHistoryMemory;
+  try {
+    const raw = JSON.parse(localStorage.getItem(PROMPT_HISTORY_KEY) || 'null');
+    if (!raw) return promptHistoryMemory;
+    if (!raw.rounds || typeof raw.rounds !== 'object' || !Array.isArray(raw.recent)) throw new Error('invalid history');
+    const rounds = {};
+    for (const r of EXPERIMENT_RECIPES) {
+      const n = raw.rounds[r.name];
+      if (Number.isSafeInteger(n) && n > 0 && n < 1000000) rounds[r.name] = n;
+    }
+    const recent = raw.recent.filter(x => x && typeof x.format === 'string' && typeof x.brief === 'string')
+      .slice(-24).map(x => ({format:x.format.slice(0,200), brief:x.brief.slice(0,2000)}));
+    return promptHistoryMemory = { rounds, recent };
+  } catch { promptHistoryStorageFailed = true; return promptHistoryMemory; }
+}
+function rememberPrompt(plan){
+  const history = readPromptHistory();
+  if (plan.recipe) history.rounds[plan.recipe.name] = Math.max(history.rounds[plan.recipe.name] || 0, plan.round);
+  history.recent = [...history.recent, {format:plan.format, brief:plan.brief}].slice(-24);
+  promptHistoryMemory = history;
+  try { localStorage.setItem(PROMPT_HISTORY_KEY, JSON.stringify(history)); promptHistoryStorageFailed = false; }
+  catch { promptHistoryStorageFailed = true; }
+}
+function recipeBrief(recipe, round){
+  const scene = recipe.scenes[round-1] || '過去の例を再利用せず、履歴にない場所・被写体・出来事を新しく選ぶ';
+  return `題材と場面：${scene}。撮り方：${recipe.camera}。物語：${recipe.story}。音：${recipe.sound}。`
+    + (round > recipe.scenes.length ? '撮り方と物語も発想の出発点です。そのまま繰り返さず、履歴にない別の具体的な企画へ置き換えてください。' : '');
+}
 
 // 日単位の記録から、投稿72〜120時間後（4日後が目安）の行を1本につき1つ選ぶ。
 // 別の日の再生数と登録増加を混ぜない。欠測は0にせず、候補判定を保留する。
@@ -1794,7 +1838,7 @@ function experimentSummary(rows){
   }
   return summary;
 }
-function experimentPlan(){
+function experimentPlan(mode = $('#prompt-mode').value){
   const published = allStats().list.filter(s => s.postedAt && +new Date(s.postedAt) <= Date.now())
     .sort((a,b) => new Date(b.postedAt)-new Date(a.postedAt) || String(a.v.id).localeCompare(String(b.v.id)));
   // 90日より古い成功だけを理由に、今も同じ型へ戻し続けない。
@@ -1823,34 +1867,39 @@ function experimentPlan(){
   const candidate = groups.filter(g => g.promising && g.pending < 2
     && !(recentFormats.length === 2 && recentFormats.every(f => f === g.format)))
     .sort((a,b) => b.summary.views/b.baseline.views - a.summary.views/a.baseline.views || a.format.localeCompare(b.format))[0];
-  if (candidate){
+  if (candidate && mode === 'refine'){
     const example = candidate.strong[0].s;
     const recipe = EXPERIMENT_RECIPES.find(r => candidate.format.endsWith('｜'+r.name));
+    const round = Number(candidate.format.match(/^探索(\d+)｜/)?.[1]) || 1;
     return { mode:'refine', label:'手応えのある型を再検証', format:candidate.format,
-      brief:recipe?.brief || '同じ形式名で記録した直近の好調な回の画風と構成を再現する。',
+      brief:recipe ? recipeBrief(recipe, round) : '参考回の仮説と構成を実写に近い動画で再検証する。以前がイラストの場合は映像方式の違いも記録する。',
       seconds:example.v.duration_sec ? `${example.v.duration_sec}秒前後` : '10〜35秒',
       axis:['冒頭の掴み','尺','締めの誘導'][candidate.made % 3], example, candidate, groups,
       reason:`直近${candidate.summary.n}本のうち${candidate.strong.length}本で、同じ計測期間の別形式${candidate.baseline.n}本の再生中央値を1.3倍以上上回り、視聴または登録の指標にも差がありました。成功の確定ではなく、再検証する候補です。`,
     };
   }
-  // 4つの違う見た目を1本ずつ回し、各2本を目安に探索。終われば新しい企画の周へ進む。
+  // 生成済みの案と登録済みの動画を予約として扱い、未投稿でも同じ案に戻さない。
+  const history = readPromptHistory();
   const options = EXPERIMENT_RECIPES.map((recipe, index) => {
-    let round = 1;
-    while (groups.some(g => g.format === experimentFormat(round, recipe.name) && g.made >= 2)) round++;
-    const format = experimentFormat(round, recipe.name);
-    return { recipe, index, round, format, made:groups.find(g => g.format === format)?.made || 0 };
-  }).sort((a,b) => a.round-b.round || a.made-b.made || a.index-b.index);
-  const next = options.find(o => !recentFormats.length || o.format !== recentFormats[0]) || options[0];
-  const hadCandidate = groups.some(g => g.promising);
-  return { mode:'explore', label:'新しい型を探索', format:next.format, brief:next.recipe.brief,
+    const recorded = state.videos.map(v => v.format || '')
+      .filter(f => f.endsWith('｜'+recipe.name)).map(f => Number(f.match(/^探索(\d+)｜/)?.[1]) || 0);
+    const round = Math.max(history.rounds[recipe.name] || 0, ...recorded, 0) + 1;
+    return { recipe, index, round, format:experimentFormat(round, recipe.name) };
+  }).sort((a,b) => a.round-b.round || a.index-b.index);
+  const lastFormat = history.recent.at(-1)?.format || published[0]?.v.format || '';
+  const avoided = history.recent.length ? history.recent.slice(-7).map(h => h.format) : published.slice(0,7).map(s => s.v.format || '');
+  const next = options.find(o => !avoided.some(f => f.endsWith('｜'+o.recipe.name)))
+    || options.find(o => !lastFormat.endsWith('｜'+o.recipe.name)) || options[0];
+  return { mode:'explore', label:'毎回違う実写アプローチを探索', format:next.format,
+    brief:recipeBrief(next.recipe, next.round), recipe:next.recipe,
     seconds:next.recipe.seconds, axis:'形式', round:next.round, groups,
-    reason:hadCandidate
-      ? '手応えのある型に集中しすぎないよう、別の見た目を試します。結果待ちの間も同じ型を量産しません。'
-      : 'まだ複数回で手応えを確認できた型がないため、場面・画風・構成の異なる企画を試します。記録不足は不成功と決めつけません。',
+    reason:mode === 'refine'
+      ? '今は比較条件を満たす再検証候補がないため、別のアプローチを探索します。記録不足を失敗とは決めつけません。'
+      : '今回は新しい企画全体を比べます。好調な過去の型にも自動で戻らず、生成履歴と登録済みの動画から次の撮り方・場面を選びます。',
   };
 }
-function renderTestPlan(){
-  const plan = experimentPlan();
+
+function renderTestPlan(plan = experimentPlan()){
   $('#test-design').innerHTML = `<div class="rounded-2xl p-4" style="background:rgba(23,69,107,.06)">
     <h3 class="text-sm font-bold">${esc(plan.label)}：${esc(plan.format)}</h3>
     <p class="text-xs mt-2">${esc(plan.reason)}</p>
@@ -1858,7 +1907,7 @@ function renderTestPlan(){
     <p class="text-xs mt-2">${plan.mode === 'explore'
       ? '探索では見た目・構成・尺をまとめて変えて構いません。どの要素が効いたかの断定は、後の再検証まで保留します。'
       : `今回は「${esc(plan.axis)}」だけを変え、ほかは参考にした回にそろえます。2本続けたら別の型も探索します。`}</p>
-    <p class="text-xs mt-2">制作後は「形式」に <b>${esc(plan.format)}</b> と記録してください。生成ボタンを押すだけでは探索は進みません。</p>
+    <p class="text-xs mt-2">制作後は「形式」に <b>${esc(plan.format)}</b> と記録してください。生成の履歴と投稿の実績は別です。生成だけでは下の投稿本数や成績には数えません。</p>
   </div>`;
   $('#test-matrix').innerHTML = plan.groups.length ? plan.groups.map(g => `<div class="text-xs mb-3">
     <b>${esc(g.format)}</b>：投稿${g.made}本 ／ 直近3本の比較可能な記録${g.summary.n}本 ／ 他の形式の比較対象${g.baseline.n}本
@@ -1973,7 +2022,7 @@ function renderAdvice(){
   out.push(card('info','📊','投稿4日後の数字を記録する',
     '比較は投稿72〜120時間後の同じ行の数字で行います。再生数に加え、視聴を選択・平均視聴秒数・登録の増加を記録してください。未入力は0ではありません。'));
   out.push(card('flat','🌱','一度の当たりを固定化しない',
-    '有望な型でも2本続けたら別の型を試します。直近の反応が落ちた場合や計測が不足する場合は、再検証候補から外して探索を続けます。伸びることを保証する基準ではありません。'));
+    '既定では毎回違う企画を探索します。有望な型は一覧で確認し、「数字に手応えのある型を再検証する」を選んだ場合だけ戻ります。再検証でも同じ型を2本投稿したら探索へ戻ります。'));
   $('#advice-list').innerHTML = out.join('');
 
   renderTestPlan();
@@ -2566,10 +2615,9 @@ function roleForNext(st){
     : { role:'間口',   why:`いま間口が${dec(pct,0)}%（決めた割合は${st.mix}%）で、新しい人が入ってくる入口が細くなっています。今回は広く届く1本にします。` };
 }
 
-function buildPrompt(){
+function buildPrompt(plan = experimentPlan()){
   const cur = currentValues();
   const st = readStrategy();
-  const plan = experimentPlan();
   const role = roleForNext(st);
   const slug = nextSlug();
   const url = trackUrl(slug);
@@ -2584,11 +2632,11 @@ function buildPrompt(){
   L.push('## この発信の土台');
   if (st.purpose) L.push(`- 目的：${st.purpose}`);
   if (st.goal) L.push(`- ゴール：${st.goal}`);
-  if (st.keep) L.push(`- 続けたい部分：${st.keep}`);
+  if (st.keep) L.push(`- 続けたい部分（入力原文。古い映像の指定は今回の探索・実写方針を優先）：${st.keep}`);
   L.push('- 精神障害の当事者本人が、チャンネルと相談ページ「星の海」をひとりで運営しています。同じ立場から「私も」と語れる言葉を使ってください。');
   L.push('- 診断・治療効果・相談対応を約束せず、病名や等級を勝手に加えないでください。煽りや説教、つらさの見世物にせず、共感と小さな発見を大切にします。');
   L.push('- 再生だけでなく、次も見たいと思うことや星の海への関心につながるかを見ます。数字のために上の土台を変えないでください。');
-  L.push(`- 制作負担の目安は1本${st.minutes}分。複雑すぎる表現は簡素化して、完了できる作りを選んでください。`);
+  L.push(`- 制作負担の目安は1本${st.minutes}分。撮影カット数や尺を調整してください。時間が足りないことを理由に図形アニメーションへ置き換えないでください。`);
   L.push(`- 今回の役割：${role.role}。${role.why}`);
   const rivals = (st.rivals || []).filter(r => r.name || r.views || r.subs);
   if (rivals.length) {
@@ -2596,10 +2644,10 @@ function buildPrompt(){
     rivals.forEach(r => L.push(`  ${r.name || '名称未入力'}：最高再生${r.views || '未入力'}／登録者${r.subs || '未入力'}${r.url ? '／'+r.url : ''}`));
   }
   L.push('');
-  L.push('## 制作方針：探索 → 手応えのある型を再検証 → また探索');
-  L.push('- 同じ部屋で灯りがともる動画を続ける方針から、見た目と構成の違う型を探す方針へ切り替えました。窓辺・夜・点灯の結末・17秒を必須条件にしません。');
-  L.push('- 探索では、場面・画風・明暗・構成・尺をまとめて変えてよいです。この段階は企画全体の比較で、どの要素が効いたかは断定しません。');
-  L.push('- 手応えのある型を磨く回だけ、参考回の特徴をそろえて1要素を変えます。単発のヒットを永続的な正解にせず、別の型の探索も続けます。');
+  L.push('## 制作方針：毎回違うアプローチで、実写に近い動画を試す');
+  L.push('- 今回の探索・実写方針を、入力された土台や過去の制作メモにある古い映像指定より優先します。発信の目的や大切にしたい気持ちは保ち、窓辺・夜・点灯・同じ人物・同じ構図は引き継ぎません。');
+  L.push('- 探索では、場面・被写体・実際の動作・撮り方・物語の構成・音のうち、直近の企画から少なくとも4項目を具体的に変えてください。内容やテロップだけの差し替えは禁止です。');
+  L.push('- 初期設定は毎回の探索です。数字が良い型があっても自動で似た映像に戻しません。再検証が明示的に選ばれた回だけ、参考回の仮説を検証します。');
   L.push('- 「1000回を超えたら成功」という絶対基準は使いません。同じ投稿後日数の自分の他の動画と比べ、視聴や登録も確認します。');
   L.push('');
   L.push(`## 今回：${plan.label}`);
@@ -2608,10 +2656,9 @@ function buildPrompt(){
   L.push(`- 今回の見た目と構成：${plan.brief}`);
   L.push(`- 尺の設計目安：${plan.seconds}。内容と読める速さから決めて、実際の書き出し秒数を記録してください。`);
   if (plan.mode === 'explore') {
-    L.push('- 最初の1秒を見ただけで、最近の夜の窓辺とは違う企画だと分かる画にしてください。昼の明るさ、余白、グラフィック、物の動きなど、選んだ形式の特徴を前面に出します。');
-    L.push('- この形式で違う題材を2本ほど試します。失敗と決めつけて毎回すべてを捨てることも、結果待ちの間に同じものを量産することもしません。');
-    L.push('- 過去に同じ系列を試している場合は、場面・配色・動きの仕掛けを刷新し、単なるタイトルの言い換えにしないでください。新しい周の形式名は上に指定した名前を使います。');
-    L.push('- 制作前に作業用として異なる3案を考え、冒頭の見やすさ・具体性・既存動画との差から1案を選び、その1本だけを完成させてください。');
+    L.push('- 冒頭1秒の画だけで前回と別の企画だと分かること。主役の物体や人物、ロケーション、カメラ位置、動作のうち複数を変え、同じ背景で言葉だけ変えないでください。');
+    L.push('- 制作前に場所・被写体・行動の異なる3案を検討し、履歴と最も違い、冒頭から具体的な出来事が見える1案を選びます。今回指定した撮り方と物語を出発点に、その1本だけを完成させます。');
+    L.push('- 以下の履歴と直近の投稿メモを照合し、選んだ案の変更点を4項目以上、短く明示してから制作します。履歴外の映像を見たと装わないでください。');
   } else {
     const g = plan.candidate;
     L.push(`- 参考にする回：${promptLineOf(plan.example)}`);
@@ -2621,6 +2668,12 @@ function buildPrompt(){
     L.push('- 比較に使えたこの型の記録：');
     g.samples.forEach(o => L.push(`  ${o.s.v.slug}「${o.s.v.title}」計測日${o.date}（投稿後約${dec(o.age,0)}時間）：再生${num(o.views)}回／視聴を選択${dec(o.stayed)}%／平均視聴率${dec(o.retention)}%／1000再生あたり登録${dec(o.subRate)}人`));
   }
+  L.push('');
+  L.push('## 重複を避けるための生成履歴（未制作・未投稿の案を含む。成績ではない）');
+  const history = readPromptHistory().recent;
+  if (!history.length) L.push('このブラウザーの生成履歴はまだありません。以下の登録済み動画も参照してください。');
+  history.forEach(h => L.push(`- ${h.format}：${h.brief}`));
+  recent.filter(s => s.v.note).forEach(s => L.push(`- 投稿メモ ${s.v.slug}：${s.v.note}`));
   L.push('');
   L.push('## 今回読み込んだ数字（記録と仮説を分ける）');
   L.push(`- 読み込み日：${todayStr()}。記録の計測日：${dates[0] || '未記録'}〜${dates.at(-1) || '未記録'}。`);
@@ -2644,8 +2697,8 @@ function buildPrompt(){
   L.push('');
   L.push('## 構成・画・音');
   L.push('- 冒頭から、その回の具体的な出来事や問いが伝わるようにします。時刻から始める決まり、暗い部屋、最後の点灯、5〜7枚のテロップには固定しません。');
-  L.push('- 動く文字なら文字の変形、コマ撮りなら物の移動、二分割なら会話の食い違いなど、その型で続きを見たくなる変化を作ります。意味のない装飾の動きで引き延ばさないでください。');
-  L.push('- 人物・シルエット・簡単なキャラクターは企画に合えば使えます。夜色・写実・コードの多層風景に縛りません。利用できる素材や描画手段で一貫した画風にしてください。');
+  L.push('- 自然な実写映像に限りなく近い質感を目指します。光・影・肌・素材・遠近・被写界深度・物理的な動きが一貫し、動作に意味がある動画にします。人物の顔・手指や物体の変形、ちらつき、背景の不連続を点検してください。');
+  L.push('- 実際に動く被写体の動画を使います。図形・SVG・Canvasによる風景、切り絵、シルエット、文字アニメ、静止画のズームやパンだけで完成させることは禁止です。文字は補助とし、文字を隠しても内容の違いが伝わる映像にします。');
   L.push('- ループは内容に合う場合だけ使います。自然に終わる、答えを見せる、短い問いを残す、といった締め方も可能です。「毎晩1本」の約束は自動で入れません。');
   L.push('- 音声トラックは必須。BGM＋効果音・BGMのみ・効果音のみから選び、読み上げナレーションは入れません。権利を確認できる音または自作の音を使い、急な大音量を避けます。');
   L.push('- テロップはスマホで読める太さと大きさにし、背景との明暗差を確保します。1〜2行を基本にし、文章の長さに合った表示時間を取ります。');
@@ -2653,7 +2706,8 @@ function buildPrompt(){
   L.push('- 投稿する時間帯や説明文の基本条件はできるだけそろえます。探索段階でまとめて変えた要素は記録し、どれが原因かは後の再検証で確かめます。');
   L.push('');
   L.push('## 制作・書き出しと自己点検');
-  L.push('- 利用できる実行環境、ffmpeg / ffprobe、日本語フォント、素材と出力先を確認して制作を進めてください。過去の会話や特定のキットの存在を前提にしません。');
+  L.push('- まず利用可能な動画生成ツール、利用許諾を確認できる実写動画素材、編集環境を確認します。動画生成または実写素材の編集で実現し、コードは編集・字幕・音・書き出しの補助に使います。過去の会話や特定のキットを前提にしません。');
+  L.push('- 動画生成機能も適切な実写動画素材も使えない場合は、実写動画を作れると装わず、不足する機能や必要な素材を具体的に伝えて止めてください。静止画やコード描画への無断の代替、未生成mp4の納品宣言はしません。');
   L.push(`- 出力フォルダは識別子${slug}ごとに分け、既存ファイルを上書きしません。`);
   L.push('- 縦1080×1920、30fps、mp4（H.264・yuv420p）、音声AAC 48kHz。尺は今回の企画に合わせ、17秒に固定しません。');
   L.push('- 作業用の短い試写で冒頭・中間・終盤の画を確認し、誤字、はみ出し、読める時間、音割れ、映像と音の長さを確かめてから本番を書き出します。点検用のコマや試写ファイルは納品しません。');
@@ -2667,7 +2721,7 @@ function buildPrompt(){
   L.push('   次の計測リンクを本文に1回、そのまま入れてください。URLやUTMのパラメータを変更せず、識別子の解説は貼り付け用の説明文に含めません。');
   L.push(url);
   L.push('4. 記録用の1行（下の形式）。実際に作った内容を書き、形式名は正確に引き継いでください。');
-  L.push(`識別子: ${slug} ／ テーマ: ___ ／ 冒頭の掴み: ___ ／ 音: ___ ／ 形式: ${plan.format} ／ 尺: ___（実測秒）／ 締め: ___ ／ 役割: ${role.role} ／ 今回変えたもの: ${plan.axis} ／ メモ: ${plan.label}・画風と場面___・仮説___${plan.example ? '・参考:'+plan.example.v.slug : ''}`);
+  L.push(`識別子: ${slug} ／ テーマ: ___ ／ 冒頭の掴み: ___ ／ 音: ___ ／ 形式: ${plan.format} ／ 尺: ___（実測秒）／ 締め: ___ ／ 役割: ${role.role} ／ 今回変えたもの: ${plan.axis} ／ メモ: ${plan.label}・場面___・被写体___・動作___・撮り方___・物語___・音___・仮説___${plan.example ? '・参考:'+plan.example.v.slug : ''}`);
   L.push('   「動画」タブの形式欄は自由入力できます。上のメモも残してください。YouTubeのURLと投稿日時を登録しないと、投稿後日数をそろえて比較できません。');
   L.push('5. 自己点検を1行。実測した尺・解像度・音声の確認と、今回はどんな仮説を試したかを簡潔に記します。');
   return { text:L.join('\n'), slug };
@@ -2679,6 +2733,7 @@ async function showPrompt(){
   $('#prompt-copy').disabled = true;
   try {
     if (!await loadAll()) {
+      $('#prompt-box').classList.remove('hidden');
       $('#prompt-msg').textContent = '最新の数字を読み込めないため、作成を止めました。入力内容は残っています。';
       return;
     }
@@ -2690,15 +2745,20 @@ async function showPrompt(){
       $('#prompt-slug').textContent = '—';
       return;
     }
-    const { text, slug } = buildPrompt();
+    const plan = experimentPlan();
+    const { text, slug } = buildPrompt(plan);
+    rememberPrompt(plan);
+    renderTestPlan(plan);
     $('#prompt-box').classList.remove('hidden');
     $('#prompt-out').value = text;
     $('#prompt-slug').textContent = slug;
-    $('#prompt-msg').textContent = '保存済みの数字と、現在入力している土台から作成しました。未保存の数字は含みません。';
+    $('#prompt-msg').textContent = '保存済みの数字と現在の土台から作成しました。生成履歴は投稿成績には数えません。'
+      + (promptHistoryStorageFailed ? ' 生成履歴を端末に保存できません。この画面では別案へ進みますが、再読み込み後は履歴を引き継げない場合があります。' : plan.mode === 'explore' ? ' 次の生成では別のアプローチを選びます。' : ' 別案に進む場合は「別のアプローチを作る」を押してください。');
   } finally { $('#prompt-build').disabled = false; $('#prompt-build2').disabled = false; }
 }
 $('#prompt-build').addEventListener('click', showPrompt);
-$('#prompt-build2').addEventListener('click', showPrompt);
+$('#prompt-build2').addEventListener('click', () => { $('#prompt-mode').value = 'explore'; showPrompt(); });
+$('#prompt-mode').addEventListener('change', renderAdvice);
 
 $('#prompt-copy').addEventListener('click', async () => {
   const msg = $('#prompt-msg');
