@@ -60,6 +60,7 @@ async function open(db, storage={}) {
     const matches=row=>filters.every(([key,value])=>String(row[key])===value.slice(3));
     if(req.method()==='GET') {
       reads.push({table,offset:url.searchParams.get('offset')});
+      if(flags.missingStayed && table==='sv_metrics' && url.searchParams.get('select')==='stayed_pct') return send({message:'column stayed_pct does not exist'},400);
       if(flags.failMetrics && table==='sv_metrics') return send({message:'network temporarily unavailable'},503);
       rows=rows.filter(matches).map(row=>({...row}));
       const order=url.searchParams.get('order');
@@ -474,5 +475,152 @@ test('failed refresh does not consume an approach and unavailable history storag
     const second=await a.page.locator('#prompt-out').inputValue();
     assert.notEqual(second,first);assert.match(second,/形式: 探索1｜実写・手仕事の接写/);
     assert.deepEqual(a.writes,[]);assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
+
+const dayAgoJst = days => new Date(Date.now()-days*864e5).toLocaleDateString('sv-SE',{timeZone:'Asia/Tokyo'});
+function studyFixture(){
+  const db=experimentFixture();
+  for(const age of [40,32,20]) addExperiment(db,'導入前',age,{stayed_pct:50,avg_watch_sec:16,subs_gained:1,likes:10});
+  for(const age of [12,10,7]){
+    const {id}=addExperiment(db,'実写テスト',age,{stayed_pct:70,avg_watch_sec:8,subs_gained:2,likes:20});
+    db.sv_videos.find(v=>v.id===id).note='【制作手法:Seedance】\n残したい制作メモ';
+  }
+  return db;
+}
+const studyStrategy = () => ({...strategy('冒頭と視聴時間を比べる'),videoStudy:{beforeEnd:dayAgoJst(15),beforeStayed:'99',start:dayAgoJst(14)}});
+
+test('stayed input derives swipe complement, preserves zero and only saves the existing metric',async()=>{
+  const db=fixture(),a=await open(db);
+  try {
+    await a.tab('entry');
+    for(const [value,expected] of [['0','100.0%'],['100','0.0%'],['61.5','38.5%'],['','—']]){
+      await fillMetric(a.page,'post-1','stayed_pct',value);
+      assert((await a.page.locator('[data-swipe-post="post-1"]').textContent()).includes(expected));
+    }
+    await fillMetric(a.page,'post-1','stayed_pct','101');await saveEntries(a.page);
+    assert.equal(a.writes.length,0);assert.match(await a.page.locator('#entry-msg').textContent(),/数字または保存先/);
+    await fillMetric(a.page,'post-1','stayed_pct','0');await saveEntries(a.page);
+    assert.equal(db.sv_metrics[0].stayed_pct,0);
+    const saved=a.writes.find(x=>x.table==='sv_metrics').body[0];
+    assert.deepEqual(Object.keys(saved).sort(),['measured_on','post_id','stayed_pct']);
+    assert.equal(db.sv_metrics[0].views,100);assert.equal(db.sv_metrics[0].likes,5);
+    assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
+
+test('legacy schema without stayed still loads and keeps the other input fields',async()=>{
+  const a=await open(fixture());
+  try {
+    a.flags.missingStayed=true;assert.equal(await a.page.evaluate(()=>loadAll()),true);
+    assert.equal(await a.page.locator('[data-metric="stayed_pct"]').count(),0);
+    assert.match(await a.page.locator('#setup-warn').textContent(),/youtube-hook.sql/);
+    assert.equal(await a.page.evaluate(()=>allStats().list[0].stayed),null);
+    await a.tab('entry');await fillMetric(a.page,'post-1','likes','7');await saveEntries(a.page);
+    assert.match(await a.page.locator('#entry-msg').textContent(),/保存と読み直し/);
+    assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
+
+test('28-day baseline settings preserve legacy strategy, sync to another browser and reject overlapping dates',async()=>{
+  const db=fixture(),old={...strategy('保存済みの目的'),customLegacy:'消さない'},a=await open(db,{'sv-strategy-v1':JSON.stringify(old)});
+  try {
+    await a.tab('base');
+    await a.page.locator('#study-before-end').fill(dayAgoJst(15));
+    await a.page.locator('#study-before-stayed').fill('0');
+    await a.page.locator('#study-start').fill(dayAgoJst(14));
+    await a.page.reload();await a.page.waitForFunction(()=>state.ready);await a.tab('base');
+    assert.equal(await a.page.locator('#study-before-stayed').inputValue(),'0');
+    await a.page.locator('#base-save').click();await a.page.waitForFunction(()=>!document.querySelector('#base-save').disabled);
+    assert.match(await a.page.locator('#base-msg').textContent(),/保存と読み直し/);
+    const saved=JSON.parse(db.sv_config[0].value);
+    assert.equal(saved.customLegacy,'消さない');assert.equal(saved.keep,old.keep);assert.equal(saved.videoStudy.beforeStayed,'0');
+    const b=await open(db);
+    try { assert.equal(await b.page.locator('#study-before-stayed').inputValue(),'0');assert.equal(await b.page.locator('#base-purpose').inputValue(),old.purpose); }
+    finally { await b.context.close(); }
+    const before=db.sv_config[0].value;
+    await a.page.locator('#study-start').fill(dayAgoJst(16));
+    await a.page.locator('#base-save').click();await a.page.waitForFunction(()=>!document.querySelector('#base-save').disabled);
+    assert.match(await a.page.locator('#base-msg').textContent(),/終了日より後/);assert.equal(db.sv_config[0].value,before);
+  }finally{await a.context.close();}
+});
+
+test('production method is saved with the original note and never inferred from format or date',async()=>{
+  const db=studyFixture(),a=await open(db);
+  try {
+    await a.page.evaluate(()=>openVideo('experiment-1'));
+    await a.page.locator('#video-modal summary').click();
+    await a.page.locator('#vm-note').fill('大事なメモ\n2行目');await a.page.locator('#vm-method').selectOption('seedance');
+    await a.page.locator('#vm-save').click();await a.page.waitForFunction(()=>!document.querySelector('#vm-save').disabled);
+    await a.page.waitForFunction(()=>document.querySelector('#video-modal').classList.contains('hidden'));
+    assert.equal(db.sv_videos[0].note,'【制作手法:Seedance】\n大事なメモ\n2行目');
+    await a.page.evaluate(()=>openVideo('experiment-1'));
+    assert.equal(await a.page.locator('#vm-method').inputValue(),'seedance');
+    assert.equal(await a.page.locator('#vm-note').inputValue(),'大事なメモ\n2行目');
+    await a.page.locator('#vm-method').selectOption('other');await a.page.locator('#vm-save').click();
+    await a.page.waitForFunction(()=>document.querySelector('#video-modal').classList.contains('hidden'));
+    assert.equal(db.sv_videos[0].note,'【制作手法:その他】\n大事なメモ\n2行目');
+    assert.equal(await a.page.evaluate(()=>productionMethod({format:'Seedance',note:'Seedanceを検討中'})),'unknown');
+    assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
+
+test('before and after compare age-matched video medians separately from the Studio baseline',async()=>{
+  const db=studyFixture();
+  addExperiment(db,'手法未記録',8,{stayed_pct:1});
+  const pending=addExperiment(db,'Seedance結果待ち',1,{},0);
+  db.sv_videos.find(v=>v.id===pending.id).note='【制作手法:Seedance】';
+  addExperiment(db,'期間外',70,{stayed_pct:99});addExperiment(db,'未来',-1,{stayed_pct:99});
+  db.sv_metrics.push({post_id:'experiment-post-6',measured_on:dayAgoJst(0),views:999999,stayed_pct:1,avg_watch_sec:100});
+  const a=await open(db,{'sv-strategy-v1':JSON.stringify(studyStrategy())});
+  try {
+    const result=await a.page.evaluate(()=>{
+      const c=studyComparison();return {before:c.before,after:c.after,excluded:c.excluded,diagnosis:studyDiagnosis(c)};
+    });
+    assert.equal(result.before.summary.n,3);assert.equal(result.after.summary.n,3);
+    assert.equal(result.before.summary.stayed,50);assert.equal(result.after.summary.stayed,70);
+    assert.equal(result.after.summary.retention,40);assert.equal(result.after.summary.watch,8);
+    assert.equal(result.after.summary.likeRate,4);assert.equal(result.after.summary.subRate,4);
+    assert.equal(result.excluded,1);assert.equal(result.after.pending,1);assert.match(result.diagnosis,/パターンB/);
+    const html=await a.page.locator('#seedance-comparison').textContent();
+    assert.match(html,/99.0%/);assert.match(html,/20.0ポイント/);assert.match(html,/暫定/);
+    const prompt=await a.page.evaluate(()=>buildPrompt().text);
+    assert.match(prompt,/優先順位：1. 視聴を継続/);assert.match(prompt,/冒頭0〜5秒/);assert.match(prompt,/パターンB/);
+    assert.match(prompt,/平均再生率は完走率ではありません/);assert.match(prompt,/Studio参考値/);
+    for(const m of db.sv_metrics.filter(m=>['experiment-post-4','experiment-post-5','experiment-post-6'].includes(m.post_id))) m.stayed_pct=40;
+    await a.page.evaluate(()=>loadAll());assert.match(await a.page.evaluate(()=>studyDiagnosis(studyComparison())),/パターンA/);
+    assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
+
+test('KPI diagnostics wait for paired samples, keep missing values distinct and allow replay above 100%',async()=>{
+  const db=studyFixture();
+  db.sv_metrics[3].avg_watch_sec=null;db.sv_metrics[4].stayed_pct=null;
+  db.sv_metrics[5].avg_watch_sec=30;db.sv_metrics[5].subs_gained=0;db.sv_metrics[5].likes=0;
+  const a=await open(db,{'sv-strategy-v1':JSON.stringify(studyStrategy())});
+  try {
+    const result=await a.page.evaluate(()=>{const c=studyComparison();return {summary:c.after.summary,diagnosis:studyDiagnosis(c),obs:c.after.rows.find(o=>o.s.v.id==='experiment-6')};});
+    assert.equal(result.summary.stayedN,2);assert.equal(result.summary.retentionN,2);
+    assert.match(result.diagnosis,/判断保留/);assert.equal(result.obs.retention,150);
+    assert.equal(result.obs.subRate,0);assert.equal(result.obs.likeRate,0);
+    db.sv_metrics[5].views=0;await a.page.evaluate(()=>loadAll());
+    const o=await a.page.evaluate(()=>studyComparison().after.rows.find(o=>o.s.v.id==='experiment-6'));
+    assert.equal(o.subRate,null);assert.equal(o.likeRate,null);assert.equal(o.views,0);
+    assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
+
+test('retest prioritizes continued viewing without a view-count gate, but never treats missing hook data as zero',async()=>{
+  const db=baselineFixture();
+  addExperiment(db,'探索1｜実写・手仕事の接写',15,{views:200,stayed_pct:60});
+  addExperiment(db,'探索1｜実写・手仕事の接写',14,{views:200,stayed_pct:60});
+  addExperiment(db,'探索1｜別の撮り方',12,{views:500,stayed_pct:40});
+  const a=await open(db);
+  try {
+    const plan=await a.page.evaluate(()=>experimentPlan('refine'));
+    assert.equal(plan.mode,'refine');assert(plan.candidate.summary.views<plan.candidate.baseline.views);
+    assert.match(plan.reason,/視聴継続中央値/);assert.equal(await a.page.evaluate(()=>experimentPlan().mode),'explore');
+    db.sv_metrics.filter(m=>['experiment-post-4','experiment-post-5'].includes(m.post_id)).forEach(m=>m.stayed_pct=null);
+    await a.page.evaluate(()=>loadAll());assert.equal(await a.page.evaluate(()=>experimentPlan('refine').mode),'explore');
   }finally{await a.context.close();}
 });

@@ -293,11 +293,20 @@
       <p id="subs-msg" class="text-[11px] mt-2"></p>
     </div>
 
+    <div class="glass rounded-2xl p-5">
+      <h2 class="font-semibold text-sm mb-2">最重要KPI：冒頭 → 視聴時間 → 登録</h2>
+      <div id="primary-kpis"></div>
+    </div>
+    <div class="glass rounded-2xl p-5">
+      <h2 class="font-semibold text-sm mb-2">Seedance導入前後の比較</h2>
+      <p class="text-xs mb-3">「土台」で導入前28日間と導入開始日を設定し、動画の編集画面で制作手法を記録してください。</p>
+      <div id="seedance-comparison"></div>
+    </div>
     <div id="home-cards" class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5"></div>
 
     <div class="glass rounded-2xl p-5">
-      <h2 class="font-semibold text-sm mb-1">いまの健康診断</h2>
-      <p class="text-[11px] text-slate-500 mb-4">伸びているショート動画の目安と、いまの自分の数字を並べています。</p>
+      <h2 class="font-semibold text-sm mb-1">参考指標（全期間の最新値）</h2>
+      <p class="text-[11px] text-slate-500 mb-4">以下の目安は運用上の参考です。項目ごとの計測日が異なる場合があり、導入効果は上の同条件の比較で確認します。</p>
       <div id="home-score"></div>
       <button id="to-grow" class="mt-3 text-[11px] text-sky-300 hover:text-sky-200">→ 目安の意味と直し方を見る</button>
     </div>
@@ -409,6 +418,16 @@
       <div id="base-mixnow"></div>
     </div>
 
+    <div class="glass rounded-2xl p-5">
+      <h2 class="font-semibold text-sm mb-2">映像化の比較基準</h2>
+      <p class="text-xs mb-3">導入前のYouTube Studioで「過去28日間・ショート」を選び、終了日と「視聴を継続」を記録してください。下の保存ボタンで土台と一緒に保存します。</p>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <label class="text-xs">導入前28日間の終了日<input id="study-before-end" type="date" class="fld mt-1"></label>
+        <label class="text-xs">Studioの視聴を継続（%）<input id="study-before-stayed" type="number" min="0" max="100" step="any" class="fld mt-1" placeholder="未入力"></label>
+        <label class="text-xs">Seedance導入開始日<input id="study-start" type="date" class="fld mt-1"></label>
+      </div>
+      <p class="text-xs mt-2">Studioのチャンネル集計値は参考値として別表示します。動画ごとの割合の中央値とは計算方法が異なります。導入後は開始日から28日間の投稿を比較対象にします。</p>
+    </div>
     <div class="glass rounded-2xl p-5">
       <div class="flex items-center justify-between gap-3">
         <p class="text-[11px] text-slate-500 leading-relaxed">
@@ -542,10 +561,8 @@
         <h2 class="font-bold">伸びているチャンネルがしていること</h2>
       </div>
       <p class="text-[11px] text-slate-500 mb-5">
-        再生数はおまけです。ショート動画がおすすめに乗るかどうかは、
-        <b class="text-slate-300">最後まで見てもらえたか</b>と
-        <b class="text-slate-300">もう一度見たくなったか</b>でほぼ決まります。
-        登録者は、そのうえで「次も見たい」と思われた分だけ増えます。
+        <b class="text-slate-300">視聴を継続した割合</b>で冒頭の反応を、<b class="text-slate-300">平均再生率</b>で見続けた長さを確認し、1,000再生あたりの登録者数を合わせて見ます。
+        平均再生率は完走率ではありません。おすすめ配信の理由や途中離脱の場所は、これらの数字だけでは分かりません。
       </p>
       <div id="grow-score" class="space-y-4"></div>
     </div>
@@ -600,7 +617,8 @@
             <option value="new">新しい順</option>
             <option value="views">再生が多い順</option>
             <option value="subs">登録につながった順</option>
-            <option value="ret">最後まで見られた順</option>
+            <option value="stayed">視聴を継続した割合が高い順</option>
+            <option value="ret">平均再生率が高い順</option>
             <option value="visit">サイトに送った順</option>
           </select>
         </label>
@@ -614,12 +632,12 @@
     <div class="glass rounded-2xl p-4">
       <p class="text-[11px] text-slate-400 mb-1">
         再生数は「再生数を取り込む」で自動で入ります（<span style="color:#2b7f8c">自動</span>と出ます）。
-        <b class="text-slate-300">いいね・コメント・平均視聴時間・登録者の増加</b>は
+        <b class="text-slate-300">視聴を継続・いいね・コメント・平均視聴時間・登録者の増加</b>は
         YouTube Studio の「アナリティクス → コンテンツ」から書き写してください。
       </p>
       <p id="entry-stayed-note" class="hidden text-[11px] text-slate-400 mb-1">
-        <b class="text-slate-300">視聴を選んだ%</b>は、Studio の「視聴を選択したユーザー」の割合です（フィードに出たうち、スワイプせずに見た人）。
-        冒頭の3秒が効いたかどうかを、いちばんまっすぐに表す数字です。1本につき1回、投稿の翌日以降に入れれば十分です。
+        <b class="text-slate-300">視聴を継続（%）</b>は、Studio の「視聴を継続」の割合です（フィードに出たうち、スワイプせずに見た人）。
+        「スワイプして次へ」は100%からこの値を引いて表示します。冒頭の反応を示す参考で、特定の1秒・3秒や離脱の原因は断定できません。投稿24時間後と4日後に、同じ集計範囲の数字を書き写してください。自動取得には未対応です。
       </p>
       <p class="text-[11px] text-slate-500 mb-3">
         <b class="text-slate-400">分かるところだけで大丈夫です。</b>空欄のまま保存できます。
@@ -795,6 +813,9 @@
           <label><span class="block text-[11px] text-slate-500 mb-1">YouTubeのURL</span><input id="vm-url" class="fld" placeholder="https://www.youtube.com/shorts/..."></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">投稿した日時</span><input id="vm-at" type="datetime-local" class="fld"></label>
         </div>
+        <label class="block text-xs">映像の制作手法
+          <select id="vm-method" class="fld"><option value="unknown">未記録</option><option value="seedance">Seedanceを使用</option><option value="other">Seedance以外</option></select>
+        </label>
         <label class="block"><span class="block text-[11px] text-slate-500 mb-1">メモ</span><textarea id="vm-note" rows="2" class="fld"></textarea></label>
       </div>
     </details>
@@ -824,8 +845,8 @@ const ENTRY_FIELDS = [
   { key:'comments',      label:'コメント' },
   { key:'subs_gained',   label:'登録の増加' },
   { key:'avg_watch_sec', label:'平均視聴(秒)' },
-  // Studio の「視聴を選択したユーザー」の割合。冒頭の3秒が効いたかを見る数字（youtube-hook.sql で列ができます）
-  { key:'stayed_pct',    label:'視聴を選んだ%' },
+  // Studio の「視聴を継続」の割合。冒頭で見続けることを選んだ割合（特定の秒数の維持率ではない）（youtube-hook.sql で列ができます）
+  { key:'stayed_pct',    label:'視聴を継続（%）' },
 ];
 /* 列がまだ無い項目は、入力欄に出しません（出すと保存のときに失敗するため） */
 const entryFields = () => ENTRY_FIELDS.filter(f =>
@@ -836,17 +857,17 @@ const MIN_SAMPLE = 3;   // これ未満の本数は「参考」扱い
 /* 伸びているショート動画の目安。
    数字そのものより、「どこがいちばん足りないか」を見るために置いています。 */
 const GOALS = [
-  { key:'retention', name:'平均視聴率', unit:'%', goal:70,
+  { key:'retention', name:'平均再生率', unit:'%', goal:70,
     why:'平均視聴時間 ÷ 尺。見続けられた長さの目安です。完走率やおすすめ配信の理由は、この数字だけでは分かりません。',
     fix:'尺を短くする。冒頭の2秒に説明を入れず、いきなり本題から始める。',
     need:'平均視聴時間と、動画の尺' },
   { key:'sub', name:'1000再生あたりの登録', unit:'人', goal:3,
-    why:'いちばん大事な数字です。何回再生されたかより、何人が「次も見たい」と思ったか。',
+    why:'主要KPIの1つです。登録者の増加÷再生数×1,000。視聴を継続・平均再生率と合わせて見ます。',
     fix:'締めで「毎晩1本」のように次の約束を伝える。プロフィールの一言を整える。',
     need:'登録の増加（YouTube Studio）' },
-  { key:'like', name:'いいね率', unit:'%', goal:2,
-    why:'見た人のうち何%が反応したか。ただしこのチャンネルでは、いいねが少ない回のほうが再生数が伸びたこともあります。伸びない原因をここに求めないでください。',
-    fix:'最後から2枚目に、一行で答えられる問いを置く。題名を問いかけの形にするのは逆効果でした（実測）。',
+  { key:'like', name:'高評価率（再生あたり）', unit:'%', goal:2,
+    why:'高評価数÷再生数×100。高評価÷（高評価＋低評価）とは別の指標です。共感や満足の参考ですが、理由は断定できません。',
+    fix:'内容やメッセージを見直す仮説に使い、同じ集計期間で比べます。',
     need:'いいねの数' },
   { key:'comment', name:'コメント率', unit:'%', goal:0.3,
     why:'コメントは滞在時間を伸ばし、同じ悩みの人どうしをつなげます。',
@@ -1094,7 +1115,7 @@ async function loadAll(){
     if (!state.hasStrategy)
       todo.push('1本ごとの「音」「役割（間口・奥座敷）」「今回変えたもの」を残すには、Supabase の SQL Editor で <code>youtube-strategy.sql</code> を実行してください。<b>一度実行した方も、もう一度実行してください</b>（音を記録する列が増えています。同じSQLを何度実行しても壊れません）。');
     if (!state.hasStayed)
-      todo.push('冒頭の3秒が効いたか（Studio の「視聴を選択したユーザー」の割合）を残すには、Supabase の SQL Editor で <code>youtube-hook.sql</code> を実行してください。（実行しなくても、ほかの機能はそのまま使えます）');
+      todo.push('Studio の「視聴を継続」の割合を残すには、Supabase の SQL Editor で <code>youtube-hook.sql</code> を実行してください。（実行しなくても、ほかの機能はそのまま使えます）');
     if (todo.length){
       $('#setup-warn').classList.remove('hidden');
       $('#setup-warn').innerHTML = todo.join('<br>');
@@ -1277,7 +1298,7 @@ function statsOf(v, med, vv){
     id: ytIdOf(v),
     postedAt: p?.posted_at || null,
     retention: (m?.avg_watch_sec != null && v.duration_sec > 0) ? (m.avg_watch_sec / v.duration_sec * 100) : null,
-    stayed:    (state.hasStayed && m?.stayed_pct != null) ? Number(m.stayed_pct) : null,   // 冒頭で「見る」を選んだ割合
+    stayed:    state.hasStayed ? validPercent(m?.stayed_pct) : null,   // 冒頭で「見る」を選んだ割合
     likeRate:    (views && likes    != null) ? likes/views*100    : null,
     commentRate: (views && comments != null) ? comments/views*100 : null,
     subRate:     (views && subs     != null) ? subs/views*1000    : null,
@@ -1306,7 +1327,7 @@ function groupBy(list, keyFn){
     m.get(k).push(s);
   });
   // 再生の倍率だけを見ていると、「よく回ったが誰も残らなかった型」を勝ちだと勘違いします。
-  // 平均視聴率・登録・サイト到達も、同じ粒度で並べて出します。
+  // 平均再生率・登録・サイト到達も、同じ粒度で並べて出します。
   const midOf = (arr, key) => {
     const xs = arr.map(x => x[key]).filter(n => n != null && isFinite(n));
     return xs.length ? median(xs) : null;
@@ -1455,6 +1476,7 @@ function renderHome(){
   const cur = currentValues();
   const { list, withViews, totalViews, med } = cur;
 
+  renderKpis();
   // 登録者
   const ch = state.channel;
   const last = ch.length ? ch[ch.length-1] : null;
@@ -1588,6 +1610,8 @@ function collectStrategy(){
     subs:  el.querySelector('.rv-subs').value.trim(),
   }));
   return {
+    ...readStrategy(),
+    videoStudy: { beforeEnd:$('#study-before-end').value, beforeStayed:$('#study-before-stayed').value, start:$('#study-start').value },
     purpose: $('#base-purpose').value.trim(),
     goal:    $('#base-goal').value.trim(),
     keep:    $('#base-keep').value.trim(),
@@ -1599,6 +1623,10 @@ function collectStrategy(){
 
 function renderBase(){
   const st = readStrategy();
+  const study = st.videoStudy || {};
+  $('#study-before-end').value = study.beforeEnd || '';
+  $('#study-before-stayed').value = study.beforeStayed ?? '';
+  $('#study-start').value = study.start || '';
   $('#base-purpose').value = st.purpose;
   $('#base-goal').value    = st.goal;
   $('#base-keep').value    = st.keep;
@@ -1706,6 +1734,8 @@ $('#base-save').addEventListener('click', async () => {
   const msg = $('#base-msg');
   $('#base-save').disabled = true;
   try {
+    const studyError = validateStudy(st.videoStudy);
+    if (studyError) throw new Error(studyError);
     if (strategyRemote === undefined) throw new Error('クラウドの内容を確認できていません。再読み込みしてから保存してください。');
     const row = { key:STRATEGY_CLOUD_KEY, value, updated_at:new Date().toISOString() };
     // 読み込んだあと別の画面で更新された土台を、古い内容で上書きしない。
@@ -1722,7 +1752,7 @@ $('#base-save').addEventListener('click', async () => {
     msg.textContent = JSON.stringify(readStrategy()) === value
       ? 'クラウドへの保存と読み直しを確認しました。サイト更新後もこの内容を使えます。'
       : '保存を確認しました。その後に入力した変更は、もう一度「保存する」を押してください。';
-    renderAdvice();
+    renderHome(); renderAdvice();
   } catch (error){
     msg.style.color = '#b7472a';
     msg.textContent = 'クラウドに保存できませんでした：' + error.message + ' 入力内容は画面に残しています。';
@@ -1745,16 +1775,115 @@ function evidenceOf(x){
   if (b.avg >= w.avg * 1.3)
     reasons.push(`再生 ${dec(b.avg)}倍 対 ${dec(w.avg)}倍`);
   if (b.ret != null && w.ret != null && b.ret >= w.ret + 5)
-    reasons.push(`平均視聴率 ${dec(b.ret,0)}% 対 ${dec(w.ret,0)}%`);
+    reasons.push(`平均再生率 ${dec(b.ret,0)}% 対 ${dec(w.ret,0)}%`);
   // どちらも 0 のときに「0 >= 0」で差が出たことにしないよう、良いほうが 0 より大きいことを条件にします
   if (b.sub > 0 && w.sub != null && b.sub >= w.sub * 1.3)
     reasons.push(`1000再生あたりの登録 ${dec(b.sub)}人 対 ${dec(w.sub)}人`);
   if (b.visit > 0 && w.visit != null && b.visit >= w.visit * 1.3)
     reasons.push(`サイト到達 ${dec(b.visit)}人 対 ${dec(w.visit)}人`);
   if (b.stayed != null && w.stayed != null && b.stayed >= w.stayed + 5)
-    reasons.push(`視聴を選択 ${dec(b.stayed,0)}% 対 ${dec(w.stayed,0)}%`);
+    reasons.push(`視聴を継続 ${dec(b.stayed,0)}% 対 ${dec(w.stayed,0)}%`);
   const level = reasons.length >= 2 ? '複数指標に差' : reasons.length === 1 ? 'たぶん' : '差がない';
   return { level, reasons, best:b, worst:w };
+}
+
+/* KPIは同じ計測行・同じ投稿後日数で比較する。Studioの期間集計は別の参考値。 */
+const KPI_SPECS = [
+  ['stayed','視聴を継続','%'], ['retention','平均再生率（算出）','%'], ['subRate','1,000再生あたりの登録者数','人'],
+  ['watch','平均視聴時間','秒'], ['likeRate','高評価率（再生あたり）','%'], ['views','再生数','回'],
+];
+const validNumberOrNull = value => value !== '' && value != null && Number.isFinite(Number(value)) && Number(value) >= 0 ? Number(value) : null;
+const validPercent = value => { const n = validNumberOrNull(value); return n != null && n <= 100 ? n : null; };
+const swipeText = value => { const n = validPercent(value); return `スワイプして次へ：${n == null ? '—' : dec(100-n,1)+'%'}（視聴を継続の補数・自動計算）`; };
+const jstDay = value => new Date(+new Date(value)+9*36e5).toISOString().slice(0,10);
+const dayShift = (day, amount) => new Date(Date.parse(day+'T00:00:00Z')+amount*864e5).toISOString().slice(0,10);
+const validDay = day => typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day)
+  && Number.isFinite(Date.parse(day+'T00:00:00Z')) && dayShift(day,0) === day;
+const METHOD_TAG = /^【制作手法:(Seedance|その他)】\s*/;
+const productionMethod = v => v?.note?.match(METHOD_TAG)?.[1] === 'Seedance' ? 'seedance' : v?.note?.match(METHOD_TAG) ? 'other' : 'unknown';
+const stripMethod = note => note.replace(METHOD_TAG,'');
+const withMethod = (note, method) => ((method === 'seedance' ? '【制作手法:Seedance】\n' : method === 'other' ? '【制作手法:その他】\n' : '') + stripMethod(note).trim()) || null;
+function validateStudy(study = {}){
+  if (study.beforeEnd && (!validDay(study.beforeEnd) || study.beforeEnd > jstDay(Date.now()))) return '導入前の終了日は今日以前の有効な日付にしてください。';
+  if (study.start && !validDay(study.start)) return '導入開始日を確認してください。';
+  if (study.beforeStayed !== '' && study.beforeStayed != null && (validPercent(study.beforeStayed) == null || !study.beforeEnd)) return 'Studioの基準値には0〜100%の数値と期間の終了日が必要です。';
+  if (study.start && study.beforeEnd && study.start <= study.beforeEnd) return '導入開始日は導入前28日間の終了日より後にしてください。';
+  return '';
+}
+function observedPeriod(from, to, method){
+  const videos = allStats().list.filter(s => s.postedAt && Number.isFinite(+new Date(s.postedAt)) && +new Date(s.postedAt) <= Date.now())
+    .filter(s => { const d = jstDay(s.postedAt); return d >= from && d <= to && (!method || method(s.v)); });
+  const rows = videos.map(experimentObservation).filter(Boolean);
+  return { videos:videos.length, rows, summary:experimentSummary(rows), pending:videos.length-rows.length };
+}
+function recentKpis(){
+  const to = jstDay(Date.now()), from = dayShift(to,-27);
+  return {from,to,...observedPeriod(from,to)};
+}
+function studyComparison(){
+  const config = readStrategy().videoStudy || {}, error = validateStudy(config);
+  if (error || !config.beforeEnd || !config.start) return { config, error:error || '「土台」で導入前の終了日とSeedance導入開始日を設定してください。' };
+  const beforeFrom = dayShift(config.beforeEnd,-27), afterEnd = dayShift(config.start,27);
+  const before = observedPeriod(beforeFrom,config.beforeEnd,v => productionMethod(v) !== 'seedance');
+  const after = observedPeriod(config.start,afterEnd,v => productionMethod(v) === 'seedance');
+  const afterAll = observedPeriod(config.start,afterEnd);
+  return {config, beforeFrom, afterEnd, before, after, excluded:afterAll.videos-after.videos,
+    provisional:afterEnd >= jstDay(Date.now()) || after.pending > 0};
+}
+function studyDiagnosis(study){
+  if (study.error) return study.error;
+  // 同じ動画集合の両指標を比べる。別々の欠測集団からA/Bを断定しない。
+  const paired = period => experimentSummary(period.rows.filter(o => o.stayed != null && o.retention != null));
+  const before = paired(study.before), after = paired(study.after);
+  if (before.n < 3 || after.n < 3) return `判断保留：視聴を継続と平均再生率がそろった動画が導入前${before.n}本・導入後${after.n}本です。各3本以上を記録してください。`;
+  const hook = after.stayed-before.stayed, length = after.retention-before.retention;
+  if (hook <= -5) return 'パターンAの仮説：視聴を継続が基準より5ポイント以上低下しています。冒頭1秒の被写体・動作・言葉を見直し、冒頭5秒の映像を試します。原因やSeedanceの性能を断定するものではありません。';
+  if (hook >= 0 && length <= -5) return 'パターンBの仮説：視聴を継続は基準以上ですが、平均再生率が5ポイント以上低下しています。冒頭の後の展開・テンポ・尺を見直します。途中離脱の場所や完走率は維持率グラフで別途確認してください。';
+  return hook >= 5 ? '冒頭の反応に改善の兆しがあります。平均再生率と登録も確認して再検証してください。映像化だけの効果や費用対効果が証明されたわけではありません。'
+    : '冒頭と視聴時間に明確な改善・悪化の型はまだ見えていません。条件をそろえた記録を増やし、別のアプローチも試してください。';
+}
+function summaryText(summary){
+  return KPI_SPECS.map(([key,label,unit]) => `${label} ${summary[key] == null ? '未記録' : dec(summary[key],1)+unit}（${summary[key+'N']}本）`).join('／');
+}
+function studyReferenceText(config){
+  const value = validPercent(config.beforeStayed);
+  return config.beforeEnd && validDay(config.beforeEnd) && value != null
+    ? `Studio参考値：${dayShift(config.beforeEnd,-27)}〜${config.beforeEnd}のショート集計。視聴を継続${dec(value,1)}%／スワイプして次へ${dec(100-value,1)}%。動画ごとの中央値とは別の集計です。`
+    : 'Studioの導入前28日間の視聴継続率は未記録です。「土台」で入力できます。';
+}
+function renderKpis(){
+  const recent = recentKpis(), s = recent.summary, study = studyComparison();
+  $('#primary-kpis').innerHTML = `<p class="text-xs mb-3">投稿期間 ${recent.from}〜${recent.to}（日本時間）。投稿72〜120時間後の同じ行から算出した動画別中央値です。Studioのチャンネル集計値ではありません。</p>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">${KPI_SPECS.slice(0,3).map(([key,label,unit],i) => `<div class="glass p-3"><b class="text-xs">${i+1}. ${label}</b><p class="num text-xl">${s[key] == null ? '—' : dec(s[key],1)+unit}</p><p class="text-xs">入力済み${s[key+'N']}本${key === 'stayed' ? '／スワイプ '+(s.stayed == null ? '—' : dec(100-s.stayed,1)+'%') : ''}</p></div>`).join('')}</div>
+    <p class="text-xs mt-2">対象${recent.videos}本／同条件の計測行なし${recent.pending}本。平均再生率＝平均視聴秒数÷尺。完走率ではなく、100%を超える場合もあります。スワイプ率は独立したKPIにしません。</p>`;
+  const reference = `<p class="text-xs mb-3">${esc(studyReferenceText(study.config))}</p>`;
+  if (study.error) { $('#seedance-comparison').innerHTML = reference+emptyNote(study.error); return; }
+  const b = study.before.summary, a = study.after.summary;
+  $('#seedance-comparison').innerHTML = reference+`<p class="text-xs mb-2">導入前 ${study.beforeFrom}〜${study.config.beforeEnd}（Seedance以外・手法未記録を含む）／導入後 ${study.config.start}〜${study.afterEnd}（Seedance使用を記録した動画のみ）${study.provisional ? '・暫定集計' : ''}</p>
+    <div class="scroll-x"><table class="w-full text-xs"><thead><tr><th>動画別中央値</th><th>導入前</th><th>導入後</th><th>差</th></tr></thead><tbody>${KPI_SPECS.map(([key,label,unit]) => {
+      const delta = a[key] != null && b[key] != null ? a[key]-b[key] : null;
+      const cell = v => v[key] == null ? '—（0本）' : `${dec(v[key],1)}${unit}（${v[key+'N']}本）`;
+      return `<tr><th class="py-2">${label}</th><td>${cell(b)}</td><td>${cell(a)}</td><td>${delta == null ? '—' : (delta>0?'+':'')+dec(delta,1)+(unit==='%'?'ポイント':unit)}</td></tr>`;
+    }).join('')}</tbody></table></div>
+    <p class="text-xs mt-2">スワイプして次へ：導入前${b.stayed == null ? '—' : dec(100-b.stayed,1)+'%'}／導入後${a.stayed == null ? '—' : dec(100-a.stayed,1)+'%' }（補数）。高評価率＝高評価数÷再生数。登録率＝登録者増加÷再生数×1,000。</p>
+    <p class="text-xs mt-2">同条件の計測行なし：導入前${study.before.pending}本／導入後${study.after.pending}本。導入後の制作手法未記録・その他は${study.excluded}本を除外。未入力は0ではありません。</p>
+    <p class="text-xs mt-3">${esc(studyDiagnosis(study))}</p>
+    <p class="text-xs mt-2">5ポイント・各3本は運用上の目安です。尺・テーマ・投稿時刻・配信対象の違いがあり、因果関係や費用対効果は断定できません。自動取得は追加せず、Studioから手入力します。</p>`;
+}
+function kpiPromptLines(){
+  const study = studyComparison(), recent = recentKpis();
+  const lines = ['## 最優先KPIと映像化の検証',
+    '- 優先順位：1. 視聴を継続した割合、2. 平均再生率、3. 1,000再生あたりの登録者数。スワイプして次へは100−視聴を継続の補数であり、別の成功指標として二重に数えません。',
+    '- 視聴を継続は冒頭の反応、平均視聴時間・平均再生率は見続けた長さの参考です。平均再生率は完走率ではありません。高評価率は高評価数÷再生数で、共感の証明ではありません。',
+    `- 直近28日間の投稿（${recent.from}〜${recent.to}）、投稿72〜120時間後の動画別中央値：${summaryText(recent.summary)}`,
+    '- '+studyReferenceText(study.config), '- '+studyDiagnosis(study),
+    '- Seedance等の動画生成を利用できる場合は、冒頭0〜5秒を1つの検証区間として設計し、最初の1秒から被写体の動きや具体的な出来事を見せます。ツールのバージョン・生成可能な秒数は利用環境で確認し、未確認の機能を前提にしません。',
+    '- 初期の探索は毎回違うアプローチを維持します。導入効果を再検証する場合は、尺・テーマ・音・投稿時間をできるだけそろえ、冒頭映像を主な変更点として記録します。途中離脱の場所はStudioの視聴者維持率グラフで確認してください。',
+    '- 制作後は動画の「映像の制作手法」を記録してください。APIでの自動取得は未実装なので、視聴を継続・平均視聴時間などをStudioから同じ集計範囲で転記します。'];
+  if (!study.error) lines.push(`- 導入前 ${study.beforeFrom}〜${study.config.beforeEnd}：${summaryText(study.before.summary)}`,
+    `- 導入後 ${study.config.start}〜${study.afterEnd}（Seedance使用のみ${study.provisional ? '・暫定' : ''}）：${summaryText(study.after.summary)}`,
+    '- 前後差だけで映像化の因果効果や投資価値を断定しません。制作費と成果の価値も別に確認します。');
+  return lines;
 }
 
 /* 生成履歴は投稿実績と分離する。数字の比較は投稿・計測済みの記録だけを使う。 */
@@ -1824,6 +1953,8 @@ function experimentObservation(s){
   const {m, age} = rows[0];
   const nonnegative = x => typeof x === 'number' && Number.isFinite(x) && x >= 0;
   return { s, date:m.measured_on, age, views:m.views,
+    watch: nonnegative(m.avg_watch_sec) ? m.avg_watch_sec : null,
+    likeRate: nonnegative(m.likes) && m.views > 0 ? m.likes/m.views*100 : null,
     stayed: state.hasStayed && nonnegative(m.stayed_pct) && m.stayed_pct <= 100 ? m.stayed_pct : null,
     retention: nonnegative(m.avg_watch_sec) && s.v.duration_sec > 0 ? m.avg_watch_sec/s.v.duration_sec*100 : null,
     subRate: state.hasSubs && nonnegative(m.subs_gained) && m.views > 0 ? m.subs_gained/m.views*1000 : null,
@@ -1831,7 +1962,7 @@ function experimentObservation(s){
 }
 function experimentSummary(rows){
   const summary = { n:rows.length };
-  for (const key of ['views','stayed','retention','subRate']) {
+  for (const key of ['views','stayed','retention','subRate','watch','likeRate']) {
     const values = rows.map(r => r[key]).filter(v => v != null && Number.isFinite(v));
     summary[key] = values.length ? median(values) : null;
     summary[key+'N'] = values.length;
@@ -1852,21 +1983,17 @@ function experimentPlan(mode = $('#prompt-mode').value){
     const baselineRows = observations.filter(o => o.s.v.format !== format).slice(0,30);
     const baseline = experimentSummary(baselineRows);
     const summary = experimentSummary(samples);
-    const signal = o => baseline.views > 0 && o.views >= baseline.views*1.3 && (
-      baseline.stayedN >= 3 && o.stayed != null && o.stayed >= baseline.stayed+5 ||
-      baseline.retentionN >= 3 && o.retention != null && o.retention >= baseline.retention+5 ||
-      baseline.subRateN >= 3 && o.subRate != null && o.subRate > 0 && o.subRate >= baseline.subRate*1.3
-    );
+    const signal = o => baseline.stayedN >= 3 && o.stayed != null && o.stayed >= baseline.stayed+5;
     const strong = samples.filter(signal);
     const promising = baseline.n >= 3 && samples.length >= 2 && strong.length >= 2
-      && summary.views >= baseline.views*1.3;
+      && summary.stayed >= baseline.stayed+5;
     const pending = last.filter(s => !experimentObservation(s)).length;
     return { format, made:made.length, last, samples, baseline, summary, strong, promising, pending };
   });
   const recentFormats = published.filter(s => isExperiment(s.v)).slice(0,2).map(s => s.v.format);
   const candidate = groups.filter(g => g.promising && g.pending < 2
     && !(recentFormats.length === 2 && recentFormats.every(f => f === g.format)))
-    .sort((a,b) => b.summary.views/b.baseline.views - a.summary.views/a.baseline.views || a.format.localeCompare(b.format))[0];
+    .sort((a,b) => (b.summary.stayed-b.baseline.stayed) - (a.summary.stayed-a.baseline.stayed) || a.format.localeCompare(b.format))[0];
   if (candidate && mode === 'refine'){
     const example = candidate.strong[0].s;
     const recipe = EXPERIMENT_RECIPES.find(r => candidate.format.endsWith('｜'+r.name));
@@ -1875,7 +2002,7 @@ function experimentPlan(mode = $('#prompt-mode').value){
       brief:recipe ? recipeBrief(recipe, round) : '参考回の仮説と構成を実写に近い動画で再検証する。以前がイラストの場合は映像方式の違いも記録する。',
       seconds:example.v.duration_sec ? `${example.v.duration_sec}秒前後` : '10〜35秒',
       axis:['冒頭の掴み','尺','締めの誘導'][candidate.made % 3], example, candidate, groups,
-      reason:`直近${candidate.summary.n}本のうち${candidate.strong.length}本で、同じ計測期間の別形式${candidate.baseline.n}本の再生中央値を1.3倍以上上回り、視聴または登録の指標にも差がありました。成功の確定ではなく、再検証する候補です。`,
+      reason:`直近${candidate.summary.n}本のうち${candidate.strong.length}本で、同じ計測期間の別形式の視聴継続中央値（${candidate.baseline.stayedN}本）を5ポイント以上上回りました。平均再生率と登録も併記し、改善効果や費用対効果の確定ではなく再検証候補とします。`,
     };
   }
   // 生成済みの案と登録済みの動画を予約として扱い、未投稿でも同じ案に戻さない。
@@ -1911,8 +2038,8 @@ function renderTestPlan(plan = experimentPlan()){
   </div>`;
   $('#test-matrix').innerHTML = plan.groups.length ? plan.groups.map(g => `<div class="text-xs mb-3">
     <b>${esc(g.format)}</b>：投稿${g.made}本 ／ 直近3本の比較可能な記録${g.summary.n}本 ／ 他の形式の比較対象${g.baseline.n}本
-    ／ 再生中央値${num(g.summary.views)}回 ／ ${g.promising ? '手応えあり・再検証候補' : '判断保留・探索を継続'}
-    <span class="block text-slate-500">視聴を選択 ${dec(g.summary.stayed)}%（${g.summary.stayedN}本）、平均視聴率 ${dec(g.summary.retention)}%（${g.summary.retentionN}本）、1000再生あたり登録 ${dec(g.summary.subRate)}人（${g.summary.subRateN}本）</span>
+    ／ 視聴継続中央値${dec(g.summary.stayed)}% ／ ${g.promising ? '手応えあり・再検証候補' : '判断保留・探索を継続'}
+    <span class="block text-slate-500">視聴を継続 ${dec(g.summary.stayed)}%（${g.summary.stayedN}本）、平均再生率 ${dec(g.summary.retention)}%（${g.summary.retentionN}本）、1000再生あたり登録 ${dec(g.summary.subRate)}人（${g.summary.subRateN}本）、再生中央値${num(g.summary.views)}回</span>
   </div>`).join('') : emptyNote('新しい型の記録はこれからです。過去の動画と数字はそのまま残ります。');
 }
 
@@ -1979,8 +2106,8 @@ function renderFormatCompare(){
     ['本数',                         x => `${x.n}本`],
     [`比較用の線以上（${num(fc.gate)}回）`, x => `${pct(x.pass, x.n)}（${x.pass}/${x.n}）`],
     ['再生の中央値',                 x => `${num(Math.round(x.med))}回`],
-    ['視聴を選択',      x => x.stayed != null ? `${dec(x.stayed,0)}%` : '—'],
-    ['平均視聴率',         x => x.ret != null ? `${dec(x.ret,0)}%` : '—'],
+    ['視聴を継続',      x => x.stayed != null ? `${dec(x.stayed,0)}%` : '—'],
+    ['平均再生率',         x => x.ret != null ? `${dec(x.ret,0)}%` : '—'],
     ['1000再生あたりの登録',         x => x.sub != null ? `${dec(x.sub)}人` : '—'],
   ];
   // 過去の形式と探索の記録を対等に表示する。
@@ -1998,7 +2125,7 @@ function renderFormatCompare(){
   <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">
     この表は計測日の異なる最新値を含む過去の傾向です。形式の優劣や因果関係を確定するものではありません。
     投稿から48時間以降の再生記録がない回は含めません。新しい型の選定は、上の検証設計で同じ投稿後日数の数字を比べます。
-    ${state.hasStayed ? '' : '<br>「視聴を選択」を出すには、<code>youtube-hook.sql</code> の実行と、「数字を入力」タブでの書き写しが要ります。'}
+    ${state.hasStayed ? '' : '<br>「視聴を継続」を出すには、<code>youtube-hook.sql</code> の実行と、「数字を入力」タブでの書き写しが要ります。'}
   </p>`;
 }
 
@@ -2018,9 +2145,11 @@ function renderAdvice(){
   const out = [];
 
   const plan = experimentPlan();
+  const study = studyComparison();
+  out.push(card('info','🎬','冒頭と視聴時間を分けて見る',esc(studyDiagnosis(study))));
   out.push(card('info','🧪',esc(plan.label),esc(plan.reason)));
   out.push(card('info','📊','投稿4日後の数字を記録する',
-    '比較は投稿72〜120時間後の同じ行の数字で行います。再生数に加え、視聴を選択・平均視聴秒数・登録の増加を記録してください。未入力は0ではありません。'));
+    '比較は投稿72〜120時間後の同じ行の数字で行います。最優先の視聴を継続と、平均視聴秒数・登録の増加・再生数を記録してください。未入力は0ではありません。'));
   out.push(card('flat','🌱','一度の当たりを固定化しない',
     '既定では毎回違う企画を探索します。有望な型は一覧で確認し、「数字に手応えのある型を再検証する」を選んだ場合だけ戻ります。再検証でも同じ型を2本投稿したら探索へ戻ります。'));
   $('#advice-list').innerHTML = out.join('');
@@ -2029,7 +2158,7 @@ function renderAdvice(){
   renderFormatCompare();
 
   /* 属性ごとの比較。
-     再生の倍率だけでなく、平均視聴率と登録も同じ行に並べます。
+     再生の倍率だけでなく、平均再生率と登録も同じ行に並べます。
      「よく回ったのに誰も残らなかった型」を勝ちだと勘違いしないためです。 */
   const groupsHtml = AXES.map(a => {
     const g = groupBy(scored, a.of);
@@ -2044,7 +2173,7 @@ function renderAdvice(){
       <h3 class="text-[11px] font-semibold text-slate-400 mb-2 flex items-center gap-2">${a.name} ${badge}</h3>` +
       hbars(g.map(x => {
         const extra = [];
-        if (x.ret != null) extra.push(`平均視聴率 ${dec(x.ret,0)}%`);
+        if (x.ret != null) extra.push(`平均再生率 ${dec(x.ret,0)}%`);
         if (x.sub != null) extra.push(`登録 ${dec(x.sub)}人`);
         return {
           label: x.key, sub: `（${x.n}本${x.n<MIN_SAMPLE?'・参考':''}）`,
@@ -2185,7 +2314,7 @@ function renderVideos(){
   }
   const { list } = currentValues();
   const key = $('#video-sort').value;
-  const pick = { views:'views', subs:'subRate', ret:'retention', visit:'visitRate' }[key];
+  const pick = { views:'views', stayed:'stayed', subs:'subRate', ret:'retention', visit:'visitRate' }[key];
   let rows = list.slice();
   if (pick) rows.sort((a,b) => (b[pick] ?? -1) - (a[pick] ?? -1));
 
@@ -2199,7 +2328,8 @@ function renderVideos(){
         style="background:${s.index>=1.5?'rgba(43,127,140,.85)':'rgba(2,6,23,.7)'};color:${s.index>=1.5?'#fbf9f4':'#6f757b'}">${dec(s.index)}倍</span>` : '';
     const sub = [
       s.subs != null ? `登録+${num(s.subs)}` : null,
-      s.retention != null ? `${dec(s.retention,0)}%` : null,
+      s.stayed != null ? `継続${dec(s.stayed,0)}%` : null,
+      s.retention != null ? `平均再生${dec(s.retention,0)}%` : null,
       s.visits ? `サイト${num(s.visits)}` : null,
     ].filter(Boolean).join(' ・ ');
     return `<button data-vid="${s.v.id}" class="video-card glass rounded-2xl overflow-hidden text-left hover:border-sky-400/50 transition">
@@ -2271,7 +2401,12 @@ function openVideo(id){
     ['いいね',   num(s.likes)],
     ['コメント', num(s.comments)],
     ['登録の増加', s.subs != null ? num(s.subs) : '—'],
-    ['平均視聴率', s.retention != null ? dec(s.retention,0)+'%' : '—'],
+    ['視聴を継続', s.stayed != null ? dec(s.stayed)+'%' : '—'],
+    ['スワイプして次へ', s.stayed != null ? dec(100-s.stayed)+'%' : '—'],
+    ['平均視聴時間', s.metrics?.avg_watch_sec != null ? dec(s.metrics.avg_watch_sec)+'秒' : '—'],
+    ['高評価率（再生あたり）', s.likeRate != null ? dec(s.likeRate)+'%' : '—'],
+    ['1000再生あたり登録', s.subRate != null ? dec(s.subRate)+'人' : '—'],
+    ['平均再生率', s.retention != null ? dec(s.retention,0)+'%' : '—'],
     ['サイト到達', s.visits ? num(s.visits)+'人' : '—'],
   ] : [];
   $('#vm-stats').innerHTML = tiles.map(([l,x]) => `<div class="rounded-xl p-2.5 text-center" style="background:rgba(43,47,51,.07)">
@@ -2294,7 +2429,8 @@ function openVideo(id){
   $('#vm-dur').value = v?.duration_sec || '';
   $('#vm-cta').value = v?.cta_type || '';
   $('#vm-date').value = v?.produced_on || todayStr();
-  $('#vm-note').value = v?.note || '';
+  $('#vm-method').value = productionMethod(v);
+  $('#vm-note').value = stripMethod(v?.note || '');
   // 役割と「今回変えたもの」は列がある時だけ。無いまま入れさせると、保存で消えたように見えます。
   $('#vm-role').value  = v?.role || '';
   $('#vm-axis').value  = v?.test_axis || '';
@@ -2318,7 +2454,7 @@ $('#vm-save').addEventListener('click', async () => {
     format: $('#vm-format').value.trim()||null,
     duration_sec: $('#vm-dur').value ? Number($('#vm-dur').value) : null,
     cta_type: $('#vm-cta').value.trim()||null, produced_on: $('#vm-date').value||null,
-    note: $('#vm-note').value.trim()||null };
+    note: withMethod($('#vm-note').value, $('#vm-method').value) };
   if (state.hasStrategy){
     payload.role       = $('#vm-role').value || null;
     payload.test_axis  = $('#vm-axis').value || null;
@@ -2437,6 +2573,7 @@ function renderEntry(){
           </div>` : ''}
         </div>
       </div>
+      <p class="text-xs mb-2" data-swipe-post="${p.id}">${swipeText(draft[p.id]?.stayed_pct ?? ex?.stayed_pct)}</p>
       <div class="grid grid-cols-3 gap-2">
         ${fields.map(f=>{
           const auto = f.key === 'views' && ex?.views != null;
@@ -2471,6 +2608,10 @@ function stashDraft(event){
   const d = readDraft(date), input = event.target;
   if (input.matches('.entry-in')) {
     (d[input.dataset.post] ||= {})[input.dataset.metric] = input.value.trim();
+    if (input.dataset.metric === 'stayed_pct') {
+      const output = [...document.querySelectorAll('[data-swipe-post]')].find(el => el.dataset.swipePost === input.dataset.post);
+      if (output) output.textContent = swipeText(input.value);
+    }
   } else if (input.id === 'entry-subs-total') d.subs = input.value.trim();
   const ok = writeDraft(date, d);
   $('#entry-msg').textContent = ok ? '入力をこの端末に控えました。「保存する」で確定してください。'
@@ -2586,8 +2727,10 @@ function promptLineOf(s){
   if (dates.length) bits.push(`計測日 ${dates.join('／')}`);
   if (s.subs  != null) bits.push(`登録${num(s.subs)}人（1000再生あたり${dec(s.subRate)}人）`);
   if (s.visits)        bits.push(`サイト到達${num(s.visits)}人（1000再生あたり${dec(s.visitRate)}人）`);
-  if (s.stayed != null)    bits.push(`視聴を選択${dec(s.stayed,0)}%`);
-  if (s.retention != null) bits.push(`平均視聴率${dec(s.retention,0)}%`);
+  if (s.stayed != null)    bits.push(`視聴を継続${dec(s.stayed,1)}%／スワイプして次へ${dec(100-s.stayed,1)}%`);
+  if (s.metrics?.avg_watch_sec != null) bits.push(`平均視聴時間${dec(s.metrics.avg_watch_sec)}秒`);
+  if (s.likeRate != null) bits.push(`高評価率（再生あたり）${dec(s.likeRate)}%`);
+  if (s.retention != null) bits.push(`平均再生率${dec(s.retention,0)}%`);
   if (s.v.duration_sec) bits.push(`${s.v.duration_sec}秒`);
   if (s.v.theme)     bits.push(`テーマ:${s.v.theme}`);
   if (s.v.hook_type) bits.push(`掴み:${s.v.hook_type}`);
@@ -2664,9 +2807,10 @@ function buildPrompt(plan = experimentPlan()){
     L.push(`- 参考にする回：${promptLineOf(plan.example)}`);
     L.push(`- 今回だけ変えるもの：${plan.axis}。画風・場所・音・テーマ・投稿時刻など、それ以外は参考回にできるだけそろえます。`);
     L.push('- 尺を変える回は参考回の約±20%を目安に、内容を削る／間を作る仮説を1つだけ試します。冒頭や締めの回は、尺をむやみに変えません。');
-    L.push(`- 同じ計測期間の再生中央値：この型${num(g.summary.views)}回（${g.summary.n}本）／他の形式${num(g.baseline.views)}回（${g.baseline.n}本）。小標本の仮説で、因果関係や再現性の証明ではありません。`);
+    L.push(`- 同じ計測期間のこの型の中央値：${summaryText(g.summary)}`);
+    L.push(`- 同じ計測期間の他形式の中央値：${summaryText(g.baseline)}。小標本の仮説で、因果関係や再現性の証明ではありません。`);
     L.push('- 比較に使えたこの型の記録：');
-    g.samples.forEach(o => L.push(`  ${o.s.v.slug}「${o.s.v.title}」計測日${o.date}（投稿後約${dec(o.age,0)}時間）：再生${num(o.views)}回／視聴を選択${dec(o.stayed)}%／平均視聴率${dec(o.retention)}%／1000再生あたり登録${dec(o.subRate)}人`));
+    g.samples.forEach(o => L.push(`  ${o.s.v.slug}「${o.s.v.title}」計測日${o.date}（投稿後約${dec(o.age,0)}時間）：再生${num(o.views)}回／視聴を継続${dec(o.stayed)}%／平均再生率${dec(o.retention)}%／1000再生あたり登録${dec(o.subRate)}人`));
   }
   L.push('');
   L.push('## 重複を避けるための生成履歴（未制作・未投稿の案を含む。成績ではない）');
@@ -2675,23 +2819,25 @@ function buildPrompt(plan = experimentPlan()){
   history.forEach(h => L.push(`- ${h.format}：${h.brief}`));
   recent.filter(s => s.v.note).forEach(s => L.push(`- 投稿メモ ${s.v.slug}：${s.v.note}`));
   L.push('');
+  L.push(...kpiPromptLines());
+  L.push('');
   L.push('## 今回読み込んだ数字（記録と仮説を分ける）');
   L.push(`- 読み込み日：${todayStr()}。記録の計測日：${dates[0] || '未記録'}〜${dates.at(-1) || '未記録'}。`);
   if (ch) L.push(`- 登録者総数：${num(ch.subscribers)}人（${ch.measured_on}）。`);
   L.push(`- 最新値を集めた総再生：${num(cur.totalViews)}回／1本の中央値：${cur.withViews.length ? num(cur.med) : '未記録'}回。計測日と公開からの期間が異なるので、これだけで型の優劣を決めません。`);
-  L.push('- 平均視聴率は平均視聴秒数÷尺です。完走した人数の割合ではなく、再視聴率そのものでもありません。');
-  L.push('- 視聴を選択した割合から特定の3秒や配信段階の原因は断定できません。未入力は0ではなく判断保留とし、記録のない映像内容や原因を作り話で補わないでください。');
+  L.push('- 平均再生率は平均視聴秒数÷尺です。完走した人数の割合ではなく、再視聴率そのものでもありません。');
+  L.push('- 視聴を継続した割合から特定の3秒や配信段階の原因は断定できません。未入力は0ではなく判断保留とし、記録のない映像内容や原因を作り話で補わないでください。');
   L.push('### 直近10本（最新の入力済み値・項目ごとの計測日）');
   if (!recent.length) L.push('投稿日時のある動画は未登録です。まず探索から始めます。');
   L.push(...recent.map(promptLineOf));
   L.push('### 新しい型の試行状況');
   if (!plan.groups.length) L.push('新しい型の記録はまだありません。以前の動画と数字は比較用の履歴です。');
-  plan.groups.forEach(g => L.push(`- ${g.format}：投稿${g.made}本／直近3本の比較可能記録${g.summary.n}本／再生中央値${num(g.summary.views)}回／${g.promising ? '手応えあり・再検証候補' : '判断保留'}。`));
+  plan.groups.forEach(g => L.push(`- ${g.format}：投稿${g.made}本／直近3本の比較可能記録${g.summary.n}本／視聴継続中央値${dec(g.summary.stayed)}%（${g.summary.stayedN}本）／再生中央値${num(g.summary.views)}回／${g.promising ? '手応えあり・再検証候補' : '判断保留'}。`));
   L.push('');
   L.push('## 次の判断に必要な計測');
-  L.push('- 投稿24時間後と投稿4日後に、再生数・視聴を選択・平均視聴秒数・登録増加を記録します。選定は、日単位の記録から投稿72〜120時間後の同じ行を使います。');
-  L.push('- 直近90日の他の形式を最大30本比較対象にします。候補の直近3本のうち2本以上で、他形式の再生中央値の1.3倍以上と、視聴を選択または平均視聴率の+5ポイント、あるいは登録率の改善が重なれば、再検証候補とします。');
-  L.push('- 他形式は3本以上の比較可能な記録を必要とし、補助指標も3本以上ある項目だけ使います。1.3倍や5ポイントは運用上の目安で、統計的有意差や伸びる保証ではありません。');
+  L.push('- 投稿24時間後と投稿4日後に、再生数・視聴を継続・平均視聴秒数・登録増加を記録します。選定は、日単位の記録から投稿72〜120時間後の同じ行を使います。');
+  L.push('- 直近90日の他の形式を最大30本比較対象にします。候補の直近3本のうち2本以上で、他形式の視聴継続中央値より5ポイント以上高く、候補全体の中央値も5ポイント以上高ければ再検証候補とします。再生数を入口の合否にせず、平均再生率と登録を別途確認します。');
+  L.push('- 他形式は3本以上の比較可能な記録を必要とし、補助指標も3本以上ある項目だけ使います。5ポイントは運用上の目安で、統計的有意差や伸びる保証ではありません。');
   L.push('- 有望な型でも2本続けたら別の型を試します。直近の結果が弱まった場合や記録が足りない場合は候補から外し、別の型を探します。記録不足は、その型が失敗したという意味ではありません。');
   L.push('- サイトへの到達は別の成果として見ます。再生と計測期間がそろわない到達数を、今回の再生期間の成果と混同しないでください。');
   L.push('');
