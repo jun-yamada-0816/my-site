@@ -162,12 +162,16 @@
   /* X のチップ */
   .chips{display:flex;flex-wrap:wrap;gap:.4rem;}
   .chip{
-    display:inline-flex;align-items:center;gap:.35rem;
+    display:inline-flex;align-items:stretch;
     border:1px solid var(--keisen);background:var(--washi);border-radius:2px;
-    padding:.3rem .6rem;font-size:.75rem;text-decoration:none;color:var(--sumi);
+    font-size:.75rem;text-decoration:none;color:var(--sumi);
   }
   .chip:hover{border-color:rgba(23,69,107,.45);}
-  .chip .del{color:var(--usuzumi);cursor:pointer;font-size:.7rem;}
+  /* 押せる範囲をチップの高さいっぱいに広げる（文字だけを押させない） */
+  .chip a{display:inline-flex;align-items:center;padding:.3rem .25rem .3rem .6rem;color:inherit;text-decoration:none;}
+  .chip .del{display:inline-flex;align-items:center;justify-content:center;padding:.3rem .55rem .3rem .35rem;
+    background:none;border:0;font:inherit;font-size:.7rem;color:var(--usuzumi);cursor:pointer;}
+  .chip .del:hover{color:var(--sumi);}
 
   /* 収集元 */
   .src-row{display:flex;gap:.6rem;align-items:center;padding:.5rem .2rem;border-bottom:1px solid var(--keisen);font-size:.78rem;}
@@ -211,6 +215,8 @@
   .fld{ font-size:16px; }
   /* 指で押すものは 44px 以上 */
   .btn, .tab, .chip{ min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
+  .chip{ align-items:stretch; }
+  .chip .del{ min-width:44px; }
   /* 押せる範囲だけを広げる（余白を外にはみ出させるので、並びはずれない） */
   .star{ padding:.55rem .5rem; margin:-.55rem -.35rem; }
   /* ノッチのある端末で、帯や本文が切り欠きに潜らないように */
@@ -244,6 +250,7 @@
     .summary{ -webkit-line-clamp:2; }
     /* マウスで押すので、ボタンは元の高さに戻す */
     .btn, .tab, .chip{ min-height:0; }
+    .chip .del{ min-width:0; }
     .star{ padding:0 .1rem; margin:0; }
   }
 
@@ -669,9 +676,8 @@ function drawXChips(){
   const list = xQueries();
   $('#x-chips').innerHTML = list.map((x, i) => `
     <span class="chip">
-      <a href="https://x.com/search?q=${encodeURIComponent(x.q)}&f=live" target="_blank" rel="noopener"
-         style="text-decoration:none;">${esc(x.label)}</a>
-      <span class="del" data-x="${i}" title="消す">×</span>
+      <a href="https://x.com/search?q=${encodeURIComponent(x.q)}&f=live" target="_blank" rel="noopener">${esc(x.label)}</a>
+      <button type="button" class="del" data-x="${i}" title="消す" aria-label="「${esc(x.label)}」を消す">×</button>
     </span>`).join('') || '<span class="tiny muted">まだありません。下から足せます。</span>';
   $('#x-chips').querySelectorAll('[data-x]').forEach(b =>
     b.addEventListener('click', () => {
