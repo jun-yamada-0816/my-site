@@ -457,7 +457,9 @@
         <li><span>02</span>プロンプトをコピー</li>
         <li><span>03</span>使いたいAIに渡す</li>
       </ol>
-      <p class="prompt-note">生成するたびに、場面・主役・動き・画風・カメラ・物語を変えて探索します。夜の窓辺や文字だけの動画には固定しません。
+      <p class="prompt-note">生成するたびに<b>画風（見た目・色・質感・文字の見せ方・カメラ・音色）を21種類から1つずつ変えます</b>。前の回と同じ見た目にはしません。
+        題材と<b>最初の一言（0〜3秒）</b>は、伸びた回と同じく当事者の具体的な行動から作ります。テーマは再生の多いテーマから、一言の型は6つから順に選びます。
+        画風は形式名（例：画風1｜墨と和紙）で記録するので、伸びた回の画風を名前で見分けられます。
         映像も音も、受け取ったAIがコード（Python と ffmpeg）で描いて書き出すので、動画生成サービスや実写の素材がなくても Claude・Codex だけで作れます。写真のような実写の質感は狙いません。
         受け取るファイルは<b>音入りの mp4 1本だけ</b>。ほかに返ってくるのは、投稿に使う題名・説明文と、登録用の1行（文字だけ）です。
         生成履歴はこのブラウザーに保存し、別の端末では登録済みの動画を参考にします。</p>
@@ -468,8 +470,8 @@
       </button>
       <label class="block text-xs mb-3" for="prompt-mode">今回の作り方
         <select id="prompt-mode" class="fld mt-1">
-          <option value="explore">毎回違うアプローチで探索する</option>
-          <option value="refine">数字に手応えのある型を再検証する</option>
+          <option value="explore">毎回ちがう画風で作る</option>
+          <option value="refine">数字に手応えのある画風を再検証する</option>
         </select>
       </label>
       <button id="prompt-build" class="w-full rounded-2xl py-3.5 font-medium text-slate-900 shadow-2xl"
@@ -482,7 +484,7 @@
         <div class="flex gap-2 mt-2">
           <button id="prompt-copy" class="flex-1 rounded-xl py-2.5 text-sm font-medium text-slate-900"
                   style="background:#2b7f8c">コピーする</button>
-          <button id="prompt-build2" class="glass rounded-xl px-4 text-xs whitespace-nowrap">別のアプローチを作る</button>
+          <button id="prompt-build2" class="glass rounded-xl px-4 text-xs whitespace-nowrap">別の画風で作る</button>
         </div>
         <p id="prompt-msg" role="status" aria-live="polite" class="text-[11px] mt-2"></p>
         <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">
@@ -499,8 +501,8 @@
         <h2 class="font-bold">今回の検証設計</h2>
       </div>
       <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">
-        <b class="text-slate-300">探索では、見た目と構成を大きく変えます。</b>手応えのある型を再検証する回だけ、変更を1つに絞ります。
-        有望な型でも2本続けたら、別の型を試します。
+        <b class="text-slate-300">画風は毎回まったく別のものにし、題材と最初の一言は伸びた回の作り方にそろえます。</b>手応えのある画風を再検証する回だけ、変更を1つに絞ります。
+        有望な画風でも2本続けたら、別の画風に戻ります。
         上の指示文にも、この設計がそのまま入ります。
       </p>
       <div id="test-design" class="space-y-3"></div>
@@ -531,7 +533,7 @@
         <span class="text-lg">🧭</span>
         <h2 class="font-bold">次に作る動画</h2>
       </div>
-      <p class="text-[11px] text-slate-500 mb-5">保存した記録から、今回の探索と計測の進め方を提案します。効果や原因を断定するものではありません。</p>
+      <p class="text-[11px] text-slate-500 mb-5">保存した記録から、今回の画風と計測の進め方を提案します。効果や原因を断定するものではありません。</p>
       <div id="advice-list" class="space-y-3"></div>
     </div>
 
@@ -1881,7 +1883,7 @@ function kpiPromptLines(){
     ...(study.error ? [] : ['- '+studyReferenceText(study.config), '- '+studyDiagnosis(study)]),
     ...(study.error ? ['- 映像化の導入前後の比較は、まだ設定されていません（比べる基準の数字はありません）。'] : []),
     '- この指示文の動画は、コードで描く映像です（Seedance等の動画生成は使いません）。冒頭0〜5秒を1つの検証区間として設計し、最初の1秒から主役の動きや具体的な出来事を見せます。',
-    '- 初期の探索は毎回違うアプローチを維持します。導入効果を再検証する場合は、尺・テーマ・音・投稿時間をできるだけそろえ、冒頭映像を主な変更点として記録します。途中離脱の場所はStudioの視聴者維持率グラフで確認してください。',
+    '- 既定では毎回ちがう画風で作ります。導入効果を再検証する場合は、尺・テーマ・音・投稿時間をできるだけそろえ、冒頭映像を主な変更点として記録します。途中離脱の場所はStudioの視聴者維持率グラフで確認してください。',
     '- 制作後は動画の「映像の制作手法」を「Seedance以外」と記録してください。APIでの自動取得は未実装なので、視聴を継続・平均視聴時間などをStudioから同じ集計範囲で転記します。'];
   if (!study.error) lines.push(`- 導入前 ${study.beforeFrom}〜${study.config.beforeEnd}：${summaryText(study.before.summary)}`,
     `- 導入後 ${study.config.start}〜${study.afterEnd}（Seedance使用のみ${study.provisional ? '・暫定' : ''}）：${summaryText(study.after.summary)}`,
@@ -1889,49 +1891,151 @@ function kpiPromptLines(){
   return lines;
 }
 
-/* 生成履歴は投稿実績と分離する。数字の比較は投稿・計測済みの記録だけを使う。
-   どの系統も、受け取ったAI（Claude・Codex）がコード実行環境だけで描き切れるものにしています。
-   Python（numpy・Pillow）で1フレームずつ描いて ffmpeg で書き出す前提です。
-   実写・写真のような写実・人物・顔・手は、動画生成なしでは作れない（作ると不気味になる）ので入れません。 */
+/* 2026-10-23 作り直し。10/18〜の探索（景色や物を描く8系統）は再生が110〜250回前後に落ち、
+   その前の「窓と灯り」の回は1,000回前後だった。違いは画風より「題材と最初の一言」と見ている（仮説）。
+   そこで、毎回変えるのは画風（見た目・色・質感・文字の見せ方・カメラ・音色）だけにし、
+   題材と最初の一言は伸びた回の作り方にそろえる。画風は1本ごとに名前で記録するので、
+   伸びた回が出たら、その画風を名前で選び直せる。
+   どの画風も、受け取ったAI（Claude・Codex）が Python（numpy・Pillow）と ffmpeg だけで描き切れるもの。
+   実写・写真のような写実・人物・顔・手は、動画生成なしでは作れない（作ると不気味になる）ので入れない。
+   並びは、順に作っても明るさと雰囲気が1本ごとに入れ替わる順にしている。 */
 const EXPERIMENT_RECIPES = [
-  { name:'切り絵の小さな旅', seconds:'15〜20秒',
-    look:'紙を切り抜いたような平らな層を4〜6枚重ね、層ごとに紙の色とやわらかい影をつける。輪郭線は描かない',
-    camera:'主役を追って横へ流れる（奥の層ほどゆっくり動くパララックス）', story:'小さな迷い→風や偶然で進む→思いがけない場所にたどり着く', sound:'風と紙がこすれる音、低くやわらかい持続音',
-    scenes:['風に飛ばされた一枚の落ち葉が、坂道の家並みを越えて、灯りのともる古い本屋の軒先に着地する', '紙飛行機が公園の木々のあいだを抜け、だれもいないベンチの上にそっと止まる', 'タンポポの綿毛が商店街の屋根の上を流れ、空き地のすみに降りて小さな芽が出る'] },
-  { name:'机の上の接写', seconds:'15〜20秒',
-    look:'机の上の物を画面いっぱいに大きく描き、手前と奥をぼかして浅い被写界深度に見せる（ぼかしの強さを動かしてピント送り）',
-    camera:'ゆっくり寄りながら、手前の物から奥の物へピントを移す', story:'止まっているように見える→小さな変化が始まる→ささやかな完成', sound:'部屋の静かな空気の音、陶器や紙がふれるかすかな音',
-    scenes:['透明なカップに入れたティーバッグから、お茶の色がゆっくり広がっていく', '窓辺の鉢植えで、しおれていた葉が水を吸ってゆっくり起き上がる', '読みかけの本のページが風で一枚ずつめくれ、しおりのページで止まる'] },
-  { name:'景色のタイムラプス', seconds:'15〜20秒',
-    look:'ひとつの景色を固定し、空の色・光・影の移り変わりを、水彩がにじむような色の面で描く',
-    camera:'ほぼ固定。全体を通してごくゆっくり寄る', story:'見落としそうな変化→時間が早回しで進む→景色が変わりきる', sound:'風・虫の声・遠い雨などの環境音（ノイズを加工して合成）',
-    scenes:['夕方の原っぱで空が藍色に変わり、蛍の光がひとつずつ増えていく', '雨上がりの水たまりに雲が流れ、最後に一番星が映る', '冬の朝、窓ガラスの霜が日差しでゆっくり溶けて、外の景色が見えてくる'] },
-  { name:'ドット絵の町', seconds:'15〜20秒',
-    look:'小さな解像度（例：180×320）で描いてから、ぼかさずに6倍へ拡大したドット絵。色は16色まで。テロップは拡大したあとの画面に、ふつうの日本語フォントで重ねる',
-    camera:'固定画面と、1ドット単位の横スクロールを組み合わせる', story:'静かな町→ひとつの小さな出来事→画面のどこかが少しあたたかくなる', sound:'角を丸めたやわらかい電子音を少しだけ。鳴らし続けない',
-    scenes:['ドット絵の夜の商店街で、シャッターが下りていく中、銭湯の煙突だけが湯気を上げ続けている', 'ドット絵の雪の公園で、まっさらな雪に小さな鳥の足あとが続いていく', 'ドット絵の部屋で時計が進み、カーテンのすき間の光が床をゆっくり移動していく'] },
-  { name:'線画が場面になる', seconds:'15〜20秒',
-    look:'生成り色の紙に、ペンの線が少しずつ引かれていく（線の長さを時間で伸ばす）。描き終わったところから色がにじんで入る',
-    camera:'線の先をゆっくり追い、最後に引いて全体を見せる', story:'何を描いているか分からない→形が見えてくる→色が入って場面になる', sound:'ペン先のかすかな音（フィルタをかけたノイズ）と、色が入るところでやわらかい和音',
-    scenes:['一本の線が走り、湯気の立つ湯のみとこたつのある部屋になる', '波打つ線が、遠くの水平線と、海に映る月の光の道になる', '格子の線が団地の窓になり、窓にひとつずつ色がともる'] },
-  { name:'寄りから引く発見', seconds:'15〜18秒',
-    look:'模様にしか見えないほど寄った画から始める。先に大きな1枚の絵を描いておき、それを縮めていくことで引く',
-    camera:'極端な寄りから、ゆっくり始まりゆっくり止まる速さで引いていく1カット', story:'何だろうという疑問→視野が広がる→身近な正体が分かる', sound:'細かく小さな音から始め、引くにつれてまわりの環境音へ広げる',
-    scenes:['光る粒の集まりから引くと、夜の街の灯りを映した窓の雨粒だと分かる', '規則正しい糸の模様から引くと、編みかけのマフラーの編み目だと分かる', '黄色い点の群れから引くと、朝の菜の花畑だと分かる'] },
-  { name:'人のいない時間の街', seconds:'16〜20秒',
-    look:'版画のような太い面と3〜4色の限られた色で、早朝や夜の、人のいない街を描く',
-    camera:'横へゆっくり移動しながら、店先や道の細部をつないでいく', story:'静かな全景→誰かが働いている気配（灯り・湯気・音）→街が動き始める', sound:'遠い車の音、換気扇、雨だれなどの街の音',
-    scenes:['夜明け前の商店街で、パン屋の窓に灯りがつき、湯気でガラスが曇っていく', '深夜のコインランドリーで、ひとつだけ回っている乾燥機の中でタオルが踊る', '雨の朝、だれもいないバス停の屋根から雨だれが落ち、遠くからバスの灯りが近づいてくる'] },
-  { name:'物が動く小さな可笑しさ', seconds:'15〜20秒',
-    look:'丸みのある単純な形とはっきりした色で描き、物が少しだけ意思を持っているように動かす',
-    camera:'正面からの固定ワイド。動きのあとの「間」を長めに見せる', story:'思いどおりにいかない→もう一度→くすっと笑える着地', sound:'ころん・ぽてっといった柔らかい動作音（合成）と短い間',
-    scenes:['積んだ本の一番上だけが少しずつずれていき、落ちる寸前でぴたりと止まる', '庭の物干しのシャツが風でふくらみ、袖がばんざいの形になる', '机の上の消しゴムが転がって鉛筆に当たり、こんどは鉛筆のほうが転がっていく'] },
+  { name:'墨と和紙', seconds:'15〜20秒', mood:'静かで凛とした',
+    look:'生成りの和紙（繊維のむらを細かいノイズで出す）に、墨の濃淡・にじみ・筆のかすれで描く水墨画。線は筆のように太さが変わる',
+    palette:'墨の黒から薄墨の灰、和紙の生成り。朱色を1か所だけ小さく（落款のような印）',
+    text:'墨色の明朝体を紙の上にじかに置く。影はつけず、字の縁だけ薄墨でわずかににじませる',
+    camera:'巻物を広げるように、横へゆっくり流れる',
+    sound:'低い持続音に、ときどき水滴の余韻（減衰する正弦波）' },
+  { name:'ネオン管の夜', seconds:'15〜20秒', mood:'都会の夜の、少しさみしい',
+    look:'ほぼ黒の背景に、ネオン管のように光る線だけで物の輪郭を描く（細い芯の線と、ぼかした光のにじみ）。床にうっすら光が映り込む',
+    palette:'黒に近い紺の地に、ピンクと水色の2色の光（赤は使わない）',
+    text:'文字もネオン管のように、白い芯と水色かピンクの光のにじみで光らせる。灯るときは0.5秒以上かけてゆっくり（ちらつかせない）',
+    camera:'正面から、ごくゆっくり寄る',
+    sound:'低いシンセのパッドと、遠い街のハム音（低い音域のノイズ）' },
+  { name:'色鉛筆の絵日記', seconds:'15〜20秒', mood:'やさしくて懐かしい',
+    look:'白い画用紙に、色鉛筆の斜めの線で塗った絵日記。線は少し揺れ、塗り残しの白を残す。まわりは余白を広く取る',
+    palette:'白い紙に、淡い黄・水色・桃色・若草色の色鉛筆',
+    text:'濃い鉛筆色（灰色がかった黒）の太めの文字を紙の上に。影はつけない',
+    camera:'ほぼ固定。色鉛筆の線が少しずつ増えて画ができていく',
+    sound:'鉛筆が紙をこするかすかな音と、木琴のような短く減衰する音' },
+  { name:'青写真（設計図）', seconds:'15〜20秒', mood:'淡々として、少しくすっと',
+    look:'設計図の青写真。濃い青の地に白い細線と方眼を引き、寸法線・矢印・注記の枠で、暮らしの物（布団・マグカップ・ドアなど）を図面として描く',
+    palette:'プルシアンブルーの地と白い線。強調は薄い黄色の線を1本だけ',
+    text:'白い文字を、図面の注記のような細い枠線の中に置く。影はつけない',
+    camera:'図面の上をすべるように平行に動き、注記のところで止まる',
+    sound:'低いパッドに、製図のかすかなクリック音を少しだけ' },
+  { name:'切り抜きコラージュ', seconds:'15〜20秒', mood:'にぎやかで、軽い',
+    look:'新聞・チラシ・色紙の切れ端を貼り重ねたコラージュ。網点（ハーフトーン）の模様、マスキングテープ、紙の下に落ちる薄い影',
+    palette:'生成りの新聞紙に、からし色・水色・桃色の色紙と黒の網点',
+    text:'白い紙片（長方形、傾きは2度まで）を貼り、その上に黒いゴシック。紙片ごと画面の中央に置く',
+    camera:'正面固定。紙が1枚ずつぽんと置かれ、少しはねて止まる',
+    sound:'紙のかさっという音と、オルゴールのような短い音型をゆっくり' },
+  { name:'影絵', seconds:'15〜20秒', mood:'あたたかい昔話のような',
+    look:'後ろから照らした琥珀色のスクリーンに、黒い影絵で物を映す（カップ・鉢植え・時計・窓枠など、影にするのは物だけ）。スクリーンの端は暗く落ちる',
+    palette:'琥珀から橙のスクリーンと、真っ黒な影',
+    text:'クリーム色の文字に、ぼかした濃い影をつける',
+    camera:'固定。影がゆっくり動き、スクリーンの光がわずかに揺らぐ',
+    sound:'低いハミングのような持続音と、紙がこすれる音' },
+  { name:'北欧ポスター', seconds:'15〜20秒', mood:'すっきり明るい',
+    look:'3〜4色の大きな色面と単純な形だけで描くポスター。影もグラデーションも使わず、余白をたっぷり取る',
+    palette:'生成り・からし色・くすんだ青緑・濃紺',
+    text:'濃紺の太い文字を、明るい色面の上に置く',
+    camera:'カメラは固定。色面が横から順にすべり込んで画が組み上がる',
+    sound:'やわらかいピアノのような単音を、間をあけてぽつぽつと' },
+  { name:'黒板とチョーク', seconds:'15〜20秒', mood:'放課後の教室のような、素朴な',
+    look:'深緑の黒板に、かすれたチョークの線で描く。消し跡の白いにじみと、チョークの粉の粒',
+    palette:'深緑の黒板に、白・薄い黄・水色のチョーク',
+    text:'白いチョークの文字（字の縁をノイズで少しかすらせる。読みにくくなるほどは削らない）',
+    camera:'固定。チョークの線が少しずつ描かれていく',
+    sound:'静かな部屋の空気と、チョークのかすかな音' },
+  { name:'漫画のコマ', seconds:'15〜20秒', mood:'ドラマのような、心の声',
+    look:'白黒の漫画。太い枠線のコマ割り、スクリーントーン（網点）の影、集中線（集中線は動かさない）',
+    palette:'白と黒と、灰色の網点だけ',
+    text:'白い吹き出し（楕円・黒い縁）の中に黒い文字。吹き出しごと画面の中央に置く',
+    camera:'コマからコマへ、ページを読む順に移っていく',
+    sound:'静かな持続音と、ページをめくる紙の音' },
+  { name:'藍の切り絵と灯り', seconds:'15〜20秒', mood:'夜の部屋の静けさ（10月前半に伸びた回の画風）',
+    look:'藍の濃淡の切り絵のような平らな層を重ね、暖かい灯りを1つだけ置く。薄い粒と周辺減光',
+    palette:'藍と紺の濃淡に、橙の灯りをひとつ',
+    text:'白い文字にぼかした影（縁取りはしない）',
+    camera:'ゆっくり寄る。奥の層ほどゆっくり動くパララックス',
+    sound:'静かなアンビエントの和音' },
+  { name:'セロファンの重ね', seconds:'15〜20秒', mood:'透明で、軽やかな',
+    look:'色のついた透明なセロファンを重ねたような画。重なったところは色が混ざって濃くなる（乗算で重ねる）。白い紙の地',
+    palette:'白い地に、水色・黄・桃色の透明な色',
+    text:'濃紺の太い文字を、白い地の上に置く',
+    camera:'色の板が横からすべり込み、重なって形ができる',
+    sound:'ガラスのような澄んだ短い音と、やわらかい持続音' },
+  { name:'ドット絵（16色）', seconds:'15〜20秒', mood:'懐かしいゲームの',
+    look:'180×320で描いてから、ぼかさずに6倍へ拡大したドット絵。色は16色まで。輪郭は1ドットの線、影は市松模様のディザ',
+    palette:'紺・紫・黄など夜の16色（昼の場面なら水色・若草・茶）',
+    text:'ゲームのメッセージ窓のような、白い縁の黒い窓の中に白い文字。窓ごと画面の中央に置く（字は拡大後の画面に、ふつうの日本語フォントで）',
+    camera:'固定画面と、1ドット単位の横スクロールを組み合わせる',
+    sound:'角を丸めたやわらかい電子音を少しだけ（鳴らし続けない）' },
+  { name:'方眼ノートの落書き', seconds:'15〜20秒', mood:'日常のメモのような、くすっと',
+    look:'方眼ノートに青いボールペンで描いた落書き。線は手描きらしく揺れ、矢印・丸囲み・小さな書き込み（読めなくてよい）を添える',
+    palette:'白い紙と薄い水色の方眼、青インク、橙のマーカーを1か所だけ',
+    text:'青インク色の太い文字を、紙の上にじかに置く。影はつけない',
+    camera:'ペンの線を追うように、ノートの上を移動する',
+    sound:'ペン先のかすかな音と、部屋の静かな空気' },
+  { name:'ステンドグラス', seconds:'15〜20秒', mood:'しんとして、きれいな',
+    look:'黒く太い線で区切った色ガラスで描くステンドグラス。ガラスごとに色むらがあり、後ろから光が透けてにじむ',
+    palette:'黒い線に、深い青・緑・琥珀・紫のガラス（赤は使わない）',
+    text:'白い文字を、半透明の黒い帯の上に置く',
+    camera:'寄ったところから、ゆっくり引いて全体の模様を見せる',
+    sound:'澄んだ鐘のような余韻（減衰する正弦波）を、間をあけて' },
+  { name:'2色刷りの版画', seconds:'15〜20秒', mood:'力強くて素朴な',
+    look:'彫り跡の太い線が残るリノカット（版画）。生成りの紙に黒と1色の2色刷りで、色の版をわざと2〜4pxずらす',
+    palette:'生成りの紙・墨の黒・朱がかった橙（赤すぎない）',
+    text:'黒の太いゴシックを、紙の上にじかに置く。影はつけない',
+    camera:'色の版が上から重なって、刷り上がるように画が完成する',
+    sound:'木を思わせる低い持続音と、紙をはがす音' },
+  { name:'点描', seconds:'15〜20秒', mood:'きらめく、夢のような',
+    look:'無数の小さな点の密度と色で形を描く点描画。点は1つずつわずかに揺れる',
+    palette:'夜の紺の地に、金・水色・白の点',
+    text:'白い文字に、ぼかした暗い影をつける',
+    camera:'寄った点の集まりから、ゆっくり引いて形が分かる',
+    sound:'細かい粒のようなかすかな音（フィルタをかけたノイズ）と、澄んだ持続音' },
+  { name:'フェルトの手芸', seconds:'15〜20秒', mood:'ふっくら、かわいい',
+    look:'フェルトや布で作ったような、ふっくらした形。縁に縫い目のステッチ、表面に細かい毛羽、やわらかい影',
+    palette:'生成りの布地に、からし色・くすんだ緑・水色・薄桃',
+    text:'濃い茶色の文字を、生成りの布の札（角丸・縫い目つき）の上に置く',
+    camera:'正面固定。物がぽてっと置かれ、少し弾んで止まる',
+    sound:'ぽこっという柔らかい音と、オルゴール' },
+  { name:'文字で描く画', seconds:'15〜20秒', mood:'夜中のパソコンの、ひそやかな',
+    look:'黒い画面に、記号やかなの文字の濃淡だけで画を描くアスキーアート（明るいところほど画数の多い字を置く）',
+    palette:'黒地に、緑か琥珀色のどちらか1色',
+    text:'同じ色の大きなゴシックを、半透明の黒い帯の上に置く',
+    camera:'固定。文字の画が1行ずつ打ち出されて完成する',
+    sound:'低いハム音と、キーを打つ小さな音を少しだけ' },
+  { name:'水彩のにじみ', seconds:'15〜20秒', mood:'淡い朝の',
+    look:'白い水彩紙に、にじみとぼかしで描く。色の境目に水のたまり（縁が少し濃くなる）を作り、紙の白を光として残す',
+    palette:'桃・水色・薄い黄の淡い色',
+    text:'濃い灰色の文字を、紙の上にじかに置く。影はつけない',
+    camera:'ゆっくり寄る。色がじわっと広がって場面になる',
+    sound:'やわらかいパッドの和音と、遠い鳥の声のような短い音' },
+  { name:'ローポリ', seconds:'15〜20秒', mood:'冷静で、少し未来的な',
+    look:'三角形の平らな面を組み合わせて物を作るローポリ。面ごとに明暗をつけて立体に見せる',
+    palette:'紺から青緑へのグラデーションの地に、白と薄い灰色の面、差し色に黄色',
+    text:'白い文字を、半透明の濃紺の帯の上に置く',
+    camera:'物のまわりを、ゆっくり回り込む（三角形の頂点を回転させて描く）',
+    sound:'澄んだ高めの和音を、ゆっくり' },
+  { name:'等高線の地図', seconds:'15〜20秒', mood:'発見のある、知的な',
+    look:'等高線・地図記号・凡例で、部屋や一日を地図として描く（布団が山、玄関までが長い道のり、など）',
+    palette:'生成りの紙に、茶色の等高線、水色の水場、緑の植生記号',
+    text:'こげ茶の文字を、地図の注記のように紙の上に置く（細い引き出し線をつけてもよい）',
+    camera:'地図の上を、道をたどるように移動する',
+    sound:'風の音と、紙の地図を広げる音' },
 ];
-const experimentFormat = (round, name) => `探索${round}｜${name}`;
-const isExperiment = v => /^探索[1-9]\d*｜.+/.test(v.format || '');
-// 動画の「形式」欄の候補は、いまの系統の1周目の名前から作る（名前を変えても食い違わない）。
+const experimentFormat = (round, name) => `画風${round}｜${name}`;
+// 10/18〜10/23 の「探索N｜…」も、新しい型の記録として同じ仕組みで比べる。
+const isExperiment = v => /^(探索|画風)[1-9]\d*｜.+/.test(v.format || '');
+const isStyleRound = v => /^画風[1-9]\d*｜.+/.test(v.format || '');
+const roundOf = format => Number(String(format || '').match(/^(?:探索|画風)(\d+)｜/)?.[1]) || 0;
+// 動画の「形式」欄の候補は、いまの画風の1周目の名前から作る（名前を変えても食い違わない）。
 $('#dl-format').innerHTML = EXPERIMENT_RECIPES.map(r => `<option value="${esc(experimentFormat(1, r.name))}">`).join('');
-const PROMPT_HISTORY_KEY = 'sv-prompt-exploration-v2';
+// 10/23 までの探索の履歴（景色・物の案）は引き継がない。新しい画風の順番と、テーマ・一言の型を残す。
+const PROMPT_HISTORY_KEY = 'sv-prompt-style-v3';
 let promptHistoryMemory = { rounds:{}, recent:[] }, promptHistoryStorageFailed = false;
 function readPromptHistory(){
   if (promptHistoryStorageFailed) return promptHistoryMemory;
@@ -1944,23 +2048,64 @@ function readPromptHistory(){
       const n = raw.rounds[r.name];
       if (Number.isSafeInteger(n) && n > 0 && n < 1000000) rounds[r.name] = n;
     }
+    const text = (x, max) => typeof x === 'string' ? x.slice(0, max) : '';
     const recent = raw.recent.filter(x => x && typeof x.format === 'string' && typeof x.brief === 'string')
-      .slice(-24).map(x => ({format:x.format.slice(0,200), brief:x.brief.slice(0,2000)}));
+      .slice(-24).map(x => ({format:x.format.slice(0,200), brief:x.brief.slice(0,2000), theme:text(x.theme,100), hook:text(x.hook,100)}));
     return promptHistoryMemory = { rounds, recent };
   } catch { promptHistoryStorageFailed = true; return promptHistoryMemory; }
 }
 function rememberPrompt(plan){
   const history = readPromptHistory();
-  if (plan.recipe) history.rounds[plan.recipe.name] = Math.max(history.rounds[plan.recipe.name] || 0, plan.round);
-  history.recent = [...history.recent, {format:plan.format, brief:plan.brief}].slice(-24);
+  if (plan.recipe && plan.mode === 'explore') history.rounds[plan.recipe.name] = Math.max(history.rounds[plan.recipe.name] || 0, plan.round);
+  history.recent = [...history.recent, {format:plan.format, brief:plan.brief, theme:plan.theme || '', hook:plan.hook?.name || ''}].slice(-24);
   promptHistoryMemory = history;
   try { localStorage.setItem(PROMPT_HISTORY_KEY, JSON.stringify(history)); promptHistoryStorageFailed = false; }
   catch { promptHistoryStorageFailed = true; }
 }
 function recipeBrief(recipe, round){
-  const scene = recipe.scenes[round-1] || '過去の例を再利用せず、履歴にない場所・主役・出来事を新しく選ぶ';
-  return `題材と場面：${scene}。画風：${recipe.look}。カメラ：${recipe.camera}。物語：${recipe.story}。音：${recipe.sound}。`
-    + (round > recipe.scenes.length ? '画風・カメラ・物語も発想の出発点です。そのまま繰り返さず、履歴にない別の具体的な企画へ置き換えてください。' : '');
+  return `画風：${recipe.look}。色：${recipe.palette}。雰囲気：${recipe.mood}。文字の見せ方：${recipe.text}。カメラ：${recipe.camera}。音：${recipe.sound}。`
+    + (round > 1 ? `この画風は${round}回目です。同じ画風の別の回として比べるため、画風の名前と質感はそろえ、場面・構図・色の配分は前回と変えてください。` : '');
+}
+
+/* 最初の一言（0〜3秒）の型。例は、このチャンネルで伸びた回（2026-10-23に確認・再生800〜1,100回）の題名と1枚目。
+   毎回ちがう型を使い、「冒頭の掴み」に型の名前を記録する。 */
+const HOOK_TYPES = [
+  { name:'物が語る状態', how:'片づかない物・止まった物で、いまの自分の状態を見せる。気持ちは説明しない',
+    ex:['流しに、三日ぶんのお皿がある。', 'カレンダーが、まだ9月のまま。'] },
+  { name:'時刻と、できていないこと', how:'時刻を先頭に置き、その時間になってもできていないことを言い切る',
+    ex:['昼の2時、カーテンは閉めたまま。', '3時12分、また目が覚めた。'] },
+  { name:'数字で言い切る', how:'回数・時間・日数をひとつ入れて、小さな行動を具体的にする',
+    ex:['お風呂に入るまで、二時間かかる。', '今日、声を出したのは一回だけ。'] },
+  { name:'〜つもりだった', how:'予定や決心だけを言い、どうなったかは言わない。答えは最後の画で見せる',
+    ex:['誰か隣に来たら、すぐ立つつもりだった。'] },
+  { name:'外と家のちがい', how:'外ではふつうにしていた自分と、帰ってからの自分の落差を見せる',
+    ex:['帰ってきて、上着のまま座っている。', '人に会った日は、帰ると動けない。'] },
+  { name:'くり返してしまうこと', how:'分かっているのにくり返してしまう小さな行動を、「また」などで言う',
+    ex:['淹れたお茶が、また冷めている。'] },
+];
+// 登録済みの動画 → この端末の生成履歴の順に並べ、いちばん長く使っていない型を選ぶ。
+function hookChoice(published, history, {avoid} = {}){
+  const used = [...published.slice(0,6).reverse().map(s => s.v.hook_type), ...history.recent.map(h => h.hook)];
+  const lastUse = h => used.lastIndexOf(h.name);
+  return HOOK_TYPES.filter(h => h.name !== avoid)
+    .sort((a,b) => lastUse(a)-lastUse(b) || HOOK_TYPES.indexOf(a)-HOOK_TYPES.indexOf(b))[0];
+}
+/* テーマは、投稿から2日以降の記録がある直近120日の回で、再生の中央値が高い順に4つまで（2本以上あるもの）。
+   直前2本と同じテーマは続けない（同じテーマが続くと落ちた。2026-09-10の実測）。 */
+const FALLBACK_THEMES = ['うつ', '孤独', '不眠'];
+function themeChoice(published, history, fixed = null){
+  const byTheme = new Map();
+  published.filter(s => s.v.theme && typeof s.views === 'number' && hasMatureMeasurement(s)
+      && Date.now()-new Date(s.postedAt) <= 120*864e5)
+    .forEach(s => { const k = String(s.v.theme).trim(); byTheme.set(k, [...(byTheme.get(k) || []), s.views]); });
+  const ranked = [...byTheme].filter(([,views]) => views.length >= 2)
+    .map(([theme, views]) => ({ theme, n:views.length, med:median(views) }))
+    .sort((a,b) => b.med-a.med || b.n-a.n || a.theme.localeCompare(b.theme)).slice(0,4);
+  if (fixed) return { theme:fixed, ranked };
+  // 記録が少ないうちは、これまで伸びたテーマで補って、同じテーマが続かないようにする。
+  const pool = [...new Set([...ranked.map(r => r.theme), ...(ranked.length >= 3 ? [] : FALLBACK_THEMES)])];
+  const recent = [...history.recent.slice(-2).map(h => h.theme), ...published.slice(0,2).map(s => s.v.theme)].filter(Boolean);
+  return { theme:pool.find(t => !recent.includes(t)) || pool[0], ranked };
 }
 // 実写・動画生成で作った回は、コードで描く制作では同じ型を作り直せない。
 // 一覧と比較には残し、再検証の候補にだけしない。
@@ -2022,49 +2167,56 @@ function experimentPlan(mode = $('#prompt-mode').value){
   const candidate = groups.filter(g => g.promising && g.reproducible && g.pending < 2
     && !(recentFormats.length === 2 && recentFormats.every(f => f === g.format)))
     .sort((a,b) => (b.summary.stayed-b.baseline.stayed) - (a.summary.stayed-a.baseline.stayed) || a.format.localeCompare(b.format))[0];
+  const history = readPromptHistory();
   if (candidate && mode === 'refine'){
     const example = candidate.strong[0].s;
     const recipe = EXPERIMENT_RECIPES.find(r => candidate.format.endsWith('｜'+r.name));
-    const round = Number(candidate.format.match(/^探索(\d+)｜/)?.[1]) || 1;
-    return { mode:'refine', label:'手応えのある型を再検証', format:candidate.format,
-      brief:recipe ? recipeBrief(recipe, round) : '参考回の仮説と構成を、コードで描く映像で再検証する。参考回と画風や作り方が違う場合は、その違いも記録する。',
+    const axis = ['冒頭の掴み','尺','締めの誘導'][candidate.made % 3];
+    // 変えるもの以外は参考回にそろえる。テーマと一言の型も、記録があれば参考回のものを使う。
+    const exampleHook = HOOK_TYPES.find(h => h.name === example.v.hook_type) || null;
+    const hook = axis === '冒頭の掴み' ? hookChoice(published, history, {avoid:exampleHook?.name})
+      : exampleHook || hookChoice(published, history);
+    const theme = themeChoice(published, history, example.v.theme || null);
+    return { mode:'refine', label:'手応えのある型を再検証', format:candidate.format, recipe,
+      brief:recipe ? recipeBrief(recipe, 1) : '参考回の画風と構成を、コードで描く映像で再検証する。参考回と画風や作り方が違う場合は、その違いも記録する。',
       seconds:example.v.duration_sec ? `${example.v.duration_sec}秒前後` : '15〜20秒',
-      axis:['冒頭の掴み','尺','締めの誘導'][candidate.made % 3], example, candidate, groups,
+      axis, example, candidate, groups, hook, theme:theme.theme, themes:theme.ranked, themeFixed:!!example.v.theme,
       reason:`直近${candidate.summary.n}本のうち${candidate.strong.length}本で、同じ計測期間の別形式の視聴継続中央値（${candidate.baseline.stayedN}本）を5ポイント以上上回りました。平均再生率と登録も併記し、改善効果や費用対効果の確定ではなく再検証候補とします。`,
     };
   }
-  // 生成済みの案と登録済みの動画を予約として扱い、未投稿でも同じ案に戻さない。
-  const history = readPromptHistory();
+  // 生成済みの案と登録済みの動画を予約として扱い、未投稿でも同じ画風に戻さない。
   const options = EXPERIMENT_RECIPES.map((recipe, index) => {
-    const recorded = state.videos.map(v => v.format || '')
-      .filter(f => f.endsWith('｜'+recipe.name)).map(f => Number(f.match(/^探索(\d+)｜/)?.[1]) || 0);
+    const recorded = state.videos.map(v => v.format || '').filter(f => f.endsWith('｜'+recipe.name)).map(roundOf);
     const round = Math.max(history.rounds[recipe.name] || 0, ...recorded, 0) + 1;
     return { recipe, index, round, format:experimentFormat(round, recipe.name) };
   }).sort((a,b) => a.round-b.round || a.index-b.index);
   const lastFormat = history.recent.at(-1)?.format || published[0]?.v.format || '';
-  const avoided = history.recent.length ? history.recent.slice(-7).map(h => h.format) : published.slice(0,7).map(s => s.v.format || '');
+  const avoided = history.recent.length ? history.recent.slice(-10).map(h => h.format) : published.slice(0,10).map(s => s.v.format || '');
   const next = options.find(o => !avoided.some(f => f.endsWith('｜'+o.recipe.name)))
     || options.find(o => !lastFormat.endsWith('｜'+o.recipe.name)) || options[0];
-  return { mode:'explore', label:'毎回違う映像アプローチを探索', format:next.format,
+  const theme = themeChoice(published, history);
+  return { mode:'explore', label:'毎回ちがう画風で作る', format:next.format,
     brief:recipeBrief(next.recipe, next.round), recipe:next.recipe,
-    seconds:next.recipe.seconds, axis:'形式', round:next.round, groups,
+    seconds:next.recipe.seconds, axis:'画風', round:next.round, groups,
+    hook:hookChoice(published, history), theme:theme.theme, themes:theme.ranked, themeFixed:false,
     reason:mode === 'refine'
-      ? '今は比較条件を満たす再検証候補がないため、別のアプローチを探索します。記録不足を失敗とは決めつけません。'
-      : '今回は新しい企画全体を比べます。好調な過去の型にも自動で戻らず、生成履歴と登録済みの動画から次の画風・場面を選びます。',
+      ? '今は比較条件を満たす再検証候補がないため、次の画風で作ります。記録不足を失敗とは決めつけません。'
+      : '画風は毎回まったく別のものにし、題材と最初の一言は伸びた回の作り方にそろえます。好調だった過去の画風にも自動では戻りません。',
   };
 }
 
-const groupStatus = g => !g.promising ? '判断保留・探索を継続'
+const groupStatus = g => !g.promising ? '判断保留・別の画風も継続'
   : g.reproducible ? '手応えあり・再検証候補' : '手応えあり（実写の回のため、コードで描く制作では再検証しない）';
 function renderTestPlan(plan = experimentPlan()){
   $('#test-design').innerHTML = `<div class="rounded-2xl p-4" style="background:rgba(23,69,107,.06)">
     <h3 class="text-sm font-bold">${esc(plan.label)}：${esc(plan.format)}</h3>
     <p class="text-xs mt-2">${esc(plan.reason)}</p>
+    <p class="text-xs mt-2"><b>テーマ</b>：${esc(plan.theme)} ／ <b>最初の一言の型</b>：${esc(plan.hook?.name)}（${esc(plan.hook?.how)}）</p>
     <p class="text-xs mt-2">${esc(plan.brief)}</p>
     <p class="text-xs mt-2">${plan.mode === 'explore'
-      ? '探索では見た目・構成・尺をまとめて変えて構いません。どの要素が効いたかの断定は、後の再検証まで保留します。'
-      : `今回は「${esc(plan.axis)}」だけを変え、ほかは参考にした回にそろえます。2本続けたら別の型も探索します。`}</p>
-    <p class="text-xs mt-2">制作後は「形式」に <b>${esc(plan.format)}</b> と記録してください。生成の履歴と投稿の実績は別です。生成だけでは下の投稿本数や成績には数えません。</p>
+      ? '画風は毎回まったく別のものにします。題材と最初の一言は伸びた回の作り方にそろえ、画風・テーマ・一言の型を1本ずつ記録します。どれが効いたかの断定は、同じ画風の再検証まで保留します。'
+      : `今回は「${esc(plan.axis)}」だけを変え、ほかは参考にした回にそろえます。2本続けたら別の画風に戻ります。`}</p>
+    <p class="text-xs mt-2">制作後は「形式」に <b>${esc(plan.format)}</b>、「冒頭の掴み」に <b>${esc(plan.hook?.name)}</b> と記録してください。生成の履歴と投稿の実績は別です。生成だけでは下の投稿本数や成績には数えません。</p>
   </div>`;
   $('#test-matrix').innerHTML = plan.groups.length ? plan.groups.map(g => `<div class="text-xs mb-3">
     <b>${esc(g.format)}</b>：投稿${g.made}本 ／ 直近3本の比較可能な記録${g.summary.n}本 ／ 他の形式の比較対象${g.baseline.n}本
@@ -2085,7 +2237,8 @@ const passGate = views => {
 };
 /* 表と指示文で同じ並び・同じ呼び名を使います */
 const FORMAT_GROUPS = [
-  { key:'exp', label:'新しい型（内訳は検証設計）', test: v => isExperiment(v) },
+  { key:'sty', label:'画風を毎回変える（10/24〜）', test: v => isStyleRound(v) },
+  { key:'exp', label:'探索（10/18〜10/23）', test: v => isExperiment(v) && !isStyleRound(v) },
   { key:'win', label:'窓と灯り',           test: v => isWindow(v) && !isExperiment(v) },
   { key:'vis', label:'映像（ほかの場面）', test: v => isVisual(v) && !isWindow(v) && !isExperiment(v) },
   { key:'chr', label:'ともり',             test: v => isCharacter(v) && !isExperiment(v) },
@@ -2181,7 +2334,7 @@ function renderAdvice(){
   out.push(card('info','📊','投稿4日後の数字を記録する',
     '比較は投稿72〜120時間後の同じ行の数字で行います。最優先の視聴を継続と、平均視聴秒数・登録の増加・再生数を記録してください。未入力は0ではありません。'));
   out.push(card('flat','🌱','一度の当たりを固定化しない',
-    '既定では毎回違う企画を探索します。有望な型は一覧で確認し、「数字に手応えのある型を再検証する」を選んだ場合だけ戻ります。再検証でも同じ型を2本投稿したら探索へ戻ります。'));
+    '既定では毎回ちがう画風で作ります。有望な画風は一覧で確認し、「数字に手応えのある画風を再検証する」を選んだ場合だけ戻ります。再検証でも同じ画風を2本投稿したら、別の画風に戻ります。'));
   $('#advice-list').innerHTML = out.join('');
 
   renderTestPlan();
@@ -2258,8 +2411,8 @@ const RULES = [
   { t:'企画に合う音を付ける',
     d:'音入りの動画を基本に、BGMや物の動きに合わせた効果音を選びます。小さい音から実際に聴き、音割れや急な大音量を避けます。音だけで伸びるとは断定しません。',
     key:'retention' },
-  { t:'探索では大きく変え、再検証では1つ変える',
-    d:'新しい型の探索では、画風・場面・構成をまとめて変えて構いません。複数回で手応えがあった型を再検証するときだけ、変える要素を1つに絞ります。',
+  { t:'画風は毎回変え、題材と最初の一言は伸びた作り方で',
+    d:'見た目（画風・色・文字の見せ方・音色）は1本ごとに別のものにして名前で記録し、どの画風が伸びたかを見分けます。題材と1枚目の一言は、伸びた回と同じく当事者の具体的な行動から作ります。景色や物のきれいさだけの一言にはしません。手応えのある画風を再検証するときだけ、変える要素を1つに絞ります。',
     key:null },
   { t:'間口で出会い、奥座敷で深める',
     d:'広く届く動画（間口）と、深く連れていく動画（奥座敷）は別物です。間口ばかりだと通り過ぎられ、奥座敷ばかりだと新しい人が来ません。間口で出会って、奥座敷で登録と相談につなげます。',
@@ -2267,8 +2420,8 @@ const RULES = [
   { t:'型に合う尺で試す',
     d:'探索では10〜35秒を目安に、読める時間と展開から決めます。17秒を正解とせず、手応えのある型では尺だけ変える比較も行います。',
     key:'dur' },
-  { t:'内容に合う終わり方を選ぶ',
-    d:'答えを見せる、問いを残す、短く終える、自然にループするなどを試します。点灯やループを毎回の必須条件にしません。',
+  { t:'最後は「私も」と、小さな良い変化で終える',
+    d:'1枚目の引っかかりに画で答え、「私も」と同じ側にいることを伝えます。灯りがつく・湯気が立つなど、画の中の小さなものをひとつだけ良いほうへ変えます。10月前半に伸びた回は「毎晩1本、置いてます。」で締めていました。',
     key:null },
   { t:'1本に伝えることは1つだけ',
     d:'2つ入れると、どちらも残りません。迷ったら、削るほうを選びます。',
@@ -2285,7 +2438,7 @@ const RULES = [
   { t:'締めで「次の約束」を伝える',
     d:'「登録してください」ではなく「毎晩、眠れない人へ1本出しています」。次に何が来るか分かると、登録は約束の受け取りになります。',
     key:'sub' },
-  { t:'手応えのある型でも、探索の枠を残す',
+  { t:'手応えのある画風でも、別の画風の枠を残す',
     d:'同じ型が2本続いたら別の型を試します。直近の数字が弱まったときは、昔の成功だけを理由に量産を続けません。',
     key:null },
   { t:'説明文に次の一歩をまとめる',
@@ -2788,6 +2941,25 @@ function roleForNext(st){
     : { role:'間口',   why:`いま間口が${dec(pct,0)}%（決めた割合は${st.mix}%）で、新しい人が入ってくる入口が細くなっています。今回は広く届く1本にします。` };
 }
 
+const stripTags = title => String(title || '').replace(/\s*[#＃]\S+/g, '').trim();
+/* このチャンネルの題名で、再生が多かった回と少なかった回（投稿から2日以降の記録がある直近120日）。
+   最初の一言の手本と反面教師として、制作するAIに渡す。 */
+function hookExamples(){
+  const rows = allStats().list.filter(s => s.v.title && s.postedAt && typeof s.views === 'number'
+      && hasMatureMeasurement(s) && Date.now()-new Date(s.postedAt) <= 120*864e5)
+    .sort((a,b) => b.views-a.views);
+  if (rows.length < 6) return null;
+  const n = Math.min(5, Math.floor(rows.length/2));
+  const line = s => `「${stripTags(s.v.title)}」${num(s.views)}回`;
+  return { top:rows.slice(0,n).map(line), bottom:rows.slice(-n).reverse().map(line) };
+}
+// 形式ごとの再生の中央値（「これまでの形式の比較」の表と同じ集計）
+function formatResultLines(){
+  const fc = formatCompare();
+  return FORMAT_GROUPS.filter(g => fc[g.key]).map(g => `- ${g.label}：${fc[g.key].n}本・再生の中央値${num(Math.round(fc[g.key].med))}回`
+    + (fc[g.key].stayed != null ? `・視聴を継続${dec(fc[g.key].stayed,0)}%` : ''));
+}
+
 function buildPrompt(plan = experimentPlan()){
   const cur = currentValues();
   const st = readStrategy();
@@ -2798,6 +2970,9 @@ function buildPrompt(plan = experimentPlan()){
     .sort((a,b) => new Date(b.postedAt)-new Date(a.postedAt)).slice(0,10);
   const ch = state.channel.at(-1);
   const dates = state.metrics.map(m => m.measured_on).filter(Boolean).sort();
+  const hook = plan.hook || HOOK_TYPES[0];
+  const theme = plan.theme || FALLBACK_THEMES[0];
+  const styleName = plan.recipe?.name || plan.format.replace(/^[^｜]*｜/, '');
   const L = [];
   L.push('あなたは「星の海」のYouTubeショート動画を企画し、映像と音をコードで作ってmp4に書き出す担当です。次の1本を制作してください。');
   L.push('企画案だけで終わらず、音入りのmp4を1本完成させ、ダウンロードできる形で渡してください。候補の動画を全部作る必要はありません。');
@@ -2806,7 +2981,7 @@ function buildPrompt(plan = experimentPlan()){
   L.push('## この発信の土台');
   if (st.purpose) L.push(`- 目的：${st.purpose}`);
   if (st.goal) L.push(`- ゴール：${st.goal}`);
-  if (st.keep) L.push(`- 続けたい部分（入力原文。古い映像の指定より、今回の探索方針を優先）：${st.keep}`);
+  if (st.keep) L.push(`- 続けたい部分（入力原文。見た目の指定があっても、画風は下の「今回の画風」を優先）：${st.keep}`);
   L.push('- 精神障害の当事者本人が、チャンネルと相談ページ「星の海」をひとりで運営しています。同じ立場から「私も」と語れる言葉を使ってください。');
   L.push('- 診断・治療効果・相談対応を約束せず、病名や等級を勝手に加えないでください。煽りや説教、つらさの見世物にせず、共感と小さな発見を大切にします。');
   L.push('- 再生だけでなく、次も見たいと思うことや星の海への関心につながるかを見ます。数字のために上の土台を変えないでください。');
@@ -2818,37 +2993,71 @@ function buildPrompt(plan = experimentPlan()){
     rivals.forEach(r => L.push(`  ${r.name || '名称未入力'}：最高再生${r.views || '未入力'}／登録者${r.subs || '未入力'}${r.url ? '／'+r.url : ''}`));
   }
   L.push('');
-  L.push('## 制作方針：毎回違うアプローチで、コードで描く映像を試す');
-  L.push('- 今回の探索方針を、入力された土台や過去の制作メモにある古い映像指定より優先します。発信の目的や大切にしたい気持ちは保ち、窓辺・夜・点灯・同じ構図は引き継ぎません。');
-  L.push('- 探索では、場面・主役（描く物）・動き・画風・カメラ・物語の構成・音のうち、直近の企画から少なくとも4項目を具体的に変えてください。テロップの言葉だけの差し替えは禁止です。');
-  L.push('- 初期設定は毎回の探索です。数字が良い型があっても自動で似た映像に戻しません。再検証が明示的に選ばれた回だけ、参考回の仮説を検証します。');
+  /* 10/18〜の探索で再生が落ちた理由の読みと、そこから決めた作り方。
+     数字は確認した日付つきで書き、理由づけは仮説と明記する（以前、仮説を事実として書いて型を壊したため）。 */
+  L.push('## これまでの結果から決めたこと');
+  L.push(...formatResultLines());
+  L.push('- 2026-10-23の確認：10/18からの探索の回（落ち葉・綿毛・お茶の色が広がる・蛍など）は110〜250回前後、その前の窓と灯りの回は8本中5本が1,000回前後でした。探索の回は、題名も1枚目の文字も景色や物の描写で、見る人が「私のことだ」と思える行動がありませんでした。同じお茶でも「淹れたお茶が、また冷めている。」は1,054回、「透明なカップで、お茶の色が少しずつ広がった。」は155回です。');
+  L.push('- そこで、差は画風より「題材と最初の一言」にあると見ています（仮説）。今回からは、画風（見た目・色・質感・文字の見せ方・カメラ・音色）は毎回まったく別のものにし、題材と最初の一言は伸びた回の作り方にそろえます。');
+  L.push('- 1本ごとに画風の名前を1つ記録します。伸びた回が出たら、その画風を名前で選んで作り直せるようにするためです。1本の中で画風を混ぜたり、前回の画風に寄せたりしないでください。');
   L.push('- 「1000回を超えたら成功」という絶対基準は使いません。同じ投稿後日数の自分の他の動画と比べ、視聴や登録も確認します。');
   L.push('');
-  L.push(`## 今回：${plan.label}`);
+  L.push('## いちばん大事なこと：最初の一言（0〜3秒）');
+  L.push('見る人は最初の1〜2秒で、指を止めるか流すかを決めます。0.0秒から画面にある1枚目の一言で、続きを見たくさせてください。');
+  const themeLine = plan.themeFixed ? '参考にする回と同じテーマです。'
+    : plan.themes?.length ? `直近120日で再生の中央値が高いテーマ：${plan.themes.map(t => `${t.theme} ${num(Math.round(t.med))}回（${t.n}本）`).join('／')}。直前の2本と同じテーマは続けません（同じテーマが続くと落ちました）。`
+    : '記録が少ないため、これまで伸びたテーマ（うつ・孤独・不眠）から順に選んでいます。';
+  L.push(`- 今回のテーマ：${theme}。${themeLine}`);
+  L.push(`- 今回の一言の型：${hook.name}。${hook.how}。例（このチャンネルで伸びた回。同じ言葉は使わない）：${hook.ex.map(x => '「'+x+'」').join(' ')}`);
+  L.push('- 一言は、当事者が自分の部屋や暮らしの中でやってしまう具体的な行動か、いまの状態そのもの。見た人が「これ、私だ」と思えるものにします。主語を書かなくても「私」の話だと分かる言い切りにします。');
+  L.push('- 続きが気になる引っかかりを1つだけ入れます（なぜそうなるのか、このあとどうなるのか）。その答えや、ほんの少しの変化は最後の画で見せます。');
+  L.push('- 15〜20字、1〜2行。1行目だけ読んでも意味が分かるところで改行します。');
+  L.push('- 使わない一言：景色や物のきれいさの描写だけ（「落ち葉が風に運ばれていく」「光がひとつずつ増えていく」）、比喩や抽象語だけ（時間・色・心）、「〜な日がある」のような気持ちの説明だけ（行動や物が見えない）、問いかけ、挨拶や前置き、「〜な人へ」「大丈夫」などの励まし、病名・診断名。');
+  L.push('- 決め方：テーマに当てはまる行動を5つ書き出し、①具体的な行動・状態か ②当事者が「私だ」と思うか ③続きが気になるか ④下の直近の題名と同じ行動になっていないか ⑤今回の画風で、0.0秒に一目で分かる画にできるか、の5点で採点して、いちばん高いものを1枚目にします（候補はこちらに渡さなくて構いません）。');
+  L.push('- 1枚目の画は、その一言の場面そのものにします（冷めたお茶なら、湯気の消えたカップが画面の主役）。一言と画がずれると、どちらも伝わりません。');
+  const examples = hookExamples();
+  if (examples) {
+    L.push('- このチャンネルで再生が多かった題名（投稿から2日以降の記録）：');
+    examples.top.forEach(x => L.push('  '+x));
+    L.push('- 再生が少なかった題名：');
+    examples.bottom.forEach(x => L.push('  '+x));
+  }
+  L.push('');
+  L.push(`## 今回：${plan.label}（画風：${styleName}）`);
   L.push(`- 記録する形式名：${plan.format}`);
-  L.push(`- 選んだ理由：${plan.reason}`);
-  L.push(`- 今回の見た目と構成：${plan.brief}`);
-  L.push(`- 尺の設計目安：${plan.seconds}。内容と読める速さから決めて、実際の書き出し秒数を記録してください。`);
+  if (plan.recipe) {
+    const r = plan.recipe;
+    L.push(`- 画風：${r.look}`, `- 色：${r.palette}`, `- 雰囲気：${r.mood}`, `- 文字の見せ方：${r.text}`, `- カメラ：${r.camera}`, `- 音：${r.sound}`);
+    if (plan.round > 1) L.push(`- この画風は${plan.round}回目です。同じ画風の別の回として比べるため、画風の名前と質感はそろえ、場面・構図・色の配分は前回と変えてください。`);
+  } else L.push(`- 画風の中身：${plan.brief}`);
   if (plan.mode === 'explore') {
-    L.push('- 冒頭1秒の画だけで前回と別の企画だと分かること。主役の物・場所・画風・カメラの動きのうち複数を変え、同じ背景で言葉だけ変えないでください。');
-    L.push('- 制作前に場所・主役・出来事の異なる3案を比べ、履歴と最も違い、冒頭から具体的な出来事が見え、しかもコードで最後まで描き切れる1案を選びます。今回指定した画風と物語を出発点に、その1本だけを完成させます。');
-    L.push('- 以下の履歴と直近の投稿メモを照合し、選んだ案の変更点を4項目以上、短く明示してから制作します。履歴外の映像を見たと装わないでください。');
+    L.push('- 前回までの画風（下の履歴）と並べたとき、サムネイル1枚で別のチャンネルに見えるくらい変えます。色・質感・線・文字の見せ方・カメラの動き・音色を、この画風に合わせて全部作り直します。前回の画を色だけ変えて使い回すのは不可です。');
   } else {
     const g = plan.candidate;
     L.push(`- 参考にする回：${promptLineOf(plan.example)}`);
-    L.push(`- 今回だけ変えるもの：${plan.axis}。画風・場所・音・テーマ・投稿時刻など、それ以外は参考回にできるだけそろえます。`);
+    L.push(`- 今回だけ変えるもの：${plan.axis}。画風・テーマ・音・投稿時刻など、それ以外は参考回にできるだけそろえます。`);
     L.push('- 尺を変える回は参考回の約±20%を目安に、内容を削る／間を作る仮説を1つだけ試します。冒頭や締めの回は、尺をむやみに変えません。');
     L.push(`- 同じ計測期間のこの型の中央値：${summaryText(g.summary)}`);
     L.push(`- 同じ計測期間の他形式の中央値：${summaryText(g.baseline)}。小標本の仮説で、因果関係や再現性の証明ではありません。`);
     L.push('- 比較に使えたこの型の記録：');
     g.samples.forEach(o => L.push(`  ${o.s.v.slug}「${o.s.v.title}」計測日${o.date}（投稿後約${dec(o.age,0)}時間）：再生${num(o.views)}回／視聴を継続${dec(o.stayed)}%／平均再生率${dec(o.retention)}%／1000再生あたり登録${dec(o.subRate)}人`));
   }
+  L.push('- 画風が変わっても、題材は上の「最初の一言」で決めた暮らしの場面です。画風に合わせて、題材を景色や物のきれいさに変えないでください。');
+  L.push(`- 選んだ理由：${plan.reason}`);
+  L.push(`- 尺の設計目安：${plan.seconds}。内容と読める速さから決めて、実際の書き出し秒数を記録してください。`);
+  L.push('');
+  L.push('## 構成（伸びた回と同じ流れ）');
+  L.push('- 1枚目（0.0〜約3秒）：上で決めた一言と、その場面。');
+  L.push('- 2〜3枚目：その奥にある本音や、そうなってしまう理由を、説明しすぎずに。説教・励まし・解決策の押しつけはしません。');
+  L.push('- 最後の1枚：「私も」と同じ側にいることが分かる一言と、画の中で小さなものがひとつだけ良いほうへ変わる瞬間（灯りがつく・湯気が立つ・カーテンが少し開く など）。2行目は「毎晩1本、置いてます。」にします（10月前半に1,000回前後まで伸びた窓と灯りの回の締めです）。');
+  L.push('- テロップは全部で4〜6枚。1枚に言うことは1つだけにします。');
   L.push('');
   L.push('## 重複を避けるための生成履歴（未制作・未投稿の案を含む。成績ではない）');
   const history = readPromptHistory().recent;
   L.push('- 履歴やメモに実写・動画生成向けの案があっても、今回は下の「作れる範囲」の作り方で作ります。');
+  L.push('- 下の履歴にある画風の質感・色・文字の見せ方は、今回の画風と同じ名前でない限り引き継ぎません。最初の一言と題名は、下の直近10本の題名と同じ行動にしないでください。');
   if (!history.length) L.push('このブラウザーの生成履歴はまだありません。以下の登録済み動画も参照してください。');
-  history.forEach(h => L.push(`- ${h.format}：${h.brief}`));
+  history.forEach(h => L.push(`- ${h.format}${h.theme ? '／テーマ：'+h.theme : ''}${h.hook ? '／一言の型：'+h.hook : ''}`));
   // 制作手法の印は記録用なので外し、改行は1行にまとめる（箇条書きが崩れないように）。
   recent.map(s => ({ slug:s.v.slug, note:stripMethod(s.v.note || '').replace(/\s*\n\s*/g, ' ').trim() }))
     .filter(x => x.note).forEach(x => L.push(`- 投稿メモ ${x.slug}：${x.note}`));
@@ -2862,7 +3071,7 @@ function buildPrompt(plan = experimentPlan()){
   L.push('- 平均再生率は平均視聴秒数÷尺です。完走した人数の割合ではなく、再視聴率そのものでもありません。');
   L.push('- 視聴を継続した割合から特定の3秒や配信段階の原因は断定できません。未入力は0ではなく判断保留とし、記録のない映像内容や原因を作り話で補わないでください。');
   L.push('### 直近10本（最新の入力済み値・項目ごとの計測日）');
-  if (!recent.length) L.push('投稿日時のある動画は未登録です。まず探索から始めます。');
+  if (!recent.length) L.push('投稿日時のある動画は未登録です。まず1本目を作ります。');
   L.push(...recent.map(promptLineOf));
   L.push('### 新しい型の試行状況');
   if (!plan.groups.length) L.push('新しい型の記録はまだありません。以前の動画と数字は比較用の履歴です。');
@@ -2882,29 +3091,30 @@ function buildPrompt(plan = experimentPlan()){
   L.push('- 最初に python・numpy・Pillow・ffmpeg・ffprobe と、日本語の入ったフォント（例：fc-list :lang=ja）が使えるか確かめます。足りない道具は、入れられる環境なら入れて構いません。');
   L.push('- 足りない道具があって入れることもできない、または日本語フォントがない場合だけ、足りないものを書いて止めてください。文字化け（□）のまま書き出したり、未完成のmp4を完成と言ったりしないでください。');
   L.push('- 使わないもの：動画生成AI・画像生成AI、写真・動画・イラスト・音源のダウンロード、有料サービス。権利の分からない素材は使えません。こちらが添付したファイル（自作の曲など）があれば使って構いません。');
-  L.push('- 写真のような写実や実写の再現は狙いません（コードで写実をやると、どこか不気味になります）。今回の画風で、平らな色の面・光・影・動きの気持ちよさで見せます。');
+  L.push('- 写真のような写実や実写の再現は狙いません（コードで写実をやると、どこか不気味になります）。今回の画風の質感・色・光・動きの気持ちよさで見せます。');
   L.push('- 人物・顔・手は描きません。物・景色・光・天気・小さな生き物の気配（足あと、蛍の光など）で語ります。');
   L.push('- 描かないもの（見ている人の中には、いちばんしんどい夜の途中にいる人がいます）：薬・お酒・刃物・ロープ・血や傷／高い場所（屋上・ベランダの手すり・橋の上）・駅のホーム・線路・踏切／水の中へ入っていく画・沈んでいく画／人影・急に現れるもの・画面が乱れるノイズ・赤い光など怖く見える画／点滅や急な明るさの変化（灯りがつくときも0.5秒以上かけてゆっくり）。');
   L.push('- 実在の商品名・ロゴ・アプリの画面・読める看板は描きません。');
   L.push('');
-  L.push('## 構成と画');
+  L.push('## 画と文字の決まり');
   L.push('- 0.0秒の1フレーム目から、場面と1枚目のテロップの両方が写っていること。黒からのフェードイン・タイトルカード・ロゴから始めません。');
   L.push('- 0.0秒から画が動いていること（カメラがゆっくり動く、粒や光が揺れている、など）。0.8〜1.5秒に画の中で小さな出来事を1つ起こし、「なんだろう」を作ります。');
-  L.push('- 1枚目のテロップは15〜18字で、画と同じ場面を言います。前置きや挨拶から入りません。2.5〜3.2秒に最初の切り替え（テロップかカット）を置きます。');
-  L.push('- カメラは止めず、寄る・引く・横に流すを使い分けます。動きはゆっくり始まってゆっくり止まる曲線（イージング）にします。寄るときは画の主役に向かって寄り、主役はスマホで何か分かる大きさ（画面の幅の3分の1以上が目安）にします。');
-  L.push('- 尺の真ん中あたりに2つ目の小さな出来事を置き、最後は1枚目で立てた問いに画で答えます。ループは内容に合うときだけ使います。最後のフレームにも場面と文字を残し、黒画面・ロゴ・「ご視聴ありがとうございました」で終えません。「毎晩1本」の約束は自動で入れません。');
-  L.push('- テロップは補助です。文字を隠しても内容の違いが伝わる映像にします。1枚は1〜2行・15〜24字、読み終わって少し間があるくらいの表示時間（目安2.5〜3.5秒）にします。');
-  L.push('- 文字は太めの日本語フォントで84〜110px。白い文字にぼかした影をつけ、明るい画では文字の後ろだけ少し暗くします。くっきりした縁取りは使いません。');
-  L.push('- 文字のかたまりの中心は x=540（左右の余白を同じに）、行ごとに中央そろえ。中央は字の枠ではなく、実際に描かれた字の画素の左端・右端で合わせます（行末の「、」「。」で約27px左に寄るため）。');
+  L.push('- 1枚目の一言（上で決めたもの）は0.0秒から表示し、2.5〜3.2秒に最初の切り替え（テロップかカット）を置きます。');
+  L.push('- カメラの動きは「今回の画風」のとおりにします。動きはゆっくり始まってゆっくり止まる曲線（イージング）にします。主役はスマホで何か分かる大きさ（画面の幅の3分の1以上が目安）にします。');
+  L.push('- 尺の真ん中あたりに2つ目の小さな出来事を置き、最後は1枚目の引っかかりに画で答えます。ループは内容に合うときだけ使います。最後のフレームにも場面と文字を残し、黒画面・ロゴ・「ご視聴ありがとうございました」で終えません。');
+  L.push('- テロップと画はセットです。テロップは1枚1〜2行・15〜24字、読み終わって少し間があるくらいの表示時間（目安2.5〜3.5秒）にします。');
+  L.push('- 文字は84〜110px。色・書体・文字の後ろ（紙片・吹き出し・帯など）は「今回の画風」の文字の見せ方に合わせ、どの画風でも夜のスマホで一瞬で読める濃淡の差をつけます。明朝体は、明朝体の日本語フォントがあるときだけ使います（なければ太めのゴシック）。');
+  L.push('- 文字のかたまりの中心は x=540（左右の余白を同じに）、行ごとに中央そろえ。中央は字の枠ではなく、実際に描かれた字の画素の左端・右端で合わせます（行末の「、」「。」で約27px左に寄るため）。紙片・吹き出し・帯も中心を x=540 にそろえ、幅は900px以内にします。');
   L.push('- 縦は文字の中心を y=760〜1100 に置き、右のボタン列（x=900〜1050・y=1150〜1750）と下の題名（y=1550より下）を縦の位置で避けます。横にずらして避けないでください。');
   L.push('- 画の主役は文字のかたまりと重ねません。主役は文字の上側（y=250〜700）か下側（y=1150〜1500。x=900より右のボタン列は避ける）に置き、動く主役も文字の上を横切らないよう、文字の上か下を通します。');
-  L.push('- 夜にスマホで見てまぶしくない明るさにします。いちばん明るいところも真っ白に飛ばしません。');
-  L.push('- 投稿する時間帯や説明文の基本条件はできるだけそろえます。探索段階でまとめて変えた要素は記録し、どれが原因かは後の再検証で確かめます。');
+  L.push('- 明るい画風でも、いちばん明るいところは真っ白（255）に飛ばさず、紙の白は明るさ235前後までにします。暗い画風でも、主役と文字ははっきり見える明るさにします。');
+  L.push('- 投稿する時間帯や説明文の基本条件はできるだけそろえます。');
   L.push('');
   L.push('## 音（無音のmp4は不可）');
   L.push('- BGMも効果音も numpy で合成します（例：正弦波の和音をゆっくりにじませる、ホワイトノイズにフィルタをかけて雨や風にする、減衰する正弦波で鈴や余韻）。読み上げナレーションは入れません。');
+  L.push('- 音色は「今回の画風」の音に合わせ、前回と同じ音にしません。');
   L.push('- 冒頭0.8秒でフェードイン（0から1へ2乗の曲線）。冒頭に効果音は置きません。夜、イヤホンで聞いている人が驚かない入り方にします。');
-  L.push('- ビート・打楽器・はっきりしたメロディは入れず、静かなアンビエントにします。効果音は3秒より後に4つまで、BGMより目立たせず、立ち上がりに50ms以上かけます。8kHzより上と80Hzより下は落とします。');
+  L.push('- ビート・打楽器は入れません。メロディは短い音型をゆっくり鳴らす程度までにします。効果音は3秒より後に4つまで、BGMより目立たせず、立ち上がりに50ms以上かけます。8kHzより上と80Hzより下は落とします。');
   L.push('- 仕上げに全体を ebur128 で測り、volume で -20 LUFS 前後（-21〜-19）にそろえます（SNS標準の -14 LUFS より、あえて静かめ）。loudnorm は静かな出だしを持ち上げてしまうので使いません。ピークは -3dBFS 以下。最後まで鳴らし続け、最後の0.5秒だけ少し下げます。');
   L.push('');
   L.push('## 作り方（書き出しまでたどり着くために）');
@@ -2926,7 +3136,7 @@ function buildPrompt(plan = experimentPlan()){
   L.push('1. 尺が目安の範囲に入り、1080×1920・30fps か（ffprobe）');
   L.push('2. 映像と音声の両方のトラックがあり、全体が -21〜-19 LUFS に入っているか（ebur128）');
   L.push('3. 冒頭0.2秒の平均の音量（mean_volume）が -40dB 以下か（フェードインが効いているか）');
-  L.push('4. 0.0秒のフレームに、場面とテロップの両方が写っているか（真っ黒や一色だけになっていないか）');
+  L.push('4. 0.0秒のフレームに、場面と1枚目の一言の両方が写っているか（真っ黒や一色だけになっていないか）');
   L.push('5. 0.0・1.0・2.0・3.0秒のフレームを書き出し、となり同士の画素の差の平均がゼロでないか（最初の3秒で画が動いているか）');
   L.push('6. フレームごとの平均の明るさ（0〜255）で、となりのフレームとの差が12を超えるところがないか（点滅していないか）');
   L.push('7. 文字の層だけ（透明の上に文字だけを描いたもの）で測って、テロップ3枚ぶんの文字の左端と右端の中心が 540±30px に入っているか');
@@ -2934,12 +3144,12 @@ function buildPrompt(plan = experimentPlan()){
   L.push('');
   L.push('## 返してほしいもの');
   L.push('1. 完成した音入りのmp4を1本。ダウンロードリンクまたは保存先を示します。音だけ・音なし・絵コンテ・試しの書き出し・制作コードなどの別ファイルは不要です。');
-  L.push('2. 題名を1つ。具体的な内容が伝わり、最近の題名と重複しない言葉にします。言い切り／問いかけは企画に合う方を選び、ハッシュタグ込み100文字以内。');
+  L.push('2. 題名を1つ。1枚目の一言と同じ場面を、当事者の行動の言い切りで書きます（本体13〜18字。2026-09-10の実測で、問いかけの題名3本は中央285回、言い切り31本は中央1,011回でした）。景色の描写・問いかけ・「〜な人へ」にせず、最近の題名と同じ行動にしません。ハッシュタグは4個（1つはテーマの言葉）、全体で100文字以内。');
   L.push('3. 概要欄へ一度でコピーできる完成した説明文を1つ。動画の紹介・答えやすい問い・当事者本人が運営していること・星の海の案内を自然につなぎます。固定コメントは別に出しません。');
   L.push('   次の計測リンクを本文に1回、そのまま入れてください。URLやUTMのパラメータを変更せず、識別子の解説は貼り付け用の説明文に含めません。');
   L.push(url);
-  L.push('4. 記録用の1行（下の形式）。実際に作った内容を書き、形式名は正確に引き継いでください。');
-  L.push(`識別子: ${slug} ／ テーマ: ___ ／ 冒頭の掴み: ___ ／ 音: ___ ／ 形式: ${plan.format} ／ 尺: ___（実測秒）／ 締め: ___ ／ 役割: ${role.role} ／ 今回変えたもの: ${plan.axis} ／ メモ: ${plan.label}・場面___・主役___・動き___・画風___・カメラ___・物語___・音___・仮説___${plan.example ? '・参考:'+plan.example.v.slug : ''}`);
+  L.push('4. 記録用の1行（下の形式）。実際に作った内容を書き、形式名・テーマ・冒頭の掴みは正確に引き継いでください。');
+  L.push(`識別子: ${slug} ／ テーマ: ${theme} ／ 冒頭の掴み: ${hook.name} ／ 音: ___ ／ 形式: ${plan.format} ／ 尺: ___（実測秒）／ 締め: ___ ／ 役割: ${role.role} ／ 今回変えたもの: ${plan.axis} ／ メモ: ${plan.label}・1枚目「___」・画風:${styleName}・場面___・仮説___${plan.example ? '・参考:'+plan.example.v.slug : ''}`);
   L.push('   「動画」タブの形式欄は自由入力できます。上のメモも残し、「映像の制作手法」は「Seedance以外」を選びます。YouTubeのURLと投稿日時を登録しないと、投稿後日数をそろえて比較できません。');
   L.push('5. 自己点検を1行（「自己点検 8/8 通過」の形）。あわせて、実際に書き出した尺と、今回試した仮説をひとことで。');
   return { text:L.join('\n'), slug };
@@ -2971,7 +3181,7 @@ async function showPrompt(){
     $('#prompt-out').value = text;
     $('#prompt-slug').textContent = slug;
     $('#prompt-msg').textContent = '保存済みの数字と現在の土台から作成しました。生成履歴は投稿成績には数えません。'
-      + (promptHistoryStorageFailed ? ' 生成履歴を端末に保存できません。この画面では別案へ進みますが、再読み込み後は履歴を引き継げない場合があります。' : plan.mode === 'explore' ? ' 次の生成では別のアプローチを選びます。' : ' 別案に進む場合は「別のアプローチを作る」を押してください。');
+      + (promptHistoryStorageFailed ? ' 生成履歴を端末に保存できません。この画面では別案へ進みますが、再読み込み後は履歴を引き継げない場合があります。' : plan.mode === 'explore' ? ' 次の生成では別の画風を選びます。' : ' 別の画風に進む場合は「別の画風で作る」を押してください。');
   } finally { $('#prompt-build').disabled = false; $('#prompt-build2').disabled = false; }
 }
 $('#prompt-build').addEventListener('click', showPrompt);
