@@ -201,6 +201,8 @@
   #prompt-base-hint{text-align:left;width:100%;}
   #prompt-build{box-shadow:0 5px 16px rgba(23,69,107,.15);}
   #prompt-copy:disabled{opacity:.45;cursor:not-allowed;}
+  .prompt-gif-steps{font-size:.8rem;line-height:1.8;background:rgba(43,127,140,.07);border:1px solid rgba(43,127,140,.18);border-radius:12px;padding:.85rem 1rem;margin-bottom:1rem;}
+  .prompt-gif-steps ol{list-style:decimal;margin:.4rem 0 0 1.25rem;padding:0;}
   @media(max-width:639px){
     #app-view .tabpanel>.p-6{padding:1.1rem;}
     #tabbar .tab{min-height:44px;padding-inline:.85rem;}
@@ -301,6 +303,11 @@
       <h2 class="font-semibold text-sm mb-2">Seedance導入前後の比較</h2>
       <p class="text-xs mb-3">「土台」で導入前28日間と導入開始日を設定し、動画の編集画面で制作手法を記録してください。</p>
       <div id="seedance-comparison"></div>
+    </div>
+    <div class="glass rounded-2xl p-5">
+      <h2 class="font-semibold text-sm mb-2">冒頭GIFの比較</h2>
+      <p class="text-xs mb-3">冒頭の3〜5秒を ChatGPT のGIFにした回と、コードだけで作った回を、同じ期間で比べます。動画の編集画面で制作手法を「冒頭にChatGPTのGIF」と記録した回がGIFの回です。</p>
+      <div id="gif-comparison"></div>
     </div>
     <div id="home-cards" class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5"></div>
 
@@ -463,6 +470,9 @@
         映像も音も、受け取ったAIがコード（Python と ffmpeg）で描いて書き出すので、動画生成サービスや実写の素材がなくても Claude・Codex だけで作れます。写真のような実写の質感は狙いません。
         受け取るファイルは<b>音入りの mp4 1本だけ</b>。ほかに返ってくるのは、投稿に使う題名・説明文と、登録用の1行（文字だけ）です。
         生成履歴はこのブラウザーに保存し、別の端末では登録済みの動画を参考にします。</p>
+      <p class="prompt-note"><b>冒頭の3〜5秒だけ、ChatGPT（Images 2.6）で作るアニメーションGIFにする</b>こともできます。
+        GIFは数枚〜十数枚の画を順に見せるパラパラ漫画なので、受け取ったAIがコマをなめらかにつないで冒頭に使い、そのあとはいつもどおりコードで描きます。
+        「GIFの回とコードの回を交互に」を選ぶと（はじめはこれ）、登録した本数が少ないほうを次に作り、「視聴を継続」と「スワイプして次へ」をダッシュボードの「冒頭GIFの比較」で比べます。</p>
       <button type="button" id="prompt-base-hint" class="hidden text-[11px] mb-3 rounded-lg px-3 py-2 leading-relaxed cursor-pointer"
          style="background:rgba(154,116,32,.09);color:#9a7420">
         「土台」タブがまだ空です。<b>なぜやるのか</b>と<b>この分野の上限</b>を入れておくと、
@@ -474,10 +484,26 @@
           <option value="refine">数字に手応えのある画風を再検証する</option>
         </select>
       </label>
+      <label class="block text-xs mb-3" for="prompt-opening">冒頭の3〜5秒
+        <select id="prompt-opening" class="fld mt-1">
+          <option value="auto">GIFの回とコードの回を交互に</option>
+          <option value="gif">毎回、ChatGPTのGIFで</option>
+          <option value="code">GIFを使わない（コードだけ）</option>
+        </select>
+      </label>
       <button id="prompt-build" class="w-full rounded-2xl py-3.5 font-medium text-slate-900 shadow-2xl"
               style="background:#17456b">分析してプロンプトを作る</button>
 
       <div id="prompt-box" class="hidden mt-4">
+        <div id="prompt-gif-steps" class="hidden prompt-gif-steps">
+          <b>今回は冒頭をGIFで作る回です。</b>次の順に進めてください。
+          <ol>
+            <li>このプロンプトを Claude（または Codex）に貼る。最初に、ChatGPT に渡す GIF の指示文だけが返ってきます。</li>
+            <li>その指示文を ChatGPT に貼り、できた GIF をダウンロードする。</li>
+            <li>GIF を Claude の<b>同じ会話</b>に添付して送る。音入りの mp4 が届きます（GIFが作れなかったときは「GIFなしで」と送る）。</li>
+            <li>「動画」タブで登録し、映像の制作手法を「冒頭にChatGPTのGIF」にする。</li>
+          </ol>
+        </div>
         <label for="prompt-out" class="prompt-output-label">Claude・Codex 共通の制作プロンプト</label>
         <textarea id="prompt-out" rows="14" readonly
                   class="fld text-[11px] leading-relaxed" style="font-family:ui-monospace,monospace"></textarea>
@@ -817,7 +843,7 @@
           <label><span class="block text-[11px] text-slate-500 mb-1">投稿した日時</span><input id="vm-at" type="datetime-local" class="fld"></label>
         </div>
         <label class="block text-xs">映像の制作手法
-          <select id="vm-method" class="fld"><option value="unknown">未記録</option><option value="seedance">Seedanceを使用</option><option value="other">Seedance以外</option></select>
+          <select id="vm-method" class="fld"><option value="unknown">未記録</option><option value="gif">冒頭にChatGPTのGIF</option><option value="other">コードだけ（GIF・Seedanceなし）</option><option value="seedance">Seedanceを使用</option></select>
         </label>
         <label class="block"><span class="block text-[11px] text-slate-500 mb-1">メモ</span><textarea id="vm-note" rows="2" class="fld"></textarea></label>
       </div>
@@ -1802,10 +1828,15 @@ const jstDay = value => new Date(+new Date(value)+9*36e5).toISOString().slice(0,
 const dayShift = (day, amount) => new Date(Date.parse(day+'T00:00:00Z')+amount*864e5).toISOString().slice(0,10);
 const validDay = day => typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day)
   && Number.isFinite(Date.parse(day+'T00:00:00Z')) && dayShift(day,0) === day;
-const METHOD_TAG = /^【制作手法:(Seedance|その他)】\s*/;
-const productionMethod = v => v?.note?.match(METHOD_TAG)?.[1] === 'Seedance' ? 'seedance' : v?.note?.match(METHOD_TAG) ? 'other' : 'unknown';
+// 制作手法はメモの先頭の印で持つ（列を足さずに済むため）。「その他」はコードだけで描いた回。
+const METHOD_TAGS = { seedance:'Seedance', gif:'ChatGPT GIF', other:'その他' };
+const METHOD_TAG = /^【制作手法:(Seedance|ChatGPT GIF|その他)】\s*/;
+const productionMethod = v => {
+  const tag = v?.note?.match(METHOD_TAG)?.[1];
+  return Object.keys(METHOD_TAGS).find(key => METHOD_TAGS[key] === tag) || 'unknown';
+};
 const stripMethod = note => note.replace(METHOD_TAG,'');
-const withMethod = (note, method) => ((method === 'seedance' ? '【制作手法:Seedance】\n' : method === 'other' ? '【制作手法:その他】\n' : '') + stripMethod(note).trim()) || null;
+const withMethod = (note, method) => ((Object.hasOwn(METHOD_TAGS, method) ? `【制作手法:${METHOD_TAGS[method]}】\n` : '') + stripMethod(note).trim()) || null;
 function validateStudy(study = {}){
   if (study.beforeEnd && (!validDay(study.beforeEnd) || study.beforeEnd > jstDay(Date.now()))) return '導入前の終了日は今日以前の有効な日付にしてください。';
   if (study.start && !validDay(study.start)) return '導入開始日を確認してください。';
@@ -1855,6 +1886,7 @@ function studyReferenceText(config){
     : 'Studioの導入前28日間の視聴継続率は未記録です。「土台」で入力できます。';
 }
 function renderKpis(){
+  renderOpeningComparison();   // 下の Seedance の比較は設定がないと途中で戻るので、先に描く
   const recent = recentKpis(), s = recent.summary, study = studyComparison();
   $('#primary-kpis').innerHTML = `<p class="text-xs mb-3">投稿期間 ${recent.from}〜${recent.to}（日本時間）。投稿72〜120時間後の同じ行から算出した動画別中央値です。Studioのチャンネル集計値ではありません。</p>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">${KPI_SPECS.slice(0,3).map(([key,label,unit],i) => `<div class="glass p-3"><b class="text-xs">${i+1}. ${label}</b><p class="num text-xl">${s[key] == null ? '—' : dec(s[key],1)+unit}</p><p class="text-xs">入力済み${s[key+'N']}本${key === 'stayed' ? '／スワイプ '+(s.stayed == null ? '—' : dec(100-s.stayed,1)+'%') : ''}</p></div>`).join('')}</div>
@@ -1873,7 +1905,91 @@ function renderKpis(){
     <p class="text-xs mt-3">${esc(studyDiagnosis(study))}</p>
     <p class="text-xs mt-2">5ポイント・各3本は運用上の目安です。尺・テーマ・投稿時刻・配信対象の違いがあり、因果関係や費用対効果は断定できません。自動取得は追加せず、Studioから手入力します。</p>`;
 }
-function kpiPromptLines(){
+/* ========================= 冒頭GIF（2026-11-09〜） =========================
+   冒頭の3〜5秒だけ ChatGPT（Images 2.6、2026-11-04 公開）のアニメーションGIFにして、
+   コードだけで描く回と「視聴を継続」（スワイプして次へは、その補数）を比べる。
+   GIFは数枚〜十数枚の画を順に見せるパラパラ漫画（APIでは2〜16コマ、標準は9コマ×0.2秒＝1.8秒）で、
+   コマどうしで形や色が揺れやすいのが弱点。受け取ったAIがコマを溶かしてつなぎ、冒頭だけに使う。
+   比べるのは冒頭だけなので、画風・テーマ・一言の決め方・構成・音は変えない。
+   どちらの回かは、動画のメモの先頭の印（【制作手法:ChatGPT GIF】）で数える。形式名は変えない。 */
+const GIF_EXPERIMENT = { start:'2026-11-09' };   // 比べ始めた日（日本時間）。テストではここを書き換える
+const OPENING_KEY = 'sv-opening-v1';
+const OPENING_SETTINGS = ['auto', 'gif', 'code'];
+function readOpeningSetting(){
+  try { const v = localStorage.getItem(OPENING_KEY); return OPENING_SETTINGS.includes(v) ? v : 'auto'; }
+  catch { return 'auto'; }
+}
+function saveOpeningSetting(value){
+  if (!OPENING_SETTINGS.includes(value)) return;
+  try { localStorage.setItem(OPENING_KEY, value); } catch {}   // 保存できなくても、この画面の選択はそのまま効く
+}
+// 比べ始めた日から後に投稿した回（未投稿なら制作日で見る）。Seedanceの回は比べる対象にしない。
+function openingVideos(){
+  return allStats().list.filter(s => {
+    const day = s.postedAt && Number.isFinite(+new Date(s.postedAt)) ? jstDay(s.postedAt)
+      : validDay(s.v.produced_on) ? s.v.produced_on : '';
+    return day >= GIF_EXPERIMENT.start && productionMethod(s.v) !== 'seedance';
+  });
+}
+/* 「GIFの回とコードの回を交互に」（既定）は、登録済みの回で少ないほうを作る（同じ本数ならGIF）。
+   生成しただけの案は数えない（「別の画風で作る」を押すたびに入れ替わらないように）。
+   再検証は、変えるもの以外を参考回にそろえるため、参考回と同じ作り方にする。 */
+function openingChoice(plan, setting){
+  const list = openingVideos();
+  const gifCount = list.filter(s => productionMethod(s.v) === 'gif').length;
+  const counts = { gif:gifCount, code:list.length-gifCount };
+  const pick = (mode, reason) => ({ mode, setting, reason, counts,
+    label: mode === 'gif' ? '冒頭の3〜5秒をChatGPTのGIFで作る' : '冒頭もコードで描く（GIFなし）' });
+  if (setting === 'gif') return pick('gif', '「毎回、ChatGPTのGIFで」を選んでいます。');
+  if (setting === 'code') return pick('code', '「GIFを使わない（コードだけ）」を選んでいます。');
+  if (plan.mode === 'refine' && plan.example) {
+    const sameAsGif = productionMethod(plan.example.v) === 'gif';
+    return pick(sameAsGif ? 'gif' : 'code', `再検証なので、参考にする回（${plan.example.v.slug}）と同じく${sameAsGif ? 'GIFで' : 'コードだけで'}作ります。`);
+  }
+  const tally = `${GIF_EXPERIMENT.start}からの登録は、GIFの回${counts.gif}本・コードだけの回${counts.code}本です。`;
+  if (counts.gif < counts.code) return pick('gif', tally+'GIFの回のほうが少ないので、GIFで作ります。');
+  if (counts.gif === counts.code) return pick('gif', tally+'同じ本数なので、GIFの回から作ります。');
+  return pick('code', tally+'コードだけの回のほうが少ないので、コードだけで作ります。');
+}
+function openingComparison(){
+  const from = GIF_EXPERIMENT.start, to = jstDay(Date.now());
+  return { from, to,
+    gif: observedPeriod(from, to, v => productionMethod(v) === 'gif'),
+    code: observedPeriod(from, to, v => !['gif','seedance'].includes(productionMethod(v))) };
+}
+function openingDiagnosis(c){
+  const paired = period => experimentSummary(period.rows.filter(o => o.stayed != null));
+  const g = paired(c.gif), k = paired(c.code);
+  if (g.n < 3 || k.n < 3) return `判断保留：投稿4日後の「視聴を継続」が記録できた回は、GIFの回${g.n}本・コードだけの回${k.n}本です。各3本以上そろってから比べます。`;
+  const d = g.stayed - k.stayed;
+  if (d >= 5) return `GIFの回のほうが、視聴を継続が${dec(d,1)}ポイント高い（スワイプして次へが同じだけ低い）傾向です。平均再生率と登録も確かめながら、GIFの回を続けて確かめます。`;
+  if (d <= -5) return `GIFの回のほうが、視聴を継続が${dec(-d,1)}ポイント低い（スワイプして次へが同じだけ高い）傾向です。GIFの場面と一言の合い方やコマのちらつきを見直すか、コードだけに戻します。`;
+  return `GIFの回とコードだけの回の、視聴を継続の差は${dec(Math.abs(d),1)}ポイントで、まだはっきりしません。本数を増やして比べます。`;
+}
+const briefSummary = summary => KPI_SPECS.slice(0,3)
+  .map(([key,label,unit]) => `${label} ${summary[key] == null ? '未記録' : dec(summary[key],1)+unit}（${summary[key+'N']}本）`).join('・');
+function renderOpeningComparison(){
+  const c = openingComparison(), g = c.gif.summary, k = c.code.summary;
+  const cell = (v, key, unit) => v[key] == null ? '—（0本）' : `${dec(v[key],1)}${unit}（${v[key+'N']}本）`;
+  const swipe = v => v.stayed == null ? '—' : dec(100-v.stayed,1)+'%';
+  $('#gif-comparison').innerHTML = `<p class="text-xs mb-2">投稿期間 ${c.from}〜${c.to}（日本時間）。投稿72〜120時間後の同じ行から算出した動画別中央値です。</p>
+    <div class="scroll-x"><table class="w-full text-xs"><thead><tr><th>動画別中央値</th><th>GIFの回</th><th>コードだけの回</th><th>差</th></tr></thead><tbody>${KPI_SPECS.map(([key,label,unit]) => {
+      const delta = g[key] != null && k[key] != null ? g[key]-k[key] : null;
+      return `<tr><th class="py-2">${label}</th><td>${cell(g,key,unit)}</td><td>${cell(k,key,unit)}</td><td>${delta == null ? '—' : (delta>0?'+':'')+dec(delta,1)+(unit==='%'?'ポイント':unit)}</td></tr>`;
+    }).join('')}</tbody></table></div>
+    <p class="text-xs mt-2">スワイプして次へ：GIFの回${swipe(g)}／コードだけの回${swipe(k)}（視聴を継続の補数）。</p>
+    <p class="text-xs mt-2">同条件の計測行なし：GIFの回${c.gif.pending}本／コードだけの回${c.code.pending}本。コードだけの回には、制作手法が未記録の回も含みます。未入力は0ではありません。</p>
+    <p class="text-xs mt-3">${esc(openingDiagnosis(c))}</p>
+    <p class="text-xs mt-2">画風・テーマ・一言の型は毎回ちがうので、差のすべてが冒頭のGIFによるものとは言い切れません。5ポイント・各3本は運用上の目安です。</p>`;
+}
+function openingPromptLines(){
+  const c = openingComparison();
+  return [`- 冒頭GIFの比較（${c.from}〜、投稿72〜120時間後の動画別中央値）：GIFの回 ${briefSummary(c.gif.summary)}／コードだけの回 ${briefSummary(c.code.summary)}`,
+    '- '+openingDiagnosis(c)];
+}
+
+function kpiPromptLines(opening = null){
+  const gif = opening?.mode === 'gif';
   const study = studyComparison(), recent = recentKpis();
   const lines = ['## 最優先KPIと映像化の検証',
     '- 優先順位：1. 視聴を継続した割合、2. 平均再生率、3. 1,000再生あたりの登録者数。スワイプして次へは100−視聴を継続の補数であり、別の成功指標として二重に数えません。',
@@ -1882,9 +1998,11 @@ function kpiPromptLines(){
     // 「土台で設定してください」は管理者向けの案内なので、制作するAIには渡さない。
     ...(study.error ? [] : ['- '+studyReferenceText(study.config), '- '+studyDiagnosis(study)]),
     ...(study.error ? ['- 映像化の導入前後の比較は、まだ設定されていません（比べる基準の数字はありません）。'] : []),
-    '- この指示文の動画は、コードで描く映像です（Seedance等の動画生成は使いません）。冒頭0〜5秒を1つの検証区間として設計し、最初の1秒から主役の動きや具体的な出来事を見せます。',
+    gif ? '- この指示文の動画は、冒頭の3〜5秒だけ添付のGIF（ChatGPTで作るもの）、残りはコードで描く映像です（Seedance等の動画生成は使いません）。冒頭0〜5秒を1つの検証区間として設計し、最初の1秒から主役の動きや具体的な出来事を見せます。'
+      : '- この指示文の動画は、コードで描く映像です（Seedance等の動画生成は使いません）。冒頭0〜5秒を1つの検証区間として設計し、最初の1秒から主役の動きや具体的な出来事を見せます。',
     '- 既定では毎回ちがう画風で作ります。導入効果を再検証する場合は、尺・テーマ・音・投稿時間をできるだけそろえ、冒頭映像を主な変更点として記録します。途中離脱の場所はStudioの視聴者維持率グラフで確認してください。',
-    '- 制作後は動画の「映像の制作手法」を「Seedance以外」と記録してください。APIでの自動取得は未実装なので、視聴を継続・平均視聴時間などをStudioから同じ集計範囲で転記します。'];
+    `- 制作後は動画の「映像の制作手法」を「${gif ? '冒頭にChatGPTのGIF' : 'コードだけ（GIF・Seedanceなし）'}」と記録してください。APIでの自動取得は未実装なので、視聴を継続・平均視聴時間などをStudioから同じ集計範囲で転記します。`,
+    ...(gif ? openingPromptLines() : [])];
   if (!study.error) lines.push(`- 導入前 ${study.beforeFrom}〜${study.config.beforeEnd}：${summaryText(study.before.summary)}`,
     `- 導入後 ${study.config.start}〜${study.afterEnd}（Seedance使用のみ${study.provisional ? '・暫定' : ''}）：${summaryText(study.after.summary)}`,
     '- 前後差だけで映像化の因果効果や投資価値を断定しません。制作費と成果の価値も別に確認します。');
@@ -2141,7 +2259,12 @@ function experimentSummary(rows){
   }
   return summary;
 }
-function experimentPlan(mode = $('#prompt-mode').value){
+// 画風・テーマ・一言の型を決めたあと、冒頭の3〜5秒をGIFにするかを決める（openingChoice）。
+function experimentPlan(mode = $('#prompt-mode').value, opening = $('#prompt-opening').value){
+  const plan = stylePlan(mode);
+  return { ...plan, opening:openingChoice(plan, opening) };
+}
+function stylePlan(mode){
   const published = allStats().list.filter(s => s.postedAt && +new Date(s.postedAt) <= Date.now())
     .sort((a,b) => new Date(b.postedAt)-new Date(a.postedAt) || String(a.v.id).localeCompare(String(b.v.id)));
   // 90日より古い成功だけを理由に、今も同じ型へ戻し続けない。
@@ -2212,6 +2335,7 @@ function renderTestPlan(plan = experimentPlan()){
     <h3 class="text-sm font-bold">${esc(plan.label)}：${esc(plan.format)}</h3>
     <p class="text-xs mt-2">${esc(plan.reason)}</p>
     <p class="text-xs mt-2"><b>テーマ</b>：${esc(plan.theme)} ／ <b>最初の一言の型</b>：${esc(plan.hook?.name)}（${esc(plan.hook?.how)}）</p>
+    <p class="text-xs mt-2"><b>冒頭の3〜5秒</b>：${esc(plan.opening.label)}。${esc(plan.opening.reason)}${plan.opening.mode === 'gif' ? ' 制作後は、映像の制作手法を「冒頭にChatGPTのGIF」にしてください。' : ''}</p>
     <p class="text-xs mt-2">${esc(plan.brief)}</p>
     <p class="text-xs mt-2">${plan.mode === 'explore'
       ? '画風は毎回まったく別のものにします。題材と最初の一言は伸びた回の作り方にそろえ、画風・テーマ・一言の型を1本ずつ記録します。どれが効いたかの断定は、同じ画風の再検証まで保留します。'
@@ -2331,6 +2455,7 @@ function renderAdvice(){
   const study = studyComparison();
   out.push(card('info','🎬','冒頭と視聴時間を分けて見る',esc(studyDiagnosis(study))));
   out.push(card('info','🧪',esc(plan.label),esc(plan.reason)));
+  out.push(card('info','🎞️','冒頭GIFの比較',esc(openingDiagnosis(openingComparison()))));
   out.push(card('info','📊','投稿4日後の数字を記録する',
     '比較は投稿72〜120時間後の同じ行の数字で行います。最優先の視聴を継続と、平均視聴秒数・登録の増加・再生数を記録してください。未入力は0ではありません。'));
   out.push(card('flat','🌱','一度の当たりを固定化しない',
@@ -2960,6 +3085,52 @@ function formatResultLines(){
     + (fc[g.key].stayed != null ? `・視聴を継続${dec(fc[g.key].stayed,0)}%` : ''));
 }
 
+/* 冒頭GIFの回だけに入れる2つの章。1回目は ChatGPT に渡す指示文を書かせて止め、2回目にGIFを受け取ってmp4を作る。
+   先に1枚目の一言を決めてからGIFを作る（いちばん効いたのは題材と一言なので、画に一言を合わせる順にはしない）。
+   GIFの弱点（コマ数が少ない・コマどうしの揺れ・減色の縞）は、受け取ったAIが溶かしてならす。 */
+function gifRequestLines(){
+  return [
+    '## 冒頭のGIF（1回目：ChatGPTに渡す指示文を書きます）',
+    '- ChatGPTのGIFは、数枚〜十数枚の画を順に見せるパラパラ漫画です（APIでは2〜16コマ、標準は9コマ×0.2秒＝1.8秒）。コマどうしで形や色が揺れやすいのが弱点なので、動きは小さく、ゆっくりにしてもらいます。',
+    '- GIFに描いてもらうのは、1枚目の一言の場面そのもの（0.0秒に写る画）です。文字は動画の側で重ねるので、GIFには入れません。',
+    '- 画風は「今回」の章の画風・色・雰囲気を、画像生成AIに伝わる短い言葉に言い換えて入れます。写真のような実写にはしません（あとに続くコードの場面と見た目をそろえるため）。',
+    '- 一言の場面が夜の部屋や窓辺のときの例：雨の降る夜、暗い部屋の窓から見た向かいの建物。ひとつの窓だけに、ゆっくり明かりが灯る（10月前半に伸びた「窓と灯り」の回と同じ場所です）。',
+    '- 下の形をそのまま使い、【】の中だけを埋めて、コードブロック1つで渡してください。こちらはそれをコピーしてChatGPTに貼ります。',
+    '```',
+    'アニメーションGIFを1つ作ってください。縦長のショート動画の、最初の3〜4秒に使います。',
+    '場面：【1枚目の一言の場面を1〜2文で。何が主役で、何がゆっくりどう変わるか】',
+    '画風：【今回の画風を短く】',
+    '色：【今回の色を短く】',
+    '- 縦長（9:16）。できなければ縦長の2:3で。',
+    '- カメラは動かさず固定。動くのは、ゆっくり変わるもの1つか2つだけにしてください（明かりが少しずつ灯る、カーテンが揺れる、湯気が立つ など）。',
+    '- 建物・家具・物の形と位置は、すべてのコマで同じにしてください（コマごとに形が変わると、ちらついて見えます）。',
+    '- 雨・雪・舞う粒のような、速く細かい動きは描かなくて構いません（あとで動画の側で足します）。',
+    '- コマはできるだけ多く（16コマ前後）、1コマ0.2秒前後に。最後のコマから最初のコマへ、自然につながるループにしてください。',
+    '- 主役は画面の上のほう（上から15〜35%）か下のほう（上から60〜75%）に置き、真ん中（上から40〜57%）は模様の少ない落ち着いた所（無地に近い壁・空・床など）にしてください。あとで文字を重ねます。',
+    '- 文字・数字・看板・ロゴ・透かしは入れないでください。',
+    '- 人・顔・手・人影は描かないでください。',
+    '- 点滅や、急に明るくなる変化はなしで。明るさはゆっくり変えてください。',
+    '- 描かないもの：薬・お酒・刃物・ロープ・血、高い所・駅・線路・踏切、水の中へ入っていく画、怖く見える画。',
+    '```',
+    '- 1回目に返すもの（これだけ）：①決めた1枚目の一言 ②その場面を1行 ③ChatGPTに貼る指示文（上の形の【】を埋めたもの・コードブロック1つ）④「GIFができたら、この会話に添付してください。」の1行。',
+    '',
+  ];
+}
+function gifUseLines(){
+  return [
+    '## 冒頭のGIFの使い方（2回目）',
+    "1. Pillow で開き、コマ数・大きさ・各コマの表示時間（info['duration']。無いときや10ミリ秒以下のときは100ミリ秒として扱う）を確かめます。コマは ImageSequence で順に読み、1枚ずつ convert('RGB') した全体の画にしてから使います。",
+    '2. 人・顔・手・人影や、上の「描かないもの」が写っていたら、そのGIFは使いません。直した指示文を出して、作り直しをお願いしてください（聞き返してよいのはここだけです）。小さな読めない文字や透かしは、切り取りかぼかしで外せるなら外して使います。',
+    '3. 縦1080×1920に合わせます。縦横比を保ったまま画面を覆う大きさに拡大し（LANCZOS）、主役が切れない位置で切り取ります。カメラが寄るぶん、1割ほど大きくしておきます。拡大したあと半径1〜2pxで軽くぼかし、明るさ±2の薄い粒（数枚を先に作り、3フレームごとに入れ替え）を重ねて、GIFの減色による縞やザラつきを目立たなくします。',
+    '4. GIFは1秒に5コマ前後なので、そのまま30fpsに並べるとカクつきます。各フレームの時刻に合わせて、となりのコマを重ねて溶かします（a＝いまのコマの中で経った割合として、(1−a)×いまのコマ＋a×次のコマ）。速さは0.5〜2倍の範囲で変えて構いません。GIFが冒頭の区間より短いときは、遅くするか、最後のコマで止めてカメラとコードの動きで続けます。最後のコマから最初のコマへ戻してループするのは、GIFの最後と最初の画がつながっているときだけです（灯りが点いたあとに戻すと、一度消えてまた点いて見えます）。',
+    '5. コマどうしで、同じはずの所の色や形が揺れる（ちらつく）ときは、前後のコマと0.25・0.5・0.25の重みで平均してならします。最初と最後のコマには反対の端のコマを混ぜず、端のコマ自身をもう一度使います（最後の画が最初に混ざると、0.0秒から灯りが点いて見えたりします）。それでも目立つときは、いちばん良い1コマを静止画として使い、動きはカメラと、コードで描く光・粒で出します（記録用の1行のメモに「GIF→静止画」と書きます）。',
+    '6. 0.0秒から、GIFの場面と1枚目の一言を両方出します。カメラは今回の画風の動きを小さめにします（拡大率は1.00〜1.06の範囲、イージング）。GIFの中でいちばん目立つ変化（明かりが灯る など）が0.8〜1.5秒に来るよう、始めるコマを選びます。GIFに出来事がないときは、コードで小さな出来事を足します。雨・雪・粒のような速く細かい動きが要るときは、コードで描いて30fpsで重ねます。',
+    '7. GIFを使うのは、0.0秒から3〜5秒まで。2.5〜3.2秒の最初の切り替えは、テロップだけを替えてGIFの場面のまま続けて構いません。GIFからコードの場面へは、テロップが替わるところで0.4〜0.6秒かけて溶かしてつなぎます（黒や白をはさみません）。',
+    '8. そのあとは、いつもどおりコードで描きます。色はGIFから取ります（GIFのコマを数色に減色し、多い色をパレットにする）。GIFのコマを背景に使い回すのは、最後に冒頭と同じ場所へ戻るときだけにし、そのときはコードで変化を1つだけ足します。',
+    '',
+  ];
+}
+
 function buildPrompt(plan = experimentPlan()){
   const cur = currentValues();
   const st = readStrategy();
@@ -2973,10 +3144,20 @@ function buildPrompt(plan = experimentPlan()){
   const hook = plan.hook || HOOK_TYPES[0];
   const theme = plan.theme || FALLBACK_THEMES[0];
   const styleName = plan.recipe?.name || plan.format.replace(/^[^｜]*｜/, '');
+  // 冒頭の3〜5秒を ChatGPT のGIFにする回（2026-11-09〜）。コードだけの回の文面は変えない。
+  const gif = plan.opening?.mode === 'gif';
   const L = [];
   L.push('あなたは「星の海」のYouTubeショート動画を企画し、映像と音をコードで作ってmp4に書き出す担当です。次の1本を制作してください。');
   L.push('企画案だけで終わらず、音入りのmp4を1本完成させ、ダウンロードできる形で渡してください。候補の動画を全部作る必要はありません。');
-  L.push('映像も音も、この会話で使えるコード実行環境（Python の numpy・Pillow と ffmpeg）だけで作れる範囲で設計します。動画生成AI・画像生成AI・実写の素材は使いません。作り方は下の「作れる範囲」と「作り方」の章のとおりです。');
+  if (gif) {
+    L.push('今回は冒頭の3〜5秒だけ、ChatGPT（Images 2.6）で作ったアニメーションGIFを使います。GIFはこちらがChatGPTで作り、この会話に添付します。それ以外の映像と音は、この会話で使えるコード実行環境（Python の numpy・Pillow と ffmpeg）で作ります。添付のGIFのほかに、動画生成AI・画像生成AI・実写の素材は使いません。作り方は下の「冒頭のGIF」「作れる範囲」「作り方」の章のとおりです。');
+    L.push('');
+    L.push('## 今回の進め方（2回に分けます）');
+    L.push('1. 1回目（この指示文を受け取ったとき）：「いちばん大事なこと」の決め方で1枚目の一言と冒頭の場面を決め、「冒頭のGIF」の章の形で、ChatGPTに渡す指示文を書いて止まってください。mp4・題名・説明文は、まだ作りません。');
+    L.push('2. 2回目（こちらがGIFを添付したとき）：GIFを確かめて冒頭に使い、mp4を最後まで作ります。ここからは途中で聞き返さないでください。');
+    L.push('- この指示文と一緒にGIFが添付されていたら、1回目は飛ばします。そのGIFの場面に合う一言を同じ決め方で選び、そのまま最後まで作ります。');
+    L.push('- こちらが「GIFなしで」と返したら、冒頭もいつもどおりコードで描いて最後まで作り、記録用の1行のメモに「GIFなし」と書きます。');
+  } else L.push('映像も音も、この会話で使えるコード実行環境（Python の numpy・Pillow と ffmpeg）だけで作れる範囲で設計します。動画生成AI・画像生成AI・実写の素材は使いません。作り方は下の「作れる範囲」と「作り方」の章のとおりです。');
   L.push('');
   L.push('## この発信の土台');
   if (st.purpose) L.push(`- 目的：${st.purpose}`);
@@ -2985,7 +3166,9 @@ function buildPrompt(plan = experimentPlan()){
   L.push('- 精神障害の当事者本人が、チャンネルと相談ページ「星の海」をひとりで運営しています。同じ立場から「私も」と語れる言葉を使ってください。');
   L.push('- 診断・治療効果・相談対応を約束せず、病名や等級を勝手に加えないでください。煽りや説教、つらさの見世物にせず、共感と小さな発見を大切にします。');
   L.push('- 再生だけでなく、次も見たいと思うことや星の海への関心につながるかを見ます。数字のために上の土台を変えないでください。');
-  L.push(`- 制作負担の目安は1本${st.minutes}分。こちらはこの指示文を貼り、できたmp4を投稿するだけにしたいので、途中で聞き返さず最後まで進めてください。重くて書き出せそうにないときは、描く物の数や細部を減らして調整します。`);
+  L.push(`- 制作負担の目安は1本${st.minutes}分。${gif
+    ? 'こちらはこの指示文を貼り、ChatGPTでGIFを1つ作って添付し、できたmp4を投稿するだけにしたいので、GIFを受け取るところ以外は途中で聞き返さず最後まで進めてください。'
+    : 'こちらはこの指示文を貼り、できたmp4を投稿するだけにしたいので、途中で聞き返さず最後まで進めてください。'}重くて書き出せそうにないときは、描く物の数や細部を減らして調整します。`);
   L.push(`- 今回の役割：${role.role}。${role.why}`);
   const rivals = (st.rivals || []).filter(r => r.name || r.views || r.subs);
   if (rivals.length) {
@@ -3025,6 +3208,7 @@ function buildPrompt(plan = experimentPlan()){
   L.push('');
   L.push(`## 今回：${plan.label}（画風：${styleName}）`);
   L.push(`- 記録する形式名：${plan.format}`);
+  if (gif) L.push('- 冒頭の3〜5秒：添付のGIF（ChatGPTで作るもの）。比べたいのは冒頭だけなので、画風・テーマ・一言の決め方・構成・音は、いつもどおりにします。');
   if (plan.recipe) {
     const r = plan.recipe;
     L.push(`- 画風：${r.look}`, `- 色：${r.palette}`, `- 雰囲気：${r.mood}`, `- 文字の見せ方：${r.text}`, `- カメラ：${r.camera}`, `- 音：${r.sound}`);
@@ -3052,6 +3236,7 @@ function buildPrompt(plan = experimentPlan()){
   L.push('- 最後の1枚：「私も」と同じ側にいることが分かる一言と、画の中で小さなものがひとつだけ良いほうへ変わる瞬間（灯りがつく・湯気が立つ・カーテンが少し開く など）。2行目は「毎晩1本、置いてます。」にします（10月前半に1,000回前後まで伸びた窓と灯りの回の締めです）。');
   L.push('- テロップは全部で4〜6枚。1枚に言うことは1つだけにします。');
   L.push('');
+  if (gif) L.push(...gifRequestLines());
   L.push('## 重複を避けるための生成履歴（未制作・未投稿の案を含む。成績ではない）');
   const history = readPromptHistory().recent;
   L.push('- 履歴やメモに実写・動画生成向けの案があっても、今回は下の「作れる範囲」の作り方で作ります。');
@@ -3062,7 +3247,7 @@ function buildPrompt(plan = experimentPlan()){
   recent.map(s => ({ slug:s.v.slug, note:stripMethod(s.v.note || '').replace(/\s*\n\s*/g, ' ').trim() }))
     .filter(x => x.note).forEach(x => L.push(`- 投稿メモ ${x.slug}：${x.note}`));
   L.push('');
-  L.push(...kpiPromptLines());
+  L.push(...kpiPromptLines(plan.opening));
   L.push('');
   L.push('## 今回読み込んだ数字（記録と仮説を分ける）');
   L.push(`- 読み込み日：${todayStr()}。記録の計測日：${dates[0] || '未記録'}〜${dates.at(-1) || '未記録'}。`);
@@ -3090,7 +3275,9 @@ function buildPrompt(plan = experimentPlan()){
   L.push('- 使う道具：Python（numpy・Pillow）で1フレームずつ画を描き、ffmpeg で mp4 にします。音も numpy で合成して wav にし、ffmpeg で映像と合わせます。');
   L.push('- 最初に python・numpy・Pillow・ffmpeg・ffprobe と、日本語の入ったフォント（例：fc-list :lang=ja）が使えるか確かめます。足りない道具は、入れられる環境なら入れて構いません。');
   L.push('- 足りない道具があって入れることもできない、または日本語フォントがない場合だけ、足りないものを書いて止めてください。文字化け（□）のまま書き出したり、未完成のmp4を完成と言ったりしないでください。');
-  L.push('- 使わないもの：動画生成AI・画像生成AI、写真・動画・イラスト・音源のダウンロード、有料サービス。権利の分からない素材は使えません。こちらが添付したファイル（自作の曲など）があれば使って構いません。');
+  L.push(gif
+    ? '- 使わないもの：添付のGIFのほかの動画生成AI・画像生成AI、写真・動画・イラスト・音源のダウンロード、有料サービス。権利の分からない素材は使えません。こちらが添付したファイル（GIF・自作の曲など）は使って構いません。'
+    : '- 使わないもの：動画生成AI・画像生成AI、写真・動画・イラスト・音源のダウンロード、有料サービス。権利の分からない素材は使えません。こちらが添付したファイル（自作の曲など）があれば使って構いません。');
   L.push('- 写真のような写実や実写の再現は狙いません（コードで写実をやると、どこか不気味になります）。今回の画風の質感・色・光・動きの気持ちよさで見せます。');
   L.push('- 人物・顔・手は描きません。物・景色・光・天気・小さな生き物の気配（足あと、蛍の光など）で語ります。');
   L.push('- 描かないもの（見ている人の中には、いちばんしんどい夜の途中にいる人がいます）：薬・お酒・刃物・ロープ・血や傷／高い場所（屋上・ベランダの手すり・橋の上）・駅のホーム・線路・踏切／水の中へ入っていく画・沈んでいく画／人影・急に現れるもの・画面が乱れるノイズ・赤い光など怖く見える画／点滅や急な明るさの変化（灯りがつくときも0.5秒以上かけてゆっくり）。');
@@ -3117,6 +3304,7 @@ function buildPrompt(plan = experimentPlan()){
   L.push('- ビート・打楽器は入れません。メロディは短い音型をゆっくり鳴らす程度までにします。効果音は3秒より後に4つまで、BGMより目立たせず、立ち上がりに50ms以上かけます。8kHzより上と80Hzより下は落とします。');
   L.push('- 仕上げに全体を ebur128 で測り、volume で -20 LUFS 前後（-21〜-19）にそろえます（SNS標準の -14 LUFS より、あえて静かめ）。loudnorm は静かな出だしを持ち上げてしまうので使いません。ピークは -3dBFS 以下。最後まで鳴らし続け、最後の0.5秒だけ少し下げます。');
   L.push('');
+  if (gif) L.push(...gifUseLines());
   L.push('## 作り方（書き出しまでたどり着くために）');
   L.push('1. 先に秒ごとの絵コンテ（何が見えるか・カメラ・出来事・テロップ・音）を決めます。こちらには渡さなくて構いません。');
   L.push('2. 動かない物は、層ごとに先に1枚ずつ描いておきます（奥・中・手前の3〜5層）。カメラが動いても端が切れないよう画面より2割ほど大きく描き、切り取る範囲を絵の内側に収めます。');
@@ -3131,8 +3319,9 @@ function buildPrompt(plan = experimentPlan()){
   L.push('- ダウンロードしやすいよう、ファイルは30MB以下を目安にします（大きいときは crf を上げて書き出し直します）。');
   L.push(`- 出力フォルダは識別子${slug}ごとに分け、既存ファイルを上書きしません。`);
   L.push('');
+  const checks = gif ? 9 : 8;
   L.push('## 書き出したあとの自己点検（ここまでやって完成です）');
-  L.push('次の8つを実際に測り、外れていたら直してから渡してください。数字の報告は要りません。渡すときに「自己点検 8/8 通過」のように1行だけ書きます。測っていない項目を通過と書かないでください。');
+  L.push(`次の${checks}つを実際に測り、外れていたら直してから渡してください。数字の報告は要りません。渡すときに「自己点検 ${checks}/${checks} 通過」のように1行だけ書きます。測っていない項目を通過と書かないでください。`);
   L.push('1. 尺が目安の範囲に入り、1080×1920・30fps か（ffprobe）');
   L.push('2. 映像と音声の両方のトラックがあり、全体が -21〜-19 LUFS に入っているか（ebur128）');
   L.push('3. 冒頭0.2秒の平均の音量（mean_volume）が -40dB 以下か（フェードインが効いているか）');
@@ -3141,17 +3330,21 @@ function buildPrompt(plan = experimentPlan()){
   L.push('6. フレームごとの平均の明るさ（0〜255）で、となりのフレームとの差が12を超えるところがないか（点滅していないか）');
   L.push('7. 文字の層だけ（透明の上に文字だけを描いたもの）で測って、テロップ3枚ぶんの文字の左端と右端の中心が 540±30px に入っているか');
   L.push('8. 日本語が□に化けていないか、最後のフレームに場面と文字が残っているか');
+  if (gif) L.push('9. 0.0秒からGIFの区間の終わり（3〜5秒）までが、添付のGIFのコマからできているか。GIFからコードの場面へ移るところに、黒や白だけのフレームがないか');
   L.push('');
   L.push('## 返してほしいもの');
+  if (gif) L.push('1回目は「冒頭のGIF」の章のものだけを返します。次の5つは、2回目にmp4ができたときに返してください。');
   L.push('1. 完成した音入りのmp4を1本。ダウンロードリンクまたは保存先を示します。音だけ・音なし・絵コンテ・試しの書き出し・制作コードなどの別ファイルは不要です。');
   L.push('2. 題名を1つ。1枚目の一言と同じ場面を、当事者の行動の言い切りで書きます（本体13〜18字。2026-09-10の実測で、問いかけの題名3本は中央285回、言い切り31本は中央1,011回でした）。景色の描写・問いかけ・「〜な人へ」にせず、最近の題名と同じ行動にしません。ハッシュタグは4個（1つはテーマの言葉）、全体で100文字以内。');
   L.push('3. 概要欄へ一度でコピーできる完成した説明文を1つ。動画の紹介・答えやすい問い・当事者本人が運営していること・星の海の案内を自然につなぎます。固定コメントは別に出しません。');
   L.push('   次の計測リンクを本文に1回、そのまま入れてください。URLやUTMのパラメータを変更せず、識別子の解説は貼り付け用の説明文に含めません。');
   L.push(url);
   L.push('4. 記録用の1行（下の形式）。実際に作った内容を書き、形式名・テーマ・冒頭の掴みは正確に引き継いでください。');
-  L.push(`識別子: ${slug} ／ テーマ: ${theme} ／ 冒頭の掴み: ${hook.name} ／ 音: ___ ／ 形式: ${plan.format} ／ 尺: ___（実測秒）／ 締め: ___ ／ 役割: ${role.role} ／ 今回変えたもの: ${plan.axis} ／ メモ: ${plan.label}・1枚目「___」・画風:${styleName}・場面___・仮説___${plan.example ? '・参考:'+plan.example.v.slug : ''}`);
-  L.push('   「動画」タブの形式欄は自由入力できます。上のメモも残し、「映像の制作手法」は「Seedance以外」を選びます。YouTubeのURLと投稿日時を登録しないと、投稿後日数をそろえて比較できません。');
-  L.push('5. 自己点検を1行（「自己点検 8/8 通過」の形）。あわせて、実際に書き出した尺と、今回試した仮説をひとことで。');
+  L.push(`識別子: ${slug} ／ テーマ: ${theme} ／ 冒頭の掴み: ${hook.name} ／ 音: ___ ／ 形式: ${plan.format} ／ 尺: ___（実測秒）／ 締め: ___ ／ 役割: ${role.role} ／ 今回変えたもの: ${plan.axis} ／ メモ: ${plan.label}・1枚目「___」・画風:${styleName}・場面___・仮説___${gif ? '・冒頭:ChatGPTのGIF（___コマ・0〜___秒）' : ''}${plan.example ? '・参考:'+plan.example.v.slug : ''}`);
+  L.push(gif
+    ? '   「動画」タブの形式欄は自由入力できます。上のメモも残し、「映像の制作手法」は「冒頭にChatGPTのGIF」を選びます（GIFを使えず、冒頭もコードで描いたときは「コードだけ（GIF・Seedanceなし）」）。YouTubeのURLと投稿日時を登録しないと、投稿後日数をそろえて比較できません。'
+    : '   「動画」タブの形式欄は自由入力できます。上のメモも残し、「映像の制作手法」は「コードだけ（GIF・Seedanceなし）」を選びます。YouTubeのURLと投稿日時を登録しないと、投稿後日数をそろえて比較できません。');
+  L.push(`5. 自己点検を1行（「自己点検 ${checks}/${checks} 通過」の形）。あわせて、実際に書き出した尺と、今回試した仮説をひとことで。`);
   return { text:L.join('\n'), slug };
 }
 
@@ -3178,15 +3371,19 @@ async function showPrompt(){
     rememberPrompt(plan);
     renderTestPlan(plan);
     $('#prompt-box').classList.remove('hidden');
+    $('#prompt-gif-steps').classList.toggle('hidden', plan.opening.mode !== 'gif');
     $('#prompt-out').value = text;
     $('#prompt-slug').textContent = slug;
     $('#prompt-msg').textContent = '保存済みの数字と現在の土台から作成しました。生成履歴は投稿成績には数えません。'
-      + (promptHistoryStorageFailed ? ' 生成履歴を端末に保存できません。この画面では別案へ進みますが、再読み込み後は履歴を引き継げない場合があります。' : plan.mode === 'explore' ? ' 次の生成では別の画風を選びます。' : ' 別の画風に進む場合は「別の画風で作る」を押してください。');
+      + (promptHistoryStorageFailed ? ' 生成履歴を端末に保存できません。この画面では別案へ進みますが、再読み込み後は履歴を引き継げない場合があります。' : plan.mode === 'explore' ? ' 次の生成では別の画風を選びます。' : ' 別の画風に進む場合は「別の画風で作る」を押してください。')
+      + ` 冒頭の3〜5秒：${plan.opening.mode === 'gif' ? 'ChatGPTのGIF' : 'コードだけ'}（${plan.opening.reason}）`;
   } finally { $('#prompt-build').disabled = false; $('#prompt-build2').disabled = false; }
 }
 $('#prompt-build').addEventListener('click', showPrompt);
 $('#prompt-build2').addEventListener('click', () => { $('#prompt-mode').value = 'explore'; showPrompt(); });
 $('#prompt-mode').addEventListener('change', renderAdvice);
+$('#prompt-opening').value = readOpeningSetting();
+$('#prompt-opening').addEventListener('change', () => { saveOpeningSetting($('#prompt-opening').value); renderAdvice(); });
 
 $('#prompt-copy').addEventListener('click', async () => {
   const msg = $('#prompt-msg');
