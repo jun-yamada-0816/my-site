@@ -1590,3 +1590,250 @@ a {
 [id$="-modal"] > .relative:focus {
   outline: none;
 }
+
+/* ── 小さな参加（2026-11-09）：星の灯り・今週の問いかけ・「知らせる」・「私も」 ──
+   スマホを基本にして、広い画面だけ列を増やす。押すものはすべて44px以上。 */
+.lights-lead {
+  font-size: 0.9375rem;
+  color: #c9d8e8;
+  margin-bottom: 14px;
+}
+.lights-sky {
+  height: 132px;
+  overflow: hidden;
+  border: 1px solid #2b4058;
+  background: radial-gradient(ellipse at 50% 125%, #1b3352 0%, #0a1426 62%, #060c19 100%);
+}
+.lights-sky svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.light-mine {
+  animation: light-twinkle 3.2s ease-in-out infinite;
+}
+@keyframes light-twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.lights-count {
+  margin-top: 10px;
+  font-size: 0.8125rem;
+  color: #b3c7dc;
+}
+.lights-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+/* 5つ目は1行ぶん使う（2列のとき） */
+.lights-options .light-btn:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+.light-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 48px;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid #5d7690;
+  background: #15263c;
+  color: #dbe8f5;
+  font: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+}
+.light-btn:hover:not(:disabled) {
+  background: #1e3450;
+  border-color: #8ca6c1;
+}
+.light-btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.light-btn[aria-pressed="true"] {
+  opacity: 1;
+  border-color: var(--gold);
+  background: #22334a;
+  color: #fff6d8;
+}
+.light-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+.light-btn[data-light="tired"] .light-dot { color: #a5b8ce; }
+.light-btn[data-light="lonely"] .light-dot { color: #c2b3e6; }
+.light-btn[data-light="sleepless"] .light-dot { color: #9ed9f4; }
+.light-btn[data-light="wordless"] .light-dot { color: #e1e8ef; }
+.light-btn[data-light="calm"] .light-dot { color: #e2ce91; }
+.lights-response {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px dotted #67839c;
+  font-size: 0.9375rem;
+  color: #dbe8f5;
+}
+.lights-response[hidden],
+.metoo-box[hidden] {
+  display: none;
+}
+.lights-links {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.lights-links a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+.lights-note {
+  margin-top: 14px;
+  font-size: 0.8125rem;
+  line-height: 1.9;
+  color: #a5b6cb;
+}
+.lights-note a {
+  text-decoration: underline;
+}
+.weekly-question {
+  border: 1px dotted #67839c;
+  padding: 14px 16px;
+  margin-bottom: 24px;
+}
+.wq-label {
+  font: 0.75rem/1.6 monospace;
+  letter-spacing: 0.08em;
+  color: #b9d2ea;
+}
+.wq-range {
+  margin-left: 6px;
+  color: #8ca6c1;
+}
+.wq-text {
+  margin-top: 6px;
+  font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", serif;
+  font-size: 1.0625rem;
+  color: var(--sumi);
+}
+.wq-note {
+  margin: 6px 0 12px;
+  font-size: 0.8125rem;
+  color: #a5b6cb;
+}
+.weekly-question .retro-button {
+  width: 100%;
+}
+.report-open,
+.report-cancel {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: #8ca6c1;
+  font: inherit;
+  font-size: 0.75rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.report-box {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px dotted #67839c;
+}
+.report-q {
+  font-size: 0.8125rem;
+  color: #c9d8e8;
+}
+.report-reasons {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+.report-reason {
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid #5d7690;
+  background: #15263c;
+  color: #dbe8f5;
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+}
+.report-reason:disabled,
+.report-cancel:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.report-error {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--shu);
+}
+.report-done {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--asagi);
+}
+.metoo-box {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px dotted #48617e;
+}
+.metoo-btn {
+  min-width: 128px;
+}
+.metoo-btn[aria-pressed="true"] {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.metoo-btn:disabled {
+  cursor: default;
+}
+.metoo-note {
+  font-size: 0.8125rem;
+  color: #a5b6cb;
+}
+.metoo-count {
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  color: var(--gold);
+}
+@media (min-width: 480px) {
+  /* ヒーローのボタンが3つになったので、2列のときは3つ目を1行ぶん使う */
+  .hero-actions > :nth-child(3):last-child {
+    grid-column: 1 / -1;
+  }
+  .report-reasons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .weekly-question .retro-button {
+    width: auto;
+  }
+}
+@media (min-width: 640px) {
+  .lights-sky {
+    height: 160px;
+  }
+  .lights-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .lights-options .light-btn:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+}

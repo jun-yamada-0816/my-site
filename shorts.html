@@ -157,17 +157,50 @@
   .scroll-x{ scroll-snap-type:x proximity; overscroll-behavior-x:contain; }
   /* 生成したプロンプトなど、長い文章の箱 */
   pre, code{ white-space:pre-wrap; word-break:break-word; }
+  /* 選択欄：Safari は標準の見た目のままだと高さの指定を無視して29pxになる。
+     見た目を外して矢印を描き直し、指で押せる高さにする（2026-11-09、WebKit で確認）。 */
+  select.fld{ -webkit-appearance:none; appearance:none; padding-right:2.25rem;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%236f757b' stroke-width='1.6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right .8rem center; background-size:.75rem auto; }
+  /* iPhone の日付欄は、指定した幅より広がって隣の部品に重なることがある */
+  input[type=date].fld, input[type=datetime-local].fld{ -webkit-appearance:none; appearance:none;
+    display:block; min-width:0; max-width:100%; }
+  input[type=date].fld::-webkit-date-and-time-value,
+  input[type=datetime-local].fld::-webkit-date-and-time-value{ text-align:left; margin:0; }
+  /* 文字だけのリンクも、指で押せる高さにする */
+  .tap{ display:inline-flex; align-items:center; min-height:44px; }
+  /* 「数字を入力」の操作欄：スマホは2列の格子。どの欄も枠からはみ出さない */
+  .entry-controls{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.65rem .75rem; align-items:end; }
+  .entry-controls > *{ min-width:0; }
+  .entry-controls .fld{ width:100%; }
+  .entry-controls input[type=date].fld{ padding-left:.5rem; padding-right:.35rem; }
+  .ec-only{ display:flex; align-items:center; gap:.55rem; min-height:44px; padding:0 .8rem;
+    border:1px solid var(--line); border-radius:2px; background:rgba(255,255,255,.55);
+    font-size:.8rem; cursor:pointer; -webkit-user-select:none; user-select:none; }
+  .ec-only input{ width:1.15rem; height:1.15rem; flex:none; margin:0; accent-color:var(--ai); }
+  .ec-sync{ width:100%; min-height:44px; padding:.5rem .75rem; }
+  /* 開け閉めする見出しも、指で押せる高さに。三角はブラウザーごとに出方が違うので描き直す */
+  summary{ display:flex; align-items:center; gap:.4rem; min-height:44px; cursor:pointer; list-style:none; }
+  summary::-webkit-details-marker{ display:none; }
+  summary::before{ content:'▸'; font-size:.8em; color:var(--usuzumi); }
+  details[open] > summary::before{ content:'▾'; }
+  /* 「保存する」は入力カードの範囲でだけ下に張り付く */
+  .entry-savebar{ position:sticky; bottom:calc(.75rem + env(safe-area-inset-bottom)); z-index:5; margin-top:1rem; }
 
   /* ── 大きめのスマホ・タブレット縦 ────────── */
   @media (min-width:640px){
     .site-bar{ padding-left:max(1.25rem, env(safe-area-inset-left)); padding-right:max(1.25rem, env(safe-area-inset-right)); }
+    .entry-controls{ display:flex; flex-wrap:wrap; align-items:flex-end; }
+    .ec-field{ width:11rem; }
+    .ec-sync{ width:auto; }
   }
 
   /* ── タブレット・PC ─────────────────────── */
   @media (min-width:1024px){
     /* マウスで押すので、44px の下限は外して元の詰まった見た目に戻す */
-    .tab, button, .fld, select{ min-height:0; }
+    .tab, button, .fld, select, .tap, summary{ min-height:0; }
     .tab{ padding-top:.5rem; padding-bottom:.5rem; }
+    .ec-only, .ec-sync{ min-height:42px; }
     #app-view{ padding-bottom:5rem; }
   }
 
@@ -288,9 +321,9 @@
         </label>
         <button id="subs-save" class="glass rounded-xl px-3 py-2 text-xs hover:border-rose-400/50">記録する</button>
         <a href="https://studio.youtube.com" target="_blank" rel="noopener"
-           class="text-[11px] text-slate-500 hover:text-slate-300 pb-2">Studio ↗</a>
+           class="tap text-[11px] text-slate-500 hover:text-slate-300 px-1">Studio ↗</a>
         <a id="yt-channel" href="#" target="_blank" rel="noopener"
-           class="text-[11px] text-slate-500 hover:text-slate-300 pb-2">チャンネル ↗</a>
+           class="tap text-[11px] text-slate-500 hover:text-slate-300 px-1">チャンネル ↗</a>
       </div>
       <p id="subs-msg" class="text-[11px] mt-2"></p>
     </div>
@@ -308,6 +341,11 @@
       <h2 class="font-semibold text-sm mb-2">冒頭GIFの比較</h2>
       <p class="text-xs mb-3">冒頭の3〜5秒を ChatGPT のGIFにした回と、コードだけで作った回を、同じ期間で比べます。動画の編集画面で制作手法を「冒頭にChatGPTのGIF」と記録した回がGIFの回です。</p>
       <div id="gif-comparison"></div>
+    </div>
+    <div class="glass rounded-2xl p-5">
+      <h2 class="font-semibold text-sm mb-2">星の海の小さな参加（直近14日）</h2>
+      <p class="text-xs mb-3">サイトの「星の灯り」「私も」「知らせる」と、掲示板を開いた・書きはじめた数です。名前や文章は記録していません（掲示板の数は、同じ端末を1日1回だけ数えます）。</p>
+      <div id="participation"></div>
     </div>
     <div id="home-cards" class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5"></div>
 
@@ -663,38 +701,47 @@
         再生数は「再生数を取り込む」で自動で入ります（<span style="color:#2b7f8c">自動</span>と出ます）。
         <b class="text-slate-300">視聴を継続・いいね・コメント・平均視聴時間・登録者の増加</b>は
         YouTube Studio の「アナリティクス → コンテンツ」から書き写してください。
-      </p>
-      <p id="entry-stayed-note" class="hidden text-[11px] text-slate-400 mb-1">
-        <b class="text-slate-300">視聴を継続（%）</b>は、Studio の「視聴を継続」の割合です（フィードに出たうち、スワイプせずに見た人）。
-        「スワイプして次へ」は100%からこの値を引いて表示します。冒頭の反応を示す参考で、特定の1秒・3秒や離脱の原因は断定できません。投稿24時間後と4日後に、同じ集計範囲の数字を書き写してください。自動取得には未対応です。
-      </p>
-      <p class="text-[11px] text-slate-500 mb-3">
         <b class="text-slate-400">分かるところだけで大丈夫です。</b>空欄のまま保存できます。
-        日付が変わると入力欄はその日の記録になります。過去の数字は「前回」に表示され、分析にも残ります。
-        タイトルが同じ動画は、サムネイル・投稿日時・動画IDで見分けてください。
-        「Studio でこの動画の数字を見る」を押すと、その動画の画面がそのまま開きます。
       </p>
-      <div class="flex flex-wrap items-end gap-2">
-        <label class="text-xs">
+      <!-- スマホでは説明が画面を埋めて入力欄が見えなくなるので、くわしい説明は畳んでおく -->
+      <details class="entry-help mb-3">
+        <summary class="text-[11px] text-slate-500">くわしい説明</summary>
+        <p id="entry-stayed-note" class="hidden text-[11px] text-slate-400 mt-2">
+          <b class="text-slate-300">視聴を継続（%）</b>は、Studio の「視聴を継続」の割合です（フィードに出たうち、スワイプせずに見た人）。
+          「スワイプして次へ」は100%からこの値を引いて表示します。冒頭の反応を示す参考で、特定の1秒・3秒や離脱の原因は断定できません。投稿24時間後と4日後に、同じ集計範囲の数字を書き写してください。自動取得には未対応です。
+        </p>
+        <p class="text-[11px] text-slate-500 mt-2">
+          日付が変わると入力欄はその日の記録になります。過去の数字は「前回」に表示され、分析にも残ります。
+          タイトルが同じ動画は、サムネイル・投稿日時・動画IDで見分けてください。
+          「Studio でこの動画の数字を見る」を押すと、その動画の画面がそのまま開きます。
+        </p>
+      </details>
+      <!-- スマホでは2列の格子。iPhone の日付欄は指定より広がって隣に重なることがあるので、
+           欄ごとに枠を分け、はみ出せないようにしている（2026-11-09）。 -->
+      <div class="entry-controls">
+        <label class="ec-field text-xs">
           <span class="block text-[11px] text-slate-500 mb-1">記録する日</span>
           <input id="entry-date" type="date" class="fld">
         </label>
-        <label class="text-xs flex items-center gap-1.5 pb-2">
-          <input id="entry-unfilled" type="checkbox" class="w-4 h-4 accent-sky-400">
-          <span class="text-[11px]">未入力だけ</span>
-        </label>
-        <label class="text-xs">
+        <label class="ec-field text-xs">
           <span class="block text-[11px] text-slate-500 mb-1">登録者の総数（その日）</span>
-          <input id="entry-subs-total" type="number" inputmode="numeric" min="0" class="fld" style="width:9rem">
+          <input id="entry-subs-total" type="number" inputmode="numeric" min="0" class="fld">
         </label>
-        <button id="entry-sync" class="glass px-3 py-2 text-xs hover:border-sky-400/50"
+        <label class="ec-only">
+          <input id="entry-unfilled" type="checkbox">
+          <span>未入力だけ</span>
+        </label>
+        <button id="entry-sync" class="glass ec-sync text-xs hover:border-sky-400/50"
                 style="border-radius:2px">⟳ 再生数を取り込む</button>
       </div>
     </div>
-    <div id="entry-list" class="space-y-2.5"></div>
-    <div class="sticky bottom-4">
-      <button id="entry-save" class="w-full rounded-2xl py-3.5 font-medium text-slate-900 shadow-2xl" style="background:#17456b">保存する</button>
-      <p id="entry-msg" class="text-center text-xs mt-2"></p>
+    <!-- 「保存する」は入力カードの範囲でだけ画面の下に張り付く（上の操作欄には重ならない） -->
+    <div class="entry-body">
+      <div id="entry-list" class="space-y-2.5"></div>
+      <div class="entry-savebar">
+        <button id="entry-save" class="w-full rounded-2xl py-3.5 font-medium text-slate-900 shadow-2xl" style="background:#17456b">保存する</button>
+        <p id="entry-msg" class="text-center text-xs mt-2"></p>
+      </div>
     </div>
 
     <!-- 取り込みの設定。ふだんは畳んでおきます -->
@@ -718,7 +765,7 @@
           <input id="apikey-input" type="password" autocomplete="off" class="fld" placeholder="AIza…">
         </label>
         <button id="apikey-save" class="glass px-3 py-2 text-xs hover:border-sky-400/50" style="border-radius:2px">保存する</button>
-        <button id="apikey-clear" class="text-[11px] text-slate-500 hover:text-slate-300 pb-2">消す</button>
+        <button id="apikey-clear" class="text-[11px] text-slate-500 hover:text-slate-300 pb-2 px-3 min-w-[44px]">消す</button>
       </div>
       <p id="apikey-msg" class="text-[11px] mt-2"></p>
     </details>
@@ -1067,6 +1114,7 @@ async function enterApp(){
   await loadStrategy();
   await loadAll();
   showTab('home');
+  loadParticipation();   // 待たない（SQL が未実行でも、ほかの画面はすぐ使える）
 }
 
 /* ========================= 読み込み ========================= */
@@ -1262,6 +1310,8 @@ function showTab(name){
     b.style.fontWeight = on ? '600' : '400';
   });
   window.scrollTo(0,0);
+  // スマホではタブの列が横にはみ出すので、選んだタブを見える位置まで寄せる
+  $(`.tab[data-tab="${name}"]`)?.scrollIntoView({ block:'nearest', inline:'nearest' });
 }
 
 /* ========================= 計算のもと ========================= */
@@ -1298,8 +1348,13 @@ function ytIdOf(v){
   const id = p.platform_video_id || ytIdFromUrl(p.url);
   return YT_ID.test(id || '') ? id : null;
 }
-const thumbOf = id => `https://i.ytimg.com/vi/${id}/oardefault.jpg`;
-const thumbAlt = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+/* サムネイル。以前の oardefault.jpg は 1080×1920 で、1枚で約8MBのメモリを使う。
+   130本ぶんを並べてスクロールすると約1GBになり、スマホのブラウザーがページごと落ちた（2026-11-09）。
+   ショートの hqdefault／sddefault は縦長の絵が真ん中に入った横長の画像なので、
+   縦長の枠（.ratio916）で真ん中を切り取ると同じ絵になる。メモリは1/12〜1/7。 */
+const thumbOf    = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;   // 480×360：入力カードの小さな絵
+const thumbLarge = id => `https://i.ytimg.com/vi/${id}/sddefault.jpg`;   // 640×480：動画一覧の大きな絵
+const thumbAlt   = id => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;   // 320×180：上が読めなかったとき
 
 function median(a){
   const x = a.filter(n => typeof n === 'number' && isFinite(n)).sort((p,q)=>p-q);
@@ -1415,8 +1470,8 @@ function hbars(rows, opt = {}){
                : r.tone === 'flat' ? 'fill-flat' : r.tone === 'yt' ? 'fill-yt' : '';
     return `<div class="mb-2.5">
       <div class="flex justify-between items-baseline gap-3 text-[11px] mb-1">
-        <span class="truncate ${r.dim?'text-slate-600':'text-slate-300'}">${esc(r.label)}${
-          r.sub ? `<span class="text-slate-600"> ${esc(r.sub)}</span>` : ''}</span>
+        <span class="flex items-baseline gap-1 min-w-0"><span class="truncate ${r.dim?'text-slate-600':'text-slate-300'}">${esc(r.label)}</span>${
+          r.sub ? `<span class="shrink-0 text-slate-600">${esc(r.sub)}</span>` : ''}</span>
         <span class="num font-semibold whitespace-nowrap ${r.dim?'text-slate-600':'text-sky-200'}">${r.text ?? num(r.value)}</span>
       </div>
       <div class="track"><div class="fill ${tone}" style="width:${w}%"></div></div>
@@ -1885,8 +1940,59 @@ function studyReferenceText(config){
     ? `Studio参考値：${dayShift(config.beforeEnd,-27)}〜${config.beforeEnd}のショート集計。視聴を継続${dec(value,1)}%／スワイプして次へ${dec(100-value,1)}%。動画ごとの中央値とは別の集計です。`
     : 'Studioの導入前28日間の視聴継続率は未記録です。「土台」で入力できます。';
 }
+/* ========================= 星の海の小さな参加（2026-11-09） =========================
+   サイト側の participation.sql の participation_summary（管理者だけが呼べる）を読む。
+   SQL が未実行なら案内だけを出す。数はすべて信用せずに確かめてから出す。 */
+const LIGHT_LABELS  = { tired:'少し疲れた', lonely:'さみしい', sleepless:'眠れない', wordless:'言葉にならない', calm:'少しおだやか' };
+const REPORT_LABELS = { attack:'傷つける言葉', personal:'個人が分かる情報', spam:'宣伝・関係のない内容', worry:'書いた人が心配' };
+let participationCache = null;   // { data } または { error }
+async function loadParticipation(){
+  try {
+    const { data, error } = await sb.rpc('participation_summary', { p_days:14 });
+    participationCache = error ? { error } : { data };
+  } catch (error) { participationCache = { error }; }
+  renderParticipation();
+}
+function participationNote(seen, typing, posts){
+  if (!seen) return 'まだ掲示板を開いた記録がありません（数えはじめたばかりのときは、この表示です）。';
+  if (typing / seen < 0.1) return `掲示板を開いた端末のうち、書きはじめたのは${dec(typing / seen * 100, 0)}%です。書く前の壁（何を書けばいいか分からない）が大きいのかもしれません。今週の問いかけに、管理人が最初の答えを置いておくと書きやすくなるかもしれません（仮説）。`;
+  if (posts < typing / 2) return '書きはじめた人の半分以上が、送る前にやめています。名前や確認の文言、AIの確認が壁になっていないか見直します（仮説）。';
+  return '開いた・書きはじめた・書き込みの数が、大きくは途切れていません。';
+}
+function renderParticipation(){
+  const el = $('#participation');
+  if (!el) return;
+  const c = participationCache;
+  if (!c) { el.innerHTML = emptyNote('読み込み中です。'); return; }
+  const d = c.data;
+  if (c.error || !d || typeof d !== 'object' || Array.isArray(d)) {
+    el.innerHTML = emptyNote('サイトの participation.sql を Supabase の SQL Editor で実行すると、ここに数が出ます。');
+    return;
+  }
+  const n = v => Number.isSafeInteger(v) && v >= 0 ? v : 0;
+  const lights = Object.entries(LIGHT_LABELS).map(([key, label]) => ({ label, value:n(d.lights?.[key]) }));
+  const totalLights = lights.reduce((sum, x) => sum + x.value, 0);
+  const seen = n(d.bbs_seen), typing = n(d.bbs_typing), posts = n(d.bbs_posts), replies = n(d.bbs_replies);
+  const reports = Object.entries(REPORT_LABELS).map(([key, label]) => [label, n(d.reports?.[key])]).filter(([, v]) => v);
+  const metooPosts = (Array.isArray(d.metoo_posts) ? d.metoo_posts : [])
+    .filter(p => p && typeof p.title === 'string').slice(0, 5);
+  el.innerHTML = `
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">${[['星の灯り', totalLights], ['私も', n(d.metoo)], ['掲示板を開いた', seen], ['書き込み・返信', posts + replies]]
+      .map(([label, value]) => `<div class="glass p-3"><p class="text-[11px] text-slate-500">${label}</p><p class="num text-xl">${num(value)}</p></div>`).join('')}</div>
+    <h3 class="text-xs font-semibold mb-2">星の灯り（気持ちごと）</h3>
+    ${totalLights ? hbars(lights.map(x => ({ label:x.label, value:x.value, text:num(x.value) + 'こ' }))) : emptyNote('まだ灯りはありません。')}
+    <h3 class="text-xs font-semibold mt-4 mb-2">掲示板までの道のり</h3>
+    ${hbars([['開いた', seen], ['書きはじめた', typing], ['書き込み（新しく）', posts], ['返信', replies]]
+      .map(([label, value]) => ({ label, value, text:num(value) })))}
+    <p class="text-xs mt-2">${esc(participationNote(seen, typing, posts))}</p>
+    ${metooPosts.length ? `<h3 class="text-xs font-semibold mt-4 mb-1">「私も」が届いた日記</h3>
+      <ul class="text-xs space-y-1">${metooPosts.map(p => `<li>${esc(p.title)}：${num(n(p.n))}</li>`).join('')}</ul>` : ''}
+    <p class="text-xs mt-3">${reports.length ? '知らせ：' + reports.map(([label, v]) => `${esc(label)} ${num(v)}`).join('／') + '（届いたときにメールも送っています）' : '知らせ：なし'}</p>`;
+}
+
 function renderKpis(){
-  renderOpeningComparison();   // 下の Seedance の比較は設定がないと途中で戻るので、先に描く
+  renderOpeningComparison();
+  renderParticipation();   // 下の Seedance の比較は設定がないと途中で戻るので、先に描く
   const recent = recentKpis(), s = recent.summary, study = studyComparison();
   $('#primary-kpis').innerHTML = `<p class="text-xs mb-3">投稿期間 ${recent.from}〜${recent.to}（日本時間）。投稿72〜120時間後の同じ行から算出した動画別中央値です。Studioのチャンネル集計値ではありません。</p>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">${KPI_SPECS.slice(0,3).map(([key,label,unit],i) => `<div class="glass p-3"><b class="text-xs">${i+1}. ${label}</b><p class="num text-xl">${s[key] == null ? '—' : dec(s[key],1)+unit}</p><p class="text-xs">入力済み${s[key+'N']}本${key === 'stayed' ? '／スワイプ '+(s.stayed == null ? '—' : dec(100-s.stayed,1)+'%') : ''}</p></div>`).join('')}</div>
@@ -2629,8 +2735,8 @@ function renderVideos(){
   $('#video-grid').innerHTML = rows.map(s => {
     const id = s.id;
     const face = id
-      ? `<img class="thumb" loading="lazy" src="${thumbOf(id)}" alt=""
-             onerror="this.onerror=null;this.src='${thumbAlt(id)}'">`
+      ? `<img class="thumb" loading="lazy" decoding="async" src="${thumbLarge(id)}" alt=""
+             onerror="this.onerror=null;this.src='${thumbOf(id)}'">`
       : `<div class="thumb flex items-center justify-center text-2xl text-slate-700">🌊</div>`;
     const badge = s.index ? `<span class="chip absolute top-1.5 left-1.5"
         style="background:${s.index>=1.5?'rgba(43,127,140,.85)':'rgba(2,6,23,.7)'};color:${s.index>=1.5?'#fbf9f4':'#6f757b'}">${dec(s.index)}倍</span>` : '';
@@ -2849,7 +2955,7 @@ function renderEntry(){
     // タイトルが同じ動画が並ぶので、サムネイル・投稿日時・動画IDで見分けます。
     const id = ytIdOf(v);
     const face = id
-      ? `<img class="thumb" loading="lazy" src="${thumbOf(id)}" alt=""
+      ? `<img class="thumb" loading="lazy" decoding="async" src="${thumbOf(id)}" alt=""
              onerror="this.onerror=null;this.src='${thumbAlt(id)}'">`
       : `<div class="thumb flex items-center justify-center text-lg">🌊</div>`;
     const t = p.posted_at ? new Date(p.posted_at) : null;
@@ -2873,8 +2979,8 @@ function renderEntry(){
             ${ex?'<span class="text-[10px]" style="color:#2b7f8c">入力済</span>':''}
           </div>
           <p class="text-[11px] text-slate-500 truncate mt-1">${esc(v.title)}</p>
-          ${id ? `<div class="flex items-center gap-2.5 mt-1">
-            <a class="text-[10px]" style="color:var(--accent);border-bottom:1px solid var(--line)"
+          ${id ? `<div class="flex items-center gap-x-2.5 flex-wrap">
+            <a class="tap text-[11px]" style="color:var(--accent);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px"
                href="https://studio.youtube.com/video/${id}/analytics/tab-overview/period-default"
                target="_blank" rel="noopener">Studio でこの動画の数字を見る</a>
             <span class="text-[10px] text-slate-500">${id}</span>
@@ -2882,7 +2988,7 @@ function renderEntry(){
         </div>
       </div>
       <p class="text-xs mb-2" data-swipe-post="${p.id}">${swipeText(draft[p.id]?.stayed_pct ?? ex?.stayed_pct)}</p>
-      <div class="grid grid-cols-3 gap-2">
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
         ${fields.map(f=>{
           const auto = f.key === 'views' && ex?.views != null;
           const ph   = (ex?.[f.key] == null && last?.[f.key] != null)
