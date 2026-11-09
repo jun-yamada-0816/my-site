@@ -58,7 +58,7 @@
         <button id="settings-btn" onclick="openSettingsModal()" aria-label="安心設定（アニメーションや文字サイズ）" title="安心設定"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M4 17h16"/><path d="M9 4v6M15 14v6"/></svg><span class="nav-tool-label">表示設定</span></button>
         <button id="admin-btn" onclick="onAdminBtnClick()" aria-label="管理者ログイン" title="管理者ログイン"><svg id="admin-icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="10" width="14" height="11" rx="1"/><path d="M8 10V7a4 4 0 018 0v3M12 14v3"/></svg><svg id="admin-icon-user" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg><span class="nav-tool-label">管理者</span></button>
       </div>
-      <ul id="mobile-menu" class="hidden retro-mobile"><li><a href="#welcome" onclick="closeMobileMenu()" class="menu-row">はじめての方へ</a></li><li><a href="#music" onclick="closeMobileMenu()" class="menu-row">音楽室</a></li><li><a href="#mood" onclick="closeMobileMenu()" class="menu-row">きょうのきもち</a></li><li><a href="#coping" onclick="closeMobileMenu()" class="menu-row">こころのケア</a></li><li><a href="#services" onclick="closeMobileMenu()" class="menu-row">制度・サービス</a></li><li><a href="#promise" onclick="closeMobileMenu()" class="menu-row">星の海の約束</a></li><li id="admin-page-links-mobile" class="hidden"><button class="menu-row" onclick="closeMobileMenu();onAdminBtnClick()">管理者メニュー</button></li></ul>
+      <ul id="mobile-menu" class="hidden retro-mobile"><li><a href="#welcome" onclick="closeMobileMenu()" class="menu-row">はじめての方へ</a></li><li><a href="#lights" onclick="closeMobileMenu()" class="menu-row">星の灯り</a></li><li><a href="#music" onclick="closeMobileMenu()" class="menu-row">音楽室</a></li><li><a href="#mood" onclick="closeMobileMenu()" class="menu-row">きょうのきもち</a></li><li><a href="#coping" onclick="closeMobileMenu()" class="menu-row">こころのケア</a></li><li><a href="#services" onclick="closeMobileMenu()" class="menu-row">制度・サービス</a></li><li><a href="#promise" onclick="closeMobileMenu()" class="menu-row">星の海の約束</a></li><li id="admin-page-links-mobile" class="hidden"><button class="menu-row" onclick="closeMobileMenu();onAdminBtnClick()">管理者メニュー</button></li></ul>
     </nav>
     <div class="welcome-strip"><span>ひとこと通信</span><div class="marquee-viewport"><span class="marquee-text">ようこそ、星の海へ。読むだけでも、音楽を聴くだけでも。あなたのペースで、ゆっくりしていってください。 ☆ BBSへの足あとも、お気軽に。</span></div><button class="ticker-toggle" onclick="toggleWelcomeTicker(this)" aria-label="流れる文字を停止" aria-pressed="false">Ⅱ</button></div>
     <div class="retro-grid">
@@ -66,7 +66,7 @@
         <div class="side-box"><h2 class="window-title">CONTENTS <span class="window-dots" aria-hidden="true">□ ×</span></h2><ul class="side-menu">
           <li><a href="#hero"><span class="symbol">⌂</span>ホーム</a></li><li><a href="#profile"><span class="symbol">♙</span>管理人のこと</a></li><li><a href="#blog"><span class="symbol">▤</span>日記・ひとりごと</a></li><li><a href="#bulletin"><span class="symbol">▱</span>みんなの掲示板</a></li><li><a href="#music"><span class="symbol">♫</span>音楽室</a></li><li><a href="#links"><span class="symbol">∞</span>リンク集</a></li>
         </ul></div>
-        <div class="side-box"><h2 class="window-title">ひと休みの部屋</h2><ul class="side-menu"><li><a href="#mood"><span class="symbol">☁</span>きょうのきもち</a></li><li><a href="#coping"><span class="symbol">✧</span>こころのケア</a></li><li><a href="#services"><span class="symbol">◇</span>支えになる制度</a></li><li><a href="#support"><span class="symbol">♡</span>相談窓口</a></li></ul></div>
+        <div class="side-box"><h2 class="window-title">ひと休みの部屋</h2><ul class="side-menu"><li><a href="#lights"><span class="symbol">✦</span>星の灯り</a></li><li><a href="#mood"><span class="symbol">☁</span>きょうのきもち</a></li><li><a href="#coping"><span class="symbol">✧</span>こころのケア</a></li><li><a href="#services"><span class="symbol">◇</span>支えになる制度</a></li><li><a href="#support"><span class="symbol">♡</span>相談窓口</a></li></ul></div>
         <div class="side-box"><h2 class="window-title">管理人より</h2><div class="side-content side-note"><p><strong>1995年のインターネットを<br>覚えていますか。</strong></p><p style="margin-top:9px">小さなホームページと、<br>「はじめまして」のカキコ。<br>あの頃の距離感で、<br>ここにいられたら。</p><p style="margin-top:10px"><a href="#profile">管理人のプロフィール →</a></p></div></div>
         <div class="side-box"><h2 class="window-title">SITE BANNER</h2><div class="side-content"><a class="site-banner" href="#links" aria-label="星の海のリンク案内">星の海</a><p class="banner-caption">88 × 31 / LINK FREE</p><div class="mini-badges"><span>NO AUTO MUSIC</span><span>スマホ対応</span></div></div></div>
         <div id="admin-page-links" class="hidden side-box side-content"><button onclick="onAdminBtnClick()" class="retro-button">管理者メニュー</button></div>
@@ -76,13 +76,35 @@
         <section id="hero" aria-labelledby="hero-title">
           <div class="window-title"><span>ようこそ、星の海のホームページへ。</span><span class="window-dots" aria-hidden="true">□ ×</span></div>
           <div class="home-hero">
-            <div class="hero-heading"><p class="hero-eyebrow">A SMALL PLACE TO REST</p><h2 id="hero-title">言葉にならない夜も、<br>ここにいていい。</h2><p class="hero-description">星を見上げたり、海を眺めたり。<br>そんなふうに、ひと息ついていってください。<br>ここは、当事者がひとりでつくる小さな相互サポートのホームページです。</p><div class="hero-actions"><a href="#bulletin" class="retro-button primary">BBSに足あとを残す</a><a href="#welcome" class="retro-button">はじめての方へ</a></div></div>
+            <div class="hero-heading"><p class="hero-eyebrow">A SMALL PLACE TO REST</p><h2 id="hero-title">言葉にならない夜も、<br>ここにいていい。</h2><p class="hero-description">星を見上げたり、海を眺めたり。<br>そんなふうに、ひと息ついていってください。<br>ここは、当事者がひとりでつくる小さな相互サポートのホームページです。</p><div class="hero-actions"><a href="#lights" class="retro-button primary">星の灯りをともす</a><a href="#bulletin" class="retro-button">BBSに足あとを残す</a><a href="#welcome" class="retro-button">はじめての方へ</a></div></div>
             <figure class="hero-art"><img src="assets/starlit-sea.svg" alt="三日月と星が浮かぶ静かな海。小さな帆船が一隻。" width="240" height="240"><figcaption>somewhere between stars &amp; sea</figcaption></figure>
           </div>
-          <div id="from-video" class="hero-from-video" hidden><p class="hero-from-video-title">動画から、来てくれたんですね。</p><p>あの動画も、このサイトも、同じ当事者がひとりで作っています。ここでは、何もしなくて大丈夫です。</p><ul><li><a href="#bulletin">掲示板に、ひとことだけ置いていく →</a></li><li><a href="#music">音楽を小さく流して、横になる →</a></li><li><a href="#support">夜中でもつながる窓口を見る →</a></li></ul></div>
+          <div id="from-video" class="hero-from-video" hidden><p class="hero-from-video-title">動画から、来てくれたんですね。</p><p>あの動画も、このサイトも、同じ当事者がひとりで作っています。ここでは、何もしなくて大丈夫です。</p><ul><li><a href="#lights">気持ちをひとつ選んで、灯りをともしていく →</a></li><li><a href="#bulletin">掲示板に、ひとことだけ置いていく →</a></li><li><a href="#music">音楽を小さく流して、横になる →</a></li><li><a href="#support">夜中でもつながる窓口を見る →</a></li></ul></div>
           <script>try { if (new URLSearchParams(location.search).get('utm_source') === 'youtube') document.getElementById('from-video').hidden = false; } catch (e) {}</script>
           <div class="counter-box"><div class="counter-line"><span>あなたは</span><span id="visit-counter" class="counter-digits" aria-label="訪問者数を読み込み中">--------</span><span>人目のお客様です</span></div><p class="counter-note">※ キリ番を踏んだ方は、よかったら <a href="#bulletin">BBS</a> へどうぞ。ROMだけでも大歓迎。</p><p id="kiriban-message" class="kiriban-hit" hidden></p></div>
         </section>
+        <!-- 星の灯り（2026-11-09）。掲示板に書くのは勇気がいるので、その手前の「小さな参加」。
+             ひとつ選ぶと、名前も文章もない「灯りの数」だけが残り、みんなの夜空に灯りが増える。
+             participation.sql を実行するまでは、灯りはこの端末の夜空にだけ灯る。
+             「きょうのきもち」（端末の中だけの記録）とは別もの。あちらの約束は変えない。 -->
+        <section id="lights" aria-labelledby="lights-title"><div class="glass-panel">
+          <div class="sec-head"><span class="sec-no">LIGHTS</span><h2 id="lights-title" class="sec-title">星の灯り</h2><span class="sec-rule" aria-hidden="true"></span></div>
+          <p class="lights-lead">今夜の、あなたの気持ちは。<br>言葉にしなくても大丈夫。ひとつ選ぶと、この夜空に小さな灯りがひとつ増えます。</p>
+          <div class="lights-sky" aria-hidden="true"><svg id="lights-sky" viewBox="0 0 320 120" preserveAspectRatio="xMidYMid slice" focusable="false"></svg></div>
+          <p id="lights-count" class="lights-count" role="status" aria-live="polite"></p>
+          <div class="lights-options" role="group" aria-label="今夜の気持ちをひとつ選ぶ">
+            <button type="button" class="light-btn" data-light="tired" aria-pressed="false"><span class="light-dot" aria-hidden="true"></span>少し疲れた</button>
+            <button type="button" class="light-btn" data-light="lonely" aria-pressed="false"><span class="light-dot" aria-hidden="true"></span>さみしい</button>
+            <button type="button" class="light-btn" data-light="sleepless" aria-pressed="false"><span class="light-dot" aria-hidden="true"></span>眠れない</button>
+            <button type="button" class="light-btn" data-light="wordless" aria-pressed="false"><span class="light-dot" aria-hidden="true"></span>言葉にならない</button>
+            <button type="button" class="light-btn" data-light="calm" aria-pressed="false"><span class="light-dot" aria-hidden="true"></span>少しおだやか</button>
+          </div>
+          <div id="lights-response" class="lights-response" hidden>
+            <p id="lights-response-text" role="status" aria-live="polite"></p>
+            <ul id="lights-response-links" class="lights-links"></ul>
+          </div>
+          <p class="lights-note">何も選ばず、眺めるだけでも。<br>選んだ気持ちは、名前も文章もつかない「灯りの数」としてだけ残ります（1日にひとつ）。だれが選んだかは、管理人にも分かりません。自分だけの記録は<a href="#mood">「きょうのきもち」</a>へ（こちらは、この端末の中だけに残ります）。</p>
+        </div></section>
         <section class="news-box" aria-labelledby="news-title"><div class="window-title"><h2 id="news-title" style="font:inherit">WHAT'S NEW! <span class="new-badge">NEW</span></h2><span id="last-update" class="last-update">更新履歴</span></div><ul id="news-list" class="news-list"><li><time datetime="2026-09-27">2026.09.27</time><span>懐かしい個人ホームページの装いになりました。<span class="new-badge">NEW</span></span></li></ul></section>
         <div class="star-rule" aria-hidden="true">· · ✦ · · ✧ · · ✦ · ·</div>
         <section id="profile" aria-labelledby="profile-title"><div class="glass-panel"><div class="sec-head"><span class="sec-no">PROFILE</span><h2 id="profile-title" class="sec-title">管理人のこと</h2><span class="sec-rule" aria-hidden="true"></span><button id="edit-profile-btn" class="hidden retro-button profile-edit" onclick="openProfileEditor()">編集する</button></div><div class="profile-intro"><div class="profile-avatar" aria-hidden="true">✧</div><div><h3 id="profile-name">管理人</h3><p id="profile-tagline">1995年から、インターネットの片隅で。</p></div></div><p id="profile-bio" class="profile-bio">はじめまして。「星の海」の管理人です。
@@ -156,6 +178,16 @@
         </p>
         <p class="mt-2">名前と本文は公開前にAIで確認します。攻撃的な内容や宣伝などは掲載できません。つらい気持ちや相談は、そのまま話して大丈夫です。</p>
         <p class="mt-2">確認のため、名前・本文・返信先の内容をOpenAIに送信します。住所や連絡先など、個人を特定できる情報は書かないでください。</p>
+        <p class="mt-2">ひとりで運営しているので、すべての書き込みに返事ができるとは限りません。返事が遅くても、気にしないでください。気になる書き込みは、それぞれの「知らせる」から管理人に伝えられます。</p>
+      </div>
+
+      <!-- 今週の問いかけ（2026-11-09）。何を書けばいいか分からない人のための、答えやすいきっかけ。
+           毎週月曜（日本時間）に入れ替わる。答えなくてもいいことを、はっきり書いておく。 -->
+      <div id="weekly-question" class="weekly-question">
+        <p class="wq-label">今週の問いかけ <span id="wq-range" class="wq-range"></span></p>
+        <p id="wq-text" class="wq-text">最近、少しだけほっとしたことはありますか。</p>
+        <p class="wq-note">答えなくても大丈夫です。ひとことでも、関係のない話でも。</p>
+        <button type="button" id="wq-answer" class="retro-button">この問いかけに答える</button>
       </div>
 
       <!-- 書き込みフォーム -->
@@ -165,8 +197,8 @@
           書き込みには「返信する」から返事ができます。無理のないペースで、お話ししましょう。
         </p>
         <form id="message-form" class="space-y-3">
-          <input id="msg-name" type="text" maxlength="30" required
-                 aria-label="お名前・ハンドルネーム" placeholder="お名前・ハンドルネーム（30文字以内）"
+          <input id="msg-name" type="text" maxlength="30"
+                 aria-label="お名前・ハンドルネーム（空欄なら「ななしさん」）" placeholder="お名前（空欄なら「ななしさん」）"
                  class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-3
                         text-slate-700 text-sm placeholder-slate-400
                         focus:outline-none focus:border-aurora-teal/50 transition-colors" />
@@ -322,6 +354,21 @@
           <h3 class="mincho text-[.98rem] mt-3 mb-2.5" style="color:var(--sumi);">医療的な助言・診断はできません</h3>
           <p class="text-xs leading-[2.1]" style="color:var(--usuzumi);">
             ここでの言葉は医療行為の代わりにはなりません。つらくてたまらないときは、ページ下部の相談窓口も頼ってください。
+          </p>
+        </div>
+      </div>
+
+      <!-- このサイトが数えていること（2026-11-09）。数え方を変えたら、ここも直すこと。 -->
+      <div id="counting" class="mt-12 pt-9" style="border-top:1px solid var(--keisen);">
+        <div class="max-w-2xl">
+          <p class="num-mincho">数えていること</p>
+          <h3 class="mincho text-[1.02rem] mt-3 mb-4" style="color:var(--sumi);">名前や文章は、数えていません</h3>
+          <p class="text-xs leading-[2.2]" style="color:var(--usuzumi);">
+            このサイトが数えているのは、訪問の回数（同じ端末は1日1回）、星の灯りと「私も」の数、掲示板を開いた回数と書きはじめた回数だけです。
+            だれが押したか、何を書きかけたかは記録しません。数を見るのは管理人だけで、この場所を続けていく手がかりにしています。
+          </p>
+          <p class="text-xs leading-[2.2] mt-4" style="color:var(--usuzumi);">
+            「きょうのきもち」の記録は、これまでどおり、あなたの端末の中だけです。掲示板に書き込むときだけ、確認のため名前と本文をOpenAIに送ります。
           </p>
         </div>
       </div>
@@ -841,6 +888,11 @@
         </div>
         <h2 id="detail-title" class="text-2xl font-bold text-slate-800 mb-6 leading-snug"></h2>
         <div id="detail-content" class="text-slate-600 leading-relaxed text-sm whitespace-pre-wrap"></div>
+        <!-- 「私も」（2026-11-09）。コメントを書かなくても、共感だけ届けられる。数は公開しない。 -->
+        <div id="detail-metoo-box" class="metoo-box">
+          <button id="detail-metoo" type="button" class="retro-button metoo-btn" aria-pressed="false" aria-describedby="detail-metoo-note" onclick="sendMetoo()">私も</button>
+          <p id="detail-metoo-note" class="metoo-note" role="status" aria-live="polite">押すと、管理人にだけ「私も」が届きます。数は公開しません。</p>
+        </div>
         <div class="detail-actions">
           <div class="detail-share">
             <button id="detail-copy-link" type="button" class="retro-button" onclick="copyDiaryLink()">この日記へのリンクをコピー</button>
@@ -849,6 +901,7 @@
           <!-- 管理者でログインしているときだけ出す。読みながら誤字に気づいたら、そのまま直せるように。 -->
           <div id="detail-admin" class="detail-admin" hidden>
             <button id="detail-edit-btn" type="button" class="retro-button" onclick="editCurrentPost()">この日記を編集する</button>
+            <p id="detail-metoo-count" class="metoo-count" role="status"></p>
           </div>
         </div>
       </div>
@@ -1135,12 +1188,15 @@
     });
 
     function renderNews() {
-      const updates = [{ date: '2026-09-27T00:00:00+09:00', text: '懐かしい個人ホームページの装いになりました。', href: '#hero' }];
+      const updates = [
+        { date: '2026-09-27T00:00:00+09:00', text: '懐かしい個人ホームページの装いになりました。', href: '#hero' },
+        { date: '2026-11-09T00:00:00+09:00', text: '「星の灯り」をはじめました。掲示板には「今週の問いかけ」を置きました。', href: '#lights' },
+      ];
       if (profileUpdatedAt) updates.push({ date: profileUpdatedAt, text: '管理人のプロフィールを更新しました。', href: '#profile' });
       for (const post of allPosts.slice(0, 3)) updates.push({ date: post.created_at, text: '日記「' + post.title + '」を更新しました。', href: '#blog', postId: post.id });
       updates.sort((a, b) => new Date(b.date) - new Date(a.date));
       const day = date => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Tokyo' }).format(new Date(date));
-      document.getElementById('news-list').innerHTML = updates.slice(0, 4).map((item, i) =>
+      document.getElementById('news-list').innerHTML = updates.slice(0, 5).map((item, i) =>
         `<li><time datetime="${day(item.date)}">${day(item.date).replaceAll('-', '.')}</time><span><a href="${item.href}"${item.postId ? ` data-news-post="${esc(item.postId)}" data-focus-key="news-${esc(item.postId)}"` : ''}>${esc(item.text)}</a>${i === 0 ? '<span class="new-badge">NEW</span>' : ''}</span></li>`).join('');
       document.getElementById('last-update').textContent = 'LAST UPDATE ' + day(updates[0].date).replaceAll('-', '.');
     }
@@ -1924,6 +1980,7 @@
               ${m.edited_at ? '<span class="text-slate-400 text-xs">（編集済み）</span>' : ''}
             </div>
             <p class="text-slate-600 text-sm leading-relaxed break-words whitespace-pre-wrap">${esc(m.content)}</p>
+            ${reportHtml(m)}
           </div>
           ${adminUser ? `
           <div class="shrink-0 self-start flex gap-1">
@@ -1963,7 +2020,7 @@
       return `
         <div class="mt-4 pt-4 border-t border-aurora-teal/20 space-y-2">
           <input id="reply-name-${id}" type="text" maxlength="30" oninput="onInlineInput(this)"
-                 aria-label="お名前・ハンドルネーム" placeholder="お名前・ハンドルネーム（30文字以内）"
+                 aria-label="お名前・ハンドルネーム（空欄なら「ななしさん」）" placeholder="お名前（空欄なら「ななしさん」）"
                  class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-2.5
                         text-slate-700 text-sm placeholder-slate-400
                         focus:outline-none focus:border-aurora-teal/50 transition-colors" />
@@ -2041,10 +2098,10 @@
     window.submitReply = async (id) => {
       const errEl   = document.getElementById(`reply-error-${id}`);
       const btn     = document.getElementById(`reply-submit-${id}`);
-      const name    = document.getElementById(`reply-name-${id}`).value.trim();
+      const name    = document.getElementById(`reply-name-${id}`).value.trim() || DEFAULT_BBS_NAME;
       const content = document.getElementById(`reply-content-${id}`).value.trim();
-      if (!name || !content) {
-        errEl.textContent = 'ニックネームと本文を入れてください。';
+      if (!content) {
+        errEl.textContent = '本文を入れてください。';
         return;
       }
       btn.disabled = true;
@@ -2531,6 +2588,7 @@
       document.getElementById('detail-content').textContent = p.content;
       document.getElementById('detail-admin').hidden = !adminUser;
       document.getElementById('detail-link-note').textContent = '';
+      setupMetoo(p);
       setDiaryParam(p.id);
       showModal('detail-modal');
     }
@@ -2677,11 +2735,11 @@
 
     document.getElementById('message-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const name    = document.getElementById('msg-name').value.trim();
+      const name    = document.getElementById('msg-name').value.trim() || DEFAULT_BBS_NAME;
       const content = document.getElementById('msg-content').value.trim();
       const errEl   = document.getElementById('msg-error');
       const btn     = document.getElementById('msg-submit');
-      if (!name || !content) return;
+      if (!content) { errEl.textContent = '本文を入れてください。'; return; }
       if (btn.disabled) return;
       btn.disabled = true;
       btn.textContent = '確認中…';
@@ -2944,6 +3002,376 @@
       }, 4000);
     }
 
+    /* ══ 小さな参加（2026-11-09） ══
+       星の灯り・日記の「私も」・掲示板の「今週の問いかけ」と「知らせる」・掲示板の数え上げ。
+       掲示板に書くのは勇気がいるので、その手前に「選ぶだけ」「押すだけ」の参加を置いている。
+       サーバー側は participation.sql。実行前（関数が無い）や通信できないときも、ページはふつうに使える。
+       送るのは種類と時刻だけ。名前・文章・端末の情報は送らない（約束の章「数えていること」と同じ）。 */
+    const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const DEFAULT_BBS_NAME = 'ななしさん';
+    const jstDay = (date = new Date()) => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Tokyo' }).format(date);
+    const hasKey = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+    function readStore(key, fallback) {
+      try { return JSON.parse(localStorage.getItem(key) ?? 'null') ?? fallback; } catch { return fallback; }
+    }
+    function writeStore(key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; }
+    }
+    // 「私も」や「知らせる」を送った相手のid。新しい300件だけ覚えておく。
+    function idList(key) {
+      const list = readStore(key, []);
+      return Array.isArray(list) ? list.filter(id => typeof id === 'string' && UUID_PATTERN.test(id)) : [];
+    }
+    function rememberId(key, id) {
+      writeStore(key, [...idList(key).filter(x => x !== id), id].slice(-300));
+    }
+
+    /* ── 星の灯り ── */
+    const LIGHTS = {
+      tired:     { label: '少し疲れた', color: '#a5b8ce',
+                   text: '疲れた日は、ここで何もしなくて大丈夫です。音楽を小さく流して、目を閉じるだけでも。',
+                   links: [['#music', '音楽室で、小さく音を流す'], ['#coping', 'ゆっくり呼吸してみる']] },
+      lonely:    { label: 'さみしい', color: '#c2b3e6',
+                   text: 'この夜空のどこかに、同じ灯りがあります。話したくなったら、掲示板にひとことだけでも。',
+                   links: [['#bulletin', '掲示板をのぞく'], ['#blog', '管理人の日記を読む']] },
+      sleepless: { label: '眠れない', color: '#9ed9f4',
+                   text: '眠れない夜に、ここで少しだけ過ごしていってください。眠ろうとしなくても大丈夫です。',
+                   links: [['#music', '音楽室で、小さく音を流す'], ['#coping', 'ゆっくり呼吸してみる']] },
+      wordless:  { label: '言葉にならない', color: '#e1e8ef',
+                   text: '言葉にならないまま、ここにいていいです。',
+                   links: [['#coping', 'ゆっくり呼吸してみる'], ['#support', '夜中でもつながる窓口を見る']] },
+      calm:      { label: '少しおだやか', color: '#e2ce91',
+                   text: '少しおだやかな夜を、この灯りがだれかに分けてくれますように。',
+                   links: [['#bulletin', '掲示板に、ひとこと残す'], ['#blog', '管理人の日記を読む']] },
+    };
+    const LIGHT_KEY = 'hoshiumi_light';
+    let lightsSummary = null;     // { total, by_mood, ok }。サーバーから読めたときだけ
+    let lightsVersion = 0;        // 灯りをともしたら増やす（古い読み込み結果で上書きしないため）
+    let lightSending  = false;
+    let lightMemory   = null;     // 端末に控えを残せないときの、きょうの灯り
+
+    // サーバーの答えはそのまま信じない。数字以外・負の数・知らない気持ちが混じったら使わない。
+    function parseLightsSummary(data) {
+      if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+      if (!Number.isSafeInteger(data.total) || data.total < 0) return null;
+      const byMood = {};
+      for (const mood of Object.keys(LIGHTS)) {
+        const n = data.by_mood && typeof data.by_mood === 'object' ? (data.by_mood[mood] ?? 0) : 0;
+        if (!Number.isSafeInteger(n) || n < 0) return null;
+        byMood[mood] = n;
+      }
+      return { total: data.total, by_mood: byMood, ok: data.ok !== false };
+    }
+    function todaysLight() {
+      const saved = readStore(LIGHT_KEY, null) || lightMemory;
+      return saved && saved.day === jstDay() && hasKey(LIGHTS, saved.mood) ? saved.mood : null;
+    }
+    // 同じ数なら、いつも同じ場所に星が出るように、決まった並びの乱数を使う
+    function seededRandom(seed) {
+      let t = seed >>> 0;
+      return () => {
+        t = (t + 0x6D2B79F5) >>> 0;
+        let r = Math.imul(t ^ (t >>> 15), 1 | t);
+        r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+    function renderLightsSky() {
+      const svg = document.getElementById('lights-sky');
+      if (!svg) return;
+      const mine = todaysLight();
+      const parts = [];
+      const far = seededRandom(7);     // いつも見えている、遠くの小さな星
+      for (let i = 0; i < 28; i++) {
+        parts.push(`<circle cx="${(far() * 320).toFixed(1)}" cy="${(far() * 120).toFixed(1)}" r="${(0.4 + far() * 0.5).toFixed(2)}" fill="#8ca6c1" opacity="0.35"/>`);
+      }
+      const moods = [];
+      if (lightsSummary) for (const mood of Object.keys(LIGHTS)) for (let k = 0; k < lightsSummary.by_mood[mood]; k++) moods.push(mood);
+      if (mine) {
+        const i = moods.indexOf(mine);   // 自分の灯りは下で大きく描くので、ひとつ外す
+        if (i >= 0) moods.splice(i, 1);
+      }
+      const near = seededRandom(31);
+      for (const mood of moods.slice(0, 120)) {
+        parts.push(`<circle class="light-star" cx="${(8 + near() * 304).toFixed(1)}" cy="${(8 + near() * 104).toFixed(1)}" r="${(1.1 + near() * 1.1).toFixed(2)}" fill="${LIGHTS[mood].color}"/>`);
+      }
+      if (mine) {
+        const spot = seededRandom(97), x = (40 + spot() * 240).toFixed(1), y = (22 + spot() * 76).toFixed(1);
+        parts.push(`<g class="light-mine"><circle cx="${x}" cy="${y}" r="8" fill="${LIGHTS[mine].color}" opacity="0.18"/><circle cx="${x}" cy="${y}" r="2.9" fill="${LIGHTS[mine].color}"/></g>`);
+      }
+      svg.innerHTML = parts.join('');
+    }
+    function renderLightsCount() {
+      const el = document.getElementById('lights-count');
+      if (!lightsSummary) { el.textContent = ''; el.hidden = true; return; }
+      el.hidden = false;
+      el.textContent = lightsSummary.total
+        ? `この24時間に、ここで灯った灯り：${lightsSummary.total}こ`
+        : 'この24時間の灯りは、まだありません。最初の灯りを、ともしてみませんか。';
+    }
+    function renderLightButtons() {
+      const mine = todaysLight();
+      document.querySelectorAll('.light-btn').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.light === mine));
+        button.disabled = !!mine || lightSending;
+      });
+    }
+    // how：shared（みんなの夜空に足せた）／busy（混み合って足せなかった）／local（この端末だけ）／admin／again（きょう2回目以降の表示）
+    function showLightResponse(mood, how) {
+      const light = LIGHTS[mood];
+      let text;
+      if (how === 'shared') {
+        const others = Math.max(0, (lightsSummary?.by_mood[mood] ?? 1) - 1);
+        text = others
+          ? `灯りをともしました。この24時間で、同じ「${light.label}」の灯りは、あなたのほかに${others}こ。`
+          : `灯りをともしました。この24時間の「${light.label}」の灯りは、あなたのがはじめてです。あとから来るだれかが、この灯りを見つけます。`;
+      } else if (how === 'busy') {
+        text = 'いま灯りが混み合っていて、みんなの夜空には足せませんでした。きょうの灯りとして、この端末に残しておきます。';
+      } else if (how === 'local') {
+        text = '灯りをともしました。この灯りは、いまはこの端末の夜空にだけ灯っています。';
+      } else if (how === 'admin') {
+        text = '管理者としてログインしているので、この灯りは数に入れていません。';
+      } else {
+        text = `きょうは「${light.label}」の灯りをともしています。また明日、ともせます。`;
+      }
+      document.getElementById('lights-response-text').textContent = text + ' ' + light.text;
+      document.getElementById('lights-response-links').innerHTML =
+        light.links.map(([href, label]) => `<li><a href="${href}">${esc(label)} →</a></li>`).join('');
+      document.getElementById('lights-response').hidden = false;
+    }
+    async function chooseLight(mood) {
+      if (!hasKey(LIGHTS, mood) || todaysLight() || lightSending) return;
+      lightSending = true;
+      lightsVersion++;
+      renderLightButtons();
+      let how = adminUser ? 'admin' : 'local';
+      if (sb && !adminUser) {
+        try {
+          const { data, error } = await sb.rpc('light_star', { p_mood: mood });
+          const parsed = error ? null : parseLightsSummary(data);
+          if (parsed) { lightsSummary = parsed; how = parsed.ok ? 'shared' : 'busy'; }
+        } catch (error) { console.error('light_star:', error); }
+      }
+      const choice = { day: jstDay(), mood };
+      if (!writeStore(LIGHT_KEY, choice)) lightMemory = choice;
+      lightSending = false;
+      renderLightButtons();
+      renderLightsSky();
+      renderLightsCount();
+      showLightResponse(mood, how);
+    }
+    function setupLights() {
+      document.querySelector('#lights .lights-options').addEventListener('click', event => {
+        const button = event.target.closest('.light-btn');
+        if (button) chooseLight(button.dataset.light);
+      });
+      renderLightButtons();
+      renderLightsSky();
+      renderLightsCount();
+      const mine = todaysLight();
+      if (mine) showLightResponse(mine, 'again');
+    }
+    async function loadLightsSummary() {
+      if (!sb) return;
+      const version = lightsVersion;
+      try {
+        const { data, error } = await sb.rpc('star_lights_summary');
+        if (error) return;   // participation.sql の実行前は関数が無い。ここで静かに終わる
+        const parsed = parseLightsSummary(data);
+        if (!parsed || version !== lightsVersion) return;
+        lightsSummary = parsed;
+        renderLightsSky();
+        renderLightsCount();
+      } catch (error) { console.error('star_lights_summary:', error); }
+    }
+
+    /* ── 今週の問いかけ ──
+       毎週月曜0時（日本時間）に次の問いへ。答えやすく、暮らしの充実や人づきあい・できたことを前提にしない問いだけ。 */
+    const WEEKLY_QUESTIONS = [
+      '最近、少しだけほっとしたことはありますか。',
+      '眠れない夜は、どんなふうに過ごしていますか。',
+      '最近、おいしかったものを教えてください。',
+      '今日の空は、どんな色でしたか。',
+      '部屋の中で、ちょっと気に入っている物はありますか。',
+      '最近よく聴いている音や曲はありますか。',
+      '疲れた日の、あなたなりの休み方は。',
+      '子どものころ好きだったものは、なんですか。',
+      '季節が変わったな、と感じたことはありますか。',
+      '最近、見かけて心がゆるんだものはありますか。',
+      'いま、窓の外には何が見えますか。',
+      '好きな季節と、その理由を教えてください。',
+    ];
+    const WEEK_ANCHOR = Date.UTC(2026, 10, 8, 15);   // 2026-11-09（月）0:00 日本時間
+    function weeklyQuestion(now = Date.now()) {
+      const week = Math.floor((now - WEEK_ANCHOR) / (7 * 864e5));
+      const n = WEEKLY_QUESTIONS.length;
+      const start = new Date(WEEK_ANCHOR + week * 7 * 864e5);
+      return { text: WEEKLY_QUESTIONS[((week % n) + n) % n], start, end: new Date(+start + 6 * 864e5) };
+    }
+    function showWeeklyQuestion() {
+      const q = weeklyQuestion();
+      const md = date => new Intl.DateTimeFormat('ja-JP', { timeZone: 'Asia/Tokyo', month: 'numeric', day: 'numeric' }).format(date);
+      document.getElementById('wq-text').textContent = q.text;
+      document.getElementById('wq-range').textContent = `${md(q.start)}〜${md(q.end)}`;
+      document.getElementById('wq-answer').addEventListener('click', () => {
+        const textarea = document.getElementById('msg-content');
+        // 書きかけがあるときは消さない。空のときだけ、問いを1行目に入れる（消して書いてもよい）
+        if (!textarea.value.trim()) textarea.value = `【今週の問いかけ】${q.text}\n`;
+        textarea.focus({ preventScroll: true });
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        textarea.scrollIntoView({ block: 'center', behavior: displaySettings.reduceMotion ? 'auto' : 'smooth' });
+      });
+    }
+
+    /* ── 掲示板の数え上げ ──
+       「開いた」「書きはじめた」を、同じ端末は1日1回だけ数える。管理人自身は数えない。
+       端末に控えを残せないときは数えない（同じ人を何度も数えないため）。 */
+    const SIGNAL_KEY = 'hoshiumi_signal_days';
+    function noteSignal(kind) {
+      if (!sb || adminUser) return;
+      const marks = readStore(SIGNAL_KEY, {});
+      const day = jstDay();
+      if (!marks || typeof marks !== 'object' || Array.isArray(marks) || marks[kind] === day) return;
+      if (!writeStore(SIGNAL_KEY, { ...marks, [kind]: day })) return;
+      sb.rpc('note_site_signal', { p_kind: kind }).then(() => {}, () => {});
+    }
+    function watchBulletinSignals() {
+      const section = document.getElementById('bulletin');
+      if (!section || adminUser) return;
+      section.addEventListener('input', event => {
+        if (event.target.matches('#msg-name, #msg-content, [id^="reply-name-"], [id^="reply-content-"]')) noteSignal('bbs_typing');
+      });
+      if (!('IntersectionObserver' in window)) return;
+      // 1.5秒以上、画面の3分の1以上に掲示板が見えていたら「開いた」
+      let timer = null;
+      const observer = new IntersectionObserver(entries => {
+        clearTimeout(timer);
+        if (!entries.some(entry => entry.isIntersecting)) return;
+        timer = setTimeout(() => {
+          const box = section.getBoundingClientRect();
+          if (Math.min(box.bottom, innerHeight) - Math.max(box.top, 0) >= innerHeight / 3) {
+            noteSignal('bbs_seen');
+            observer.disconnect();
+          }
+        }, 1500);
+      });
+      observer.observe(section);
+    }
+
+    /* ── 日記の「私も」 ── */
+    const METOO_KEY = 'hoshiumi_metoo';
+    function setupMetoo(post) {
+      const box = document.getElementById('detail-metoo-box');
+      const button = document.getElementById('detail-metoo');
+      const note = document.getElementById('detail-metoo-note');
+      const count = document.getElementById('detail-metoo-count');
+      count.textContent = '';
+      // 管理人は自分の日記に「私も」を押さないので、ボタンの代わりに届いた数を出す
+      box.hidden = !!adminUser;
+      if (adminUser) {
+        if (sb) sb.rpc('diary_metoo_count', { p_post_id: post.id }).then(({ data, error }) => {
+          if (detailPostId !== post.id) return;
+          count.textContent = !error && Number.isSafeInteger(data) && data >= 0
+            ? `この日記に届いた「私も」：${data}`
+            : '「私も」の数は、participation.sql を実行すると見られます。';
+        }, () => {});
+        return;
+      }
+      const sent = idList(METOO_KEY).includes(post.id);
+      button.disabled = sent;
+      button.setAttribute('aria-pressed', String(sent));
+      button.textContent = sent ? '私も（届けました）' : '私も';
+      note.textContent = sent ? 'この日記には、もう「私も」を届けています。'
+        : '押すと、管理人にだけ「私も」が届きます。数は公開しません。';
+    }
+    window.sendMetoo = async () => {
+      const id = detailPostId;
+      const button = document.getElementById('detail-metoo');
+      const note = document.getElementById('detail-metoo-note');
+      if (!id || !UUID_PATTERN.test(id) || id === PROFILE_ID || button.disabled || adminUser) return;
+      button.disabled = true;
+      note.textContent = '届けています…';
+      let ok = false;
+      if (sb) {
+        try {
+          const { data, error } = await sb.rpc('send_metoo', { p_post_id: id });
+          ok = !error && data === true;
+        } catch (error) { console.error('send_metoo:', error); }
+      }
+      if (ok) rememberId(METOO_KEY, id);
+      if (detailPostId !== id) return;   // 送っているあいだに別の日記へ移った
+      if (ok) {
+        button.setAttribute('aria-pressed', 'true');
+        button.textContent = '私も（届けました）';
+        note.textContent = '届きました。読んでくれて、ありがとうございます。';
+      } else {
+        button.disabled = false;
+        note.textContent = 'いまは届けられませんでした。時間をおいて、もう一度押せます。';
+      }
+    };
+
+    /* ── 掲示板の「知らせる」 ──
+       理由を4つから選ぶだけ。文章や名前は受け取らない。届いたら管理人にメール（本文は載せない）。 */
+    const REPORTED_KEY = 'hoshiumi_reported';
+    const REPORT_REASONS = [
+      ['attack', '傷つける言葉がある'],
+      ['personal', '個人が分かる情報がある'],
+      ['spam', '宣伝・関係のない内容'],
+      ['worry', '書いた人のことが心配'],
+    ];
+    let reportOpenFor = null;
+    function reportHtml(m) {
+      const id = String(m.id);
+      if (adminUser || !UUID_PATTERN.test(id)) return '';
+      if (idList(REPORTED_KEY).includes(id)) return '<p class="report-done">管理人に知らせました。ありがとうございます。</p>';
+      if (reportOpenFor !== id) {
+        return `<button type="button" class="report-open" data-report-open="${id}" onclick="openReport('${id}')">知らせる</button>`;
+      }
+      return `
+        <div class="report-box" role="group" aria-label="この書き込みについて、管理人に知らせる" data-report-for="${id}">
+          <p class="report-q">どんなことを知らせますか。あなたの名前は送られません。</p>
+          <div class="report-reasons">${REPORT_REASONS.map(([key, label]) =>
+            `<button type="button" class="report-reason" onclick="sendReport('${id}', '${key}')">${label}</button>`).join('')}</div>
+          <button type="button" class="report-cancel" onclick="closeReport()">やめる</button>
+          <p id="report-error-${id}" class="report-error" role="status" aria-live="polite"></p>
+        </div>`;
+    }
+    window.openReport = id => {
+      if (!UUID_PATTERN.test(id)) return;
+      reportOpenFor = id;
+      renderMessages();
+      document.querySelector(`[data-report-for="${id}"] .report-reason`)?.focus();
+    };
+    window.closeReport = () => {
+      const id = reportOpenFor;
+      reportOpenFor = null;
+      renderMessages();
+      if (id) document.querySelector(`[data-report-open="${id}"]`)?.focus();
+    };
+    window.sendReport = async (id, reason) => {
+      if (!UUID_PATTERN.test(id) || !REPORT_REASONS.some(([key]) => key === reason)) return;
+      const buttons = () => document.querySelectorAll(`[data-report-for="${id}"] button`);
+      buttons().forEach(button => { button.disabled = true; });
+      let result = null;
+      if (sb) {
+        try {
+          const { data, error } = await sb.rpc('report_bulletin', { p_message_id: id, p_reason: reason });
+          result = error ? null : data;
+        } catch (error) { console.error('report_bulletin:', error); }
+      }
+      if (result === true) {
+        rememberId(REPORTED_KEY, id);
+        if (reportOpenFor === id) reportOpenFor = null;
+        renderMessages();
+        return;
+      }
+      buttons().forEach(button => { button.disabled = false; });
+      const errorEl = document.getElementById('report-error-' + id);
+      if (errorEl) errorEl.textContent = result === false
+        ? 'いまは知らせが混み合っています。少し時間をおいて、もう一度お試しください。'
+        : 'いまは送れませんでした。時間をおいて、もう一度お試しください。';
+    };
+
     /* ══ INIT ══ */
     async function init() {
       forgetNickname();   // 以前の版が端末に保存した名前を消しておく
@@ -2952,10 +3380,14 @@
       await openDiaryFromUrl();
       subscribeRealtime();
       fetchDiaryMonths();
+      loadLightsSummary();
+      watchBulletinSignals();
     }
 
     applyDisplaySettings();
     renderMoodUI();
+    setupLights();
+    showWeeklyQuestion();
     showAffirmation();
     startBreathingLabel();
     init();

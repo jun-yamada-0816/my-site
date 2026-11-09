@@ -40,7 +40,7 @@ after(async()=>{ await browser?.close(); await new Promise(resolve=>server?.clos
 async function open(db, storage={}) {
   storage = {'sv-opening-v1':'code', ...storage};
   const context = await browser.newContext();
-  const flags = {failMetrics:false, failWrites:false, nullVerification:false, nullSubs:false, pauseWrite:null, pageSize:1000};
+  const flags = {failMetrics:false, failWrites:false, nullVerification:false, nullSubs:false, pauseWrite:null, pageSize:1000, participation:null};
   const writes = [], errors = [], reads=[];
   await context.addInitScript(({token,user,storage})=>{
     if (!sessionStorage.getItem('test-seeded')) {
@@ -56,6 +56,8 @@ async function open(db, storage={}) {
     if(!url.hostname.endsWith('.supabase.co')) return route.abort();
     const send=(body,status=200)=>route.fulfill({status,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(body)});
     if(url.pathname==='/auth/v1/user') return send(user);
+    // The site's participation.sql: answers only when a test provides a summary, otherwise "not installed".
+    if(url.pathname.endsWith('/rpc/participation_summary')) return flags.participation ? send(flags.participation) : send({code:'PGRST202',message:'Could not find the function'},404);
     const table=url.pathname.split('/').at(-1);
     assert(table in db, 'unexpected endpoint '+url.pathname);
     let rows=db[table];
@@ -883,5 +885,28 @@ test('the GIF comparison uses age-matched medians per method, waits for three ea
     assert.deepEqual(await a.page.evaluate(()=>['【制作手法:Seedance】x','【制作手法:その他】x','【制作手法:ChatGPT GIF】x','ChatGPT GIF','【制作手法:GIF】x'].map(note=>productionMethod({note}))),
       ['seedance','other','gif','unknown','unknown']);
     assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
+
+test('the participation card shows the site counts to the admin, guides to the SQL when missing, and ignores bad numbers',async()=>{
+  const a=await open(fixture());
+  try {
+    await a.page.waitForFunction(()=>document.querySelector('#participation').textContent.includes('participation.sql'));
+    a.flags.participation={days:14,lights:{lonely:3,calm:1,evil:99},metoo:2,metoo_posts:[{post_id:'x',title:'<b>夜</b>のひとりごと',n:2}],
+      reports:{worry:1},bbs_seen:20,bbs_typing:1,bbs_posts:0,bbs_replies:0};
+    await a.page.evaluate(()=>loadParticipation());
+    const text=(await a.page.locator('#participation').textContent()).replace(/\s+/g,'');
+    assert.match(text,/星の灯り4/);assert.match(text,/私も2/);assert.match(text,/掲示板を開いた20/);
+    assert.match(text,/さみしい3こ/);assert.doesNotMatch(text,/evil|99/);
+    assert.match(text,/書きはじめたのは5%/);assert.match(text,/知らせ：書いた人が心配1/);
+    assert.equal(await a.page.locator('#participation b').count(),0,'diary titles are escaped');
+    a.flags.participation={lights:{lonely:-1,calm:'5'},metoo:1.5,bbs_seen:'x'};
+    await a.page.evaluate(()=>loadParticipation());
+    const odd=(await a.page.locator('#participation').textContent()).replace(/\s+/g,'');
+    assert.match(odd,/星の灯り0/);assert.match(odd,/私も0/);assert.match(odd,/まだ灯りはありません/);
+    a.flags.participation=[1,2];
+    await a.page.evaluate(()=>loadParticipation());
+    assert.match(await a.page.locator('#participation').textContent(),/participation.sql/);
+    assert.deepEqual(a.writes,[]);assert.deepEqual(a.errors,[]);
   }finally{await a.context.close();}
 });
