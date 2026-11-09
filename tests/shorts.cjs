@@ -35,14 +35,17 @@ before(async () => {
   browser = await chromium.launch({headless:true, executablePath:process.env.CHROMIUM_PATH || '/usr/bin/chromium'});
 });
 after(async()=>{ await browser?.close(); await new Promise(resolve=>server?.close(resolve)); });
+// Most tests check the code-only prompt, so they pin the opening setting to "code".
+// The GIF-opening tests pass their own value, or null to leave the setting unsaved (the default is "auto").
 async function open(db, storage={}) {
+  storage = {'sv-opening-v1':'code', ...storage};
   const context = await browser.newContext();
   const flags = {failMetrics:false, failWrites:false, nullVerification:false, nullSubs:false, pauseWrite:null, pageSize:1000};
   const writes = [], errors = [], reads=[];
   await context.addInitScript(({token,user,storage})=>{
     if (!sessionStorage.getItem('test-seeded')) {
       localStorage.setItem('sb-qnmzjwgacnfxwlbgwxcr-auth-token',JSON.stringify({access_token:token,refresh_token:'test',token_type:'bearer',expires_at:Math.floor(Date.now()/1000)+3600,user}));
-      for(const [key,value] of Object.entries(storage)) localStorage.setItem(key,value);
+      for(const [key,value] of Object.entries(storage)) if(value!=null) localStorage.setItem(key,value);
       sessionStorage.setItem('test-seeded','1');
     }
   },{token,user,storage});
@@ -732,6 +735,153 @@ test('a retest keeps the reference theme and first-line type unless the first li
     // A retest does not consume the next style in the rotation.
     await a.page.evaluate(()=>rememberPrompt(experimentPlan('refine')));
     assert.equal(await a.page.evaluate(()=>readPromptHistory().rounds['墨と和紙']),undefined);
+    assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
+
+/* 冒頭の3〜5秒を ChatGPT のGIFにする回（2026-11-09〜）。 */
+const gifNote = '【制作手法:ChatGPT GIF】\n冒頭:ChatGPTのGIF';
+function tagMethod(db, id, note){ db.sv_videos.find(v=>v.id===id).note=note; }
+
+test('by default the next video opens with a ChatGPT GIF: two steps, a paste-ready GIF request, flipbook handling and nine checks',async()=>{
+  const db=baselineFixture(),a=await open(db,{'sv-opening-v1':null});
+  try {
+    await a.tab('advice');
+    assert.equal(await a.page.locator('#prompt-opening').inputValue(),'auto');
+    await a.page.locator('#prompt-build').click();
+    await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
+    const p=await a.page.locator('#prompt-out').inputValue();
+    // Unchanged from the code-only prompt: style rotation, the first line, tracking.
+    assert.match(p,/形式: 画風1｜墨と和紙/);assert.match(p,/## いちばん大事なこと：最初の一言（0〜3秒）/);
+    assert.ok(p.includes('https://hoshinoumi.org/?utm_source=youtube&utm_medium=short&utm_content=v004'));
+    // Two steps: decide the first line, write the ChatGPT request and stop; then build the mp4 from the GIF.
+    assert.match(p,/## 今回の進め方（2回に分けます）/);assert.match(p,/ChatGPT（Images 2.6）/);
+    assert.match(p,/ChatGPTに渡す指示文を書いて止まってください。mp4・題名・説明文は、まだ作りません/);
+    assert.match(p,/「GIFなしで」と返したら/);assert.match(p,/GIFを受け取るところ以外は途中で聞き返さず/);
+    assert.ok(p.indexOf('## いちばん大事なこと')<p.indexOf('## 冒頭のGIF（1回目'),'the first line is decided before the GIF is requested');
+    // The request is one fenced block with the layout and safety rules.
+    assert.equal(p.split('```').length,3);
+    const block=p.slice(p.indexOf('```')+3,p.lastIndexOf('```'));
+    assert.match(block,/^\nアニメーションGIFを1つ作ってください/);
+    for(const rule of [/縦長（9:16）/,/カメラは動かさず固定/,/すべてのコマで同じ/,/16コマ前後/,/上から40〜57%/,/文字・数字・看板・ロゴ・透かしは入れないでください/,
+      /人・顔・手・人影は描かないでください/,/点滅/,/薬・お酒・刃物・ロープ・血、高い所・駅・線路・踏切/]) assert.match(block,rule);
+    // Handling a flipbook GIF: dissolve frames, smooth without mixing the two ends, never loop back after a change.
+    assert.match(p,/## 冒頭のGIFの使い方（2回目）/);assert.match(p,/ImageSequence/);assert.match(p,/\(1−a\)×いまのコマ＋a×次のコマ/);
+    assert.match(p,/反対の端のコマを混ぜず/);assert.match(p,/最後と最初の画がつながっているときだけ/);
+    assert.match(p,/GIFを使うのは、0.0秒から3〜5秒まで/);assert.match(p,/黒や白をはさみません/);
+    assert.match(p,/添付のGIFのほかの動画生成AI・画像生成AI/);
+    assert.doesNotMatch(p,/動画生成AI・画像生成AI・実写の素材は使いません。作り方は下の「作れる範囲」と「作り方」の章のとおりです/);
+    assert.match(p,/人物・顔・手は描きません/);
+    assert.match(p,/自己点検 9\/9 通過/);assert.doesNotMatch(p,/自己点検 8\/8/);assert.match(p,/9\. 0.0秒からGIFの区間の終わり/);
+    assert.match(p,/冒頭:ChatGPTのGIF（___コマ・0〜___秒）/);assert.match(p,/「映像の制作手法」は「冒頭にChatGPTのGIF」を選びます/);
+    assert.match(p,/冒頭GIFの比較（2026-11-09〜/);
+    // The page shows the extra steps and why this opening was chosen.
+    assert.equal(await a.page.locator('#prompt-gif-steps').isVisible(),true);
+    assert.match(await a.page.locator('#prompt-msg').textContent(),/冒頭の3〜5秒：ChatGPTのGIF/);
+    assert.match(await a.page.locator('#test-design').textContent(),/冒頭の3〜5秒をChatGPTのGIFで作る/);
+    // Choosing "code" goes back to the code-only prompt and hides the GIF steps.
+    await a.page.locator('#prompt-opening').selectOption('code');
+    await a.page.locator('#prompt-build').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
+    const code=await a.page.locator('#prompt-out').inputValue();
+    assert.match(code,/自己点検 8\/8 通過/);assert.doesNotMatch(code,/GIF（ChatGPT|## 冒頭のGIF|```/);
+    assert.match(code,/「映像の制作手法」は「コードだけ（GIF・Seedanceなし）」を選びます/);
+    assert.equal(await a.page.locator('#prompt-gif-steps').isVisible(),false);
+    // Tailwind is not loaded in tests; in production its preflight makes every box border-box.
+    await a.page.addStyleTag({content:'*,::before,::after{box-sizing:border-box}'});
+    await a.page.locator('#prompt-opening').selectOption('auto');
+    await a.page.locator('#prompt-build').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
+    for(const width of [375,1024]){
+      await a.page.setViewportSize({width,height:900});
+      for(const name of ['advice','home']){
+        await a.tab(name);
+        assert.equal(await a.page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true,name+' '+width);
+      }
+    }
+    assert.deepEqual(a.writes,[]);assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
+
+test('auto alternates by the recorded method, a retest follows its reference, and an explicit choice wins and is remembered',async()=>{
+  const db=baselineFixture(); // three earlier videos without a recorded method count as code-only
+  const a=await open(db,{'sv-opening-v1':null});
+  try {
+    await a.page.evaluate(start=>{GIF_EXPERIMENT.start=start;},dayAgoJst(30));
+    let o=await a.page.evaluate(()=>experimentPlan('explore').opening);
+    assert.equal(o.mode,'gif');assert.deepEqual(o.counts,{gif:0,code:3});assert.match(o.reason,/GIFの回のほうが少ない/);
+    for(const age of [15,14,13,12]) tagMethod(db,addExperiment(db,'画風1｜墨と和紙',age).id,gifNote);
+    const seedance=addExperiment(db,'実写テスト',11);tagMethod(db,seedance.id,'【制作手法:Seedance】'); // not part of this comparison
+    await a.page.evaluate(()=>loadAll());
+    o=await a.page.evaluate(()=>experimentPlan('explore').opening);
+    assert.equal(o.mode,'code');assert.deepEqual(o.counts,{gif:4,code:3});
+    // Before the start date nothing counts, so the test starts with a GIF.
+    await a.page.evaluate(start=>{GIF_EXPERIMENT.start=start;},dayAgoJst(1));
+    assert.deepEqual(await a.page.evaluate(()=>experimentPlan('explore').opening.counts),{gif:0,code:0});
+    assert.equal(await a.page.evaluate(()=>experimentPlan('explore').opening.mode),'gif');
+    await a.page.evaluate(start=>{GIF_EXPERIMENT.start=start;},dayAgoJst(30));
+    // A retest keeps the reference video's opening even when the counts point the other way.
+    const ref=addExperiment(db,'画風2｜昼の切り絵',10,goodExperiment);tagMethod(db,ref.id,gifNote);
+    const ref2=addExperiment(db,'画風2｜昼の切り絵',9,goodExperiment);tagMethod(db,ref2.id,gifNote);
+    addExperiment(db,'画風3｜色鉛筆の絵日記',7); // a different style in between, so the retest is allowed
+    await a.page.evaluate(()=>loadAll());
+    assert.deepEqual(await a.page.evaluate(()=>experimentPlan('explore').opening.counts),{gif:6,code:4});
+    const refine=await a.page.evaluate(()=>{const p=experimentPlan('refine');return {mode:p.mode,opening:p.opening};});
+    assert.equal(refine.mode,'refine');assert.equal(refine.opening.mode,'gif');assert.match(refine.opening.reason,/参考にする回/);
+    // An explicit choice wins over the alternation and is kept after a reload.
+    await a.tab('advice');await a.page.locator('#prompt-opening').selectOption('gif');
+    assert.equal(await a.page.evaluate(()=>experimentPlan('explore').opening.mode),'gif');
+    assert.match(await a.page.locator('#test-design').textContent(),/「毎回、ChatGPTのGIFで」を選んでいます/);
+    await a.page.reload();await a.page.waitForFunction(()=>state.ready);
+    assert.equal(await a.page.locator('#prompt-opening').inputValue(),'gif');
+    await a.page.locator('#prompt-opening').selectOption('code');
+    assert.equal(await a.page.evaluate(()=>experimentPlan('refine').opening.mode),'code');
+    assert.equal(await a.page.evaluate(()=>localStorage.getItem('sv-opening-v1')),'code');
+    // A broken saved value falls back to the default instead of reaching the prompt.
+    await a.page.evaluate(()=>localStorage.setItem('sv-opening-v1','<img src=x>'));
+    await a.page.reload();await a.page.waitForFunction(()=>state.ready);
+    assert.equal(await a.page.locator('#prompt-opening').inputValue(),'auto');
+    assert.deepEqual(a.writes,[]);assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
+
+test('the GIF comparison uses age-matched medians per method, waits for three each, and the method tag round-trips',async()=>{
+  const db=experimentFixture();
+  for(const age of [10,8]) tagMethod(db,addExperiment(db,'画風1｜墨と和紙',age,{stayed_pct:70,avg_watch_sec:10}).id,gifNote);
+  const pending=addExperiment(db,'画風2｜昼の切り絵',1,{stayed_pct:99},0);tagMethod(db,pending.id,gifNote); // too new to compare
+  addExperiment(db,'画風3｜色鉛筆の絵日記',9,{stayed_pct:50}); // method not recorded: counted as code-only
+  for(const age of [7,5]) tagMethod(db,addExperiment(db,'画風4｜ネオン管の夜',age,{stayed_pct:50}).id,'【制作手法:その他】');
+  const seedance=addExperiment(db,'実写テスト',6,{stayed_pct:1});tagMethod(db,seedance.id,'【制作手法:Seedance】');
+  const a=await open(db,{'sv-opening-v1':'gif'});
+  try {
+    await a.page.evaluate(start=>{GIF_EXPERIMENT.start=start;},dayAgoJst(12));
+    let c=await a.page.evaluate(()=>{const c=openingComparison();return {gif:c.gif,code:c.code,text:openingDiagnosis(c)};});
+    assert.equal(c.gif.summary.n,2);assert.equal(c.gif.pending,1);assert.equal(c.code.summary.n,3);assert.equal(c.code.summary.stayed,50);
+    assert.match(c.text,/判断保留：.*GIFの回2本・コードだけの回3本/);
+    tagMethod(db,addExperiment(db,'画風5｜墨と和紙',6,{stayed_pct:70,avg_watch_sec:10}).id,gifNote);
+    await a.page.evaluate(()=>loadAll());await a.page.evaluate(start=>{GIF_EXPERIMENT.start=start;renderKpis();},dayAgoJst(12));
+    c=await a.page.evaluate(()=>{const c=openingComparison();return {gif:c.gif,code:c.code,text:openingDiagnosis(c)};});
+    assert.equal(c.gif.summary.n,3);assert.equal(c.gif.summary.stayed,70);assert.equal(c.code.videos,3);
+    assert.match(c.text,/視聴を継続が20.0ポイント高い/);
+    const html=await a.page.locator('#gif-comparison').textContent();
+    assert.match(html,/\+20.0ポイント/);assert.match(html,/スワイプして次へ：GIFの回30.0%／コードだけの回50.0%/);
+    assert.match(html,/同条件の計測行なし：GIFの回1本／コードだけの回0本/);
+    const prompt=await a.page.evaluate(()=>buildPrompt().text);
+    assert.match(prompt,/冒頭GIFの比較（.*GIFの回 視聴を継続 70.0%（3本）/);assert.match(prompt,/20.0ポイント高い/);
+    for(const m of db.sv_metrics) if(m.stayed_pct===70) m.stayed_pct=40;
+    await a.page.evaluate(()=>loadAll());
+    assert.match(await a.page.evaluate(()=>openingDiagnosis(openingComparison())),/10.0ポイント低い/);
+    // The method select writes the tag in front of the note and reads it back; older tags keep their meaning.
+    const id=db.sv_videos[3].id;
+    await a.page.evaluate(id=>openVideo(id),id);
+    await a.page.locator('#video-modal summary').click();
+    assert.equal(await a.page.locator('#vm-method').inputValue(),'unknown');
+    await a.page.locator('#vm-note').fill('メモ');await a.page.locator('#vm-method').selectOption('gif');
+    await a.page.locator('#vm-save').click();
+    await a.page.waitForFunction(()=>document.querySelector('#video-modal').classList.contains('hidden'));
+    assert.equal(db.sv_videos[3].note,'【制作手法:ChatGPT GIF】\nメモ');
+    await a.page.evaluate(id=>openVideo(id),id);
+    assert.equal(await a.page.locator('#vm-method').inputValue(),'gif');assert.equal(await a.page.locator('#vm-note').inputValue(),'メモ');
+    assert.deepEqual(await a.page.evaluate(()=>['【制作手法:Seedance】x','【制作手法:その他】x','【制作手法:ChatGPT GIF】x','ChatGPT GIF','【制作手法:GIF】x'].map(note=>productionMethod({note}))),
+      ['seedance','other','gif','unknown','unknown']);
     assert.deepEqual(a.errors,[]);
   }finally{await a.context.close();}
 });
