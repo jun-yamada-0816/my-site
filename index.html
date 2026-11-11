@@ -11,7 +11,7 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="星の海" />
   <meta property="og:title" content="星の海 — こころを休める場所" />
-  <meta property="og:description" content="精神障害の当事者がひとりで運営している、相互サポートの場です。読むだけでも、音楽を聴くだけでも。言葉にならない夜も、ここにいていい。" />
+  <meta property="og:description" content="精神障害の当事者がひとりで運営している、相互サポートの場です。読むだけでも、流れ着いた小瓶をひとつ拾うだけでも。言葉にならない夜も、ここにいていい。" />
   <meta property="og:url" content="https://hoshinoumi.org/" />
   <meta property="og:locale" content="ja_JP" />
   <!-- 共有したときの画像（1200×630）。元は tools/og-image/og-image.html、作り直しは同じフォルダの render.cjs -->
@@ -58,17 +58,17 @@
         <button id="settings-btn" onclick="openSettingsModal()" aria-label="安心設定（アニメーションや文字サイズ）" title="安心設定"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M4 17h16"/><path d="M9 4v6M15 14v6"/></svg><span class="nav-tool-label">表示設定</span></button>
         <button id="admin-btn" onclick="onAdminBtnClick()" aria-label="管理者ログイン" title="管理者ログイン"><svg id="admin-icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="10" width="14" height="11" rx="1"/><path d="M8 10V7a4 4 0 018 0v3M12 14v3"/></svg><svg id="admin-icon-user" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg><span class="nav-tool-label">管理者</span></button>
       </div>
-      <ul id="mobile-menu" class="hidden retro-mobile"><li><a href="#welcome" onclick="closeMobileMenu()" class="menu-row">はじめての方へ</a></li><li><a href="#lights" onclick="closeMobileMenu()" class="menu-row">星の灯り</a></li><li><a href="#music" onclick="closeMobileMenu()" class="menu-row">音楽室</a></li><li><a href="#mood" onclick="closeMobileMenu()" class="menu-row">きょうのきもち</a></li><li><a href="#coping" onclick="closeMobileMenu()" class="menu-row">こころのケア</a></li><li><a href="#services" onclick="closeMobileMenu()" class="menu-row">制度・サービス</a></li><li><a href="#promise" onclick="closeMobileMenu()" class="menu-row">星の海の約束</a></li><li id="admin-page-links-mobile" class="hidden"><button class="menu-row" onclick="closeMobileMenu();onAdminBtnClick()">管理者メニュー</button></li></ul>
+      <ul id="mobile-menu" class="hidden retro-mobile"><li><a href="#welcome" onclick="closeMobileMenu()" class="menu-row">はじめての方へ</a></li><li><a href="#bottle" onclick="closeMobileMenu()" class="menu-row">星の小瓶</a></li><li><a href="#lights" onclick="closeMobileMenu()" class="menu-row">星の灯り</a></li><li><a href="#mikuji" onclick="closeMobileMenu()" class="menu-row">星みくじ</a></li><li><a href="#mood" onclick="closeMobileMenu()" class="menu-row">きょうのきもち</a></li><li><a href="#coping" onclick="closeMobileMenu()" class="menu-row">こころのケア</a></li><li><a href="#services" onclick="closeMobileMenu()" class="menu-row">制度・サービス</a></li><li><a href="#promise" onclick="closeMobileMenu()" class="menu-row">星の海の約束</a></li><li id="admin-page-links-mobile" class="hidden"><button class="menu-row" onclick="closeMobileMenu();onAdminBtnClick()">管理者メニュー</button></li></ul>
     </nav>
-    <div class="welcome-strip"><span>ひとこと通信</span><div class="marquee-viewport"><span class="marquee-text">ようこそ、星の海へ。読むだけでも、音楽を聴くだけでも。あなたのペースで、ゆっくりしていってください。 ☆ BBSへの足あとも、お気軽に。</span></div><button class="ticker-toggle" onclick="toggleWelcomeTicker(this)" aria-label="流れる文字を停止" aria-pressed="false">Ⅱ</button></div>
+    <div class="welcome-strip"><span>ひとこと通信</span><div class="marquee-viewport"><span class="marquee-text">ようこそ、星の海へ。読むだけでも、小瓶をひとつ拾うだけでも。あなたのペースで、ゆっくりしていってください。 ☆ BBSへの足あとも、お気軽に。</span></div><button class="ticker-toggle" onclick="toggleWelcomeTicker(this)" aria-label="流れる文字を停止" aria-pressed="false">Ⅱ</button></div>
     <div class="retro-grid">
       <aside class="sidebar" aria-label="サイトのご案内">
         <div class="side-box"><h2 class="window-title">CONTENTS <span class="window-dots" aria-hidden="true">□ ×</span></h2><ul class="side-menu">
-          <li><a href="#hero"><span class="symbol">⌂</span>ホーム</a></li><li><a href="#profile"><span class="symbol">♙</span>管理人のこと</a></li><li><a href="#blog"><span class="symbol">▤</span>日記・ひとりごと</a></li><li><a href="#bulletin"><span class="symbol">▱</span>みんなの掲示板</a></li><li><a href="#music"><span class="symbol">♫</span>音楽室</a></li><li><a href="#links"><span class="symbol">∞</span>リンク集</a></li>
+          <li><a href="#hero"><span class="symbol">⌂</span>ホーム</a></li><li><a href="#profile"><span class="symbol">♙</span>管理人のこと</a></li><li><a href="#blog"><span class="symbol">▤</span>日記・ひとりごと</a></li><li><a href="#bulletin"><span class="symbol">▱</span>みんなの掲示板</a></li><li><a href="#links"><span class="symbol">∞</span>リンク集</a></li>
         </ul></div>
-        <div class="side-box"><h2 class="window-title">ひと休みの部屋</h2><ul class="side-menu"><li><a href="#lights"><span class="symbol">✦</span>星の灯り</a></li><li><a href="#mood"><span class="symbol">☁</span>きょうのきもち</a></li><li><a href="#coping"><span class="symbol">✧</span>こころのケア</a></li><li><a href="#services"><span class="symbol">◇</span>支えになる制度</a></li><li><a href="#support"><span class="symbol">♡</span>相談窓口</a></li></ul></div>
+        <div class="side-box"><h2 class="window-title">ひと休みの部屋</h2><ul class="side-menu"><li><a href="#bottle"><span class="symbol">✉&#xFE0E;</span>星の小瓶</a></li><li><a href="#lights"><span class="symbol">✦</span>星の灯り</a></li><li><a href="#mikuji"><span class="symbol">☆</span>星みくじ</a></li><li><a href="#mood"><span class="symbol">☁</span>きょうのきもち</a></li><li><a href="#coping"><span class="symbol">✧</span>こころのケア</a></li><li><a href="#services"><span class="symbol">◇</span>支えになる制度</a></li><li><a href="#support"><span class="symbol">♡</span>相談窓口</a></li></ul></div>
         <div class="side-box"><h2 class="window-title">管理人より</h2><div class="side-content side-note"><p><strong>1995年のインターネットを<br>覚えていますか。</strong></p><p style="margin-top:9px">小さなホームページと、<br>「はじめまして」のカキコ。<br>あの頃の距離感で、<br>ここにいられたら。</p><p style="margin-top:10px"><a href="#profile">管理人のプロフィール →</a></p></div></div>
-        <div class="side-box"><h2 class="window-title">SITE BANNER</h2><div class="side-content"><a class="site-banner" href="#links" aria-label="星の海のリンク案内">星の海</a><p class="banner-caption">88 × 31 / LINK FREE</p><div class="mini-badges"><span>NO AUTO MUSIC</span><span>スマホ対応</span></div></div></div>
+        <div class="side-box"><h2 class="window-title">SITE BANNER</h2><div class="side-content"><a class="site-banner" href="#links" aria-label="星の海のリンク案内">星の海</a><p class="banner-caption">88 × 31 / LINK FREE</p><div class="mini-badges"><span>BOTTLE MAIL</span><span>スマホ対応</span></div></div></div>
         <div id="admin-page-links" class="hidden side-box side-content"><button onclick="onAdminBtnClick()" class="retro-button">管理者メニュー</button></div>
         <p class="side-footer">☆ take your time ☆<br>また、いつでも。</p>
       </aside>
@@ -76,13 +76,61 @@
         <section id="hero" aria-labelledby="hero-title">
           <div class="window-title"><span>ようこそ、星の海のホームページへ。</span><span class="window-dots" aria-hidden="true">□ ×</span></div>
           <div class="home-hero">
-            <div class="hero-heading"><p class="hero-eyebrow">A SMALL PLACE TO REST</p><h2 id="hero-title">言葉にならない夜も、<br>ここにいていい。</h2><p class="hero-description">星を見上げたり、海を眺めたり。<br>そんなふうに、ひと息ついていってください。<br>ここは、当事者がひとりでつくる小さな相互サポートのホームページです。</p><div class="hero-actions"><a href="#lights" class="retro-button primary">星の灯りをともす</a><a href="#bulletin" class="retro-button">BBSに足あとを残す</a><a href="#welcome" class="retro-button">はじめての方へ</a></div></div>
+            <div class="hero-heading"><p class="hero-eyebrow">A SMALL PLACE TO REST</p><h2 id="hero-title">言葉にならない夜も、<br>ここにいていい。</h2><p class="hero-description">星を見上げたり、海を眺めたり。<br>そんなふうに、ひと息ついていってください。<br>ここは、当事者がひとりでつくる小さな相互サポートのホームページです。</p><div class="hero-actions"><a href="#bottle" class="retro-button primary">流れ着いた小瓶をひろう</a><a href="#lights" class="retro-button">星の灯りをともす</a><a href="#bulletin" class="retro-button">BBSに足あとを残す</a></div><p class="hero-guide"><a href="#welcome">はじめての方へ →</a></p></div>
             <figure class="hero-art"><img src="assets/starlit-sea.svg" alt="三日月と星が浮かぶ静かな海。小さな帆船が一隻。" width="240" height="240"><figcaption>somewhere between stars &amp; sea</figcaption></figure>
           </div>
-          <div id="from-video" class="hero-from-video" hidden><p class="hero-from-video-title">動画から、来てくれたんですね。</p><p>あの動画も、このサイトも、同じ当事者がひとりで作っています。ここでは、何もしなくて大丈夫です。</p><ul><li><a href="#lights">気持ちをひとつ選んで、灯りをともしていく →</a></li><li><a href="#bulletin">掲示板に、ひとことだけ置いていく →</a></li><li><a href="#music">音楽を小さく流して、横になる →</a></li><li><a href="#support">夜中でもつながる窓口を見る →</a></li></ul></div>
+          <div id="from-video" class="hero-from-video" hidden><p class="hero-from-video-title">動画から、来てくれたんですね。</p><p>あの動画も、このサイトも、同じ当事者がひとりで作っています。ここでは、何もしなくて大丈夫です。</p><ul><li><a href="#bottle">だれかが流した小瓶を、ひとつひろう →</a></li><li><a href="#lights">気持ちをひとつ選んで、灯りをともしていく →</a></li><li><a href="#bulletin">掲示板に、ひとことだけ置いていく →</a></li><li><a href="#support">夜中でもつながる窓口を見る →</a></li></ul></div>
           <script>try { if (new URLSearchParams(location.search).get('utm_source') === 'youtube') document.getElementById('from-video').hidden = false; } catch (e) {}</script>
-          <div class="counter-box"><div class="counter-line"><span>あなたは</span><span id="visit-counter" class="counter-digits" aria-label="訪問者数を読み込み中">--------</span><span>人目のお客様です</span></div><p class="counter-note">※ キリ番を踏んだ方は、よかったら <a href="#bulletin">BBS</a> へどうぞ。ROMだけでも大歓迎。</p><p id="kiriban-message" class="kiriban-hit" hidden></p></div>
+          <div class="counter-box"><div class="counter-line"><span>あなたは</span><span id="visit-counter" class="counter-digits" aria-label="訪問者数を読み込み中">--------</span><span>人目のお客様です</span></div><p class="counter-note">※ キリ番を踏んだ方は、よかったら <a href="#bulletin">BBS</a> へどうぞ。ROMだけでも大歓迎。</p><p id="kiriban-message" class="kiriban-hit" hidden></p><p id="bottle-news" class="bottle-news" hidden><a href="#bottle-mine">✉&#xFE0E; あなたの小瓶に、知らせが届いています →</a></p></div>
         </section>
+        <!-- 星の小瓶（2026-11-11）。知らないだれかが選んだことばを拾い、自分も流せる。
+             文面は決まった候補から選ぶだけ（自由な文章は入らない）なので、公開前の確認が要らない。
+             流した小瓶が拾われると、次に来たとき、流した端末にだけ知らせる。
+             bottle-usage.sql を実行するまでは、管理人がはじめに置いた小瓶（BOTTLE_STARTERS）だけが拾える。 -->
+        <section id="bottle" aria-labelledby="bottle-title"><div class="glass-panel">
+          <div class="sec-head"><span class="sec-no">BOTTLE MAIL</span><h2 id="bottle-title" class="sec-title">星の小瓶</h2><span class="sec-rule" aria-hidden="true"></span></div>
+          <p class="bottle-lead">この海には、だれかが流した小瓶が流れ着きます。<br>中には、短いことばがひとつ。拾うだけでも、あなたが流しても。</p>
+          <!-- 波と星は retro.css の背景。月と小瓶だけをここに置く（画面が広くても大きさが変わらないように） -->
+          <div class="bottle-shore" aria-hidden="true">
+            <svg class="bottle-moon" viewBox="0 0 20 20" focusable="false"><path d="M12 2a8 8 0 1 0 6.6 11.4A6.4 6.4 0 0 1 12 2z" fill="#e2ce91"/></svg>
+            <svg class="bottle-float" viewBox="-26 -16 52 32" focusable="false"><g transform="rotate(-22)">
+              <rect x="-14" y="-6.5" width="25" height="13" rx="4.5" fill="#9ed9f4" fill-opacity=".2" stroke="#bfe6f7" stroke-width="1"/>
+              <rect x="11" y="-3" width="7" height="6" fill="#9ed9f4" fill-opacity=".2" stroke="#bfe6f7" stroke-width="1"/>
+              <rect x="18" y="-2.6" width="3.6" height="5.2" rx="1" fill="#c9a36a"/>
+              <rect x="-9" y="-2.8" width="13" height="5.6" rx="1" fill="#f3ead2"/>
+            </g></svg>
+          </div>
+          <p id="bottle-sea" class="bottle-sea" hidden></p>
+          <div class="bottle-actions">
+            <button type="button" id="bottle-pick" class="retro-button primary">流れ着いた小瓶をひろう</button>
+            <button type="button" id="bottle-open-form" class="retro-button" aria-expanded="false" aria-controls="bottle-form">小瓶を流す</button>
+          </div>
+          <p id="bottle-status" class="bottle-status" role="status" aria-live="polite"></p>
+          <div id="bottle-letter" class="bottle-letter" tabindex="-1" hidden>
+            <div role="status" aria-live="polite">
+              <p id="bottle-letter-from" class="bottle-letter-from"></p>
+              <p id="bottle-letter-to" class="bottle-letter-to"></p>
+              <p id="bottle-letter-word" class="bottle-letter-word"></p>
+            </div>
+            <div class="bottle-letter-actions">
+              <button type="button" id="bottle-thanks" class="retro-button">ありがとうを返す</button>
+              <p id="bottle-thanks-note" class="bottle-thanks-note" role="status" aria-live="polite"></p>
+            </div>
+          </div>
+          <form id="bottle-form" class="bottle-form" hidden>
+            <fieldset><legend>だれに流しますか</legend><div id="bottle-to-options" class="bottle-options"></div></fieldset>
+            <fieldset><legend>どのことばを入れますか</legend><div id="bottle-word-options" class="bottle-options"></div></fieldset>
+            <p id="bottle-admin-note" class="bottle-admin-note" hidden>管理者としてログイン中に流した小瓶は、「管理人が流した小瓶」として届きます。</p>
+            <div id="bottle-preview" class="bottle-preview" aria-live="polite" hidden><p class="bottle-preview-label">この小瓶が流れます</p><p id="bottle-preview-to" class="bottle-letter-to"></p><p id="bottle-preview-word" class="bottle-letter-word"></p></div>
+            <div class="bottle-form-actions"><button type="submit" id="bottle-throw" class="retro-button primary">この小瓶を流す</button><button type="button" id="bottle-cancel" class="retro-button">やめる</button></div>
+            <p id="bottle-form-error" class="bottle-form-error" role="status" aria-live="polite"></p>
+          </form>
+          <div id="bottle-mine" class="bottle-mine" tabindex="-1" hidden>
+            <h3>あなたが流した小瓶</h3>
+            <ul id="bottle-mine-list"></ul>
+          </div>
+          <p class="bottle-note">小瓶に入れられるのは、ここにあることばだけです（自由な文章は入りません）。残るのは、選んだことばと、流した時刻だけ（拾った人には「何時ごろ」とだけ伝わります）。だれが流したか、だれが拾ったかは、管理人にも分かりません。拾われた回数は、流した端末にだけ出ます。</p>
+        </div></section>
         <!-- 星の灯り（2026-11-09）。掲示板に書くのは勇気がいるので、その手前の「小さな参加」。
              ひとつ選ぶと、名前も文章もない「灯りの数」だけが残り、みんなの夜空に灯りが増える。
              participation.sql を実行するまでは、灯りはこの端末の夜空にだけ灯る。
@@ -105,11 +153,11 @@
           </div>
           <p class="lights-note">何も選ばず、眺めるだけでも。<br>選んだ気持ちは、名前も文章もつかない「灯りの数」としてだけ残ります（1日にひとつ）。だれが選んだかは、管理人にも分かりません。自分だけの記録は<a href="#mood">「きょうのきもち」</a>へ（こちらは、この端末の中だけに残ります）。</p>
         </div></section>
-        <section class="news-box" aria-labelledby="news-title"><div class="window-title"><h2 id="news-title" style="font:inherit">WHAT'S NEW! <span class="new-badge">NEW</span></h2><span id="last-update" class="last-update">更新履歴</span></div><ul id="news-list" class="news-list"><li><time datetime="2026-09-27">2026.09.27</time><span>懐かしい個人ホームページの装いになりました。<span class="new-badge">NEW</span></span></li></ul></section>
+        <section id="news" class="news-box" aria-labelledby="news-title"><div class="window-title"><h2 id="news-title" style="font:inherit">WHAT'S NEW! <span class="new-badge">NEW</span></h2><span id="last-update" class="last-update">更新履歴</span></div><ul id="news-list" class="news-list"><li><time datetime="2026-09-27">2026.09.27</time><span>懐かしい個人ホームページの装いになりました。<span class="new-badge">NEW</span></span></li></ul></section>
         <div class="star-rule" aria-hidden="true">· · ✦ · · ✧ · · ✦ · ·</div>
         <section id="profile" aria-labelledby="profile-title"><div class="glass-panel"><div class="sec-head"><span class="sec-no">PROFILE</span><h2 id="profile-title" class="sec-title">管理人のこと</h2><span class="sec-rule" aria-hidden="true"></span><button id="edit-profile-btn" class="hidden retro-button profile-edit" onclick="openProfileEditor()">編集する</button></div><div class="profile-intro"><div class="profile-avatar" aria-hidden="true">✧</div><div><h3 id="profile-name">管理人</h3><p id="profile-tagline">1995年から、インターネットの片隅で。</p></div></div><p id="profile-bio" class="profile-bio">はじめまして。「星の海」の管理人です。
 精神障害の当事者として、この場所をひとりで運営しています。
-読むだけでも、音楽を聴くだけでも。気が向いたら、BBSでお話ししましょう。</p><dl class="profile-facts"><div id="profile-likes-row" hidden><dt>好きなもの</dt><dd id="profile-likes"></dd></div><div id="profile-since-row"><dt>ネット歴</dt><dd id="profile-since">1995年から</dd></div></dl><p id="profile-status" class="profile-status" role="status"></p><p id="profile-saved" class="profile-message" role="status"></p></div></section>
+読むだけでも、小瓶をひとつ拾うだけでも。気が向いたら、BBSでお話ししましょう。</p><dl class="profile-facts"><div id="profile-likes-row" hidden><dt>好きなもの</dt><dd id="profile-likes"></dd></div><div id="profile-since-row"><dt>ネット歴</dt><dd id="profile-since">1995年から</dd></div></dl><p id="profile-status" class="profile-status" role="status"></p><p id="profile-saved" class="profile-message" role="status"></p></div></section>
   <!-- ========== BLOG ========== -->
   <section id="blog" class="relative z-10 py-14 sm:py-20 md:py-24 px-4 sm:px-6 overflow-hidden">
 
@@ -228,39 +276,30 @@
     </div>
   </section>
 
-  <!-- ========== 音楽 ========== -->
-  <section id="music" class="relative z-10 py-14 sm:py-20 md:py-24 px-4 sm:px-6 overflow-hidden">
-
-    <div class="glass-panel relative z-10 max-w-3xl mx-auto px-5 sm:px-8 md:px-14 py-10 sm:py-14 md:py-16">
-      <div class="section-toolbar flex items-end justify-between gap-5 mb-8">
-        <div class="sec-head flex-1" style="margin-bottom:0;">
-          <span class="sec-no">MUSIC</span>
-          <h2 class="sec-title">音楽</h2>
-          <span class="sec-rule" aria-hidden="true"></span>
-          <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">Suno で制作</span>
-        </div>
-        <button id="upload-track-btn" onclick="openUploadModal()"
-                class="hidden glass rounded-xl px-5 py-2.5 text-aurora-indigo border border-aurora-indigo/40
-                       hover:border-aurora-indigo hover:bg-aurora-indigo/10 transition-all duration-300
-                       flex items-center gap-2 text-sm font-semibold">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-          </svg>
-          アップロード
-        </button>
-      </div>
-      <p class="text-slate-500 text-sm leading-relaxed mb-10">
-        気持ちを言葉にできないとき、音楽が寄り添ってくれることがあります。自分のために作った曲を置いておきます。
-      </p>
-      <div id="tracks-container">
-        <div class="flex flex-col items-center gap-3 py-16 text-slate-500">
-          <div class="w-5 h-5 border-2 border-aurora-indigo/30 border-t-aurora-indigo rounded-full animate-spin-slow"></div>
-          <p class="text-sm">読み込み中...</p>
-        </div>
-      </div>
+  <!-- ========== 星みくじ ==========
+       2026-11-11：音楽室をやめて、そのあとに置いた「引くだけ」の場所。1日1回。
+       大吉も凶もなく、先のことは占わない。結果はこの端末の中だけに残る（数えるのは引かれた回数だけ）。 -->
+  <section id="mikuji" aria-labelledby="mikuji-title"><div class="glass-panel">
+    <div class="sec-head">
+      <span class="sec-no">OMIKUJI</span>
+      <h2 id="mikuji-title" class="sec-title">星みくじ</h2>
+      <span class="sec-rule" aria-hidden="true"></span>
+      <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">1日1回</span>
     </div>
-  </section>
+    <p class="lead">今夜の星を、ひとつ引いてみませんか。大吉も凶もない、当たり外れのないおみくじです。先のことは占いません。</p>
+    <button type="button" id="mikuji-draw" class="retro-button primary mikuji-draw">星みくじを引く</button>
+    <div id="mikuji-result" class="mikuji-result" tabindex="-1" aria-labelledby="mikuji-star" hidden>
+      <p class="mikuji-label">今夜の星</p>
+      <h3 id="mikuji-star" class="mikuji-star"></h3>
+      <p id="mikuji-word" class="mikuji-word"></p>
+      <dl class="mikuji-items">
+        <div><dt>今夜のちいさなこと</dt><dd id="mikuji-small"></dd></div>
+        <div><dt>今夜のおまもり</dt><dd id="mikuji-charm"></dd></div>
+      </dl>
+      <p id="mikuji-again" class="mikuji-again"></p>
+    </div>
+    <p class="mikuji-note">ちいさなことは、できたらで大丈夫です。引いた結果は、この端末の中だけに残ります。</p>
+  </div></section>
 
   <!-- ========== はじめての方へ ========== -->
   <section id="welcome" class="relative z-10 py-14 sm:py-20 md:py-24 px-4 sm:px-6 overflow-hidden">
@@ -274,7 +313,7 @@
       <p class="welcome-lead">何かをしなくても、大丈夫。<br>気になる場所から、ゆっくりどうぞ。</p>
       <div class="visit-paths" aria-label="過ごし方を選ぶ">
         <a href="#blog" class="visit-path"><span class="path-top"><span>01 / READ</span><span aria-hidden="true">↗</span></span><h3>誰かの言葉に、ふれる</h3><p>日々のひとりごとを、少しずつ。</p><span class="path-destination">ブログを読む</span></a>
-        <a href="#music" class="visit-path"><span class="path-top"><span>02 / LISTEN</span><span aria-hidden="true">↗</span></span><h3>音楽と、ひと息つく</h3><p>言葉を探さず、音に耳をすます。</p><span class="path-destination">音楽を聴く</span></a>
+        <a href="#bottle" class="visit-path"><span class="path-top"><span>02 / PICK UP</span><span aria-hidden="true">↗</span></span><h3>流れ着いた小瓶を、ひろう</h3><p>知らないだれかが選んだ、短いことば。</p><span class="path-destination">小瓶をひろう</span></a>
         <a href="#mood" class="visit-path"><span class="path-top"><span>03 / FEEL</span><span aria-hidden="true">↗</span></span><h3>いまのきもちを、残す</h3><p>ひとことでいい。自分のための記録。</p><span class="path-destination">きもちを選ぶ</span></a>
         <a href="#bulletin" class="visit-path"><span class="path-top"><span>04 / TALK</span><span aria-hidden="true">↗</span></span><h3>まとまらないまま、話す</h3><p>ニックネームで、そっと言葉を置く。</p><span class="path-destination">掲示板を開く</span></a>
       </div>
@@ -358,18 +397,14 @@
         </div>
       </div>
 
-      <!-- このサイトが数えていること（2026-11-09）。数え方を変えたら、ここも直すこと。 -->
+      <!-- このサイトが数えていること（2026-11-09、2026-11-11 に書き直し）。数え方を変えたら、ここも直すこと。 -->
       <div id="counting" class="mt-12 pt-9" style="border-top:1px solid var(--keisen);">
         <div class="max-w-2xl">
           <p class="num-mincho">数えていること</p>
           <h3 class="mincho text-[1.02rem] mt-3 mb-4" style="color:var(--sumi);">名前や文章は、数えていません</h3>
-          <p class="text-xs leading-[2.2]" style="color:var(--usuzumi);">
-            このサイトが数えているのは、訪問の回数（同じ端末は1日1回）、星の灯りと「私も」の数、掲示板を開いた回数と書きはじめた回数だけです。
-            だれが押したか、何を書きかけたかは記録しません。数を見るのは管理人だけで、この場所を続けていく手がかりにしています。
-          </p>
-          <p class="text-xs leading-[2.2] mt-4" style="color:var(--usuzumi);">
-            「きょうのきもち」の記録は、これまでどおり、あなたの端末の中だけです。掲示板に書き込むときだけ、確認のため名前と本文をOpenAIに送ります。
-          </p>
+          <p class="text-xs leading-[2.2]" style="color:var(--usuzumi);">このサイトが数えているのは、訪問の回数と、それぞれの場所が「見られた回数」「使われた回数」です（同じ端末は1日1回まで）。日記は、どの日記が何回開かれたかも数えます。星の灯り・星の小瓶・「私も」は、選ばれた種類と、その時刻だけが残ります。動画のリンクから来たときは、どの動画からかも数えます。</p>
+          <p class="text-xs leading-[2.2] mt-4" style="color:var(--usuzumi);">だれが見たか、だれが押したか、何を書きかけたかは記録しません。数を見るのは管理人だけで、この場所を続けていく手がかりにしています。</p>
+          <p class="text-xs leading-[2.2] mt-4" style="color:var(--usuzumi);">「きょうのきもち」で選んだ気持ちと、星みくじの結果は、あなたの端末の中だけです（数えるのは、使われた回数だけ）。掲示板に書き込むときだけ、確認のため名前と本文をOpenAIに送ります。</p>
         </div>
       </div>
 
@@ -401,7 +436,7 @@
         <span class="sec-rule" aria-hidden="true"></span>
         <span class="hidden sm:block text-[11px] tracking-[.22em] whitespace-nowrap" style="color:var(--usuzumi);">じぶんをそっと見つめる</span>
       </div>
-      <p class="lead mb-12 max-w-2xl">今日の気分にいちばん近いものを、ひとつ選んでみてください。記録は<strong style="color:var(--asagi);font-weight:500;">この端末の中だけ</strong>に保存され、外部には一切送信されません。誰にも見られない、あなただけの記録です。</p>
+      <p class="lead mb-12 max-w-2xl">今日の気分にいちばん近いものを、ひとつ選んでみてください。選んだ気持ちは<strong style="color:var(--asagi);font-weight:500;">この端末の中だけ</strong>に保存され、外には送られません。誰にも見られない、あなただけの記録です。<span class="lead-small">（サイトが数えるのは「この場所が使われた回数」だけで、どの気持ちを選んだかは数えません）</span></p>
 
       <!-- きもちボタン -->
       <div class="mood-options mb-8" role="group" aria-label="今日の気分を選ぶ">
@@ -580,7 +615,7 @@
     </div>
   </section>
 
-  <section id="links" aria-labelledby="links-title"><div class="glass-panel"><div class="sec-head"><span class="sec-no">LINK</span><h2 id="links-title" class="sec-title">インターネットの小さな道しるべ</h2></div><p class="lead">このホームページの、もうひとつの入口と、お役立ちリンク。</p><div class="links-grid"><a class="link-item" href="https://www.youtube.com/@jenjenjenjun" target="_blank" rel="noopener noreferrer"><span class="link-label">YouTube ↗</span><div><h3>星の海の動画</h3><p>眠れない夜に。毎晩、短い動画を置いています。</p></div></a><a class="link-item" href="#music"><span class="link-label">MUSIC ROOM</span><div><h3>星の海の音楽室</h3><p>言葉を探さず、音に耳をすます時間。</p></div></a><a class="link-item" href="https://www.mhlw.go.jp/mamorouyokokoro/" target="_blank" rel="noopener noreferrer"><span class="link-label">こころの窓口 ↗</span><div><h3>まもろうよ こころ</h3><p>厚生労働省による、電話・SNSの相談窓口のご案内。</p></div></a></div><div class="banner-guide"><a class="site-banner" href="https://hoshinoumi.org/">星の海</a><p style="margin-top:10px">当サイトはリンクフリーです。リンク先はこちら。ご報告はBBSへ、お気軽にどうぞ。</p><code>https://hoshinoumi.org/</code></div></div></section>
+  <section id="links" aria-labelledby="links-title"><div class="glass-panel"><div class="sec-head"><span class="sec-no">LINK</span><h2 id="links-title" class="sec-title">インターネットの小さな道しるべ</h2></div><p class="lead">このホームページの、もうひとつの入口と、お役立ちリンク。</p><div class="links-grid"><a class="link-item" href="https://www.youtube.com/@jenjenjenjun" target="_blank" rel="noopener noreferrer"><span class="link-label">YouTube ↗</span><div><h3>星の海の動画</h3><p>眠れない夜に。毎晩、短い動画を置いています。</p></div></a><a class="link-item" href="#bottle"><span class="link-label">BOTTLE MAIL</span><div><h3>星の小瓶</h3><p>だれかのことばを拾ったり、あなたのことばを流したり。</p></div></a><a class="link-item" href="https://www.mhlw.go.jp/mamorouyokokoro/" target="_blank" rel="noopener noreferrer"><span class="link-label">こころの窓口 ↗</span><div><h3>まもろうよ こころ</h3><p>厚生労働省による、電話・SNSの相談窓口のご案内。</p></div></a></div><div class="banner-guide"><a class="site-banner" href="https://hoshinoumi.org/">星の海</a><p style="margin-top:10px">当サイトはリンクフリーです。リンク先はこちら。ご報告はBBSへ、お気軽にどうぞ。</p><code>https://hoshinoumi.org/</code></div></div></section>
     <div id="support" class="support-section">
       <div class="glass-panel px-6 md:px-10 py-10">
         <div class="sec-head" style="margin-bottom:1.75rem;">
@@ -914,69 +949,9 @@
     </div>
   </div>
 
-  <!-- ======================================================
-       MODAL: 楽曲アップロード
-       ====================================================== -->
-  <div id="upload-modal" class="hidden fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-3 sm:p-4"
-       role="dialog" aria-modal="true" aria-labelledby="upload-modal-title">
-    <div class="absolute inset-0 bg-slate-700/25 backdrop-blur-sm" onclick="closeUploadModal()"></div>
-    <div class="relative glass rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl shadow-slate-400/30">
-      <h2 id="upload-modal-title" class="text-xl font-bold text-slate-800 mb-6">楽曲をアップロード</h2>
-      <form id="upload-form" class="space-y-4">
-        <input id="track-title" data-autofocus type="text" required maxlength="100" placeholder="曲のタイトル"
-               class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-3
-                      text-slate-700 text-sm placeholder-slate-400
-                      focus:outline-none focus:border-aurora-indigo/50 transition-colors" />
-        <textarea id="track-desc" rows="2" maxlength="200" placeholder="一言コメント（任意）"
-                  class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-3
-                         text-slate-700 text-sm placeholder-slate-400 resize-none
-                         focus:outline-none focus:border-aurora-indigo/50 transition-colors"></textarea>
-        <!-- ファイル選択 -->
-        <label class="block cursor-pointer">
-          <div class="border border-dashed border-slate-300 rounded-xl px-4 py-6 text-center
-                      hover:border-aurora-indigo/50 transition-colors">
-            <svg class="w-8 h-8 mx-auto mb-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                    d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
-            </svg>
-            <p id="file-label" class="text-slate-500 text-sm">MP3 / WAV ファイルを選択</p>
-            <p class="text-slate-400 text-xs mt-1">クリックしてファイルを選ぶ</p>
-          </div>
-          <input id="track-file" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a" required
-                 class="hidden" onchange="onFileSelect(this)" />
-        </label>
-        <!-- アップロード中インジケーター -->
-        <div id="uploading-indicator" class="hidden flex items-center gap-3 py-2">
-          <div class="w-4 h-4 border-2 border-aurora-indigo/40 border-t-aurora-indigo rounded-full animate-spin-slow shrink-0"></div>
-          <span class="text-slate-500 text-sm">アップロード中...</span>
-        </div>
-        <p id="upload-error" class="text-red-500 text-xs min-h-[1em]"></p>
-        <div class="flex gap-3">
-          <button type="button" onclick="closeUploadModal()"
-                  class="flex-1 glass py-3 rounded-xl text-slate-500 border border-slate-200
-                         hover:border-slate-400 transition-colors text-sm font-semibold">
-            キャンセル
-          </button>
-          <button type="submit" id="upload-submit"
-                  class="flex-1 glass py-3 rounded-xl text-aurora-indigo border border-aurora-indigo/40
-                         hover:border-aurora-indigo hover:bg-aurora-indigo/10 transition-all duration-300
-                         text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed">
-            アップロード
-          </button>
-        </div>
-      </form>
-      <button onclick="closeUploadModal()" aria-label="閉じる"
-              class="absolute top-4 right-4 p-1 text-slate-500 hover:text-slate-600 transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-      </button>
-    </div>
-  </div>
-
   <dialog id="admin-menu" class="retro-dialog" aria-labelledby="admin-menu-title">
     <div class="dialog-title"><h2 id="admin-menu-title" style="font:inherit">管理者メニュー / CONTROL ROOM</h2><button onclick="closeAdminMenu()" aria-label="管理者メニューを閉じる">×</button></div>
-    <div class="dialog-body"><p>おかえりなさい。今日は、どこを更新しますか。</p><div class="admin-actions"><button class="retro-button" onclick="closeAdminMenu();openProfileEditor()">PROFILE / プロフィールを編集する</button><button class="retro-button" onclick="closeAdminMenu();openPostEditor()">DIARY / 日記を書く</button><button class="retro-button" onclick="closeAdminMenu();openUploadModal()">MUSIC / 音楽を追加する</button><a class="retro-button" href="#bulletin" onclick="closeAdminMenu()">BBS / 掲示板を管理する</a></div><div class="admin-tools"><a href="shorts.html" target="_blank" rel="noopener">YouTube分析 ↗</a><a href="it-news.html" target="_blank" rel="noopener">ITニュース ↗</a><a href="niigata-cafes-list.html" target="_blank" rel="noopener">カフェ ↗</a></div><p id="admin-error" role="alert"></p><button class="retro-button" onclick="logoutFromMenu()">ログアウト</button></div>
+    <div class="dialog-body"><p>おかえりなさい。今日は、どこを更新しますか。</p><div class="admin-actions"><button class="retro-button" onclick="closeAdminMenu();openProfileEditor()">PROFILE / プロフィールを編集する</button><button class="retro-button" onclick="closeAdminMenu();openPostEditor()">DIARY / 日記を書く</button><a class="retro-button" href="#bulletin" onclick="closeAdminMenu()">BBS / 掲示板を管理する</a><a class="retro-button" href="usage.html" target="_blank" rel="noopener">ACCESS / 利用状況を見る ↗</a></div><div class="admin-tools"><a href="shorts.html" target="_blank" rel="noopener">YouTube分析 ↗</a><a href="it-news.html" target="_blank" rel="noopener">ITニュース ↗</a><a href="niigata-cafes-list.html" target="_blank" rel="noopener">カフェ ↗</a></div><p id="admin-error" role="alert"></p><button class="retro-button" onclick="logoutFromMenu()">ログアウト</button></div>
   </dialog>
   <dialog id="profile-editor" class="retro-dialog" aria-labelledby="profile-editor-title">
     <div class="dialog-title"><h2 id="profile-editor-title" style="font:inherit">PROFILE / プロフィール編集</h2><button onclick="closeProfileEditor()" aria-label="プロフィール編集を閉じる">×</button></div>
@@ -1019,7 +994,6 @@
     let adminUser   = null;
     let allPosts    = [];
     let allMessages = [];
-    let allTracks   = [];
 
     /* ── 掲示板（返信スレッド・管理者編集）の状態 ──
        renderMessages() は一覧をまるごと作り直すため、入力中の内容は
@@ -1049,10 +1023,9 @@
     let postSaving          = false;
     let returnToDetailAfter = false; // 詳細画面から編集を始めたら、保存後に詳細へ戻す
     let detailPostId        = null;  // 詳細画面で表示している日記のid
-
-    /* ── オーディオプレーヤー状態 ── */
-    let currentAudio   = null;
-    let currentTrackId = null;
+    /* 日記ごとの「開かれた回数」。管理者としてログインしているときだけ読む（訪問者には出さない）。
+       Map（id → 回数）。読めていないあいだは null。サーバー側は bottle-usage.sql。 */
+    let diaryViewCounts     = null;
 
     /* Profile is a reserved content document in the existing admin-writable
        blog_posts table. Exclude its stable ID from all diary queries. This
@@ -1061,7 +1034,7 @@
     const PROFILE_TITLE = '__site_profile_v1__';
     const defaultProfile = Object.freeze({
       name: '管理人', tagline: '1995年から、インターネットの片隅で。',
-      bio: 'はじめまして。「星の海」の管理人です。\n精神障害の当事者として、この場所をひとりで運営しています。\n読むだけでも、音楽を聴くだけでも。気が向いたら、BBSでお話ししましょう。',
+      bio: 'はじめまして。「星の海」の管理人です。\n精神障害の当事者として、この場所をひとりで運営しています。\n読むだけでも、小瓶をひとつ拾うだけでも。気が向いたら、BBSでお話ししましょう。',
       likes: '', since: '1995',
     });
     let siteProfile = { ...defaultProfile };
@@ -1189,8 +1162,8 @@
 
     function renderNews() {
       const updates = [
-        { date: '2026-09-27T00:00:00+09:00', text: '懐かしい個人ホームページの装いになりました。', href: '#hero' },
         { date: '2026-11-09T00:00:00+09:00', text: '「星の灯り」をはじめました。掲示板には「今週の問いかけ」を置きました。', href: '#lights' },
+        { date: '2026-11-11T00:00:00+09:00', text: '「星の小瓶」と「星みくじ」をはじめました。音楽室は、おしまいにしました。', href: '#bottle' },
       ];
       if (profileUpdatedAt) updates.push({ date: profileUpdatedAt, text: '管理人のプロフィールを更新しました。', href: '#profile' });
       for (const post of allPosts.slice(0, 3)) updates.push({ date: post.created_at, text: '日記「' + post.title + '」を更新しました。', href: '#blog', postId: post.id });
@@ -1255,15 +1228,6 @@
         newPostBtn.classList.remove('flex');
       }
 
-      const uploadTrackBtn = document.getElementById('upload-track-btn');
-      if (adminUser) {
-        uploadTrackBtn.classList.remove('hidden');
-        uploadTrackBtn.classList.add('flex');
-      } else {
-        uploadTrackBtn.classList.add('hidden');
-        uploadTrackBtn.classList.remove('flex');
-      }
-
       const adminPageLinks = document.getElementById('admin-page-links');
       if (adminUser) {
         adminPageLinks.classList.remove('hidden');
@@ -1286,7 +1250,8 @@
       document.getElementById('detail-admin').hidden = !adminUser;
       renderPosts();
       renderMessages();
-      renderTracks();
+      renderBottleForAdmin();
+      loadDiaryViewCounts();   // ログインしたら読み、ログアウトしたら消す
     }
 
     /* ══ モバイルメニュー ══ */
@@ -1749,14 +1714,14 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-3 mb-1.5">
                 <p class="num-mincho" style="font-size:.72rem;letter-spacing:.14em;">${fmtDate(p.created_at)}</p>
-                ${hasViewCount(p) ? `
-                <p class="flex items-center gap-1 text-slate-500 text-xs">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                ${adminUser && diaryViewCounts ? `
+                <p class="diary-views" title="管理者にだけ見えています">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                           d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                           d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                  </svg>${p.view_count.toLocaleString()} 回閲覧
+                  </svg>${(diaryViewCounts.get(p.id) ?? 0).toLocaleString()} 回
                 </p>` : ''}
               </div>
               <h3 class="mincho text-[1.05rem] mb-2.5 group-hover:text-aurora-blue
@@ -1800,12 +1765,6 @@
       }
       renderPosts();
     };
-
-    // 閲覧数の列は、docs/supabase-setup.md のSQLを実行するまでDBに存在しない。
-    // 列がないのに「0 回閲覧」と出すと架空の数字になるので、そのときは出さない。
-    function hasViewCount(p) {
-      return typeof p.view_count === 'number';
-    }
 
     window.collapsePosts = () => {
       blogVisible = BLOG_PAGE_SIZE;
@@ -2163,242 +2122,6 @@
       try { localStorage.removeItem('hoshiumi_nickname'); } catch {}
     }
 
-    /* ══ MUSIC ══ */
-    async function fetchTracks() {
-      if (!sb) { renderTracks(); return; }
-      if (isSecretKey) { showKeyError('tracks-container'); return; }
-      try {
-        const { data, error } = await sb
-          .from('music_tracks')
-          .select('*')
-          .order('created_at', { ascending: false });
-        if (error) throw error;
-        allTracks = data ?? [];
-        renderTracks();
-      } catch (e) {
-        console.error('fetchTracks:', e);
-        showFetchError('tracks-container', e.message);
-      }
-    }
-
-    async function uploadTrack(file, title, description) {
-      const ext      = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: storageErr } = await sb.storage
-        .from('music')
-        .upload(fileName, file, { contentType: file.type || 'audio/mpeg', upsert: false });
-      if (storageErr) throw storageErr;
-      const { data: urlData } = sb.storage.from('music').getPublicUrl(fileName);
-      const { error: dbErr } = await sb.from('music_tracks')
-        .insert({ title, description: description || '', file_url: urlData.publicUrl });
-      if (dbErr) throw dbErr;
-      await fetchTracks();
-    }
-
-    async function deleteTrack(id) {
-      const track = allTracks.find(t => t.id === id);
-      if (track) {
-        const fileName = track.file_url.split('/').pop();
-        await sb.storage.from('music').remove([fileName]);
-      }
-      const { error } = await sb.from('music_tracks').delete().eq('id', id);
-      if (error) throw error;
-      if (currentTrackId === id && currentAudio) {
-        currentAudio.pause();
-        currentAudio = null;
-        currentTrackId = null;
-      }
-      await fetchTracks();
-    }
-
-    function renderTracks() {
-      const el = document.getElementById('tracks-container');
-      if (!configured) { el.innerHTML = notConfiguredMsg('aurora-indigo'); return; }
-      if (isSecretKey)  { showKeyError('tracks-container'); return; }
-      if (allTracks.length === 0) {
-        el.innerHTML = emptyMsg('まだ楽曲がありません。');
-        return;
-      }
-      el.innerHTML = `<div class="space-y-3">${allTracks.map(t => `
-        <div id="track-card-${t.id}"
-             class="glass rule-card">
-          <div class="flex items-center gap-4">
-            <button onclick="toggleTrack('${t.id}')"
-                    id="play-btn-${t.id}"
-                    class="shrink-0 w-11 h-11 rounded-full flex items-center justify-center
-                           bg-aurora-indigo/15 border border-aurora-indigo/40
-                           hover:bg-aurora-indigo/30 hover:border-aurora-indigo
-                           transition-all duration-200 text-aurora-indigo">
-              <svg id="play-icon-${t.id}"  class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-              <svg id="pause-icon-${t.id}" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-            </button>
-            <div class="flex-1 min-w-0">
-              <p class="mincho text-[1rem] truncate" style="color:var(--sumi);">${esc(t.title)}</p>
-              ${t.description ? `<p class="text-slate-500 text-xs mt-0.5 truncate">${esc(t.description)}</p>` : ''}
-              ${typeof t.play_count === 'number' ? `
-              <p class="flex items-center gap-1 text-slate-500 text-xs mt-1">
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                <span id="play-count-${t.id}">${t.play_count.toLocaleString()} 回再生</span>
-              </p>` : ''}
-            </div>
-            ${adminUser ? `
-            <button onclick="confirmDeleteTrack('${t.id}')"
-                    class="shrink-0 p-2 rounded-lg text-slate-400
-                           hover:text-red-500 hover:bg-red-500/10 transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-              </svg>
-            </button>` : ''}
-          </div>
-          <div id="player-wrap-${t.id}" class="hidden mt-4">
-            <div class="flex justify-between text-xs text-slate-500 mb-2">
-              <span id="time-cur-${t.id}">0:00</span>
-              <span id="time-tot-${t.id}">--:--</span>
-            </div>
-            <div class="w-full bg-slate-200 rounded-full h-1.5 cursor-pointer"
-                 onclick="seekTrack('${t.id}',event)">
-              <div id="progress-${t.id}"
-                   class="bg-gradient-to-r from-aurora-indigo to-aurora-violet h-1.5 rounded-full transition-none"
-                   style="width:0%"></div>
-            </div>
-          </div>
-        </div>
-      `).join('')}</div>`;
-    }
-
-    /* ── オーディオプレーヤー ── */
-    // 再生するURLは読み込んだ一覧から引く（onclick の文字列に URL を埋め込むと、
-    // ' を含むURLがそのままスクリプトとして動いてしまうため）。https 以外は再生しない。
-    function trackUrl(id) {
-      const track = allTracks.find(t => t.id === id);
-      try {
-        const url = new URL(track?.file_url ?? '');
-        return url.protocol === 'https:' ? url.href : null;
-      } catch { return null; }
-    }
-
-    window.toggleTrack = function (id) {
-      if (currentTrackId === id && currentAudio) {
-        if (currentAudio.paused) { currentAudio.play(); setPlay(id, true); }
-        else                     { currentAudio.pause(); setPlay(id, false); }
-        return;
-      }
-      if (currentAudio) {
-        currentAudio.pause();
-        if (currentTrackId) { setPlay(currentTrackId, false); hidePlayer(currentTrackId); }
-      }
-      const url = trackUrl(id);
-      if (!url) { currentAudio = null; currentTrackId = null; return; }
-      currentAudio   = new Audio(url);
-      currentTrackId = id;
-      currentAudio.addEventListener('loadedmetadata', () => {
-        const el = document.getElementById(`time-tot-${id}`);
-        if (el) el.textContent = fmtTime(currentAudio.duration);
-      });
-      currentAudio.addEventListener('timeupdate', () => {
-        if (!currentAudio) return;
-        const pct = (currentAudio.currentTime / currentAudio.duration * 100) || 0;
-        const p = document.getElementById(`progress-${id}`);
-        const t = document.getElementById(`time-cur-${id}`);
-        if (p) p.style.width = pct + '%';
-        if (t) t.textContent = fmtTime(currentAudio.currentTime);
-      });
-      currentAudio.addEventListener('ended', () => { setPlay(id, false); });
-      currentAudio.addEventListener('error', () => { setPlay(id, false); });
-      showPlayer(id);
-      setPlay(id, true);
-      currentAudio.play().catch(() => setPlay(id, false));
-      countPlay(id);
-    };
-
-    // 再生数を +1（新しく曲を再生し始めたときのみ。一時停止からの再開は数えない）
-    // 再生数の列がまだDBにないとき（docs/supabase-setup.md のSQL未実行）と、管理者の再生は数えない。
-    function countPlay(id) {
-      const track = allTracks.find(t => t.id === id);
-      if (!track || typeof track.play_count !== 'number' || adminUser) return;
-      const setCount = (n) => {
-        const el = document.getElementById(`play-count-${id}`);
-        if (el) el.textContent = `${n.toLocaleString()} 回再生`;
-      };
-      track.play_count += 1;
-      setCount(track.play_count);
-      if (!sb) return;
-      sb.rpc('increment_track_plays', { track_id: id }).then(({ data, error }) => {
-        if (error || typeof data !== 'number') return;
-        if (track) track.play_count = data;
-        setCount(data);
-      });
-    }
-
-    window.seekTrack = function (id, e) {
-      if (currentTrackId !== id || !currentAudio) return;
-      const rect = e.currentTarget.getBoundingClientRect();
-      const pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      currentAudio.currentTime = pct * currentAudio.duration;
-    };
-
-    function setPlay(id, playing) {
-      const pi = document.getElementById(`play-icon-${id}`);
-      const pp = document.getElementById(`pause-icon-${id}`);
-      if (!pi || !pp) return;
-      pi.classList.toggle('hidden',  playing);
-      pp.classList.toggle('hidden', !playing);
-    }
-    function showPlayer(id) {
-      const w = document.getElementById(`player-wrap-${id}`);
-      if (w) w.classList.remove('hidden');
-    }
-    function hidePlayer(id) {
-      const w = document.getElementById(`player-wrap-${id}`);
-      if (w) w.classList.add('hidden');
-    }
-    function fmtTime(s) {
-      if (!isFinite(s)) return '--:--';
-      return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
-    }
-
-    /* ── アップロードモーダル ── */
-    window.openUploadModal  = () => showModal('upload-modal');
-    window.closeUploadModal = () => {
-      hideModal('upload-modal');
-      document.getElementById('upload-form').reset();
-      document.getElementById('file-label').textContent    = 'MP3 / WAV ファイルを選択';
-      document.getElementById('upload-error').textContent  = '';
-      document.getElementById('uploading-indicator').classList.add('hidden');
-      document.getElementById('upload-submit').disabled    = false;
-    };
-    window.onFileSelect = function (input) {
-      const f = input.files[0];
-      document.getElementById('file-label').textContent = f ? f.name : 'MP3 / WAV ファイルを選択';
-    };
-    window.confirmDeleteTrack = async (id) => {
-      if (!confirm('この楽曲を削除しますか？')) return;
-      await deleteTrack(id);
-    };
-
-    document.getElementById('upload-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const title = document.getElementById('track-title').value.trim();
-      const desc  = document.getElementById('track-desc').value.trim();
-      const file  = document.getElementById('track-file').files[0];
-      const errEl = document.getElementById('upload-error');
-      const btn   = document.getElementById('upload-submit');
-      const ind   = document.getElementById('uploading-indicator');
-      if (!file) { errEl.textContent = 'ファイルを選択してください。'; return; }
-      btn.disabled = true;
-      ind.classList.remove('hidden');
-      errEl.textContent = '';
-      try {
-        await uploadTrack(file, title, desc);
-        closeUploadModal();
-      } catch (err) {
-        errEl.textContent = 'アップロードに失敗しました: ' + err.message;
-        btn.disabled = false;
-        ind.classList.add('hidden');
-      }
-    });
-
     /* ══ REALTIME ══ */
     function subscribeRealtime() {
       if (!sb) return;
@@ -2496,7 +2219,6 @@
       'post-modal':     () => closePostEditor(),
       'x-share-modal':  () => closeXShareModal(),
       'detail-modal':   () => closePostDetail(),
-      'upload-modal':   () => closeUploadModal(),
     };
 
     window.openLoginModal = () => showModal('login-modal');
@@ -2583,7 +2305,7 @@
     function showPostDetail(p) {
       detailPostId = p.id;
       document.getElementById('detail-date').textContent    = fmtDate(p.created_at);
-      document.getElementById('detail-views').textContent   = hasViewCount(p) ? `${p.view_count.toLocaleString()} 回閲覧` : '';
+      showDetailViews();
       document.getElementById('detail-title').textContent   = p.title;
       document.getElementById('detail-content').textContent = p.content;
       document.getElementById('detail-admin').hidden = !adminUser;
@@ -2593,25 +2315,18 @@
       showModal('detail-modal');
     }
 
+    // 詳細画面の「開かれた回数」。管理者にだけ出す。
+    function showDetailViews() {
+      const n = adminUser && diaryViewCounts && detailPostId ? diaryViewCounts.get(detailPostId) ?? 0 : null;
+      document.getElementById('detail-views').textContent =
+        n === null ? '' : `これまでに ${n.toLocaleString()} 回 開かれました（管理者にだけ表示）`;
+    }
+
     window.openPost = (id) => {
       const p = knownPosts.get(id);
       if (!p) return;
-      // 閲覧数は、列があるときだけ・管理者以外が読んだときだけ数える（訪問者数と同じ考え方）
-      if (hasViewCount(p) && !adminUser) {
-        p.view_count += 1;
-        if (sb) {
-          sb.rpc('increment_post_views', { post_id: id }).then(({ data, error }) => {
-            if (error || typeof data !== 'number') return;
-            p.view_count = data;
-            renderPosts();
-            if (detailPostId === id) {
-              document.getElementById('detail-views').textContent = `${data.toLocaleString()} 回閲覧`;
-            }
-          });
-        }
-      }
+      noteDiaryView(id);   // 管理者が開いたぶんは数えない。数は管理者にしか出さない
       showPostDetail(p);
-      renderPosts();
     };
     window.closePostDetail = () => {
       if (detailPostId) setDiaryParam(null);
@@ -2826,7 +2541,10 @@
         const raw = String(readOnly ? data?.count : data);
         if (!/^\d+$/.test(raw)) throw new Error('Invalid counter response');
         // Persist the visit marker only after the server confirms the increment.
-        if (!readOnly) { try { localStorage.setItem(VISIT_DAY_KEY, day); } catch {} }
+        if (!readOnly) {
+          try { localStorage.setItem(VISIT_DAY_KEY, day); } catch {}
+          noteUsage('visit');   // 利用状況のページで、ほかの数と比べるための「きょうの訪問」
+        }
         const digits = raw.padStart(8, '0');
         el.innerHTML = [...digits].map(digit => `<span aria-hidden="true">${digit}</span>`).join('');
         el.setAttribute('aria-label', raw + '人');
@@ -2883,7 +2601,7 @@
     window.closeSettingsModal = () => hideModal('settings-modal');
 
     /* ══ つらいときモーダル ══ */
-    window.openSosModal  = () => showModal('sos-modal');
+    window.openSosModal  = () => { showModal('sos-modal'); noteUsage('sos_open'); };
     window.closeSosModal = () => hideModal('sos-modal');
 
     /* ══ Esc キーでモーダルを閉じる ══ */
@@ -2930,6 +2648,7 @@
       links.classList.toggle('hidden', !MOODS[idx].showLinks);
       links.classList.toggle('flex',   MOODS[idx].showLinks);
       renderMoodUI();
+      noteUsage('mood_used');   // 数えるのは「使われた」ことだけ。どの気持ちを選んだかは送らない
     };
 
     function renderMoodUI() {
@@ -2988,6 +2707,7 @@
     window.nextAffirmation = function () {
       affirmationIdx = (affirmationIdx + 1 + Math.floor(Math.random() * (AFFIRMATIONS.length - 1))) % AFFIRMATIONS.length;
       showAffirmation();
+      noteUsage('affirm_next');
     };
 
     /* ══ 呼吸法ラベル切り替え ══ */
@@ -3029,20 +2749,20 @@
     /* ── 星の灯り ── */
     const LIGHTS = {
       tired:     { label: '少し疲れた', color: '#a5b8ce',
-                   text: '疲れた日は、ここで何もしなくて大丈夫です。音楽を小さく流して、目を閉じるだけでも。',
-                   links: [['#music', '音楽室で、小さく音を流す'], ['#coping', 'ゆっくり呼吸してみる']] },
+                   text: '疲れた日は、ここで何もしなくて大丈夫です。流れ着いた小瓶をひとつ拾って、目を閉じるだけでも。',
+                   links: [['#bottle', '流れ着いた小瓶を、ひとつひろう'], ['#coping', 'ゆっくり呼吸してみる']] },
       lonely:    { label: 'さみしい', color: '#c2b3e6',
                    text: 'この夜空のどこかに、同じ灯りがあります。話したくなったら、掲示板にひとことだけでも。',
-                   links: [['#bulletin', '掲示板をのぞく'], ['#blog', '管理人の日記を読む']] },
+                   links: [['#bottle', 'だれかが流した小瓶を、ひとつひろう'], ['#bulletin', '掲示板をのぞく']] },
       sleepless: { label: '眠れない', color: '#9ed9f4',
                    text: '眠れない夜に、ここで少しだけ過ごしていってください。眠ろうとしなくても大丈夫です。',
-                   links: [['#music', '音楽室で、小さく音を流す'], ['#coping', 'ゆっくり呼吸してみる']] },
+                   links: [['#bottle', 'だれかが流した小瓶を、ひとつひろう'], ['#mikuji', '今夜の星みくじを引く']] },
       wordless:  { label: '言葉にならない', color: '#e1e8ef',
                    text: '言葉にならないまま、ここにいていいです。',
                    links: [['#coping', 'ゆっくり呼吸してみる'], ['#support', '夜中でもつながる窓口を見る']] },
       calm:      { label: '少しおだやか', color: '#e2ce91',
                    text: '少しおだやかな夜を、この灯りがだれかに分けてくれますように。',
-                   links: [['#bulletin', '掲示板に、ひとこと残す'], ['#blog', '管理人の日記を読む']] },
+                   links: [['#bottle', '今夜のだれかへ、小瓶をひとつ流す'], ['#bulletin', '掲示板に、ひとこと残す']] },
     };
     const LIGHT_KEY = 'hoshiumi_light';
     let lightsSummary = null;     // { total, by_mood, ok }。サーバーから読めたときだけ
@@ -3223,39 +2943,133 @@
       });
     }
 
-    /* ── 掲示板の数え上げ ──
-       「開いた」「書きはじめた」を、同じ端末は1日1回だけ数える。管理人自身は数えない。
-       端末に控えを残せないときは数えない（同じ人を何度も数えないため）。 */
+    /* ── 利用回数（2026-11-11）──
+       それぞれの場所が「見られた」「使われた」を、同じ端末は1日1回だけ数える（日付は日本時間）。
+       管理人自身は数えない。端末に控えを残せないときも数えない（同じ人を何度も数えないため）。
+       送るのは種類だけ。数を見られるのは管理者だけ（usage.html）。サーバー側は bottle-usage.sql。
+       数えるものを変えたら、約束の章「数えていること」も直すこと。 */
     const SIGNAL_KEY = 'hoshiumi_signal_days';
-    function noteSignal(kind) {
+    // bottle-usage.sql の実行前は note_usage が無い。そのあいだも掲示板の2つだけは、以前からある関数で数え続ける。
+    const LEGACY_USAGE_KINDS = ['bbs_seen', 'bbs_typing'];
+    let usageFunctionMissing = false;
+    function sendLegacyUsage(kind) {
+      if (LEGACY_USAGE_KINDS.includes(kind)) sb.rpc('note_site_signal', { p_kind: kind }).then(() => {}, () => {});
+    }
+    function noteUsage(kind) {
       if (!sb || adminUser) return;
       const marks = readStore(SIGNAL_KEY, {});
       const day = jstDay();
       if (!marks || typeof marks !== 'object' || Array.isArray(marks) || marks[kind] === day) return;
       if (!writeStore(SIGNAL_KEY, { ...marks, [kind]: day })) return;
-      sb.rpc('note_site_signal', { p_kind: kind }).then(() => {}, () => {});
+      if (usageFunctionMissing) { sendLegacyUsage(kind); return; }
+      sb.rpc('note_usage', { p_kind: kind }).then(({ error }) => {
+        if (error?.code !== 'PGRST202') return;   // PGRST202＝その関数が無い
+        usageFunctionMissing = true;
+        sendLegacyUsage(kind);
+      }, () => {});
     }
-    function watchBulletinSignals() {
-      const section = document.getElementById('bulletin');
-      if (!section || adminUser) return;
-      section.addEventListener('input', event => {
-        if (event.target.matches('#msg-name, #msg-content, [id^="reply-name-"], [id^="reply-content-"]')) noteSignal('bbs_typing');
-      });
-      if (!('IntersectionObserver' in window)) return;
-      // 1.5秒以上、画面の3分の1以上に掲示板が見えていたら「開いた」
+
+    // 「見られた」：その場所が、画面の3分の1以上（短い場所はその6割以上）、1.5秒つづけて見えていたら
+    const SEEN_SECTIONS = [
+      ['bottle', 'bottle_seen'], ['lights', 'lights_seen'], ['news', 'news_seen'], ['profile', 'profile_seen'],
+      ['blog', 'blog_seen'], ['bulletin', 'bbs_seen'], ['mikuji', 'mikuji_seen'], ['welcome', 'welcome_seen'],
+      ['promise', 'promise_seen'], ['mood', 'mood_seen'], ['coping', 'coping_seen'], ['services', 'services_seen'],
+      ['links', 'links_seen'], ['support', 'support_seen'],
+    ];
+    function watchSections() {
+      if (!sb || adminUser || !('IntersectionObserver' in window)) return;
+      const kinds = new Map();     // 場所 → 数える種類
+      const inView = new Map();    // いま画面にかかっている場所 → じゅうぶん見えはじめた時刻（まだなら null）
       let timer = null;
+      const enoughVisible = el => {
+        const box = el.getBoundingClientRect();
+        const visible = Math.min(box.bottom, innerHeight) - Math.max(box.top, 0);
+        return box.height > 0 && visible > 0 && visible >= Math.min(innerHeight / 3, box.height * 0.6);
+      };
+      const stopWhenIdle = () => {
+        if (inView.size || timer === null) return;
+        clearInterval(timer);
+        timer = null;
+      };
+      const check = () => {
+        const now = performance.now();
+        for (const [el, since] of inView) {
+          if (document.hidden || !enoughVisible(el)) { inView.set(el, null); continue; }
+          if (since === null) { inView.set(el, now); continue; }
+          if (now - since < 1500) continue;
+          noteUsage(kinds.get(el));
+          observer.unobserve(el);
+          inView.delete(el);
+        }
+        stopWhenIdle();
+      };
       const observer = new IntersectionObserver(entries => {
-        clearTimeout(timer);
-        if (!entries.some(entry => entry.isIntersecting)) return;
-        timer = setTimeout(() => {
-          const box = section.getBoundingClientRect();
-          if (Math.min(box.bottom, innerHeight) - Math.max(box.top, 0) >= innerHeight / 3) {
-            noteSignal('bbs_seen');
-            observer.disconnect();
-          }
-        }, 1500);
+        for (const entry of entries) {
+          if (!entry.isIntersecting) inView.delete(entry.target);
+          else if (!inView.has(entry.target)) inView.set(entry.target, null);
+        }
+        if (inView.size && timer === null) timer = setInterval(check, 500);
+        stopWhenIdle();
       });
-      observer.observe(section);
+      for (const [id, kind] of SEEN_SECTIONS) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        kinds.set(el, kind);
+        observer.observe(el);
+      }
+    }
+
+    // 「使われた」のうち、リンクを押すもの。どのリンクかは送らない（場所ごとの種類だけ）。
+    const TAP_KINDS = [
+      ['#news-list a', 'news_tap'],
+      ['#welcome a.visit-path', 'welcome_tap'],
+      ['#services a[href]', 'services_tap'],
+      ['#links a[href]', 'links_tap'],
+      ['#support a[href], #sos-modal a[href^="tel:"], #sos-modal a[target="_blank"]', 'help_tap'],
+    ];
+    function watchTaps() {
+      document.addEventListener('click', event => {
+        if (!(event.target instanceof Element)) return;
+        const hit = TAP_KINDS.find(([selector]) => event.target.closest(selector));
+        if (hit) noteUsage(hit[1]);
+      });
+      // 掲示板は、書きはじめたら「使われた」
+      document.getElementById('bulletin').addEventListener('input', event => {
+        if (event.target.matches('#msg-name, #msg-content, [id^="reply-name-"], [id^="reply-content-"]')) noteUsage('bbs_typing');
+      });
+    }
+
+    /* ── 日記ごとの「開かれた回数」──
+       同じ端末・同じ日記は1日1回。管理人が開いたぶんは数えない。数は管理者にだけ出す。 */
+    const DIARY_VIEW_KEY = 'hoshiumi_diary_views';
+    function noteDiaryView(id) {
+      if (!sb || adminUser || !UUID_PATTERN.test(id) || id === PROFILE_ID) return;
+      noteUsage('diary_open');
+      const day = jstDay();
+      const saved = readStore(DIARY_VIEW_KEY, null);
+      const ids = saved && saved.day === day && Array.isArray(saved.ids) ? saved.ids.filter(x => typeof x === 'string') : [];
+      if (ids.includes(id)) return;
+      if (!writeStore(DIARY_VIEW_KEY, { day, ids: [...ids, id].slice(-300) })) return;
+      sb.rpc('note_diary_view', { p_post_id: id }).then(() => {}, () => {});
+    }
+    async function loadDiaryViewCounts() {
+      const hadCounts = diaryViewCounts !== null;
+      diaryViewCounts = null;
+      if (hadCounts) { renderPosts(); showDetailViews(); }
+      if (!sb || !adminUser) return;
+      const asked = adminUser;
+      try {
+        const { data, error } = await sb.rpc('diary_view_counts');
+        // bottle-usage.sql の実行前は関数が無い。そのときは数を出さないだけで、ほかはふつうに使える
+        if (error || adminUser !== asked || !data || typeof data !== 'object' || Array.isArray(data)) return;
+        const counts = new Map();
+        for (const [id, n] of Object.entries(data)) {
+          if (UUID_PATTERN.test(id) && Number.isSafeInteger(n) && n >= 0) counts.set(id, n);
+        }
+        diaryViewCounts = counts;
+        renderPosts();
+        showDetailViews();
+      } catch (error) { console.error('diary_view_counts:', error); }
     }
 
     /* ── 日記の「私も」 ── */
@@ -3372,21 +3186,444 @@
         : 'いまは送れませんでした。時間をおいて、もう一度お試しください。';
     };
 
+    /* ══ 星の小瓶（2026-11-11） ══
+       だれかが選んだことばを拾い、自分も流せる。文面は下の候補から選ぶだけ（自由な文章は送れない・受け取らない）。
+       サーバー側は bottle-usage.sql。宛先やことばを増やすときは、SQL の側（制約と関数）もそろえること。
+       ・拾う：1日3つまで。もう拾ったものと自分が流したものは避けてもらう。今夜の星の灯りと同じ宛先が先に届く
+       ・流す：1日2本まで。返ってくる合言葉（key）をこの端末に控え、次に来たときに「何回拾われたか」をたずねる
+       ・SQLの実行前や通信できないときは、管理人がはじめに置いた小瓶（BOTTLE_STARTERS）だけが拾える */
+    const BOTTLE_TO = {
+      sleepless: '眠れない夜のだれかへ',
+      lonely:    'さみしい夜のだれかへ',
+      tired:     '疲れているだれかへ',
+      wordless:  '言葉にならないだれかへ',
+      anxious:   '明日がこわいだれかへ',
+      anyone:    '今夜ここに来たあなたへ',
+    };
+    const BOTTLE_WORDS = {
+      here:       'ここにいます。',
+      same_night: '同じ夜を、過ごしています。',
+      enough:     '今日はもう、じゅうぶんです。',
+      slowly:     'ゆっくりで、大丈夫です。',
+      me_too:     'わたしも、そうです。',
+      not_alone:  'ひとりじゃ、ないです。',
+      rest:       '休んでも、いいんです。',
+      no_words:   '言葉は、なくていいです。',
+      thanks:     '今日もいてくれて、ありがとう。',
+      see_you:    'また、ここで会いましょう。',
+    };
+    const BOTTLE_STARTERS = [
+      ['sleepless', 'same_night'], ['anyone', 'here'], ['tired', 'enough'], ['lonely', 'not_alone'],
+      ['anxious', 'slowly'], ['wordless', 'no_words'], ['anyone', 'thanks'], ['tired', 'rest'],
+    ];
+    const BOTTLE_KEY = 'hoshiumi_bottle';
+    const BOTTLE_PICKS_A_DAY = 3;
+    const BOTTLE_THROWS_A_DAY = 2;
+    let bottleMemory = null;      // 端末に控えを残せないときの、この画面を開いているあいだだけの控え
+    let bottleBusy = false;
+    let currentBottle = null;     // いま開いている小瓶
+    let seaCount = null;          // 海にある小瓶の数（読めたときだけ）
+    let bottleNewsFor = new Set();// 今回あたらしく知らせが届いた、自分の小瓶の合言葉
+
+    const countOf = value => (Number.isSafeInteger(value) && value >= 0 ? value : 0);
+    // 端末の控えは、そのまま信じない（形のちがうもの・知らない宛先やことばは捨てる）
+    function loadBottleState() {
+      const saved = readStore(BOTTLE_KEY, null) || bottleMemory || {};
+      const today = saved.day === jstDay();
+      const ids = list => (Array.isArray(list) ? list.filter(id => typeof id === 'string' && UUID_PATTERN.test(id)) : []);
+      return {
+        day: jstDay(),
+        picked: today ? countOf(saved.picked) : 0,
+        thrown: today ? countOf(saved.thrown) : 0,
+        seen: ids(saved.seen).slice(-150),
+        thanked: ids(saved.thanked).slice(-150),
+        starters: Array.isArray(saved.starters) ? saved.starters.filter(i => Number.isInteger(i) && i >= 0 && i < BOTTLE_STARTERS.length) : [],
+        mine: (Array.isArray(saved.mine) ? saved.mine : []).filter(m => m && typeof m === 'object'
+            && UUID_PATTERN.test(m.id) && UUID_PATTERN.test(m.key) && hasKey(BOTTLE_TO, m.to) && hasKey(BOTTLE_WORDS, m.word))
+          .map(m => ({ id: m.id, key: m.key, to: m.to, word: m.word, day: /^\d{4}-\d{2}-\d{2}$/.test(m.day) ? m.day : '',
+                       picks: countOf(m.picks), thanks: countOf(m.thanks), shownPicks: countOf(m.shownPicks), shownThanks: countOf(m.shownThanks) }))
+          .slice(-10),
+      };
+    }
+    function saveBottleState(state) {
+      bottleMemory = state;
+      return writeStore(BOTTLE_KEY, state);
+    }
+    // 今夜の星の灯りと同じ宛先（「少しおだやか」は、どの宛先でもない）
+    const bottleToForLight = mood => (hasKey(BOTTLE_TO, mood) ? mood : null);
+    // サーバーの答えも、そのまま信じない
+    function parseBottle(data) {
+      if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+      if (!UUID_PATTERN.test(data.id) || !hasKey(BOTTLE_TO, data.to) || !hasKey(BOTTLE_WORDS, data.word)) return null;
+      const at = typeof data.at === 'string' && Number.isFinite(Date.parse(data.at)) ? data.at : null;
+      return { id: data.id, to: data.to, word: data.word, at, by: data.from_admin === true ? 'admin' : 'visitor' };
+    }
+    // 「11月8日の夜中3時ごろ」。日本時間。サーバーからは「時」までしか届かない
+    function bottleWhen(iso) {
+      const parts = Object.fromEntries(new Intl.DateTimeFormat('ja-JP', {
+        timeZone: 'Asia/Tokyo', month: 'numeric', day: 'numeric', hour: 'numeric', hourCycle: 'h23',
+      }).formatToParts(new Date(iso)).map(part => [part.type, part.value]));
+      const hour = Number(parts.hour);
+      const band = hour < 4 ? '夜中' : hour < 6 ? '明け方' : hour < 11 ? '朝' : hour < 16 ? '昼' : hour < 19 ? '夕方' : '夜';
+      return `${parts.month}月${parts.day}日の${band}${hour > 12 ? hour - 12 : hour}時ごろ`;
+    }
+    function bottleSay(text) {
+      document.getElementById('bottle-status').textContent = text;
+    }
+    function renderBottleButtons() {
+      const state = loadBottleState();
+      const left = BOTTLE_PICKS_A_DAY - state.picked;
+      const pick = document.getElementById('bottle-pick');
+      // 通信中は、押せないようにはしない（押しても bottleBusy が止める）。
+      // フォーカスのあるボタンを押せなくすると、キーボードの位置が失われるため。
+      pick.disabled = left <= 0;
+      document.getElementById('bottle').setAttribute('aria-busy', String(bottleBusy));
+      pick.textContent = left <= 0 ? 'きょうの小瓶は、ここまで（また明日）'
+        : !state.picked ? '流れ着いた小瓶をひろう'
+        : currentBottle ? `もうひとつ ひろう（きょうはあと${left}つ）` : `小瓶をひろう（きょうはあと${left}つ）`;
+    }
+    function renderSeaCount() {
+      const el = document.getElementById('bottle-sea');
+      el.hidden = !seaCount;
+      el.textContent = seaCount ? `いま、この海には ${seaCount.toLocaleString()}本の小瓶が浮かんでいます。` : '';
+    }
+    async function loadSeaCount() {
+      if (!sb) return;
+      try {
+        const { data, error } = await sb.rpc('sea_bottle_count');
+        if (error || !Number.isSafeInteger(data) || data < 0) return;   // SQLの実行前は関数が無い。数を出さないだけ
+        seaCount = data;
+        renderSeaCount();
+      } catch (error) { console.error('sea_bottle_count:', error); }
+    }
+    function showBottle(bottle) {
+      currentBottle = bottle;
+      const state = loadBottleState();
+      const letter = document.getElementById('bottle-letter');
+      document.getElementById('bottle-letter-from').textContent =
+        bottle.by === 'starter' ? '管理人が、はじめに置いておいた小瓶'
+        : (bottle.at ? bottleWhen(bottle.at) + '、' : '') + (bottle.by === 'admin' ? '管理人が流した小瓶' : 'だれかが流した小瓶');
+      document.getElementById('bottle-letter-to').textContent = BOTTLE_TO[bottle.to];
+      document.getElementById('bottle-letter-word').textContent = BOTTLE_WORDS[bottle.word];
+      const thanks = document.getElementById('bottle-thanks');
+      const thanked = !!bottle.id && state.thanked.includes(bottle.id);
+      thanks.hidden = !bottle.id;   // はじめに置いた小瓶には、返す先がない
+      thanks.disabled = thanked;
+      thanks.textContent = thanked ? 'ありがとうを返しました' : 'ありがとうを返す';
+      document.getElementById('bottle-thanks-note').textContent = bottle.id && !thanked ? '押すと、流した人に「ありがとう」がひとつ届きます。' : '';
+      letter.hidden = false;
+      letter.classList.remove('bottle-arrive');
+      void letter.offsetWidth;   // もう一度、ふわっと出すため
+      letter.classList.add('bottle-arrive');
+      letter.scrollIntoView({ block: 'nearest', behavior: displaySettings.reduceMotion ? 'auto' : 'smooth' });
+    }
+    async function pickBottle() {
+      if (bottleBusy) return;
+      const state = loadBottleState();
+      if (state.picked >= BOTTLE_PICKS_A_DAY) { renderBottleButtons(); return; }
+      bottleBusy = true;
+      bottleSay('');
+      renderBottleButtons();
+      let bottle = null;
+      if (sb) {
+        try {
+          const args = { p_skip: [...state.seen, ...state.mine.map(m => m.id)].slice(-200) };
+          const to = bottleToForLight(todaysLight());
+          if (to) args.p_to = to;
+          const { data, error } = await sb.rpc('pick_bottle', args);
+          if (!error) bottle = parseBottle(data);
+        } catch (error) { console.error('pick_bottle:', error); }
+      }
+      if (bottle) {
+        state.seen.push(bottle.id);
+      } else {
+        const left = BOTTLE_STARTERS.map((_, i) => i).filter(i => !state.starters.includes(i));
+        if (left.length) {
+          const i = left[Math.floor(Math.random() * left.length)];
+          state.starters.push(i);
+          bottle = { id: null, to: BOTTLE_STARTERS[i][0], word: BOTTLE_STARTERS[i][1], at: null, by: 'starter' };
+        }
+      }
+      bottleBusy = false;
+      if (!bottle) {
+        bottleSay('いまは、あたらしい小瓶が流れ着いていません。あなたが流した小瓶は、次に来ただれかが拾います。');
+        renderBottleButtons();
+        return;
+      }
+      state.picked += 1;
+      saveBottleState(state);
+      const pickHadFocus = document.activeElement === document.getElementById('bottle-pick');
+      showBottle(bottle);
+      renderBottleButtons();
+      // きょうの最後のひとつを拾うとボタンが押せなくなるので、フォーカスは便せんへ移す
+      if (pickHadFocus && document.getElementById('bottle-pick').disabled) {
+        document.getElementById('bottle-letter').focus({ preventScroll: true });
+      }
+      noteUsage('bottle_pick');
+    }
+    async function thankBottle() {
+      const bottle = currentBottle;
+      const button = document.getElementById('bottle-thanks');
+      const note = document.getElementById('bottle-thanks-note');
+      if (!bottle?.id || button.disabled || loadBottleState().thanked.includes(bottle.id)) return;
+      button.disabled = true;
+      note.textContent = '返しています…';
+      let ok = false;
+      if (sb) {
+        try {
+          const { data, error } = await sb.rpc('thank_bottle', { p_id: bottle.id });
+          ok = !error && data === true;
+        } catch (error) { console.error('thank_bottle:', error); }
+      }
+      if (ok) {
+        const state = loadBottleState();
+        state.thanked.push(bottle.id);
+        saveBottleState(state);
+        noteUsage('bottle_thanks');
+      }
+      if (currentBottle !== bottle) return;   // 返しているあいだに、別の小瓶を拾った
+      button.disabled = ok;
+      button.textContent = ok ? 'ありがとうを返しました' : 'ありがとうを返す';
+      note.textContent = ok ? '届きました。' : 'いまは返せませんでした。時間をおいて、もう一度押せます。';
+    }
+    function bottleChoice(name) {
+      return document.querySelector(`#bottle-form input[name="${name}"]:checked`)?.value ?? '';
+    }
+    function renderBottlePreview() {
+      const to = bottleChoice('bottle-to'), word = bottleChoice('bottle-word');
+      const ready = hasKey(BOTTLE_TO, to) && hasKey(BOTTLE_WORDS, word);
+      document.getElementById('bottle-preview').hidden = !ready;
+      document.getElementById('bottle-preview-to').textContent = ready ? BOTTLE_TO[to] : '';
+      document.getElementById('bottle-preview-word').textContent = ready ? BOTTLE_WORDS[word] : '';
+    }
+    function setBottleForm(open) {
+      const form = document.getElementById('bottle-form');
+      const opener = document.getElementById('bottle-open-form');
+      form.hidden = !open;
+      opener.setAttribute('aria-expanded', String(open));
+      document.getElementById('bottle-form-error').textContent = '';
+      if (open) {
+        bottleSay('');
+        form.querySelector('input').focus({ preventScroll: true });
+        form.scrollIntoView({ block: 'nearest', behavior: displaySettings.reduceMotion ? 'auto' : 'smooth' });
+      } else {
+        form.reset();
+        renderBottlePreview();
+      }
+    }
+    async function throwBottle() {
+      if (bottleBusy) return;
+      const errorEl = document.getElementById('bottle-form-error');
+      const to = bottleChoice('bottle-to'), word = bottleChoice('bottle-word');
+      if (!hasKey(BOTTLE_TO, to) || !hasKey(BOTTLE_WORDS, word)) {
+        errorEl.textContent = '宛先とことばを、ひとつずつ選んでください。';
+        return;
+      }
+      const state = loadBottleState();
+      if (!adminUser && state.thrown >= BOTTLE_THROWS_A_DAY) {
+        errorEl.textContent = `きょう流せる小瓶は、${BOTTLE_THROWS_A_DAY}本までです。また明日、流せます。`;
+        return;
+      }
+      bottleBusy = true;
+      errorEl.textContent = '';
+      renderBottleButtons();
+      let result = null;
+      if (sb) {
+        try {
+          const { data, error } = await sb.rpc('throw_bottle', { p_to: to, p_word: word });
+          result = error ? null : data;
+        } catch (error) { console.error('throw_bottle:', error); }
+      }
+      bottleBusy = false;
+      renderBottleButtons();
+      if (!result || result.ok !== true || !UUID_PATTERN.test(result.id) || !UUID_PATTERN.test(result.key)) {
+        errorEl.textContent = result && result.ok === false
+          ? 'いま、海が混み合っています。少し時間をおいて、もう一度お試しください。'
+          : 'いまは流せませんでした。時間をおいて、もう一度お試しください。';
+        return;
+      }
+      state.thrown += 1;
+      state.mine = [...state.mine, { id: result.id, key: result.key, to, word, day: jstDay(), picks: 0, thanks: 0, shownPicks: 0, shownThanks: 0 }].slice(-10);
+      const kept = saveBottleState(state);
+      if (seaCount !== null) { seaCount += 1; renderSeaCount(); }
+      setBottleForm(false);
+      document.getElementById('bottle-open-form').focus({ preventScroll: true });
+      renderMyBottles();
+      bottleSay(kept ? '小瓶を流しました。だれかが拾うと、次にここへ来たとき、お知らせします。'
+        : '小瓶を流しました。（この端末には控えを残せないので、拾われたお知らせは、このページを開いているあいだだけになります）');
+      noteUsage('bottle_throw');
+    }
+    function renderMyBottles() {
+      const state = loadBottleState();
+      const box = document.getElementById('bottle-mine');
+      box.hidden = !state.mine.length;
+      const md = day => (day ? `${Number(day.slice(5, 7))}月${Number(day.slice(8, 10))}日に流した小瓶` : '流した小瓶');
+      document.getElementById('bottle-mine-list').innerHTML = [...state.mine].reverse().map(m => {
+        const reached = m.picks
+          ? `${m.picks.toLocaleString()}回 拾われました${m.thanks ? `。ありがとうが ${m.thanks.toLocaleString()}つ 届いています` : ''}。`
+          : 'まだ、波の上をただよっています。';
+        return `<li><p class="bottle-mine-letter"><span>「${esc(BOTTLE_TO[m.to])}</span> <span>${esc(BOTTLE_WORDS[m.word])}」</span></p>
+          <p class="bottle-mine-count">${md(m.day)}：${reached}${bottleNewsFor.has(m.key) ? ' <span class="new-badge">NEW</span>' : ''}</p></li>`;
+      }).join('');
+      document.getElementById('bottle-news').hidden = !bottleNewsFor.size;
+    }
+    // 自分が流した小瓶が、何回拾われたか。合言葉を知っているこの端末にだけ返ってくる
+    async function refreshMyBottles() {
+      renderMyBottles();
+      const keys = loadBottleState().mine.map(m => m.key);
+      if (!sb || !keys.length) return;
+      try {
+        const { data, error } = await sb.rpc('bottle_status', { p_keys: keys });
+        if (error || !Array.isArray(data)) return;
+        const answers = new Map(data.filter(row => row && UUID_PATTERN.test(row.key)).map(row => [row.key, row]));
+        const state = loadBottleState();
+        // 答えに無い小瓶は、もう海に無い（400日たって流れていった）。控えからも外す
+        state.mine = state.mine.filter(m => !keys.includes(m.key) || answers.has(m.key));
+        for (const m of state.mine) {
+          const answer = answers.get(m.key);
+          if (!answer) continue;
+          m.picks = countOf(answer.picks);
+          m.thanks = countOf(answer.thanks);
+          if (m.picks > m.shownPicks || m.thanks > m.shownThanks) bottleNewsFor.add(m.key);
+        }
+        saveBottleState(state);
+        renderMyBottles();
+        markBottleNewsShown();
+      } catch (error) { console.error('bottle_status:', error); }
+    }
+    // 知らせは、自分の小瓶の一覧が画面に入ったら「見た」ことにする（次に来たときは NEW を出さない）。
+    // いま開いているページでは、NEW の印はそのまま残す。
+    let myBottlesInView = false;
+    function markBottleNewsShown() {
+      if (!myBottlesInView || !bottleNewsFor.size) return;
+      const state = loadBottleState();
+      for (const m of state.mine) { m.shownPicks = m.picks; m.shownThanks = m.thanks; }
+      saveBottleState(state);
+    }
+    function watchMyBottles() {
+      if (!('IntersectionObserver' in window)) return;
+      new IntersectionObserver(entries => {
+        myBottlesInView = entries.at(-1).isIntersecting;
+        markBottleNewsShown();
+      }).observe(document.getElementById('bottle-mine'));
+    }
+    function renderBottleForAdmin() {
+      const note = document.getElementById('bottle-admin-note');
+      if (note) note.hidden = !adminUser;
+    }
+    function setupBottle() {
+      const options = (name, map) => Object.entries(map).map(([key, label]) =>
+        `<label class="bottle-option"><input type="radio" name="${name}" value="${key}"><span>${esc(label)}</span></label>`).join('');
+      document.getElementById('bottle-to-options').innerHTML = options('bottle-to', BOTTLE_TO);
+      document.getElementById('bottle-word-options').innerHTML = options('bottle-word', BOTTLE_WORDS);
+      document.getElementById('bottle-pick').addEventListener('click', pickBottle);
+      document.getElementById('bottle-thanks').addEventListener('click', thankBottle);
+      document.getElementById('bottle-open-form').addEventListener('click', () => setBottleForm(document.getElementById('bottle-form').hidden));
+      document.getElementById('bottle-cancel').addEventListener('click', () => {
+        setBottleForm(false);
+        document.getElementById('bottle-open-form').focus({ preventScroll: true });
+      });
+      const form = document.getElementById('bottle-form');
+      form.addEventListener('change', renderBottlePreview);
+      form.addEventListener('submit', event => { event.preventDefault(); throwBottle(); });
+      renderBottleButtons();
+      renderMyBottles();
+      watchMyBottles();
+    }
+
+    /* ══ 星みくじ（2026-11-11） ══
+       1日1回（日本時間）、引くだけ。大吉も凶もなく、先のことは占わない。命令やはげましの言葉は入れない。
+       結果はこの端末の中だけに残る（数えるのは「引かれた」ことだけで、何が出たかは送らない）。 */
+    const MIKUJI_STARS = [
+      ['一番星', 'まだ明るい空に、ひとつだけ先に光る星。ひとりで光っていても、ちゃんと見えています。'],
+      ['流れ星', '願いごとは、間に合わなくて大丈夫。見えただけで、じゅうぶんな夜です。'],
+      ['三日月', '欠けて見えても、月はまるいまま。いまは、見えていないだけです。'],
+      ['北極星', 'ひと晩じゅう、動かない星。動けない夜があっても、星は星のままです。'],
+      ['すばる', '小さな星が、寄りあって光っています。ひとつひとつは、小さくていいんです。'],
+      ['天の川', '遠くから見ると、ひとつの川に見えるたくさんの星。今日のあなたも、その光のひとつです。'],
+      ['明けの明星', '夜のいちばん終わりに出る星。眠れなかった夜にだけ、見える星です。'],
+      ['宵の明星', '一日の終わりに、最初に光る星。今日はもう、おしまいにしていい合図です。'],
+      ['海ほたる', '波にゆれて青く光る、小さな生きもの。光ろうとしなくても、ゆれるだけで光ります。'],
+      ['灯台', '星ではないけれど、夜の海にはこれがあります。戻ってくる場所は、消えずに光っています。'],
+      ['凪', '風のやんだ、しずかな海。何も起きない時間も、海の大事な時間です。'],
+      ['雲のむこうの星', '今夜は見えなくても、雲の上にはいつもの星。見えない日も、なくなってはいません。'],
+    ];
+    const MIKUJI_SMALL = [
+      '白湯か水を、ひとくち飲む。',
+      '肩を一度だけ、ゆっくり回す。',
+      '窓の外を、十秒だけ眺める。',
+      '深呼吸を、ひとつだけ。',
+      'ひざに、あたたかい布をかける。',
+      '画面の明るさを、少し下げる。',
+      '手のひらを、こすってあたためる。',
+      '今日の空の色を、思い出してみる。',
+      '足の指を、ぐーぱーする。',
+      '枕の向きを、変えてみる。',
+      '好きだったものを、ひとつ思い出す。',
+      '何もしない。それも、ちいさなことのひとつです。',
+    ];
+    const MIKUJI_CHARMS = [
+      '毛布のはしっこ', 'あたたかいマグカップ', '窓のむこうの灯り', 'やわらかいタオル', 'くつした', '飲みかけのお茶',
+      '遠くの電車の音', '月の光', '充電器', '好きな色のペン', '洗いたてのシーツ', 'だれかの「おやすみ」',
+    ];
+    const MIKUJI_KEY = 'hoshiumi_mikuji';
+    let mikujiMemory = null;   // 端末に控えを残せないときの、きょうの結果
+    function todaysMikuji() {
+      const saved = readStore(MIKUJI_KEY, null) || mikujiMemory;
+      const inRange = (i, list) => Number.isInteger(i) && i >= 0 && i < list.length;
+      return saved && saved.day === jstDay() && inRange(saved.star, MIKUJI_STARS)
+        && inRange(saved.small, MIKUJI_SMALL) && inRange(saved.charm, MIKUJI_CHARMS) ? saved : null;
+    }
+    function showMikuji(result) {
+      const [star, word] = MIKUJI_STARS[result.star];
+      document.getElementById('mikuji-star').textContent = star;
+      document.getElementById('mikuji-word').textContent = word;
+      document.getElementById('mikuji-small').textContent = MIKUJI_SMALL[result.small];
+      document.getElementById('mikuji-charm').textContent = MIKUJI_CHARMS[result.charm];
+      document.getElementById('mikuji-again').textContent = 'また明日、引けます。';
+      document.getElementById('mikuji-result').hidden = false;
+      const button = document.getElementById('mikuji-draw');
+      button.disabled = true;
+      button.textContent = '今夜の星みくじは、引きました';
+    }
+    function drawMikuji() {
+      if (todaysMikuji()) return;
+      const any = list => Math.floor(Math.random() * list.length);
+      const result = { day: jstDay(), star: any(MIKUJI_STARS), small: any(MIKUJI_SMALL), charm: any(MIKUJI_CHARMS) };
+      if (!writeStore(MIKUJI_KEY, result)) mikujiMemory = result;
+      showMikuji(result);
+      const box = document.getElementById('mikuji-result');
+      box.classList.add('mikuji-arrive');
+      box.focus({ preventScroll: true });   // 引くボタンは押せなくなるので、結果へ移す（読み上げもここから）
+      box.scrollIntoView({ block: 'nearest', behavior: displaySettings.reduceMotion ? 'auto' : 'smooth' });
+      noteUsage('mikuji_draw');
+    }
+    function setupMikuji() {
+      document.getElementById('mikuji-draw').addEventListener('click', drawMikuji);
+      const today = todaysMikuji();
+      if (today) showMikuji(today);
+    }
+
     /* ══ INIT ══ */
     async function init() {
       forgetNickname();   // 以前の版が端末に保存した名前を消しておく
       try { await checkSession(); } catch (error) { console.error('checkSession:', error); }
-      await Promise.all([fetchPosts(), fetchMessages(), fetchTracks(), fetchProfile(), updateVisitCounter()]);
+      await Promise.all([fetchPosts(), fetchMessages(), fetchProfile(), updateVisitCounter()]);
       await openDiaryFromUrl();
       subscribeRealtime();
       fetchDiaryMonths();
       loadLightsSummary();
-      watchBulletinSignals();
+      loadSeaCount();
+      refreshMyBottles();
+      watchSections();
     }
 
     applyDisplaySettings();
     renderMoodUI();
     setupLights();
+    setupBottle();
+    setupMikuji();
+    watchTaps();
     showWeeklyQuestion();
     showAffirmation();
     startBreathingLabel();

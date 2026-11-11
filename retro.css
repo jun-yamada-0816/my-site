@@ -1837,3 +1837,382 @@ a {
     grid-column: auto;
   }
 }
+
+/* ── 星の小瓶・星みくじ・管理者にだけ出す数（2026-11-11） ──
+   スマホを基本にして、広い画面だけ列を増やす。押すものはすべて44px以上。
+   動きは html.reduce-motion と prefers-reduced-motion で止まる（上のほうの共通の指定）。 */
+.hero-guide {
+  margin-top: 6px;
+  font-size: 0.875rem;
+}
+.hero-guide a,
+.bottle-news a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.bottle-news {
+  margin-top: 4px;
+}
+.bottle-news a {
+  color: var(--gold);
+}
+.lead-small {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.8125rem;
+  line-height: 1.9;
+  color: #a5b6cb;
+}
+.diary-views {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--gold);
+}
+.bottle-lead {
+  font-size: 0.9375rem;
+  color: #c9d8e8;
+  margin-bottom: 14px;
+}
+.bottle-shore {
+  position: relative;
+  height: 96px;
+  overflow: hidden;
+  border: 1px solid #2b4058;
+  /* 手前から：遠くの波・星・空 */
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='30'%3E%3Cpath d='M0 6q20-6 40 0t40 0V30H0z' fill='%2313283f'/%3E%3C/svg%3E") repeat-x 20px calc(100% - 10px) / 80px 30px,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='48'%3E%3Cg fill='%238ca6c1' opacity='.5'%3E%3Ccircle cx='18' cy='12' r='.8'/%3E%3Ccircle cx='63' cy='30' r='.6'/%3E%3Ccircle cx='101' cy='9' r='.7'/%3E%3Ccircle cx='139' cy='24' r='.6'/%3E%3Ccircle cx='176' cy='8' r='.7'/%3E%3Ccircle cx='214' cy='33' r='.6'/%3E%3Ccircle cx='231' cy='15' r='.5'/%3E%3C/g%3E%3C/svg%3E") repeat-x 0 0 / 240px 48px,
+    linear-gradient(#060c19 0%, #0a1426 48%, #152c46 100%);
+}
+/* 手前の波。小瓶の下半分にかぶさる */
+.bottle-shore::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 30px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='30'%3E%3Cpath d='M0 6q20-6 40 0t40 0V30H0z' fill='%230e2136'/%3E%3C/svg%3E") repeat-x 0 0 / 80px 30px;
+}
+.bottle-moon {
+  position: absolute;
+  top: 12px;
+  right: 14%;
+  width: 18px;
+  height: 18px;
+}
+.bottle-float {
+  position: absolute;
+  bottom: 13px;
+  left: 50%;
+  width: 66px;
+  height: 41px;
+  margin-left: -33px;
+  animation: bottle-bob 5s ease-in-out infinite;
+}
+@keyframes bottle-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.bottle-sea {
+  margin-top: 10px;
+  font-size: 0.8125rem;
+  color: #b3c7dc;
+}
+.bottle-actions,
+.bottle-form-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+.bottle-actions {
+  margin-top: 14px;
+}
+.bottle-actions .retro-button,
+.bottle-form-actions .retro-button,
+.bottle-letter .retro-button,
+.mikuji-draw {
+  cursor: pointer;
+}
+.bottle-actions .retro-button:disabled,
+.bottle-form-actions .retro-button:disabled,
+.bottle-letter .retro-button:disabled,
+.mikuji-draw:disabled {
+  cursor: default;
+  opacity: 0.62;
+}
+.bottle-status {
+  margin-top: 10px;
+  font-size: 0.875rem;
+  line-height: 1.8;
+  color: #dbe8f5;
+}
+.bottle-status:empty,
+.bottle-form-error:empty,
+.bottle-thanks-note:empty {
+  display: none;
+}
+.bottle-letter {
+  position: relative;
+  margin-top: 14px;
+  padding: 18px 18px 14px;
+  border: 1px solid #5d7690;
+  background: #132238;
+}
+/* 便せんのふち取り */
+.bottle-letter::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px dotted #3c556f;
+  pointer-events: none;
+}
+.bottle-letter-from {
+  font: 0.75rem/1.7 monospace;
+  color: #9cb3ca;
+}
+.bottle-letter-to {
+  margin-top: 12px;
+  font-size: 0.875rem;
+  color: var(--gold);
+}
+.bottle-letter-word {
+  margin-top: 4px;
+  font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", serif;
+  font-size: 1.3125rem;
+  line-height: 1.8;
+  color: #f3ead2;
+}
+.bottle-letter-actions {
+  position: relative;
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dotted #48617e;
+}
+.bottle-thanks-note {
+  font-size: 0.8125rem;
+  color: #a5b6cb;
+}
+.bottle-arrive,
+.mikuji-arrive {
+  animation: bottle-arrive 0.7s ease-out;
+}
+@keyframes bottle-arrive {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.bottle-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px dotted #67839c;
+}
+.bottle-form fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.bottle-form legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 0.875rem;
+  color: #b9d2ea;
+}
+.bottle-options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+.bottle-option {
+  position: relative;
+  display: block;
+}
+/* 丸いボタンは隠して、行ぜんたいを押せるようにする（キーボードでは矢印キーで選べる） */
+.bottle-option input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.bottle-option span {
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+  padding: 8px 12px;
+  border: 1px solid #5d7690;
+  background: #15263c;
+  color: #dbe8f5;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+.bottle-option input:hover + span {
+  background: #1e3450;
+  border-color: #8ca6c1;
+}
+.bottle-option input:checked + span {
+  border-color: var(--gold);
+  background: #22334a;
+  color: #fff6d8;
+}
+.bottle-option input:focus-visible + span {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+.bottle-preview {
+  padding: 12px 14px;
+  border: 1px dotted #3c556f;
+  background: #132238;
+}
+.bottle-preview-label {
+  font: 0.75rem/1.7 monospace;
+  color: #9cb3ca;
+}
+.bottle-preview .bottle-letter-to {
+  margin-top: 6px;
+}
+.bottle-preview .bottle-letter-word {
+  font-size: 1.125rem;
+}
+.bottle-admin-note,
+.bottle-form-error {
+  font-size: 0.8125rem;
+  line-height: 1.8;
+}
+.bottle-admin-note {
+  color: var(--gold);
+}
+.bottle-form-error {
+  color: var(--shu);
+}
+.bottle-mine {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dotted #48617e;
+}
+.bottle-mine:focus,
+.mikuji-result:focus,
+.bottle-letter:focus {
+  outline: none;
+}
+.bottle-mine h3 {
+  margin-bottom: 4px;
+  font-size: 0.9375rem;
+  color: #dbe8f5;
+}
+.bottle-mine ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.bottle-mine li {
+  padding: 9px 0;
+  border-top: 1px dotted var(--keisen);
+}
+.bottle-mine li:first-child {
+  border-top: 0;
+}
+.bottle-mine-letter {
+  font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", serif;
+  font-size: 0.9375rem;
+  color: #e4ebf3;
+}
+/* 宛先とことばの途中では折り返さない（あいだで折り返す） */
+.bottle-mine-letter span {
+  display: inline-block;
+}
+.bottle-mine-count {
+  margin-top: 2px;
+  font-size: 0.8125rem;
+  line-height: 1.8;
+  color: #a5b6cb;
+}
+.bottle-note,
+.mikuji-note {
+  margin-top: 14px;
+  font-size: 0.8125rem;
+  line-height: 1.9;
+  color: #a5b6cb;
+}
+.mikuji-draw {
+  width: 100%;
+}
+.mikuji-result {
+  margin-top: 14px;
+  padding: 20px 16px 16px;
+  border: 1px solid #5d7690;
+  background: #132238;
+  text-align: center;
+}
+.mikuji-label {
+  font: 0.75rem/1.6 monospace;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+}
+.mikuji-star {
+  margin-top: 6px;
+  font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", serif;
+  font-size: 1.75rem;
+  letter-spacing: 0.12em;
+  color: #fff6d8;
+}
+.mikuji-word {
+  margin-top: 10px;
+  font-size: 0.9375rem;
+  line-height: 2;
+  color: #dbe8f5;
+}
+.mikuji-items {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dotted #48617e;
+  text-align: left;
+}
+.mikuji-items dt {
+  font: 0.75rem/1.6 monospace;
+  letter-spacing: 0.06em;
+  color: #b9d2ea;
+}
+.mikuji-items dd {
+  margin: 2px 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  color: #e4ebf3;
+}
+.mikuji-again {
+  margin-top: 12px;
+  font-size: 0.8125rem;
+  color: #a5b6cb;
+}
+@media (min-width: 480px) {
+  .bottle-actions,
+  .bottle-form-actions,
+  .bottle-options,
+  .mikuji-items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mikuji-draw {
+    width: auto;
+    min-width: 260px;
+  }
+}
+@media (min-width: 640px) {
+  .bottle-shore {
+    height: 112px;
+  }
+  #bottle-to-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

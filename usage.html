@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<!-- 星の海：コンテンツの利用状況（管理者だけが数を読める）。
+     数は Supabase の site_usage_summary()（bottle-usage.sql）から読む。管理者としてログインしていないと、関数が断る。
+     このページのソースは誰でも読めるので、数や個人の情報はここに書かないこと。 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>利用状況 ｜ 星の海</title>
+<meta name="robots" content="noindex">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.10/dist/umd/supabase.min.js" integrity="sha384-ARQ6JMpleHd1EQUxL9V4CSjKPqSyRfswRYBiVKcn1MT6zUD+BdOm/NYzic64PuF4" crossorigin="anonymous"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ══════════════════════════════════════════════════════════
+     星の海 共通の見た目
+     ── 分析・カフェ一覧・利用状況などの管理者ページで同じ色を使っています。
+        それぞれのページが単体で動くよう、同じ指定を各ファイルに置いています（色を変えるときは全部直す）。
+     ══════════════════════════════════════════════════════════ */
+  :root{
+    --sumi:#2b2f33;      /* 墨 … 本文 */
+    --usuzumi:#6f757b;   /* 薄墨 … 補足 */
+    --ai:#17456b;        /* 藍 */
+    --asagi:#2b7f8c;     /* 浅葱 */
+    --shu:#b7472a;       /* 朱 … 注意 */
+    --washi:#fbf9f4;     /* 和紙 … カード */
+    --kinari:#f2efe7;    /* 生成り … 地 */
+    --keisen:rgba(43,47,51,.13);
+    /* グラフの棒の色。藍を、紙の上で「棒」として読める明るさにしたもの。
+       （明るさ・あざやかさ・紙との差を、色の検証で確かめた値。文字の色には使わない） */
+    --series:#2b6ca3;
+    --series-on:#17456b;      /* 指やカーソルが乗っている棒 */
+    --series-track:#dbe5ee;   /* 割合の棒の、まだ埋まっていない側（同じ色の薄い段） */
+    --grid:#e7e2d7;           /* 目盛りの線 */
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html{ -webkit-text-size-adjust:100%; }
+  html, body{
+    margin:0;
+    background:
+      radial-gradient(900px 520px at 10% -10%, rgba(23,69,107,.07), transparent 62%),
+      radial-gradient(820px 520px at 92% -4%, rgba(43,127,140,.06), transparent 62%),
+      var(--kinari);
+    color:var(--sumi);
+    font-family:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;
+    letter-spacing:.03em;
+    line-height:1.8;
+  }
+  body{ overflow-x:hidden; padding-bottom:calc(48px + env(safe-area-inset-bottom)); }
+  h1, h2, h3{
+    font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
+    font-weight:500; letter-spacing:.09em; margin:0;
+  }
+  a{ color:var(--ai); }
+  .site-bar{
+    display:flex; align-items:center; gap:.9rem;
+    padding:.85rem max(1rem, env(safe-area-inset-right)) .85rem max(1rem, env(safe-area-inset-left));
+    background:rgba(251,249,244,.88);
+    border-bottom:1px solid var(--keisen);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    position:sticky; top:0; z-index:60;
+  }
+  .site-bar a.home{
+    display:inline-flex; align-items:center; min-height:44px;
+    font-family:"Shippori Mincho B1","Hiragino Mincho ProN",serif;
+    color:var(--ai); text-decoration:none; letter-spacing:.3em; font-size:.9rem; white-space:nowrap;
+  }
+  .site-bar .sep{ width:1px; height:1rem; background:var(--keisen); }
+  .site-bar .here{ font-size:.75rem; letter-spacing:.22em; color:var(--usuzumi); white-space:nowrap; }
+
+  /* ── 利用状況ページ（スマホの姿を基本にして、広い画面だけ足す）──────── */
+  .wrap{
+    max-width:920px; margin:0 auto;
+    padding:20px max(14px, env(safe-area-inset-right)) 0 max(14px, env(safe-area-inset-left));
+  }
+  .page-head h1{ font-size:1.25rem; }
+  .note{ margin:.5rem 0 0; font-size:.8125rem; line-height:1.9; color:var(--usuzumi); }
+  .message{
+    margin:18px 0 0; padding:18px 16px;
+    background:var(--washi); border:1px solid var(--keisen); border-radius:2px;
+    font-size:.9375rem;
+  }
+  .message a{ display:inline-flex; align-items:center; min-height:44px; font-weight:500; }
+  .card{
+    margin-top:16px; padding:16px 14px 18px;
+    background:var(--washi); border:1px solid var(--keisen); border-radius:2px;
+  }
+  .card h2{ font-size:1.05rem; }
+  .card h3{ margin-top:20px; font-size:.95rem; }
+  .card > h2 + .note{ margin-top:.25rem; }
+
+  /* 期間の切り替え。この枠の中の数だけが切り替わる */
+  .filter-row{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 8px; }
+  .filter-label{ font-size:.75rem; letter-spacing:.2em; color:var(--usuzumi); margin-right:2px; }
+  .periods{ display:flex; gap:3px; padding:3px; background:rgba(255,255,255,.6); border:1px solid var(--keisen); border-radius:2px; }
+  .period{
+    min-height:44px; min-width:64px; padding:0 12px;
+    border:0; border-radius:1px; background:transparent;
+    font:inherit; font-size:.875rem; letter-spacing:.08em; color:var(--usuzumi); cursor:pointer;
+  }
+  .period[aria-pressed="true"]{ background:var(--ai); color:var(--washi); font-weight:500; }
+  .period:focus-visible, .reload:focus-visible, .plot:focus-visible, summary:focus-visible, a:focus-visible{
+    outline:2px solid var(--asagi); outline-offset:2px;
+  }
+  .reload{
+    min-height:44px; padding:0 14px; margin-left:auto;
+    border:1px solid var(--keisen); border-radius:2px; background:rgba(255,255,255,.6);
+    font:inherit; font-size:.8125rem; letter-spacing:.08em; color:var(--ai); cursor:pointer;
+  }
+  .reload:disabled{ opacity:.5; cursor:default; }
+
+  /* 数字のタイル */
+  .tiles{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; margin-top:14px; }
+  .tile{ padding:12px 12px 10px; background:rgba(255,255,255,.55); border:1px solid var(--keisen); border-radius:2px; min-width:0; }
+  .tile-label{ display:block; font-size:.75rem; line-height:1.5; color:var(--usuzumi); }
+  .tile-value{ display:block; margin-top:2px; font-size:1.75rem; font-weight:500; line-height:1.25; letter-spacing:0; color:var(--sumi); }
+  .tile-value small{ margin-left:3px; font-size:.75rem; font-weight:400; color:var(--usuzumi); }
+  .tile-sub{ display:block; margin-top:2px; font-size:.6875rem; line-height:1.6; color:var(--usuzumi); }
+
+  /* 場所ごとの表 */
+  .places{ width:100%; margin-top:10px; border-collapse:collapse; font-size:.875rem; }
+  .places th, .places td{ padding:10px 6px; border-top:1px solid var(--keisen); text-align:left; vertical-align:top; }
+  .places thead th{ border-top:0; padding-top:4px; font-size:.75rem; font-weight:400; letter-spacing:.1em; color:var(--usuzumi); white-space:nowrap; }
+  .places tbody th{ font-weight:500; width:34%; }
+  .places th:first-child, .places td:first-child{ padding-left:0; }
+  .places th:last-child, .places td:last-child{ padding-right:0; }
+  .places .seen{ width:27%; }
+  .big{ font-size:1.0625rem; font-weight:500; letter-spacing:0; font-variant-numeric:tabular-nums; }
+  .unit{ margin-left:2px; font-size:.6875rem; color:var(--usuzumi); }
+  .dash{ color:var(--usuzumi); }
+  .share{ display:block; margin-top:4px; font-size:.6875rem; line-height:1.4; color:var(--usuzumi); font-variant-numeric:tabular-nums; }
+  /* 割合の細い棒：埋まった側は棒の色、残りは同じ色の薄い段 */
+  .meter{ display:block; height:4px; margin-top:5px; border-radius:2px; background:var(--series-track); overflow:hidden; }
+  .meter i{ display:block; height:100%; border-radius:2px; background:var(--series); }
+  .used{ display:flex; flex-wrap:wrap; gap:2px 12px; margin:0; padding:0; list-style:none; }
+  .used li{ white-space:nowrap; }
+  .used .k{ font-size:.75rem; color:var(--usuzumi); margin-right:4px; }
+
+  /* 横の棒（多い順・決まった順の一覧）。棒はすべて同じ色、数は棒の先に */
+  .bars{ margin:10px 0 0; padding:0; list-style:none; }
+  .bars li{ padding:7px 0; border-top:1px solid var(--keisen); }
+  .bars li:first-child{ border-top:0; }
+  .bar-name{ display:block; font-size:.875rem; line-height:1.6; overflow-wrap:anywhere; }
+  .bar-name a{ text-decoration:none; }
+  .bar-name a:hover{ text-decoration:underline; }
+  /* 数は、棒の先に置く。棒の長さは「数の入る幅を除いた残り」に対する割合 */
+  .bar-line{ display:flex; align-items:center; gap:6px; margin-top:3px; }
+  .bar-fill{ flex:none; display:block; height:10px; min-width:2px; border-radius:0 4px 4px 0; background:var(--series); }
+  .bar-fill[data-zero]{ min-width:0; }
+  .bar-n{ flex:none; font-size:.875rem; font-weight:500; line-height:1.2; letter-spacing:0; }
+  .empty{ margin:10px 0 0; font-size:.875rem; color:var(--usuzumi); }
+  .pairs{ display:grid; grid-template-columns:minmax(0,1fr); gap:0 24px; }
+
+  /* 縦の棒グラフ */
+  .chart{ position:relative; margin:18px 0 0; }
+  .chart figcaption{ font-size:.875rem; font-weight:500; }
+  .chart figcaption span{ display:block; font-size:.75rem; font-weight:400; color:var(--usuzumi); }
+  .plot-row{ display:flex; gap:6px; }
+  .plot-row.main{ margin-top:38px; }   /* 棒に乗せたときの表示が出る場所を、あけておく */
+  .yaxis{
+    flex:none; display:flex; flex-direction:column; justify-content:space-between; align-items:flex-end;
+    height:150px; padding-top:20px;
+    font-size:.6875rem; line-height:1; color:var(--usuzumi); letter-spacing:0; font-variant-numeric:tabular-nums;
+  }
+  /* 上と下の数字を、それぞれの線の高さに合わせる（まん中は、そのままで線の高さ） */
+  .yaxis span:first-child{ transform:translateY(-50%); }
+  .yaxis span:last-child{ transform:translateY(50%); }
+  .plot{ position:relative; flex:1; min-width:0; height:150px; padding-top:20px; }
+  .plot .grid{ position:absolute; inset:20px 0 0; display:flex; flex-direction:column; justify-content:space-between; pointer-events:none; }
+  .plot .grid i{ display:block; height:1px; background:var(--grid); }
+  .plot .grid i:last-child{ background:#cfc9bb; }   /* いちばん下が、棒の立つ線 */
+  .cols{ position:relative; display:flex; height:100%; }
+  /* 1本ぶんの「押せる・乗せられる」範囲は、棒より広く、上から下まで */
+  .col{ position:relative; flex:1; min-width:0; display:flex; justify-content:center; align-items:flex-end; padding:0 1px; }
+  .col .bar{ display:block; width:100%; max-width:24px; border-radius:4px 4px 0 0; background:var(--series); }
+  .col.on .bar{ background:var(--series-on); }
+  .col.on::before{ content:""; position:absolute; inset:-20px 0 0; background:rgba(23,69,107,.06); }
+  .col .val{
+    position:absolute; left:50%; transform:translateX(-50%); margin-bottom:3px;
+    font-size:.6875rem; line-height:1; font-weight:500; letter-spacing:0; color:var(--sumi); white-space:nowrap;
+  }
+  .xaxis{ display:flex; padding-top:5px; font-size:.6875rem; line-height:1.2; color:var(--usuzumi); letter-spacing:0; }
+  /* 棒より幅の広い文字も、棒のまん中にそろえる */
+  .xaxis span{ flex:1; min-width:0; display:flex; justify-content:center; white-space:nowrap; }
+  .xaxis span:first-child{ justify-content:flex-start; }
+  .xaxis span:last-child{ justify-content:flex-end; }   /* 右端の文字が、図からはみ出さないように */
+  .tip{
+    position:absolute; z-index:5; top:0; padding:5px 9px;
+    background:var(--sumi); color:var(--washi); border-radius:2px;
+    font-size:.75rem; line-height:1.5; white-space:nowrap; pointer-events:none;
+  }
+  .tip strong{ font-size:.9375rem; font-weight:500; letter-spacing:0; margin-right:6px; }
+  .chart details{ margin-top:8px; font-size:.8125rem; }
+  .chart summary{ display:inline-flex; align-items:center; min-height:44px; color:var(--ai); cursor:pointer; }
+  .mini{ border-collapse:collapse; font-size:.8125rem; font-variant-numeric:tabular-nums; }
+  .mini th, .mini td{ padding:4px 16px 4px 0; border-top:1px solid var(--keisen); text-align:left; font-weight:400; }
+  .mini td{ text-align:right; }
+  .rules{ margin:8px 0 0; padding-left:1.2em; font-size:.8125rem; line-height:1.9; color:var(--usuzumi); }
+
+  @media (min-width:640px){
+    .wrap{ padding-top:28px; }
+    .page-head h1{ font-size:1.45rem; }
+    .card{ padding:20px 22px 22px; }
+    .tiles{ grid-template-columns:repeat(5, minmax(0,1fr)); }
+    .tiles.four{ grid-template-columns:repeat(4, minmax(0,1fr)); }
+    .places{ font-size:.9375rem; }
+    .places tbody th{ width:26%; }
+    .places .seen{ width:22%; }
+    .pairs{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .yaxis, .plot{ height:180px; }
+  }
+  @media (hover:none){
+    .bar-name a:hover{ text-decoration:none; }
+  }
+</style>
+</head>
+<body>
+<div class="site-bar">
+  <a class="home" href="./">星の海</a><span class="sep"></span><span class="here">利用状況</span>
+</div>
+<main class="wrap">
+  <header class="page-head">
+    <h1>コンテンツの利用状況</h1>
+    <p class="note">それぞれの場所が、どれくらい見られて、どれくらい使われているか。この数は管理者にだけ見えます。</p>
+  </header>
+
+  <p id="message" class="message" role="status">読み込み中…</p>
+
+  <div id="report" hidden>
+    <!-- 期間で切り替わる数は、すべてこの枠の中。切り替えの行は、切り替わるものの上に1つだけ置く -->
+    <section class="card" aria-labelledby="places-title">
+      <div class="filter-row">
+        <span class="filter-label" id="period-label">期間</span>
+        <div class="periods" role="group" aria-labelledby="period-label">
+          <button type="button" class="period" data-period="today" aria-pressed="false">きょう</button>
+          <button type="button" class="period" data-period="d7" aria-pressed="true">7日</button>
+          <button type="button" class="period" data-period="d30" aria-pressed="false">30日</button>
+          <button type="button" class="period" data-period="all" aria-pressed="false">これまで</button>
+        </div>
+        <button type="button" id="reload" class="reload">読み込み直す</button>
+      </div>
+      <p id="period-note" class="note"></p>
+
+      <div id="tiles" class="tiles"></div>
+
+      <h3 id="places-title">場所ごとの「見た」「使った」</h3>
+      <p class="note">上から、ページに並んでいる順です。「見た」は、その場所が画面に1.5秒以上うつった端末の数。「使った」は、押した・選んだ端末の数（どちらも、同じ端末は1日1回）。掲示板の書き込み・返信と「私も」は、実際の件数です。</p>
+      <table class="places">
+        <thead><tr><th scope="col">場所</th><th scope="col" class="seen">見た</th><th scope="col">使った</th></tr></thead>
+        <tbody id="places"></tbody>
+      </table>
+
+      <h3>よく開かれた日記</h3>
+      <p class="note">同じ端末が同じ日記を開いたぶんは、1日1回まで。多い順に10件です。</p>
+      <div id="top-diaries"></div>
+
+      <h3>星の灯りで選ばれた気持ち</h3>
+      <div id="lights"></div>
+
+      <h3>流された小瓶</h3>
+      <p class="note">この期間に流された小瓶の、宛先とことば。</p>
+      <div class="pairs">
+        <div id="bottle-to"></div>
+        <div id="bottle-word"></div>
+      </div>
+
+      <h3>掲示板の「知らせる」</h3>
+      <div id="reports"></div>
+    </section>
+
+    <section class="card" aria-labelledby="sea-title">
+      <h2 id="sea-title">いまの海</h2>
+      <p class="note">星の小瓶の、いまの数です（期間の切り替えとは別）。</p>
+      <div id="sea" class="tiles four"></div>
+    </section>
+
+    <section class="card" aria-labelledby="flow-title">
+      <h2 id="flow-title">訪問の流れ</h2>
+      <p class="note">この2つのグラフは、上の「期間」とは別に、いつも同じ範囲を出します。棒に指やカーソルを乗せると、数が出ます。</p>
+      <figure id="chart-daily" class="chart"></figure>
+      <figure id="chart-hours" class="chart"></figure>
+    </section>
+
+    <section class="card" aria-labelledby="rules-title">
+      <h2 id="rules-title">数え方</h2>
+      <ul class="rules">
+        <li>同じ端末からは、それぞれの種類につき1日1回だけ数えます（日付は日本時間）。「人数」ではなく「端末と日」の数です。</li>
+        <li>管理者としてログインしているあいだの操作は、数えていません。</li>
+        <li>端末に控えを残せないブラウザ（プライベートブラウズの一部など）は、同じ人を何度も数えないよう、数えていません。実際より少なめに出ます。</li>
+        <li>残しているのは「種類」と「時刻」だけです。だれが見たか・押したかは、分かりません。</li>
+        <li>記録は400日を過ぎると消えます（日記の閲覧と「私も」は残します）。</li>
+      </ul>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  // トップページと同じ Supabase（ログインは同じサイトなので引き継がれる）
+  const SUPABASE_URL      = 'https://qnmzjwgacnfxwlbgwxcr.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_BG0n_GkXIwMBUlSN-W5vzA_vb4rbPKq';
+
+  const PERIOD_LABEL = { today: 'きょう', d7: 'きょうを含む7日間', d30: 'きょうを含む30日間', all: '数えはじめてから' };
+  // 上から、トップページに並んでいる順。seen＝「見た」の種類、used＝「使った」として出すもの
+  const PLACES = [
+    { name: '星の小瓶',         seen: 'bottle_seen',   used: [['ひろった', s => s('bottle_pick')], ['流した', s => s('bottle_throw')], ['ありがとう', s => s('bottle_thanks')]] },
+    { name: '星の灯り',         seen: 'lights_seen',   used: [['ともした', (s, w) => w.sum('light')]] },
+    { name: '更新履歴',         seen: 'news_seen',     used: [['リンクを押した', s => s('news_tap')]] },
+    { name: '管理人のこと',     seen: 'profile_seen',  used: [] },
+    { name: '日記',             seen: 'blog_seen',     used: [['ひらいた', s => s('diary_open')], ['「私も」', (s, w) => w.one('metoo', 'all')]] },
+    { name: '掲示板',           seen: 'bbs_seen',      used: [['書きはじめた', s => s('bbs_typing')], ['書き込み', (s, w) => w.one('bbs', 'post')], ['返信', (s, w) => w.one('bbs', 'reply')]] },
+    { name: '星みくじ',         seen: 'mikuji_seen',   used: [['引いた', s => s('mikuji_draw')]] },
+    { name: 'はじめての方へ',   seen: 'welcome_seen',  used: [['行き先を押した', s => s('welcome_tap')]] },
+    { name: '星の海の約束',     seen: 'promise_seen',  used: [] },
+    { name: 'きょうのきもち',   seen: 'mood_seen',     used: [['選んだ', s => s('mood_used')]] },
+    { name: 'こころのケア',     seen: 'coping_seen',   used: [['べつの言葉を見た', s => s('affirm_next')]] },
+    { name: '支えになる制度',   seen: 'services_seen', used: [['リンクを押した', s => s('services_tap')]] },
+    { name: 'リンク集',         seen: 'links_seen',    used: [['リンクを押した', s => s('links_tap')]] },
+    { name: '相談窓口',         seen: 'support_seen',  used: [['電話・リンクを押した', s => s('help_tap')]] },
+    { name: 'つらいとき（右下のボタン）', seen: null,  used: [['ひらいた', s => s('sos_open')]] },
+  ];
+  // 記号と文面。トップページ（index.html）の LIGHTS・BOTTLE_TO・BOTTLE_WORDS・REPORT_REASONS と同じにしておくこと
+  const LIGHT_LABEL = { tired: '少し疲れた', lonely: 'さみしい', sleepless: '眠れない', wordless: '言葉にならない', calm: '少しおだやか' };
+  const BOTTLE_TO = { sleepless: '眠れない夜のだれかへ', lonely: 'さみしい夜のだれかへ', tired: '疲れているだれかへ',
+                      wordless: '言葉にならないだれかへ', anxious: '明日がこわいだれかへ', anyone: '今夜ここに来たあなたへ' };
+  const BOTTLE_WORDS = { here: 'ここにいます。', same_night: '同じ夜を、過ごしています。', enough: '今日はもう、じゅうぶんです。',
+                         slowly: 'ゆっくりで、大丈夫です。', me_too: 'わたしも、そうです。', not_alone: 'ひとりじゃ、ないです。',
+                         rest: '休んでも、いいんです。', no_words: '言葉は、なくていいです。', thanks: '今日もいてくれて、ありがとう。',
+                         see_you: 'また、ここで会いましょう。' };
+  const REPORT_LABEL = { attack: '傷つける言葉がある', personal: '個人が分かる情報がある', spam: '宣伝・関係のない内容', worry: '書いた人のことが心配' };
+  const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  let sb = null;
+  let report = null;      // サーバーの答え（確かめてから使う）
+  let period = 'd7';
+
+  const $ = id => document.getElementById(id);
+  // サーバーの答えはそのまま信じない。0以上の整数でなければ 0 として扱う
+  const num = value => (Number.isSafeInteger(value) && value >= 0 ? value : 0);
+  const fmt = n => n.toLocaleString('ja-JP');
+  const isObject = value => !!value && typeof value === 'object' && !Array.isArray(value);
+  // 要素を作る。文字は必ず textContent で入れる（日記の題名などを HTML として解釈させない）
+  function el(tag, attrs, ...children) {
+    const node = document.createElement(tag);
+    for (const [key, value] of Object.entries(attrs || {})) {
+      if (value === null || value === undefined || value === false) continue;
+      if (key === 'class') node.className = value;
+      else if (key === 'text') node.textContent = value;
+      else node.setAttribute(key, value === true ? '' : value);
+    }
+    for (const child of children.flat()) {
+      if (child === null || child === undefined || child === false) continue;
+      node.append(child instanceof Node ? child : document.createTextNode(String(child)));
+    }
+    return node;
+  }
+
+  /* ── いま選んでいる期間の数を引く ── */
+  const windows = {
+    one: (src, key) => (isObject(report.counts[src]) && isObject(report.counts[src][key]) ? num(report.counts[src][key][period]) : 0),
+    sum: src => (isObject(report.counts[src]) ? Object.keys(report.counts[src]).reduce((total, key) => total + windows.one(src, key), 0) : 0),
+  };
+  const signal = kind => windows.one('signal', kind);
+
+  function showMessage(text, link) {
+    const box = $('message');
+    box.hidden = false;
+    box.textContent = text;
+    if (link) box.append(el('br'), el('a', { href: link[0], text: link[1] }));
+    $('report').hidden = true;
+  }
+
+  /* ── 数字のタイル ── */
+  function tile(label, value, unit, sub) {
+    return el('div', { class: 'tile' },
+      el('span', { class: 'tile-label', text: label }),
+      el('span', { class: 'tile-value' }, fmt(value), unit ? el('small', { text: unit }) : null),
+      sub ? el('span', { class: 'tile-sub', text: sub }) : null);
+  }
+  function renderTiles() {
+    const total = report.counter_total === null ? null : num(report.counter_total);
+    $('tiles').replaceChildren(
+      tile('訪問', signal('visit'), '', total === null ? null : `足あとカウンターは延べ ${fmt(total)}`),
+      tile('小瓶をひろった', signal('bottle_pick')),
+      tile('星の灯りをともした', windows.sum('light')),
+      tile('日記をひらいた', signal('diary_open'), '', `日記の閲覧は ${fmt(windows.one('view', 'all'))}回`),
+      tile('掲示板の書き込み', windows.one('bbs', 'post') + windows.one('bbs', 'reply'), '件'));
+  }
+
+  /* ── 場所ごとの表 ── */
+  function renderPlaces() {
+    const visits = signal('visit');
+    $('places').replaceChildren(...PLACES.map(place => {
+      const seen = place.seen ? signal(place.seen) : null;
+      const seenCell = el('td', { class: 'seen' });
+      if (seen === null) {
+        seenCell.append(el('span', { class: 'dash', text: '—' }));
+      } else {
+        seenCell.append(el('span', { class: 'big', text: fmt(seen) }));
+        if (visits > 0) {
+          // 「訪問のうち、どれくらいがここまで見たか」。別々に数えているので100%を少し超えることがある
+          const share = Math.round(seen / visits * 100);
+          seenCell.append(
+            el('span', { class: 'meter', role: 'img', 'aria-label': `訪問の${share}%` }, el('i', { style: `width:${Math.min(share, 100)}%` })),
+            el('span', { class: 'share', text: `訪問の${share}%` }));
+        }
+      }
+      const used = place.used.length
+        ? el('ul', { class: 'used' }, place.used.map(([label, read]) =>
+            el('li', {}, el('span', { class: 'k', text: label }), el('span', { class: 'big', text: fmt(read(signal, windows)) }))))
+        : el('span', { class: 'dash', text: '—' });
+      return el('tr', {}, el('th', { scope: 'row', text: place.name }), seenCell, el('td', {}, used));
+    }));
+  }
+
+  /* ── 横の棒の一覧（棒はすべて同じ色。数は棒の先に出す）── */
+  function barList(rows, emptyText) {
+    if (!rows.length || rows.every(row => !row.n)) return el('p', { class: 'empty', text: emptyText });
+    const max = Math.max(...rows.map(row => row.n));
+    return el('ul', { class: 'bars' }, rows.map(row => el('li', {},
+      el('span', { class: 'bar-name' }, row.href ? el('a', { href: row.href, target: '_blank', rel: 'noopener', text: row.name }) : row.name),
+      el('span', { class: 'bar-line' },
+        el('span', { class: 'bar-fill', 'data-zero': !row.n, style: `width:calc((100% - 4em) * ${(row.n / max).toFixed(4)})` }),
+        el('span', { class: 'bar-n', text: fmt(row.n) })))));
+  }
+  // 決まった順で並べる一覧（気持ち・宛先・ことば）。期間を変えても、同じものは同じ場所に出る
+  const fixedRows = (src, labels) => Object.entries(labels).map(([key, name]) => ({ name, n: windows.one(src, key) }));
+  function renderLists() {
+    const top = isObject(report.top_diaries) && Array.isArray(report.top_diaries[period]) ? report.top_diaries[period] : [];
+    $('top-diaries').replaceChildren(barList(
+      top.filter(row => isObject(row) && typeof row.title === 'string').slice(0, 10).map(row => ({
+        name: row.title,
+        n: num(row.n),
+        href: UUID_PATTERN.test(row.post_id) ? './?diary=' + encodeURIComponent(row.post_id) : null,
+      })),
+      'この期間に開かれた日記は、まだありません。'));
+    $('lights').replaceChildren(barList(fixedRows('light', LIGHT_LABEL), 'この期間にともされた灯りは、まだありません。'));
+    $('bottle-to').replaceChildren(barList(fixedRows('bottle_to', BOTTLE_TO), 'この期間に流された小瓶は、まだありません。'));
+    const words = fixedRows('bottle_word', BOTTLE_WORDS);
+    $('bottle-word').replaceChildren(words.some(row => row.n) ? barList(words, '') : '');
+    $('reports').replaceChildren(barList(fixedRows('report', REPORT_LABEL), 'この期間に届いた「知らせる」は、ありません。'));
+  }
+  function renderSea() {
+    const sea = isObject(report.bottles) ? report.bottles : {};
+    $('sea').replaceChildren(
+      tile('海にある小瓶', num(sea.in_sea), '本', `うち管理人の小瓶 ${fmt(num(sea.from_admin))}本`),
+      tile('一度は拾われた小瓶', num(sea.picked_once), '本'),
+      tile('拾われた回数', num(sea.picks), '回', 'いま海にある小瓶の合計'),
+      tile('届いたありがとう', num(sea.thanks)));
+  }
+
+  /* ── 縦の棒グラフ ──
+     1つの数の流れを見るだけなので、色は1色。数は、いちばん多い棒と最後の棒にだけ出し、
+     ほかは目盛り・乗せたときの表示・「表で見る」で読めるようにする。 */
+  // 目盛りの上限：数より大きい、切りのよい数（半分も整数になるもの）
+  function niceMax(max) {
+    for (let base = 1; ; base *= 10) for (const step of [2, 4, 10]) if (step * base >= max) return step * base;
+  }
+  function columnChart(figure, { title, subtitle, name, labels, longLabels, values, showLabel, lastNote }) {
+    const max = Math.max(0, ...values);   // 1本も無いとき（まだ記録が無いとき）は 0
+    const caption = el('figcaption', {}, title, el('span', { text: subtitle }));
+    if (!max) {
+      figure.replaceChildren(caption, el('p', { class: 'empty', text: 'まだ記録がありません。' }));
+      return;
+    }
+    const top = niceMax(max);
+    const peak = values.indexOf(max);
+    const last = values.length - 1;
+    const cols = values.map((value, i) => {
+      const height = value ? Math.max(value / top * 100, 1.5) : 0;
+      const col = el('div', { class: 'col', 'data-i': i }, el('span', { class: 'bar', style: `height:${height}%` }));
+      // 数を出すのは、いちばん多い棒と、最後の棒（きょう・23時）だけ
+      if (value && (i === peak || (lastNote && i === last))) col.append(el('span', { class: 'val', style: `bottom:${height}%`, text: fmt(value) }));
+      return col;
+    });
+    const tip = el('div', { class: 'tip', hidden: true });
+    const plot = el('div', { class: 'plot', tabindex: '0', role: 'group',
+      'aria-label': `${title}。左右の矢印キーで、棒を1本ずつ読めます。` },
+      el('div', { class: 'grid' }, el('i'), el('i'), el('i')),
+      el('div', { class: 'cols' }, cols));
+    const live = el('span', { style: 'position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)', 'aria-live': 'polite' });
+    let active = -1;
+    const show = i => {
+      if (active >= 0) cols[active].classList.remove('on');
+      active = i;
+      if (i < 0) { tip.hidden = true; return; }
+      cols[i].classList.add('on');
+      tip.replaceChildren(el('strong', { text: fmt(values[i]) }), `${longLabels[i]}・${name}`);
+      tip.hidden = false;
+      // 棒の真上に出す。図の左右からは、はみ出させない
+      const box = cols[i].getBoundingClientRect(), frame = figure.getBoundingClientRect(), plotBox = plot.getBoundingClientRect();
+      const half = tip.offsetWidth / 2;
+      const center = Math.min(Math.max(box.left + box.width / 2 - frame.left, half), frame.width - half);
+      tip.style.left = `${center - half}px`;
+      tip.style.top = `${plotBox.top - frame.top - tip.offsetHeight - 2}px`;
+    };
+    for (const col of cols) {
+      col.addEventListener('pointerenter', () => show(Number(col.dataset.i)));
+      col.addEventListener('pointerdown', () => show(Number(col.dataset.i)));
+    }
+    plot.addEventListener('pointerleave', () => show(-1));
+    plot.addEventListener('blur', () => show(-1));
+    plot.addEventListener('keydown', event => {
+      const move = { ArrowLeft: -1, ArrowRight: 1 }[event.key];
+      let next = active;
+      if (move) next = active < 0 ? last : Math.min(Math.max(active + move, 0), last);
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = last;
+      else if (event.key === 'Escape') next = -1;
+      else return;
+      event.preventDefault();
+      show(next);
+      live.textContent = next < 0 ? '' : `${longLabels[next]}、${name} ${fmt(values[next])}`;
+    });
+    figure.replaceChildren(
+      caption,
+      el('div', { class: 'plot-row main' },
+        el('div', { class: 'yaxis', 'aria-hidden': 'true' }, el('span', { text: fmt(top) }), el('span', { text: fmt(top / 2) }), el('span', { text: '0' })),
+        plot),
+      el('div', { class: 'plot-row', 'aria-hidden': 'true' },
+        el('div', { class: 'yaxis', style: 'height:auto;padding:0;visibility:hidden' }, el('span', { text: fmt(top) })),
+        el('div', { class: 'xaxis', style: 'flex:1;min-width:0;margin-top:0' }, labels.map((label, i) => el('span', { text: showLabel(i) ? label : '' })))),
+      tip, live,
+      el('details', {}, el('summary', { text: '表で見る' }),
+        el('table', { class: 'mini' }, el('tbody', {}, values.map((value, i) =>
+          el('tr', {}, el('th', { scope: 'row', text: longLabels[i] }), el('td', { text: fmt(value) })))))));
+  }
+  function renderCharts() {
+    const daily = (Array.isArray(report.daily) ? report.daily : [])
+      .filter(row => isObject(row) && /^\d{4}-\d{2}-\d{2}$/.test(row.day)).slice(-14);
+    // その日の正午（日本時間）は、世界時でも同じ日付なので、曜日をそのまま引ける
+    const weekday = day => '日月火水木金土'[new Date(day + 'T12:00:00+09:00').getUTCDay()];
+    columnChart($('chart-daily'), {
+      title: '日ごとの訪問',
+      subtitle: '直近14日（日本時間）。いちばん右が、きょう',
+      name: '訪問',
+      labels: daily.map(row => `${Number(row.day.slice(5, 7))}/${Number(row.day.slice(8, 10))}`),
+      longLabels: daily.map(row => `${Number(row.day.slice(5, 7))}月${Number(row.day.slice(8, 10))}日（${weekday(row.day)}）`),
+      values: daily.map(row => (isObject(row.kinds) ? num(row.kinds.visit) : 0)),
+      showLabel: i => (daily.length - 1 - i) % 3 === 0,
+      lastNote: true,
+    });
+    const hours = Array.from({ length: 24 }, (_, h) => (Array.isArray(report.hours) ? num(report.hours[h]) : 0));
+    columnChart($('chart-hours'), {
+      title: '時間帯ごとの訪問',
+      subtitle: '直近30日の合計（日本時間）。左が0時、右が23時',
+      name: '訪問',
+      labels: hours.map((_, h) => `${h}時`),
+      longLabels: hours.map((_, h) => `${h}時台`),
+      values: hours,
+      showLabel: h => h % 6 === 0 || h === 23,
+      lastNote: false,
+    });
+  }
+
+  function renderPeriod() {
+    for (const button of document.querySelectorAll('.period')) button.setAttribute('aria-pressed', String(button.dataset.period === period));
+    const since = typeof report.since === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(report.since)
+      ? `${Number(report.since.slice(0, 4))}年${Number(report.since.slice(5, 7))}月${Number(report.since.slice(8, 10))}日` : null;
+    $('period-note').textContent = `${PERIOD_LABEL[period]}の数です（日本時間）。`
+      + (since ? `数えはじめた日：${since}。` : 'まだ訪問の記録がありません。きょうの訪問から数えはじめます。')
+      + (period === 'all' ? '「これまで」は、最長で400日ぶんです。' : '');
+    renderTiles();
+    renderPlaces();
+    renderLists();
+  }
+  function render() {
+    $('message').hidden = true;
+    $('report').hidden = false;
+    renderPeriod();
+    renderSea();
+    renderCharts();   // 表示してから描く（乗せたときの表示の位置を、実際の大きさから決めるため）
+  }
+
+  async function load() {
+    const reload = $('reload');
+    reload.disabled = true;
+    try {
+      if (!window.supabase) { showMessage('読み込みに失敗しました。通信状態を確かめて、ページを開き直してください。'); return; }
+      sb = sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) {
+        showMessage('このページは管理者だけが見られます。トップページで管理者としてログインしてから、管理者メニューの「利用状況を見る」を開いてください。', ['./', 'トップページへ']);
+        return;
+      }
+      const { data, error } = await sb.rpc('site_usage_summary');
+      if (error) {
+        console.error('site_usage_summary:', error.code);
+        showMessage(error.code === 'PGRST202' || error.code === '42883'
+          ? 'まだ数を出す準備ができていません。Supabase の SQL Editor で bottle-usage.sql を実行してください。'
+          : error.code === '42501'
+            ? 'このアカウントでは見られません。管理者のアカウントでログインしているか、確かめてください。'
+            : '数を読み込めませんでした。時間をおいて、開き直してください。', ['./', 'トップページへ']);
+        return;
+      }
+      if (!isObject(data) || !isObject(data.counts)) {
+        showMessage('数を読み込めませんでした（答えの形が、想定とちがいます）。時間をおいて、開き直してください。');
+        return;
+      }
+      report = data;
+      render();
+    } catch (error) {
+      console.error('load:', error);
+      showMessage('数を読み込めませんでした。時間をおいて、開き直してください。');
+    } finally {
+      reload.disabled = false;
+    }
+  }
+
+  for (const button of document.querySelectorAll('.period')) {
+    button.addEventListener('click', () => {
+      if (!report || !PERIOD_LABEL[button.dataset.period]) return;
+      period = button.dataset.period;
+      renderPeriod();
+    });
+  }
+  $('reload').addEventListener('click', load);
+  load();
+})();
+</script>
+</body>
+</html>

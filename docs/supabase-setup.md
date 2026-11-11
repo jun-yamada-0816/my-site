@@ -127,6 +127,8 @@ select vault.create_secret('re_新しいキー', 'resend_api_key', '掲示板の
 
 ## 音楽（music_tracks）と Storage
 
+**2026-11-11 に、サイトから音楽室を無くしました。** 下は、以前の構成の記録です。表と曲のファイルは消していないので、完全に消すときはダッシュボードの Storage → `music` でファイルを削除してください。
+
 ```sql
 create table music_tracks (
   id uuid default gen_random_uuid() primary key,
@@ -182,9 +184,9 @@ grant execute on function increment_visit_count() to anon, authenticated;
 -- update site_visits set count = N where id = 1;
 ```
 
-## 日記の閲覧数・音楽の再生数
+## 日記の閲覧数・音楽の再生数（使わなくなりました）
 
-**2026-10-02 の時点で、本番ではまだ実行されていません。** 実行するまでは、閲覧数・再生数は画面に表示されません（以前は全件「0 回」と出ていました）。実行すると、その時点から数え始めます。
+**2026-11-11 から、このSQLは使いません。実行しないでください。** 日記の閲覧数は `bottle-usage.sql`（下の章）で数え、管理者にだけ表示します。サイトはもう `view_count`・`play_count` を読まず、下の2つの関数も呼びません。下は、以前の構成の記録です（本番では一度も実行されていません）。
 
 ```sql
 alter table blog_posts   add column if not exists view_count bigint not null default 0;
@@ -225,9 +227,21 @@ $$;
 grant execute on function increment_track_plays(uuid) to anon, authenticated;
 ```
 
+## 星の小瓶・利用回数・日記ごとの閲覧数（bottle-usage.sql、2026-11-11）
+
+**本番ではまだ実行されていません（2026-11-11 時点）。** 実行するまで、星の小瓶は管理人がはじめに置いた小瓶だけが拾え、利用状況のページ（`usage.html`）は「このSQLを実行してください」と出ます。サイトはエラーにならずに使えます。
+
+1. 先に `admin-only.sql` と `participation.sql` が実行済みであること（済んでいないと、何も変えずに「先に◯◯を実行してください」と止まります）。
+2. SQL Editor で `bottle-usage.sql` をまるごと1回実行します。何度実行しても記録は消えません。
+3. 確かめ方：トップページの「星の小瓶」で小瓶を1本流すと、「いま、この海には 1本の小瓶が浮かんでいます。」と出ます。管理者メニューの「利用状況を見る」に数が出ます。
+
+作られるもの：`diary_views`（どの日記が、いつ開かれたか）、`sea_bottles`（小瓶。宛先とことばは決まった記号だけ）、`sea_bottle_rate`（水増しを防ぐための10分ごとの数）。`site_signals` は数える種類を増やします。どの表も訪問者から直接は読み書きできません。数を読む関数（`site_usage_summary`・`diary_view_counts`）は、`is_site_admin()` のときだけ答えます。
+
+テストは `tests/run-bottle-usage-db.sh`（使い捨ての postgres:16、ネットワークなし）。
+
 ## 星の灯り・「私も」・「知らせる」（participation.sql、2026-11-09）
 
-**本番ではまだ実行されていません（2026-11-09 時点）。** 実行するまで、星の灯りはその端末の中だけで灯り、「私も」「知らせる」は「いまは届けられません」と出ます。サイトはエラーにならずに使えます。
+**本番では実行済みです（2026-11-11 に、公開の関数が答えることを確認）。** 実行するまで、星の灯りはその端末の中だけで灯り、「私も」「知らせる」は「いまは届けられません」と出ます。サイトはエラーにならずに使えます。
 
 1. 先に `admin-only.sql` と `bbs-moderation.sql` が実行済みであることを確かめます（どちらも実行済みなら何もしなくてよい）。
 2. Supabase の **SQL Editor** で `participation.sql` をまるごと貼り付けて、1回実行します。何度実行しても記録は消えません。
