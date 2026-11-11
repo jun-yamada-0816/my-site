@@ -26,8 +26,8 @@ const diary = {
   created_at: "2026-09-26T15:00:00Z",
   view_count: 4,
 };
-// Diary edits and paging. Older generated entries have no view_count column,
-// matching a production DB where the optional counter SQL has not been run.
+// Diary edits and paging. A legacy view_count column, if a database still has one,
+// must never be shown: reading counts are for the admin only (bottle-usage.sql).
 let failDiaryUpdate = false,
   manyDiaries = false,
   viewIncrements = 0;
@@ -246,9 +246,11 @@ const assets = [
         increments++;
         return send(++visits);
       }
-      if (url.pathname.endsWith("/increment_post_views")) {
+      if (url.pathname.endsWith("/increment_post_views"))
+        throw new Error("the legacy public view counter must not be called");
+      if (url.pathname.endsWith("/note_diary_view")) {
         viewIncrements++;
-        return send(5);
+        return send(true);
       }
       if (url.pathname.endsWith("/bulletin_messages")) {
         assert.equal(route.request().method(), "GET", "BBS must never write directly to Supabase");
@@ -591,7 +593,8 @@ const assets = [
       await phone.locator("#mobile-menu-btn").getAttribute("aria-expanded"),
       "true",
     );
-    await phone.locator('#mobile-menu a[href="#music"]').click();
+    assert.equal(await phone.locator('a[href="#music"], #music').count(), 0, "The music room is gone");
+    await phone.locator('#mobile-menu a[href="#mikuji"]').click();
     assert.equal(
       await phone.locator("#mobile-menu-btn").getAttribute("aria-expanded"),
       "false",
@@ -767,20 +770,16 @@ const assets = [
       document.querySelector("#posts-container").textContent.includes(`${n}件のうち 5件`), totalDiaries,
     );
     assert.equal(
-      (await archive.locator("#posts-container").textContent()).includes("回閲覧"),
-      true,
-      "Entries with a view count show it",
+      /回閲覧|\d+ 回/.test(await archive.locator("#posts-container").textContent()),
+      false,
+      "Visitors never see how often a diary was read",
     );
+    assert.equal(await archive.locator("#posts-container .diary-views").count(), 0);
     for (let i = 0; i < Math.ceil(totalDiaries / 5) - 1; i++)
       await archive.getByRole("button", { name: /もっと見る/ }).click();
     await archive.waitForFunction((n) => document.querySelectorAll("#posts-container article").length === n, totalDiaries);
     assert.deepEqual(diaryPageRequests, [0, 100], "Second page is requested only when needed");
     assert.equal(await archive.getByRole("button", { name: /もっと見る/ }).count(), 0);
-    assert.equal(
-      await archive.locator("#posts-container article").last().locator("text=回閲覧").count(),
-      0,
-      "No invented view count when the column is missing",
-    );
     // Monthly archive with many months: the month's entries load by date range, oldest first.
     await archive.locator("#diary-archive").waitFor({ state: "visible" });
     const jst = (iso) => new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit" }).format(new Date(iso));
