@@ -38,7 +38,7 @@ after(async()=>{ await browser?.close(); await new Promise(resolve=>server?.clos
 // Most tests check the code-only prompt, so they pin the opening setting to "code".
 // The GIF-opening tests pass their own value, or null to leave the setting unsaved (the default is "auto").
 async function open(db, storage={}) {
-  storage = {'sv-opening-v1':'code', ...storage};
+  storage = {'sv-opening-v2':'code', ...storage};
   const context = await browser.newContext();
   const flags = {failMetrics:false, failWrites:false, nullVerification:false, nullSubs:false, pauseWrite:null, pageSize:1000, participation:null};
   const writes = [], errors = [], reads=[];
@@ -285,22 +285,33 @@ function baselineFixture(){
 }
 const goodExperiment={views:900,avg_watch_sec:12,stayed_pct:60,subs_gained:2};
 
-test('new prompt changes the visual style each time, keeps the proven first line, deliverables and tracking, and makes no writes',async()=>{
+test('new prompt picks a new pattern and visual style each time, keeps deliverables and tracking, and makes no writes',async()=>{
   const db=baselineFixture(),a=await open(db);
   try {
     await a.tab('advice');await a.page.locator('#prompt-build').click();
     await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
     const first=await a.page.locator('#prompt-out').inputValue();
-    assert.match(first,/今回：毎回ちがう画風で作る（画風：墨と和紙）/);
+    const one=await a.page.evaluate(()=>readPromptHistory().recent.at(-1));
+    assert.match(one.code,/^T\d{3}-A\d-N\d-S1$/); // code-drawn videos never show people
+    assert.ok(first.includes(`## 今回の型（型番 ${one.code}）`));
+    assert.match(first,/## 今回の画風：墨と和紙（毎回ちがう型で作る）/);
     assert.match(first,/形式: 画風1｜墨と和紙/);
     assert.match(first,/水墨画/);assert.match(first,/サムネイル1枚で別のチャンネルに見える/);
-    // The first line is the priority: a relatable action with a hook, not a description of scenery.
+    // Why the pattern changes every time: the measured repetition, stated with its date.
+    assert.match(first,/2026-11-12の確認（チャンネルの全171本の題名と再生数）/);assert.match(first,/うつ15本・不眠13本・孤独15本/);
+    assert.match(first,/型は検証のためのものです。指定された型を、別のものに取り替えないでください/);
+    for(const label of ['テーマ：','題材：','切り口：','最初の一言の型：','展開の型：','締めの型：','画風：墨と和紙','写るもの：物と光だけ']) assert.ok(first.includes('- '+label),label);
+    // The first line is still the priority: a relatable action with a hook, not a description of scenery.
     assert.match(first,/## いちばん大事なこと：最初の一言（0〜3秒）/);
-    assert.match(first,/今回のテーマ：うつ/);assert.match(first,/今回の一言の型：物が語る状態/);
-    assert.match(first,/テーマ: うつ ／ 冒頭の掴み: 物が語る状態/);
+    assert.ok(first.includes(`今回のテーマ：${one.theme}。`));assert.ok(first.includes(`今回の一言の型：${one.hook}。`));
     assert.match(first,/景色や物のきれいさの描写だけ/);assert.match(first,/5点で採点/);
-    assert.match(first,/毎晩1本、置いてます。/);
+    assert.match(first,/ここ1か月でくり返した物（カーテン・枕・時計/);
+    assert.match(first,/## 構成（今回の展開と締め）/);assert.ok(first.includes(`締めの型「${one.ending}」`));
     assert.match(first,/窓と灯り：3本・再生の中央値500回/);
+    assert.match(first,/過去の題名（新しい順・3本）/);
+    // The record line carries the whole pattern, ready to paste into the video form.
+    assert.ok(first.includes(`識別子: v004 ／ 型番: ${one.code} ／ テーマ: ${one.theme} ／ 冒頭の掴み: ${one.hook} ／ 音: ___ ／ 形式: 画風1｜墨と和紙 ／ 尺: ___（実測秒）／ 締め: ${one.ending} ／`));
+    assert.match(first,/今回変えたもの: 型の探索 ／ 制作手法: その他 ／ メモ: 毎回ちがう型で作る・題材「/);
     // The prompt must stay within what Claude/Codex can render with code alone.
     assert.match(first,/Python（numpy・Pillow）で1フレームずつ画を描き、ffmpeg で mp4/);
     assert.match(first,/動画生成AI・画像生成AI・実写の素材は使いません/);
@@ -308,16 +319,19 @@ test('new prompt changes the visual style each time, keeps the proven first line
     assert.match(first,/自己点検 8\/8 通過/);assert.match(first,/冒頭0.2秒の平均の音量/);
     assert.match(first,/人物・顔・手は描きません/);assert.match(first,/日本語フォントがない場合だけ/);
     assert.doesNotMatch(first,/実写映像に限りなく近い|実写動画素材と編集環境|動画生成または実写素材の編集で実現|コード描画への無断の代替|図形・SVG・Canvasによる風景|Seedance等の動画生成を利用できる場合/);
+    assert.doesNotMatch(first,/ChatGPTに頼む素材|素材の使い方|```/);
     assert.match(first,/音入りのmp4を1本/);assert.match(first,/固定コメントは別に出しません/);
     assert.ok(first.includes("https://hoshinoumi.org/?utm_source=youtube&utm_medium=short&utm_content=v004"));
     assert.doesNotMatch(first,/全体17秒|場所はひとつ。暗い自分の部屋|形式: 映像＋テロップ（窓と灯り）|画の答えは、自分のスタンド|少なくとも4項目/);
     await a.page.locator('#prompt-build2').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build2').disabled);
     const second=await a.page.locator('#prompt-out').inputValue();
+    const two=await a.page.evaluate(()=>readPromptHistory().recent.at(-1));
     assert.notEqual(second,first);
     assert.match(second,/形式: 画風1｜ネオン管の夜/);assert.doesNotMatch(second,/水墨画/);
-    assert.match(second,/今回のテーマ：孤独/);assert.match(second,/今回の一言の型：時刻と、できていないこと/);
-    assert.match(second,/- 画風1｜墨と和紙／テーマ：うつ／一言の型：物が語る状態/); // The prior plan appears only as avoidance history.
+    assert.notEqual(two.code.slice(0,4),one.code.slice(0,4));assert.notEqual(two.theme,one.theme);assert.notEqual(two.hook,one.hook);assert.notEqual(two.ending,one.ending);
+    assert.ok(second.includes(`- 画風1｜墨と和紙／型番：${one.code}／テーマ：${one.theme}／一言の型：${one.hook}`)); // The prior plan appears only as avoidance history.
     assert.match(await a.page.locator('#test-design').textContent(),/画風1｜ネオン管の夜/);
+    assert.ok((await a.page.locator('#test-design').textContent()).includes('型番 '+two.code));
     assert.equal(await a.page.evaluate(()=>experimentPlan().groups.length),0);
     assert.equal(await a.page.locator('#prompt-slug').textContent(),'v004');
     await a.page.reload();await a.page.waitForFunction(()=>state.ready);await a.tab('advice');
@@ -366,10 +380,10 @@ test('repeated evidence promotes a candidate, with exploration after two consecu
     assert.match(prompt,/形式: 探索1｜昼の切り絵/);assert.match(prompt,/参考:v/);
     assert.match(await a.page.locator('#test-design').textContent(),/手応えのある型を再検証/);
     await a.page.locator('#prompt-build').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
-    assert.match(await a.page.locator('#prompt-out').inputValue(),/今回：手応えのある型を再検証/);
+    assert.match(await a.page.locator('#prompt-out').inputValue(),/（手応えのある型を再検証）/);
     await a.page.locator('#prompt-build2').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build2').disabled);
     assert.equal(await a.page.locator('#prompt-mode').inputValue(),'explore');
-    assert.match(await a.page.locator('#prompt-out').inputValue(),/今回：毎回ちがう画風で作る/);
+    assert.match(await a.page.locator('#prompt-out').inputValue(),/（毎回ちがう型で作る）/);
     // Once the recent results weaken, old hits do not keep the format selected.
     addExperiment(db,'探索1｜昼の切り絵',10,{views:80});
     addExperiment(db,'探索1｜昼の切り絵',9,{views:90});await a.page.evaluate(()=>loadAll());
@@ -447,7 +461,7 @@ test('unpublished plans reserve their concept without being counted as performan
 });
 
 
-test('generation rotates 21 distinct visual styles, themes and first-line types without changing published results or saved inputs',async()=>{
+test('generation rotates 21 distinct visual styles and never repeats a theme, first-line type or topic in a row, without changing published results or saved inputs',async()=>{
   const db=baselineFixture(), before=structuredClone(db), old=strategy('大切な目的');
   old.keep='毎回、夜の窓辺をコードで描く';
   const a=await open(db,{'sv-strategy-v1':JSON.stringify(old),['sv-entry-draft-'+date]:JSON.stringify({'experiment-post-1':{views:'777'}})});
@@ -457,22 +471,75 @@ test('generation rotates 21 distinct visual styles, themes and first-line types 
     for(let n=0;n<25;n++){
       const result=await a.page.evaluate(async()=>{
         const plan=experimentPlan();await showPrompt();
-        return {brief:plan.brief,format:plan.format,hook:plan.hook.name,theme:plan.theme,copy:document.querySelector('#prompt-out').value};
+        return {brief:plan.brief,format:plan.format,hook:plan.hook.name,theme:plan.theme,code:plan.pattern.code,ending:plan.pattern.ending.name,copy:document.querySelector('#prompt-out').value};
       });
       results.push(result);
-      assert.match(result.copy,/画風は毎回まったく別のものにし、題材と最初の一言は伸びた回の作り方にそろえます/);
+      assert.match(result.copy,/毎回ちがう組み合わせ（型）にします/);
+      assert.ok(result.copy.includes('型番: '+result.code+' ／'));
     }
     assert.equal(new Set(results.slice(0,21).map(r=>r.brief)).size,21);
     assert.equal(new Set(results.map(r=>r.format)).size,25);
     assert.equal(results[21].format,'画風2｜墨と和紙');assert.match(results[21].brief,/2回目/);
+    assert.equal(new Set(results.map(r=>r.code.slice(0,4))).size,25,'every topic is new');
+    assert.equal(new Set(results.slice(0,20).map(r=>r.theme)).size,20,'all 20 themes are used before one repeats');
     for(let n=1;n<25;n++){
-      assert.notEqual(results[n].hook,results[n-1].hook);assert.notEqual(results[n].theme,results[n-1].theme);
+      assert.notEqual(results[n].hook,results[n-1].hook);assert.notEqual(results[n].theme,results[n-1].theme);assert.notEqual(results[n].ending,results[n-1].ending);
+      if(n>1) assert.notEqual(results[n].theme,results[n-2].theme);
     }
     const history=await a.page.evaluate(()=>readPromptHistory());
-    assert.equal(history.recent.length,24);
+    assert.equal(history.recent.length,25);
     assert.equal(await a.page.locator('#base-keep').inputValue(),old.keep);
     assert.deepEqual(db,before);assert.deepEqual(a.writes,[]);assert.deepEqual(a.errors,[]);
     assert.equal(await a.page.evaluate(date=>JSON.parse(localStorage.getItem('sv-entry-draft-'+date))['experiment-post-1'].views,date),'777');
+  }finally{await a.context.close();}
+});
+
+test('the pattern catalog is safe and well formed, and 160 generations use every topic once with balanced, unpaired levels',async()=>{
+  const a=await open(baselineFixture(),{'sv-opening-v2':null});
+  try {
+    const c=await a.page.evaluate(()=>({themes:TOPIC_THEMES,topics:TOPICS,angles:ANGLES,narr:NARRATIVES,endings:ENDINGS,subjects:SUBJECTS,hooks:HOOK_TYPES,count:PATTERN_COUNT}));
+    assert.equal(c.themes.length,20);assert.equal(c.topics.length,160);
+    assert.equal(new Set(c.topics.map(t=>t.id)).size,160);assert.equal(new Set(c.topics.map(t=>t.seed)).size,160);
+    assert.equal(c.topics[0].id,11);assert.equal(c.topics.at(-1).id,208); // ids are recorded: theme number ×10 + topic number
+    assert.equal(c.hooks.length,12);assert.equal(c.angles.length,8);assert.equal(c.narr.length,8);assert.equal(c.endings.length,6);assert.equal(c.subjects.length,4);
+    assert.ok(c.count>=1000);
+    for(const key of ['angles','narr','endings','subjects','hooks']){
+      assert.equal(new Set(c[key].map(x=>x.name)).size,c[key].length,key);
+      for(const x of c[key]) assert.ok(x.name&&x.how,key+' '+x.name);
+    }
+    // Topics are lived situations; nothing that could hurt someone watching on their worst night.
+    for(const t of c.topics){
+      assert.ok(t.theme&&t.tag&&t.area&&t.seed.length>=8&&t.seed.length<=40,t.seed);
+      assert.doesNotMatch(t.seed,/薬|酒|刃物|ロープ|血|死|自傷|切る跡|飛び|屋上|ベランダ|線路|踏切|ホーム|吐|痩せ|体重/,t.seed);
+    }
+    for(const s of c.subjects) assert.match(s.ask,/顔|写さないでください/,s.name);
+    assert.deepEqual(await a.page.evaluate(()=>[decodePattern('T011-A3-N2-S1')?.topic.seed,decodePattern('【型:T208-A8-N8-S4】メモ')?.code,decodePattern('T999-A1-N1-S1'),decodePattern('T011-A9-N1-S1'),decodePattern('メモだけ')]),
+      [c.topics[0].seed,'T208-A8-N8-S4',null,null,null]);
+    assert.deepEqual(await a.page.evaluate(()=>[withPattern('古いメモ','T011-A3-N2-S1'),withPattern('【型:T011-A1-N1-S1】 書き直し','T012-A3-N2-S1'),withPattern('そのまま','こわれた型番')]),
+      ['【型:T011-A3-N2-S1】 古いメモ','【型:T012-A3-N2-S1】 書き直し','そのまま']);
+    const rows=await a.page.evaluate(()=>{
+      const out=[];
+      for(let n=0;n<160;n++){const plan=experimentPlan('explore','photo');rememberPrompt(plan);
+        const p=plan.pattern;out.push({topic:p.topic.id,theme:p.topic.theme,angle:p.angle.id,narr:p.narr.id,subj:p.subj.id,hook:p.hook.name,ending:p.ending.name,format:plan.format});}
+      return out;
+    });
+    const tally=key=>{const m=new Map();rows.forEach(r=>m.set(r[key],(m.get(r[key])||0)+1));return [...m.values()];};
+    assert.equal(new Set(rows.map(r=>r.topic)).size,160,'every topic is used once before any repeats');
+    assert.deepEqual(tally('theme'),Array(20).fill(8));
+    assert.deepEqual(tally('angle'),Array(8).fill(20));assert.deepEqual(tally('narr'),Array(8).fill(20));assert.deepEqual(tally('subj'),Array(4).fill(40));
+    for(const key of ['hook','ending']){const t=tally(key);assert.ok(Math.max(...t)-Math.min(...t)<=1,key+' '+t);}
+    assert.equal(tally('hook').length,12);assert.equal(tally('ending').length,6);
+    for(let n=2;n<160;n++) assert.ok(rows[n].theme!==rows[n-1].theme&&rows[n].theme!==rows[n-2].theme,'theme repeats at '+n);
+    // Levels must not travel in fixed pairs, or their effects could never be told apart.
+    const pairs=(x,y)=>new Set(rows.map(r=>r[x]+'|'+r[y])).size;
+    assert.ok(pairs('angle','narr')>=40,'angle×narr '+pairs('angle','narr'));
+    assert.ok(pairs('angle','subj')>=28,'angle×subj '+pairs('angle','subj'));
+    assert.ok(pairs('hook','ending')>=50,'hook×ending '+pairs('hook','ending'));
+    assert.equal(new Set(rows.slice(0,15).map(r=>r.format)).size,15);assert.match(rows[0].format,/^写真1｜/);assert.match(rows[15].format,/^写真2｜/);
+    // The 161st video starts the second lap of topics instead of failing.
+    const again=await a.page.evaluate(()=>experimentPlan('explore','photo').pattern);
+    assert.equal(again.tried,160);assert.equal(again.topicsUsed,160);assert.ok(again.topic.id>=11);
+    assert.deepEqual(a.writes,[]);assert.deepEqual(a.errors,[]);
   }finally{await a.context.close();}
 });
 
@@ -486,7 +553,7 @@ test('failed refresh does not consume an approach and unavailable history storag
     a.flags.failMetrics=false;
     await a.page.evaluate(()=>{
       const original=Storage.prototype.setItem;
-      Storage.prototype.setItem=function(key,value){if(key==='sv-prompt-style-v3')throw new Error('quota');return original.call(this,key,value);};
+      Storage.prototype.setItem=function(key,value){if(key==='sv-prompt-style-v4')throw new Error('quota');return original.call(this,key,value);};
     });
     await a.page.locator('#prompt-build').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
     assert.match(await a.page.locator('#prompt-msg').textContent(),/生成履歴を端末に保存できません/);
@@ -514,7 +581,7 @@ test('every visual style stays drawable with code: no people, unsafe places or l
       assert.match(brief,/画風：/);assert.match(brief,/文字の見せ方：/);assert.match(brief,/音：/);
     }
     const options=await a.page.locator('#dl-format option').evaluateAll(xs=>xs.map(x=>x.value));
-    assert.deepEqual(options,recipes.map(r=>'画風1｜'+r.name));
+    assert.deepEqual(options,[...(await a.page.evaluate(()=>PHOTO_RECIPES.map(r=>'写真1｜'+r.name))),...recipes.map(r=>'画風1｜'+r.name)]);
     assert.deepEqual(a.errors,[]);
   }finally{await a.context.close();}
 });
@@ -532,7 +599,7 @@ test('a strong live-action format stays in the comparison but is never chosen fo
     assert.equal(plan.mode,'explore');assert.match(plan.reason,/再検証候補がない/);
     assert.match(await a.page.locator('#test-matrix').textContent(),/実写の回のため、コードで描く制作では再検証しない/);
     const prompt=await a.page.evaluate(()=>buildPrompt(experimentPlan('refine')).text);
-    assert.match(prompt,/今回：毎回ちがう画風で作る/);
+    assert.match(prompt,/（毎回ちがう型で作る）/);
     assert.match(prompt,/実写・動画生成向けの案があっても、今回は下の「作れる範囲」の作り方で作ります/);
     assert.deepEqual(a.writes,[]);assert.deepEqual(a.errors,[]);
   }finally{await a.context.close();}
@@ -687,7 +754,7 @@ test('retest prioritizes continued viewing without a view-count gate, but never 
 
 function setVideo(db,id,fields){Object.assign(db.sv_videos.find(v=>v.id===id),fields);}
 
-test('first line follows the strongest recent themes, rotates first-line types and quotes real high and low titles',async()=>{
+test('themes are spread across the catalog instead of following past winners, and real high and low titles are quoted',async()=>{
   const db=experimentFixture();
   const add=(title,theme,views,daysAgo,extra={})=>{const {id}=addExperiment(db,'映像＋テロップ（窓と灯り）',daysAgo,{views});setVideo(db,id,{title,theme,...extra});};
   add('淹れたお茶が、また冷めている。 #ショート #うつ','うつ',1054,30);
@@ -697,23 +764,30 @@ test('first line follows the strongest recent themes, rotates first-line types a
   add('風に飛ばされた落ち葉が、知らない本屋の軒先で止まった。 #ショート','日常',110,22);
   add('最後の綿毛がひとつ、知らない野原に降りた。 #ショート','日常',251,20);
   add('今日、声を出したのは一回だけ。 #ショート #孤独','孤独',1001,18,{hook_type:'数字で言い切る'});
+  add('星と海 #ショート #精神障害','',2159,90); // the early untitled videos are not listed as titles
   const a=await open(db);
   try {
     const plan=await a.page.evaluate(()=>experimentPlan());
-    // 孤独 has a single video, so it is not ranked; the last two posted themes are not repeated.
+    // The ranking is shown for reference only (孤独 has a single video, so it is not ranked).
     assert.deepEqual(plan.themes.map(t=>t.theme),['不眠','うつ','日常']);
-    assert.equal(plan.theme,'不眠');assert.equal(plan.hook.name,'物が語る状態');
+    // Old videos carry no pattern code, so they do not push the choice toward or away from any theme.
+    assert.equal(plan.pattern.tried,0);assert.equal(plan.pattern.topicsUsed,0);
     const prompt=await a.page.evaluate(()=>buildPrompt().text);
-    assert.match(prompt,/今回のテーマ：不眠。直近120日で再生の中央値が高いテーマ：不眠 1,042回（2本）／うつ 985回（2本）／日常 181回（2本）/);
-    assert.match(prompt,/再生が多かった題名（投稿から2日以降の記録）：\n  「淹れたお茶が、また冷めている。」1,054回\n  「眠れない夜は、窓の前にいる。」1,053回/);
+    assert.ok(prompt.includes(`今回のテーマ：${plan.theme}。テーマは20個を順にまわし、直前の2本と同じテーマは続けません`));
+    assert.match(prompt,/参考（直近120日のテーマ別の再生の中央値。次のテーマは、これでは決めません）：不眠 1,042回（2本）／うつ 985回（2本）／日常 181回（2本）/);
+    assert.match(prompt,/再生が多かった題名（投稿から2日以降の記録）：\n  「星と海」2,159回\n  「淹れたお茶が、また冷めている。」1,054回/);
     assert.match(prompt,/再生が少なかった題名：\n  「風に飛ばされた落ち葉が、知らない本屋の軒先で止まった。」110回/);
-    assert.doesNotMatch(prompt.slice(prompt.indexOf('再生が多かった題名'),prompt.indexOf('## 今回：')),/#ショート/); // hashtags are stripped from the examples
-    assert.match(prompt,/テーマ: 不眠 ／ 冒頭の掴み: 物が語る状態/);
+    assert.doesNotMatch(prompt.slice(prompt.indexOf('再生が多かった題名'),prompt.indexOf('## 今回の画風')),/#ショート/); // hashtags are stripped from the examples
+    // Every earlier title is handed over so the same action, object or phrasing is not repeated.
+    assert.match(prompt,/過去の題名（新しい順・7本）。1枚目の一言と題名は、このどれとも同じ行動・同じ物・同じ言い回しにしないでください：\n  今日、声を出したのは一回だけ。／最後の綿毛がひとつ、知らない野原に降りた。／/);
+    assert.doesNotMatch(prompt.slice(prompt.indexOf('過去の題名（新しい順'),prompt.indexOf('## 最優先KPI')),/#ショート|星と海／|／星と海/);
+    assert.ok(prompt.includes(`テーマ: ${plan.theme} ／ 冒頭の掴み: ${plan.hook.name} ／`));
+    assert.ok(prompt.includes(`#${plan.pattern.topic.tag} を入れる`));
     await a.tab('advice');await a.page.locator('#prompt-build').click();
     await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
     const next=await a.page.evaluate(()=>experimentPlan());
-    assert.equal(next.theme,'うつ');assert.equal(next.hook.name,'時刻と、できていないこと');
-    assert.match(await a.page.locator('#test-design').textContent(),/テーマ：不眠 ／ 最初の一言の型：物が語る状態/); // the plan that was just generated
+    assert.notEqual(next.theme,plan.theme);assert.notEqual(next.hook.name,plan.hook.name);assert.equal(next.pattern.tried,1);
+    assert.ok((await a.page.locator('#test-design').textContent()).includes(`テーマ：${plan.theme} ／ 題材：${plan.pattern.topic.seed}`)); // the plan that was just generated
     assert.deepEqual(a.errors,[]);
   }finally{await a.context.close();}
 });
@@ -741,60 +815,83 @@ test('a retest keeps the reference theme and first-line type unless the first li
   }finally{await a.context.close();}
 });
 
-/* 冒頭の3〜5秒を ChatGPT のGIFにする回（2026-11-09〜）。 */
+/* 実写の素材（ChatGPT の実写の画像とGIF）で作る回（2026-11-12〜）。 */
 const gifNote = '【制作手法:ChatGPT GIF】\n冒頭:ChatGPTのGIF';
+const photoNote = '【制作手法:ChatGPT 実写】\n素材:GIF2・写真2';
 function tagMethod(db, id, note){ db.sv_videos.find(v=>v.id===id).note=note; }
 
-test('by default the next video opens with a ChatGPT GIF: two steps, a paste-ready GIF request, flipbook handling and nine checks',async()=>{
-  const db=baselineFixture(),a=await open(db,{'sv-opening-v1':null});
+test('by default the next video is built from photoreal ChatGPT material: two steps, a paste-ready request for real motion, footage-like handling and nine checks',async()=>{
+  const db=baselineFixture(),a=await open(db,{'sv-opening-v2':null,'sv-opening-v1':'code'}); // the old v1 choice is not carried over
   try {
     await a.tab('advice');
-    assert.equal(await a.page.locator('#prompt-opening').inputValue(),'auto');
+    assert.equal(await a.page.locator('#prompt-opening').inputValue(),'photo');
     await a.page.locator('#prompt-build').click();
     await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
     const p=await a.page.locator('#prompt-out').inputValue();
-    // Unchanged from the code-only prompt: style rotation, the first line, tracking.
-    assert.match(p,/形式: 画風1｜墨と和紙/);assert.match(p,/## いちばん大事なこと：最初の一言（0〜3秒）/);
+    const one=await a.page.evaluate(()=>readPromptHistory().recent.at(-1));
+    // The shooting style replaces the drawn style; the pattern, the first line and tracking stay.
+    assert.match(p,/形式: 写真1｜窓辺の自然光/);assert.match(p,/## 今回の撮り方：窓辺の自然光（毎回ちがう型で作る）/);
+    assert.match(one.code,/^T\d{3}-A\d-N\d-S[1-4]$/);assert.ok(p.includes(`## 今回の型（型番 ${one.code}）`));
+    assert.match(p,/## いちばん大事なこと：最初の一言（0〜3秒）/);
     assert.ok(p.includes('https://hoshinoumi.org/?utm_source=youtube&utm_medium=short&utm_content=v004'));
-    // Two steps: decide the first line, write the ChatGPT request and stop; then build the mp4 from the GIF.
-    assert.match(p,/## 今回の進め方（2回に分けます）/);assert.match(p,/ChatGPT（Images 2.6）/);
+    // Two steps: decide the first line, write the ChatGPT request and stop; then build the mp4 from the material.
+    assert.match(p,/## 今回の進め方（2回に分けます）/);assert.match(p,/ChatGPT（Images 2.6）/);assert.match(p,/実写に見える映像で作ります/);
     assert.match(p,/ChatGPTに渡す指示文を書いて止まってください。mp4・題名・説明文は、まだ作りません/);
-    assert.match(p,/「GIFなしで」と返したら/);assert.match(p,/GIFを受け取るところ以外は途中で聞き返さず/);
-    assert.ok(p.indexOf('## いちばん大事なこと')<p.indexOf('## 冒頭のGIF（1回目'),'the first line is decided before the GIF is requested');
-    // The request is one fenced block with the layout and safety rules.
+    assert.match(p,/素材が1つもないときは作り始めず/);assert.match(p,/素材を受け取るところ以外は途中で聞き返さず/);
+    assert.ok(p.indexOf('## いちばん大事なこと')<p.indexOf('## ChatGPTに頼む素材（1回目'),'the first line is decided before the material is requested');
+    // Why the earlier GIFs barely moved, and the two things that are now always requested.
+    assert.match(p,/これまでのGIFは「絵が少し動くだけ」になっていました（2026-11-12）/);
+    assert.match(p,/①実写の写真に見えること ②1コマ目から最後のコマまで続く、はっきりした動きが1つあること/);
+    // The request is one fenced block: four pieces of material, photoreal, one clear motion, layout and safety rules.
     assert.equal(p.split('```').length,3);
     const block=p.slice(p.indexOf('```')+3,p.lastIndexOf('```'));
-    assert.match(block,/^\nアニメーションGIFを1つ作ってください/);
-    for(const rule of [/縦長（9:16）/,/カメラは動かさず固定/,/すべてのコマで同じ/,/16コマ前後/,/上から40〜57%/,/文字・数字・看板・ロゴ・透かしは入れないでください/,
-      /人・顔・手・人影は描かないでください/,/点滅/,/薬・お酒・刃物・ロープ・血、高い所・駅・線路・踏切/]) assert.match(block,rule);
-    // Handling a flipbook GIF: dissolve frames, smooth without mixing the two ends, never loop back after a change.
-    assert.match(p,/## 冒頭のGIFの使い方（2回目）/);assert.match(p,/ImageSequence/);assert.match(p,/\(1−a\)×いまのコマ＋a×次のコマ/);
-    assert.match(p,/反対の端のコマを混ぜず/);assert.match(p,/最後と最初の画がつながっているときだけ/);
-    assert.match(p,/GIFを使うのは、0.0秒から3〜5秒まで/);assert.match(p,/黒や白をはさみません/);
-    assert.match(p,/添付のGIFのほかの動画生成AI・画像生成AI/);
-    assert.doesNotMatch(p,/動画生成AI・画像生成AI・実写の素材は使いません。作り方は下の「作れる範囲」と「作り方」の章のとおりです/);
-    assert.match(p,/人物・顔・手は描きません/);
-    assert.match(p,/自己点検 9\/9 通過/);assert.doesNotMatch(p,/自己点検 8\/8/);assert.match(p,/9\. 0.0秒からGIFの区間の終わり/);
-    assert.match(p,/冒頭:ChatGPTのGIF（___コマ・0〜___秒）/);assert.match(p,/「映像の制作手法」は「冒頭にChatGPTのGIF」を選びます/);
-    assert.match(p,/冒頭GIFの比較（2026-11-09〜/);
-    // The page shows the extra steps and why this opening was chosen.
+    assert.match(block,/^\n縦長のショート動画に使う素材を4つ、順番に作ってください。素材1と素材4はアニメーションGIF、素材2と素材3は写真（静止画）です。/);
+    for(const rule of [/実写の写真に見える画にしてください。イラスト・アニメ・絵画・3DCGの見た目にはしないでください/,/撮り方：昼の窓から入るやわらかい自然光/,/色：白い光と/,/写るもの：/,
+      /生活感を出してください/,/HDR風/,/縦長（9:16）/,/上から40〜57%/,/文字・数字・ロゴ・透かし・読める看板・読める画面は入れないでください/,/人の顔は写さないでください/,/点滅/,
+      /薬・お酒・刃物・ロープ・血や傷、高い所（屋上・ベランダの手すり・橋の上）・駅のホーム・線路・踏切/,
+      /■ 素材1：アニメーションGIF（動画の最初の3〜4秒）/,/動き：【はっきり分かる動きを1つ/,/実際に撮った動画から、コマを順に切り出したように/,/16コマ前後/,/カメラは三脚に固定/,
+      /1コマ目から動きが始まり、コマごとに少しずつ進み、最後のコマで動きが終わる/,/同じ画のコマを続けないでください/,/■ 素材2・素材3：写真（静止画）/,/■ 素材4：アニメーションGIF（動画の最後の3〜4秒）/,/「続き」と送ったら/]) assert.match(block,rule);
+    assert.doesNotMatch(block,/動くのは、ゆっくり変わるもの1つか2つだけ|カメラは動かさず固定。動くのは/); // the wording that produced barely moving pictures
+    const subject=await a.page.evaluate(code=>decodePattern(code).subj,one.code);
+    assert.ok(block.includes('写るもの：'+subject.ask));
+    // Turning flipbook frames and stills into footage: dissolve, steady only what should not move, never leave a photo frozen.
+    assert.match(p,/## 素材の使い方（2回目）/);assert.match(p,/ImageSequence/);assert.match(p,/\(1−a\)×いまのコマ＋a×次のコマ/);
+    assert.match(p,/全コマの画素ごとの中央値を「動かない背景」とし/);assert.match(p,/平均でならすのは動いていない所だけ/);
+    assert.match(p,/止めたまま置きません（スライドショーに見えます）/);assert.match(p,/手持ちのカメラのようなごく小さな揺れ/);
+    assert.match(p,/物・家具・人のような形のあるものは描き足しません/);assert.match(p,/4つの素材の色をそろえます/);
+    assert.match(p,/最初のコマへ戻すループにはしません/);assert.match(p,/黒や白をはさみません/);
+    assert.match(p,/場面にあるはずの環境音/);
+    assert.match(p,/添付の素材のほかの動画生成AI・画像生成AI/);assert.match(p,/顔は写しません。コードで人・手・顔を描き足しません/);
+    assert.doesNotMatch(p,/動画生成AI・画像生成AI・実写の素材は使いません。作り方は下の「作れる範囲」と「作り方」の章のとおりです|人物・顔・手は描きません|写真のような写実や実写の再現は狙いません/);
+    assert.match(p,/自己点検 9\/9 通過/);assert.doesNotMatch(p,/自己点検 8\/8/);assert.match(p,/9\. 全編が添付の素材からできているか/);
+    assert.match(p,/制作手法: ChatGPT 実写 ／ メモ: /);assert.match(p,/・素材:GIF___・写真___/);assert.match(p,/「映像の制作手法」は「ChatGPTの実写の画像とGIF」になります/);
+    assert.match(p,/実写の回とコードだけの回の比較（投稿72〜120時間後の動画別中央値）/);
+    // The page shows the extra steps and how this video is made.
     assert.equal(await a.page.locator('#prompt-gif-steps').isVisible(),true);
-    assert.match(await a.page.locator('#prompt-msg').textContent(),/冒頭の3〜5秒：ChatGPTのGIF/);
-    assert.match(await a.page.locator('#test-design').textContent(),/冒頭の3〜5秒をChatGPTのGIFで作る/);
-    // Choosing "code" goes back to the code-only prompt and hides the GIF steps.
+    assert.match(await a.page.locator('#prompt-msg').textContent(),/作り方：ChatGPTの実写の画像とGIF/);
+    assert.match(await a.page.locator('#test-design').textContent(),/ChatGPTの実写の画像とGIFで作る/);
+    // Choosing "code" goes back to the code-only prompt with the drawn styles, and is remembered.
     await a.page.locator('#prompt-opening').selectOption('code');
     await a.page.locator('#prompt-build').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
     const code=await a.page.locator('#prompt-out').inputValue();
-    assert.match(code,/自己点検 8\/8 通過/);assert.doesNotMatch(code,/GIF（ChatGPT|## 冒頭のGIF|```/);
-    assert.match(code,/「映像の制作手法」は「コードだけ（GIF・Seedanceなし）」を選びます/);
+    assert.match(code,/自己点検 8\/8 通過/);assert.doesNotMatch(code,/## ChatGPTに頼む素材|## 素材の使い方|```/);
+    assert.match(code,/形式: 画風1｜墨と和紙/);assert.match(code,/写るもの：物と光だけ/);assert.match(code,/制作手法: その他 ／/);
+    assert.match(code,/「映像の制作手法」は「コードだけ（GIF・Seedanceなし）」になります/);
     assert.equal(await a.page.locator('#prompt-gif-steps').isVisible(),false);
+    assert.equal(await a.page.evaluate(()=>localStorage.getItem('sv-opening-v2')),'code');
+    await a.page.reload();await a.page.waitForFunction(()=>state.ready);
+    assert.equal(await a.page.locator('#prompt-opening').inputValue(),'code');
+    // A broken saved value falls back to the default instead of reaching the prompt.
+    await a.page.evaluate(()=>localStorage.setItem('sv-opening-v2','<img src=x>'));
+    await a.page.reload();await a.page.waitForFunction(()=>state.ready);await a.tab('advice');
+    assert.equal(await a.page.locator('#prompt-opening').inputValue(),'photo');
+    assert.equal(await a.page.evaluate(()=>experimentPlan('explore','<img src=x>').opening.mode),'photo');
     // Tailwind is not loaded in tests; in production its preflight makes every box border-box.
     await a.page.addStyleTag({content:'*,::before,::after{box-sizing:border-box}'});
-    await a.page.locator('#prompt-opening').selectOption('auto');
     await a.page.locator('#prompt-build').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
     for(const width of [375,1024]){
       await a.page.setViewportSize({width,height:900});
-      for(const name of ['advice','home']){
+      for(const name of ['advice','home','grow']){
         await a.tab(name);
         assert.equal(await a.page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true,name+' '+width);
       }
@@ -803,87 +900,144 @@ test('by default the next video opens with a ChatGPT GIF: two steps, a paste-rea
   }finally{await a.context.close();}
 });
 
-test('auto alternates by the recorded method, a retest follows its reference, and an explicit choice wins and is remembered',async()=>{
-  const db=baselineFixture(); // three earlier videos without a recorded method count as code-only
-  const a=await open(db,{'sv-opening-v1':null});
+test('every shooting style is photographic and safe, rotates before repeating, and a retest follows the kind of its reference',async()=>{
+  const db=baselineFixture();
+  const a=await open(db,{'sv-opening-v2':null});
   try {
-    await a.page.evaluate(start=>{GIF_EXPERIMENT.start=start;},dayAgoJst(30));
-    let o=await a.page.evaluate(()=>experimentPlan('explore').opening);
-    assert.equal(o.mode,'gif');assert.deepEqual(o.counts,{gif:0,code:3});assert.match(o.reason,/GIFの回のほうが少ない/);
-    for(const age of [15,14,13,12]) tagMethod(db,addExperiment(db,'画風1｜墨と和紙',age).id,gifNote);
-    const seedance=addExperiment(db,'実写テスト',11);tagMethod(db,seedance.id,'【制作手法:Seedance】'); // not part of this comparison
+    const recipes=await a.page.evaluate(()=>PHOTO_RECIPES);
+    assert.equal(recipes.length,15);
+    for(const key of ['name','look','camera']) assert.equal(new Set(recipes.map(r=>r[key])).size,15,key);
+    const drawn=await a.page.evaluate(()=>EXPERIMENT_RECIPES.map(r=>r.name));
+    for(const r of recipes){
+      for(const key of ['name','seconds','mood','look','palette','text','camera','sound']) assert.ok(r[key],r.name+' '+key);
+      assert.ok(!drawn.includes(r.name),r.name); // names are how a format finds its recipe
+      const text=[r.name,r.mood,r.look,r.palette,r.text,r.camera,r.sound].join('／');
+      assert.doesNotMatch(text,/顔が|顔を写|人影|駅|線路|踏切|屋上|ベランダ|橋の上|薬|酒|刃物|ロープ|血|点滅|赤い光|ロゴ|イラスト|アニメ/,r.name);
+      const [,lo,hi]=r.seconds.match(/^(\d+)〜(\d+)秒$/).map(Number);
+      assert(lo>=15&&hi<=22,r.name+' '+r.seconds);
+      assert.match(await a.page.evaluate(r=>recipeBrief(r,2,true),r),/^撮り方：.*この撮り方は2回目です/);
+    }
+    for(let n=0;n<15;n++){
+      const plan=await a.page.evaluate(()=>experimentPlan());
+      assert.equal(plan.mode,'explore');assert.equal(plan.opening.mode,'photo');assert.equal(plan.format,'写真1｜'+recipes[n].name);
+      tagMethod(db,addExperiment(db,plan.format,45-n,{views:100}).id,photoNote);
+      assert.equal(await a.page.evaluate(()=>loadAll()),true);
+    }
+    assert.equal((await a.page.evaluate(()=>experimentPlan())).format,'写真2｜窓辺の自然光');
+    // The photoreal rounds get their own column, apart from the drawn styles and the 10/18〜10/23 exploration.
+    const fc=await a.page.evaluate(()=>{const fc=formatCompare();return {pho:fc.pho?.n,sty:fc.sty,exp:fc.exp};});
+    assert.equal(fc.pho,15);assert.equal(fc.sty,null);assert.equal(fc.exp,null);
+    // A promising photoreal format is retested with photoreal material even when "code" is selected, and the other way round.
+    for(const age of [8,7]) tagMethod(db,addExperiment(db,'写真2｜物の接写',age,goodExperiment).id,photoNote);
+    addExperiment(db,'画風1｜墨と和紙',6,{views:200}); // a different format in between, so the retest is allowed
     await a.page.evaluate(()=>loadAll());
-    o=await a.page.evaluate(()=>experimentPlan('explore').opening);
-    assert.equal(o.mode,'code');assert.deepEqual(o.counts,{gif:4,code:3});
-    // Before the start date nothing counts, so the test starts with a GIF.
-    await a.page.evaluate(start=>{GIF_EXPERIMENT.start=start;},dayAgoJst(1));
-    assert.deepEqual(await a.page.evaluate(()=>experimentPlan('explore').opening.counts),{gif:0,code:0});
-    assert.equal(await a.page.evaluate(()=>experimentPlan('explore').opening.mode),'gif');
-    await a.page.evaluate(start=>{GIF_EXPERIMENT.start=start;},dayAgoJst(30));
-    // A retest keeps the reference video's opening even when the counts point the other way.
-    const ref=addExperiment(db,'画風2｜昼の切り絵',10,goodExperiment);tagMethod(db,ref.id,gifNote);
-    const ref2=addExperiment(db,'画風2｜昼の切り絵',9,goodExperiment);tagMethod(db,ref2.id,gifNote);
-    addExperiment(db,'画風3｜色鉛筆の絵日記',7); // a different style in between, so the retest is allowed
-    await a.page.evaluate(()=>loadAll());
-    assert.deepEqual(await a.page.evaluate(()=>experimentPlan('explore').opening.counts),{gif:6,code:4});
-    const refine=await a.page.evaluate(()=>{const p=experimentPlan('refine');return {mode:p.mode,opening:p.opening};});
-    assert.equal(refine.mode,'refine');assert.equal(refine.opening.mode,'gif');assert.match(refine.opening.reason,/参考にする回/);
-    // An explicit choice wins over the alternation and is kept after a reload.
-    await a.tab('advice');await a.page.locator('#prompt-opening').selectOption('gif');
-    assert.equal(await a.page.evaluate(()=>experimentPlan('explore').opening.mode),'gif');
-    assert.match(await a.page.locator('#test-design').textContent(),/「毎回、ChatGPTのGIFで」を選んでいます/);
-    await a.page.reload();await a.page.waitForFunction(()=>state.ready);
-    assert.equal(await a.page.locator('#prompt-opening').inputValue(),'gif');
-    await a.page.locator('#prompt-opening').selectOption('code');
-    assert.equal(await a.page.evaluate(()=>experimentPlan('refine').opening.mode),'code');
-    assert.equal(await a.page.evaluate(()=>localStorage.getItem('sv-opening-v1')),'code');
-    // A broken saved value falls back to the default instead of reaching the prompt.
-    await a.page.evaluate(()=>localStorage.setItem('sv-opening-v1','<img src=x>'));
-    await a.page.reload();await a.page.waitForFunction(()=>state.ready);
-    assert.equal(await a.page.locator('#prompt-opening').inputValue(),'auto');
+    await a.tab('advice');await a.page.locator('#prompt-opening').selectOption('code');
+    let refine=await a.page.evaluate(()=>{const p=experimentPlan('refine');return {mode:p.mode,format:p.format,opening:p.opening,photo:p.photo};});
+    assert.equal(refine.mode,'refine');assert.equal(refine.format,'写真2｜物の接写');assert.equal(refine.opening.mode,'photo');assert.match(refine.opening.reason,/参考にする回/);
+    const prompt=await a.page.evaluate(()=>buildPrompt(experimentPlan('refine')).text);
+    assert.match(prompt,/## 今回の撮り方：物の接写（手応えのある型を再検証）/);assert.match(prompt,/## ChatGPTに頼む素材/);assert.match(prompt,/今回だけ変えるもの：/);
+    assert.equal(await a.page.evaluate(()=>experimentPlan('explore').opening.mode),'code'); // the explicit choice still decides ordinary videos
     assert.deepEqual(a.writes,[]);assert.deepEqual(a.errors,[]);
   }finally{await a.context.close();}
 });
 
-test('the GIF comparison uses age-matched medians per method, waits for three each, and the method tag round-trips',async()=>{
+test('the photoreal comparison uses age-matched medians per method, waits for three each, and the method tags round-trip',async()=>{
   const db=experimentFixture();
-  for(const age of [10,8]) tagMethod(db,addExperiment(db,'画風1｜墨と和紙',age,{stayed_pct:70,avg_watch_sec:10}).id,gifNote);
-  const pending=addExperiment(db,'画風2｜昼の切り絵',1,{stayed_pct:99},0);tagMethod(db,pending.id,gifNote); // too new to compare
-  addExperiment(db,'画風3｜色鉛筆の絵日記',9,{stayed_pct:50}); // method not recorded: counted as code-only
-  for(const age of [7,5]) tagMethod(db,addExperiment(db,'画風4｜ネオン管の夜',age,{stayed_pct:50}).id,'【制作手法:その他】');
+  for(const age of [10,8]) tagMethod(db,addExperiment(db,'写真1｜窓辺の自然光',age,{stayed_pct:70,avg_watch_sec:10}).id,photoNote);
+  const pending=addExperiment(db,'写真1｜物の接写',1,{stayed_pct:99},0);tagMethod(db,pending.id,photoNote); // too new to compare
+  addExperiment(db,'画風3｜色鉛筆の絵日記',20,{stayed_pct:50}); // method not recorded: counted as code-only
+  for(const age of [18,16]) tagMethod(db,addExperiment(db,'画風4｜ネオン管の夜',age,{stayed_pct:50}).id,'【制作手法:その他】');
+  tagMethod(db,addExperiment(db,'画風5｜墨と和紙',11,{stayed_pct:30}).id,gifNote); // the illustrated-GIF openings are shown apart
   const seedance=addExperiment(db,'実写テスト',6,{stayed_pct:1});tagMethod(db,seedance.id,'【制作手法:Seedance】');
-  const a=await open(db,{'sv-opening-v1':'gif'});
+  addExperiment(db,'画風1｜墨と和紙',40,{stayed_pct:5}); // before the baseline period
+  const a=await open(db,{'sv-opening-v2':'photo'});
   try {
-    await a.page.evaluate(start=>{GIF_EXPERIMENT.start=start;},dayAgoJst(12));
-    let c=await a.page.evaluate(()=>{const c=openingComparison();return {gif:c.gif,code:c.code,text:openingDiagnosis(c)};});
-    assert.equal(c.gif.summary.n,2);assert.equal(c.gif.pending,1);assert.equal(c.code.summary.n,3);assert.equal(c.code.summary.stayed,50);
-    assert.match(c.text,/判断保留：.*GIFの回2本・コードだけの回3本/);
-    tagMethod(db,addExperiment(db,'画風5｜墨と和紙',6,{stayed_pct:70,avg_watch_sec:10}).id,gifNote);
-    await a.page.evaluate(()=>loadAll());await a.page.evaluate(start=>{GIF_EXPERIMENT.start=start;renderKpis();},dayAgoJst(12));
-    c=await a.page.evaluate(()=>{const c=openingComparison();return {gif:c.gif,code:c.code,text:openingDiagnosis(c)};});
-    assert.equal(c.gif.summary.n,3);assert.equal(c.gif.summary.stayed,70);assert.equal(c.code.videos,3);
-    assert.match(c.text,/視聴を継続が20.0ポイント高い/);
+    const period=()=>{PHOTO_EXPERIMENT.start=window.testStart;PHOTO_EXPERIMENT.baseline=window.testBaseline;GIF_EXPERIMENT.start=window.testBaseline;};
+    await a.page.evaluate(([start,baseline])=>{window.testStart=start;window.testBaseline=baseline;},[dayAgoJst(12),dayAgoJst(25)]);
+    await a.page.evaluate(period);
+    let c=await a.page.evaluate(()=>{const c=openingComparison();return {photo:c.photo,code:c.code,gif:c.gif,text:openingDiagnosis(c)};});
+    assert.equal(c.photo.summary.n,2);assert.equal(c.photo.pending,1);assert.equal(c.code.summary.n,3);assert.equal(c.code.summary.stayed,50);assert.equal(c.gif.summary.n,1);
+    assert.match(c.text,/判断保留：.*実写の回2本・コードだけの回3本/);
+    tagMethod(db,addExperiment(db,'写真1｜夕方の西日',6,{stayed_pct:70,avg_watch_sec:10}).id,photoNote);
+    await a.page.evaluate(()=>loadAll());await a.page.evaluate(period);await a.page.evaluate(()=>renderKpis());
+    c=await a.page.evaluate(()=>{const c=openingComparison();return {photo:c.photo,code:c.code,text:openingDiagnosis(c)};});
+    assert.equal(c.photo.summary.n,3);assert.equal(c.photo.summary.stayed,70);assert.equal(c.code.videos,3);
+    assert.match(c.text,/実写の回のほうが、視聴を継続が20.0ポイント高い/);
     const html=await a.page.locator('#gif-comparison').textContent();
-    assert.match(html,/\+20.0ポイント/);assert.match(html,/スワイプして次へ：GIFの回30.0%／コードだけの回50.0%/);
-    assert.match(html,/同条件の計測行なし：GIFの回1本／コードだけの回0本/);
+    assert.match(html,/\+20.0ポイント/);assert.match(html,/スワイプして次へ：実写の回30.0%／コードだけの回50.0%/);
+    assert.match(html,/同条件の計測行なし：実写の回1本／コードだけの回0本/);assert.match(html,/冒頭だけGIFの回/);assert.match(html,/30.0%（1本）/);
     const prompt=await a.page.evaluate(()=>buildPrompt().text);
-    assert.match(prompt,/冒頭GIFの比較（.*GIFの回 視聴を継続 70.0%（3本）/);assert.match(prompt,/20.0ポイント高い/);
+    assert.match(prompt,/実写の回とコードだけの回の比較（.*実写の回（.*） 視聴を継続 70.0%（3本）/);assert.match(prompt,/20.0ポイント高い/);
     for(const m of db.sv_metrics) if(m.stayed_pct===70) m.stayed_pct=40;
-    await a.page.evaluate(()=>loadAll());
+    await a.page.evaluate(()=>loadAll());await a.page.evaluate(period);
     assert.match(await a.page.evaluate(()=>openingDiagnosis(openingComparison())),/10.0ポイント低い/);
     // The method select writes the tag in front of the note and reads it back; older tags keep their meaning.
     const id=db.sv_videos[3].id;
     await a.page.evaluate(id=>openVideo(id),id);
     await a.page.locator('#video-modal summary').click();
     assert.equal(await a.page.locator('#vm-method').inputValue(),'unknown');
-    await a.page.locator('#vm-note').fill('メモ');await a.page.locator('#vm-method').selectOption('gif');
+    await a.page.locator('#vm-note').fill('メモ');await a.page.locator('#vm-method').selectOption('photo');
     await a.page.locator('#vm-save').click();
     await a.page.waitForFunction(()=>document.querySelector('#video-modal').classList.contains('hidden'));
-    assert.equal(db.sv_videos[3].note,'【制作手法:ChatGPT GIF】\nメモ');
+    assert.equal(db.sv_videos[3].note,'【制作手法:ChatGPT 実写】\nメモ');
     await a.page.evaluate(id=>openVideo(id),id);
-    assert.equal(await a.page.locator('#vm-method').inputValue(),'gif');assert.equal(await a.page.locator('#vm-note').inputValue(),'メモ');
-    assert.deepEqual(await a.page.evaluate(()=>['【制作手法:Seedance】x','【制作手法:その他】x','【制作手法:ChatGPT GIF】x','ChatGPT GIF','【制作手法:GIF】x'].map(note=>productionMethod({note}))),
-      ['seedance','other','gif','unknown','unknown']);
+    assert.equal(await a.page.locator('#vm-method').inputValue(),'photo');assert.equal(await a.page.locator('#vm-note').inputValue(),'メモ');
+    assert.deepEqual(await a.page.evaluate(()=>['【制作手法:Seedance】x','【制作手法:その他】x','【制作手法:ChatGPT GIF】x','【制作手法:ChatGPT 実写】x','ChatGPT 実写','【制作手法:GIF】x'].map(note=>productionMethod({note}))),
+      ['seedance','other','gif','photo','unknown','unknown']);
+    assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
+
+test('pasting the record line fills the video form, keeps the pattern code in the note, and the pattern feeds the comparison by item',async()=>{
+  const db=baselineFixture(),a=await open(db,{'sv-opening-v2':null});
+  try {
+    await a.tab('advice');await a.page.locator('#prompt-build').click();
+    await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
+    const prompt=await a.page.locator('#prompt-out').inputValue();
+    const one=await a.page.evaluate(()=>{const h=readPromptHistory().recent.at(-1);return {...h,p:decodePattern(h.code)};});
+    const line=prompt.split('\n').find(l=>l.startsWith('識別子: v004 ／'));
+    assert.ok(line);
+    const filled=line.replace('音: ___','音: BGM＋効果音').replace('尺: ___（実測秒）','尺: 17.4（実測秒）').replace('1枚目「___」','1枚目「<b>テスト</b>」');
+    const parsed=await a.page.evaluate(text=>parseRecordLine(text),filled);
+    assert.equal(parsed['型番'],one.code);assert.equal(parsed['形式'],'写真1｜窓辺の自然光');assert.equal(parsed['制作手法'],'ChatGPT 実写');assert.match(parsed['メモ'],/^毎回ちがう型で作る・題材「/);
+    await a.page.evaluate(()=>openVideo('experiment-1'));
+    await a.page.locator('#video-modal summary').click();
+    await a.page.locator('#vm-paste').fill(filled);await a.page.locator('#vm-paste-apply').click();
+    assert.match(await a.page.locator('#vm-paste-msg').textContent(),/入れました：識別子・テーマ・冒頭の掴み・形式・締め・尺・音・役割・今回変えたもの・制作手法・型番・メモ。題名/);
+    assert.equal(await a.page.locator('#vm-slug').inputValue(),'v004');assert.equal(await a.page.locator('#vm-theme').inputValue(),one.theme);
+    assert.equal(await a.page.locator('#vm-hook').inputValue(),one.hook);assert.equal(await a.page.locator('#vm-format').inputValue(),'写真1｜窓辺の自然光');
+    assert.equal(await a.page.locator('#vm-cta').inputValue(),one.ending);assert.equal(await a.page.locator('#vm-dur').inputValue(),'17');
+    assert.equal(await a.page.locator('#vm-audio').inputValue(),'BGM＋効果音');assert.equal(await a.page.locator('#vm-axis').inputValue(),'型の探索');
+    assert.equal(await a.page.locator('#vm-method').inputValue(),'photo');
+    assert.ok((await a.page.locator('#vm-note').inputValue()).startsWith(`【型:${one.code}】 毎回ちがう型で作る・題材「`));
+    assert.equal(await a.page.locator('#video-modal b').count(),0,'pasted text is never treated as HTML');
+    assert.deepEqual(a.writes,[]); // nothing is saved until the save button is pressed
+    await a.page.locator('#vm-save').click();
+    await a.page.waitForFunction(()=>document.querySelector('#video-modal').classList.contains('hidden'));
+    const saved=db.sv_videos[0];
+    assert.equal(saved.slug,'v004');assert.equal(saved.theme,one.theme);assert.equal(saved.hook_type,one.hook);assert.equal(saved.cta_type,one.ending);
+    assert.equal(saved.format,'写真1｜窓辺の自然光');assert.equal(saved.duration_sec,17);assert.equal(saved.test_axis,'型の探索');
+    assert.ok(saved.note.startsWith(`【制作手法:ChatGPT 実写】\n【型:${one.code}】 `));
+    // The saved pattern is read back for the comparison by item, and reserves its topic for the next plan.
+    await a.page.waitForFunction(()=>state.videos.some(v=>v.slug==='v004'));
+    const got=await a.page.evaluate(()=>{const s=allStats().list.find(s=>s.v.slug==='v004');return Object.fromEntries(AXES.map(x=>[x.key,x.of(s)]));});
+    assert.equal(got.look,'窓辺の自然光');assert.equal(got.area,one.p.topic.area);assert.equal(got.angle,one.p.angle.name);assert.equal(got.narr,one.p.narr.name);assert.equal(got.subj,one.p.subj.name);
+    assert.equal(got.theme,one.theme);assert.equal(got.cta,one.ending);
+    await a.tab('advice');
+    const groups=await a.page.locator('#insight-groups').textContent();
+    for(const label of ['場面','切り口','展開の型','写るもの','撮り方・画風']) assert.ok(groups.includes(label),label);
+    const next=await a.page.evaluate(()=>experimentPlan().pattern);
+    assert.equal(next.tried,1);assert.notEqual(next.topic.id,one.p.topic.id);assert.notEqual(next.topic.theme,one.theme);
+    // Blanks, unknown codes and unknown choices are skipped instead of being written; an existing code in the note survives.
+    await a.page.evaluate(()=>openVideo('experiment-2')); // the edit section is still open from the first video
+    await a.page.locator('#vm-note').fill('【型:T011-A1-N1-S1】 前のメモ');
+    await a.page.locator('#vm-paste').fill('識別子: v 9 ／ 型番: T999-A1-N1-S1 ／ テーマ: 不安 ／ 音: 大きな音 ／ 尺: ___（実測秒）／ 制作手法: なぞの手法');
+    await a.page.locator('#vm-paste-apply').click();
+    assert.match(await a.page.locator('#vm-paste-msg').textContent(),/入れました：テーマ。読み取れなかった項目：識別子・音・制作手法・型番（手で入れてください）/);
+    assert.equal(await a.page.locator('#vm-slug').inputValue(),'v2');assert.equal(await a.page.locator('#vm-theme').inputValue(),'不安');
+    assert.equal(await a.page.locator('#vm-note').inputValue(),'【型:T011-A1-N1-S1】 前のメモ');assert.equal(await a.page.locator('#vm-method').inputValue(),'unknown');
+    await a.page.locator('#vm-paste').fill('関係のない文章');await a.page.locator('#vm-paste-apply').click();
+    assert.match(await a.page.locator('#vm-paste-msg').textContent(),/読み取れる項目がありませんでした/);
     assert.deepEqual(a.errors,[]);
   }finally{await a.context.close();}
 });

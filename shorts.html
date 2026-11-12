@@ -338,8 +338,8 @@
       <div id="seedance-comparison"></div>
     </div>
     <div class="glass rounded-2xl p-5">
-      <h2 class="font-semibold text-sm mb-2">冒頭GIFの比較</h2>
-      <p class="text-xs mb-3">冒頭の3〜5秒を ChatGPT のGIFにした回と、コードだけで作った回を、同じ期間で比べます。動画の編集画面で制作手法を「冒頭にChatGPTのGIF」と記録した回がGIFの回です。</p>
+      <h2 class="font-semibold text-sm mb-2">実写の回とコードだけの回の比較</h2>
+      <p class="text-xs mb-3">ChatGPT の実写の画像とGIFを素材にした回と、コードだけで描いた回を比べます。動画の編集画面で制作手法を「ChatGPTの実写の画像とGIF」と記録した回が実写の回です。冒頭だけイラストのGIFにした回（11/9〜11/12）は、右端に別に出します。</p>
       <div id="gif-comparison"></div>
     </div>
     <div class="glass rounded-2xl p-5">
@@ -502,15 +502,14 @@
         <li><span>02</span>プロンプトをコピー</li>
         <li><span>03</span>使いたいAIに渡す</li>
       </ol>
-      <p class="prompt-note">生成するたびに<b>画風（見た目・色・質感・文字の見せ方・カメラ・音色）を21種類から1つずつ変えます</b>。前の回と同じ見た目にはしません。
-        題材と<b>最初の一言（0〜3秒）</b>は、伸びた回と同じく当事者の具体的な行動から作ります。テーマは再生の多いテーマから、一言の型は6つから順に選びます。
-        画風は形式名（例：画風1｜墨と和紙）で記録するので、伸びた回の画風を名前で見分けられます。
-        映像も音も、受け取ったAIがコード（Python と ffmpeg）で描いて書き出すので、動画生成サービスや実写の素材がなくても Claude・Codex だけで作れます。写真のような実写の質感は狙いません。
+      <p class="prompt-note">生成するたびに、<b>題材・切り口・最初の一言の型・展開・締め・撮り方・写るもの</b>を、まだ使っていない組み合わせ（型）に変えます。
+        題材は20のテーマに160個、切り口8・一言の型12・展開8・締め6・撮り方15・写るもの4。同じ題材や同じ物のくり返しにはしません。
+        型は<b>型番</b>（例：T011-A3-N2-S1）で記録するので、本数がたまると、どの題材・どの型が伸びたかを下の「何が効いているか」で項目ごとに比べられます。</p>
+      <p class="prompt-note"><b>映像は、実写に見える素材から作ります。</b>ChatGPT（Images 2.6）に、実写の写真のようなアニメーションGIF 2つ（冒頭と最後）と写真2枚を作ってもらい、
+        受け取ったAI（Claude・Codex）が、カメラで撮った映像に見えるように動かして、文字と音をつけます。
         受け取るファイルは<b>音入りの mp4 1本だけ</b>。ほかに返ってくるのは、投稿に使う題名・説明文と、登録用の1行（文字だけ）です。
+        ChatGPTが使えない日は、「コードだけで描く（イラスト）」を選ぶと、これまでの画風21種で作れます。
         生成履歴はこのブラウザーに保存し、別の端末では登録済みの動画を参考にします。</p>
-      <p class="prompt-note"><b>冒頭の3〜5秒だけ、ChatGPT（Images 2.6）で作るアニメーションGIFにする</b>こともできます。
-        GIFは数枚〜十数枚の画を順に見せるパラパラ漫画なので、受け取ったAIがコマをなめらかにつないで冒頭に使い、そのあとはいつもどおりコードで描きます。
-        「GIFの回とコードの回を交互に」を選ぶと（はじめはこれ）、登録した本数が少ないほうを次に作り、「視聴を継続」と「スワイプして次へ」をダッシュボードの「冒頭GIFの比較」で比べます。</p>
       <button type="button" id="prompt-base-hint" class="hidden text-[11px] mb-3 rounded-lg px-3 py-2 leading-relaxed cursor-pointer"
          style="background:rgba(154,116,32,.09);color:#9a7420">
         「土台」タブがまだ空です。<b>なぜやるのか</b>と<b>この分野の上限</b>を入れておくと、
@@ -518,15 +517,14 @@
       </button>
       <label class="block text-xs mb-3" for="prompt-mode">今回の作り方
         <select id="prompt-mode" class="fld mt-1">
-          <option value="explore">毎回ちがう画風で作る</option>
-          <option value="refine">数字に手応えのある画風を再検証する</option>
+          <option value="explore">毎回ちがう型で作る</option>
+          <option value="refine">数字に手応えのある撮り方・画風を再検証する</option>
         </select>
       </label>
-      <label class="block text-xs mb-3" for="prompt-opening">冒頭の3〜5秒
+      <label class="block text-xs mb-3" for="prompt-opening">映像の作り方
         <select id="prompt-opening" class="fld mt-1">
-          <option value="auto">GIFの回とコードの回を交互に</option>
-          <option value="gif">毎回、ChatGPTのGIFで</option>
-          <option value="code">GIFを使わない（コードだけ）</option>
+          <option value="photo">実写の画像とGIFで作る（ChatGPT）</option>
+          <option value="code">コードだけで描く（イラスト）</option>
         </select>
       </label>
       <button id="prompt-build" class="w-full rounded-2xl py-3.5 font-medium text-slate-900 shadow-2xl"
@@ -534,12 +532,12 @@
 
       <div id="prompt-box" class="hidden mt-4">
         <div id="prompt-gif-steps" class="hidden prompt-gif-steps">
-          <b>今回は冒頭をGIFで作る回です。</b>次の順に進めてください。
+          <b>今回は、実写の素材で作る回です。</b>次の順に進めてください。
           <ol>
-            <li>このプロンプトを Claude（または Codex）に貼る。最初に、ChatGPT に渡す GIF の指示文だけが返ってきます。</li>
-            <li>その指示文を ChatGPT に貼り、できた GIF をダウンロードする。</li>
-            <li>GIF を Claude の<b>同じ会話</b>に添付して送る。音入りの mp4 が届きます（GIFが作れなかったときは「GIFなしで」と送る）。</li>
-            <li>「動画」タブで登録し、映像の制作手法を「冒頭にChatGPTのGIF」にする。</li>
+            <li>このプロンプトを Claude（または Codex）に貼る。最初に、ChatGPT に渡す素材の指示文だけが返ってきます。</li>
+            <li>その指示文を ChatGPT に貼り、できた素材4つ（GIF 2つ・写真2枚）をダウンロードする。一度に出てこないときは「続き」と送る。</li>
+            <li>素材を Claude の<b>同じ会話</b>に添付して送る。音入りの mp4 が届きます。</li>
+            <li>返ってきた「記録用の1行」を、「動画」タブの「記録用の1行から入力する」に貼って登録する。</li>
           </ol>
         </div>
         <label for="prompt-out" class="prompt-output-label">Claude・Codex 共通の制作プロンプト</label>
@@ -548,7 +546,7 @@
         <div class="flex gap-2 mt-2">
           <button id="prompt-copy" class="flex-1 rounded-xl py-2.5 text-sm font-medium text-slate-900"
                   style="background:#2b7f8c">コピーする</button>
-          <button id="prompt-build2" class="glass rounded-xl px-4 text-xs whitespace-nowrap">別の画風で作る</button>
+          <button id="prompt-build2" class="glass rounded-xl px-4 text-xs whitespace-nowrap">別の型で作る</button>
         </div>
         <p id="prompt-msg" role="status" aria-live="polite" class="text-[11px] mt-2"></p>
         <p class="text-[11px] text-slate-500 mt-3 leading-relaxed">
@@ -565,8 +563,8 @@
         <h2 class="font-bold">今回の検証設計</h2>
       </div>
       <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">
-        <b class="text-slate-300">画風は毎回まったく別のものにし、題材と最初の一言は伸びた回の作り方にそろえます。</b>手応えのある画風を再検証する回だけ、変更を1つに絞ります。
-        有望な画風でも2本続けたら、別の画風に戻ります。
+        <b class="text-slate-300">題材・切り口・一言の型・展開・締め・撮り方・写るものを、毎回ちがう組み合わせにします。</b>まだ使った回数の少ないものから選ぶので、本数が増えるほど、項目ごとに同じ本数で比べられます。
+        手応えのある撮り方・画風を再検証する回だけ、変更を1つに絞ります。
         上の指示文にも、この設計がそのまま入ります。
       </p>
       <div id="test-design" class="space-y-3"></div>
@@ -597,13 +595,14 @@
         <span class="text-lg">🧭</span>
         <h2 class="font-bold">次に作る動画</h2>
       </div>
-      <p class="text-[11px] text-slate-500 mb-5">保存した記録から、今回の画風と計測の進め方を提案します。効果や原因を断定するものではありません。</p>
+      <p class="text-[11px] text-slate-500 mb-5">保存した記録から、今回の型と計測の進め方を提案します。効果や原因を断定するものではありません。</p>
       <div id="advice-list" class="space-y-3"></div>
     </div>
 
     <div class="glass rounded-2xl p-5">
       <h2 class="font-semibold text-sm mb-1">何が効いているか</h2>
-      <p class="text-[11px] text-slate-500 mb-4">動画ごとの再生数を、チャンネルの中央値で割った「倍率」で比べています。1.0倍がふつうです。</p>
+      <p class="text-[11px] text-slate-500 mb-4">動画ごとの再生数を、チャンネルの中央値で割った「倍率」で比べています。1.0倍がふつうです。
+        型番を記録した回は、テーマ・場面・切り口・展開・締め・撮り方・写るものでも比べます（1つの項目に3本たまるまでは「参考」）。</p>
       <div id="insight-groups" class="space-y-5"></div>
     </div>
 
@@ -833,6 +832,12 @@
     <details class="mb-2">
       <summary class="text-[11px] text-slate-400 cursor-pointer select-none py-1">この動画の記録を編集する</summary>
       <div class="space-y-3 text-xs mt-3">
+        <div class="rounded-xl p-3" style="background:rgba(43,127,140,.07)">
+          <label class="block"><span class="block text-[11px] text-slate-500 mb-1">記録用の1行から入力する（AIが返した「識別子: … ／ 型番: … ／ …」の行を貼る）</span>
+            <textarea id="vm-paste" rows="2" class="fld" placeholder="識別子: v172 ／ 型番: T011-A3-N2-S1 ／ テーマ: うつ ／ …"></textarea></label>
+          <button type="button" id="vm-paste-apply" class="glass rounded-xl px-4 py-2 text-xs mt-2">この1行から入力する</button>
+          <p id="vm-paste-msg" role="status" aria-live="polite" class="text-[11px] mt-2"></p>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label><span class="block text-[11px] text-slate-500 mb-1">識別子</span><input id="vm-slug" class="fld"></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">作った日</span><input id="vm-date" type="date" class="fld"></label>
@@ -843,7 +848,7 @@
             <input id="vm-theme" list="dl-theme" class="fld" placeholder="眠れない夜"><datalist id="dl-theme"></datalist></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">冒頭の掴み</span>
             <input id="vm-hook" list="dl-hook" class="fld" placeholder="問いかけ">
-            <datalist id="dl-hook"><option value="問いかけ"><option value="共感"><option value="断言"><option value="数字"><option value="体験談"><option value="場面描写"></datalist></label>
+            <datalist id="dl-hook"></datalist></label>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <label><span class="block text-[11px] text-slate-500 mb-1">形式</span>
@@ -852,7 +857,7 @@
           <label><span class="block text-[11px] text-slate-500 mb-1">尺(秒)</span><input id="vm-dur" type="number" inputmode="numeric" class="fld"></label>
           <label><span class="block text-[11px] text-slate-500 mb-1">締め</span>
             <input id="vm-cta" list="dl-cta" class="fld" placeholder="リンクへ">
-            <datalist id="dl-cta"><option value="ループ（1枚目へ戻る）"><option value="リンクへ"><option value="コメント促し"><option value="登録の約束"><option value="なし"></datalist></label>
+            <datalist id="dl-cta"></datalist></label>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <label><span class="block text-[11px] text-slate-500 mb-1">音</span>
@@ -880,6 +885,7 @@
               <option value="投稿した時間帯">投稿した時間帯</option>
               <option value="締めの誘導">締めの誘導</option>
               <option value="変えていない">変えていない（型の再現）</option>
+              <option value="型の探索">型の探索（全部を組み替え）</option>
             </select></label>
         </div>
         <p id="vm-strategy-note" class="hidden text-[11px] text-amber-400 leading-relaxed">
@@ -890,9 +896,9 @@
           <label><span class="block text-[11px] text-slate-500 mb-1">投稿した日時</span><input id="vm-at" type="datetime-local" class="fld"></label>
         </div>
         <label class="block text-xs">映像の制作手法
-          <select id="vm-method" class="fld"><option value="unknown">未記録</option><option value="gif">冒頭にChatGPTのGIF</option><option value="other">コードだけ（GIF・Seedanceなし）</option><option value="seedance">Seedanceを使用</option></select>
+          <select id="vm-method" class="fld"><option value="unknown">未記録</option><option value="photo">ChatGPTの実写の画像とGIF</option><option value="gif">冒頭にChatGPTのGIF（イラスト）</option><option value="other">コードだけ（GIF・Seedanceなし）</option><option value="seedance">Seedanceを使用</option></select>
         </label>
-        <label class="block"><span class="block text-[11px] text-slate-500 mb-1">メモ</span><textarea id="vm-note" rows="2" class="fld"></textarea></label>
+        <label class="block"><span class="block text-[11px] text-slate-500 mb-1">メモ</span><textarea id="vm-note" rows="3" class="fld" placeholder="型番は【型:T011-A3-N2-S1】の形で残します"></textarea></label>
       </div>
     </details>
 
@@ -1039,6 +1045,12 @@ const AXES = [
   { key:'dur',     name:'尺',             of: s => durationBucket(s.v.duration_sec) },
   { key:'format',  name:'形式',           of: s => s.v.format },
   { key:'cta',     name:'締めの誘導',     of: s => s.v.cta_type },
+  // 2026-11-12〜：型番（メモの【型:…】）と形式名から読む項目。型番のない回は、この5つには入らない。
+  { key:'look',    name:'撮り方・画風（何回目かは分けない）', of: s => lookOf(s.v) },
+  { key:'area',    name:'場面',           of: s => patternOf(s.v)?.topic.area },
+  { key:'angle',   name:'切り口',         of: s => patternOf(s.v)?.angle.name },
+  { key:'narr',    name:'展開の型',       of: s => patternOf(s.v)?.narr.name },
+  { key:'subj',    name:'写るもの',       of: s => patternOf(s.v)?.subj.name },
   { key:'hour',    name:'投稿した時間帯', of: s => hourBucket(s.postedAt) },
   { key:'weekday', name:'投稿した曜日',   of: s => s.postedAt ? WEEKDAYS[new Date(s.postedAt).getDay()]+'曜' : null },
 ];
@@ -1884,8 +1896,9 @@ const dayShift = (day, amount) => new Date(Date.parse(day+'T00:00:00Z')+amount*8
 const validDay = day => typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day)
   && Number.isFinite(Date.parse(day+'T00:00:00Z')) && dayShift(day,0) === day;
 // 制作手法はメモの先頭の印で持つ（列を足さずに済むため）。「その他」はコードだけで描いた回。
-const METHOD_TAGS = { seedance:'Seedance', gif:'ChatGPT GIF', other:'その他' };
-const METHOD_TAG = /^【制作手法:(Seedance|ChatGPT GIF|その他)】\s*/;
+// 「ChatGPT 実写」＝ChatGPTの実写の画像とGIFを素材にした回（2026-11-12〜）。「ChatGPT GIF」＝冒頭だけイラストのGIFにした回（11-09〜11-12）。
+const METHOD_TAGS = { seedance:'Seedance', photo:'ChatGPT 実写', gif:'ChatGPT GIF', other:'その他' };
+const METHOD_TAG = /^【制作手法:(Seedance|ChatGPT 実写|ChatGPT GIF|その他)】\s*/;
 const productionMethod = v => {
   const tag = v?.note?.match(METHOD_TAG)?.[1];
   return Object.keys(METHOD_TAGS).find(key => METHOD_TAGS[key] === tag) || 'unknown';
@@ -2011,91 +2024,74 @@ function renderKpis(){
     <p class="text-xs mt-3">${esc(studyDiagnosis(study))}</p>
     <p class="text-xs mt-2">5ポイント・各3本は運用上の目安です。尺・テーマ・投稿時刻・配信対象の違いがあり、因果関係や費用対効果は断定できません。自動取得は追加せず、Studioから手入力します。</p>`;
 }
-/* ========================= 冒頭GIF（2026-11-09〜） =========================
-   冒頭の3〜5秒だけ ChatGPT（Images 2.6、2026-11-04 公開）のアニメーションGIFにして、
-   コードだけで描く回と「視聴を継続」（スワイプして次へは、その補数）を比べる。
-   GIFは数枚〜十数枚の画を順に見せるパラパラ漫画（APIでは2〜16コマ、標準は9コマ×0.2秒＝1.8秒）で、
-   コマどうしで形や色が揺れやすいのが弱点。受け取ったAIがコマを溶かしてつなぎ、冒頭だけに使う。
-   比べるのは冒頭だけなので、画風・テーマ・一言の決め方・構成・音は変えない。
-   どちらの回かは、動画のメモの先頭の印（【制作手法:ChatGPT GIF】）で数える。形式名は変えない。 */
-const GIF_EXPERIMENT = { start:'2026-11-09' };   // 比べ始めた日（日本時間）。テストではここを書き換える
-const OPENING_KEY = 'sv-opening-v1';
-const OPENING_SETTINGS = ['auto', 'gif', 'code'];
+/* ========================= 実写の素材で作る回（2026-11-12〜） =========================
+   ChatGPT（Images 2.6、2026-11-04 公開）に、実写の写真に見えるGIF 2つと写真2枚を作ってもらい、
+   受け取ったAIがそれを動かしてmp4にする。コードだけで描いた回（10/24〜）と「視聴を継続」を比べる。
+   11/09〜11/12 は冒頭の3〜5秒だけをイラストのGIFにしていた（印は【制作手法:ChatGPT GIF】）。
+   「絵が少し動くだけ」のGIFになったので、実写の素材に切り替えた（印は【制作手法:ChatGPT 実写】）。
+   どの回かは、動画のメモの先頭の印で数える。 */
+const GIF_EXPERIMENT = { start:'2026-11-09' };   // 冒頭だけイラストのGIFにした回を数えはじめた日（日本時間）
+// start＝実写の回を数えはじめた日、baseline＝比べる相手（コードだけの回）を数えはじめる日。テストではここを書き換える
+const PHOTO_EXPERIMENT = { start:'2026-11-12', baseline:'2026-10-24' };
+const OPENING_KEY = 'sv-opening-v2';   // v1（auto／gif／code）は引き継がない。はじめは実写で作る
+const OPENING_SETTINGS = ['photo', 'code'];
 function readOpeningSetting(){
-  try { const v = localStorage.getItem(OPENING_KEY); return OPENING_SETTINGS.includes(v) ? v : 'auto'; }
-  catch { return 'auto'; }
+  try { const v = localStorage.getItem(OPENING_KEY); return OPENING_SETTINGS.includes(v) ? v : 'photo'; }
+  catch { return 'photo'; }
 }
 function saveOpeningSetting(value){
   if (!OPENING_SETTINGS.includes(value)) return;
   try { localStorage.setItem(OPENING_KEY, value); } catch {}   // 保存できなくても、この画面の選択はそのまま効く
 }
-// 比べ始めた日から後に投稿した回（未投稿なら制作日で見る）。Seedanceの回は比べる対象にしない。
-function openingVideos(){
-  return allStats().list.filter(s => {
-    const day = s.postedAt && Number.isFinite(+new Date(s.postedAt)) ? jstDay(s.postedAt)
-      : validDay(s.v.produced_on) ? s.v.produced_on : '';
-    return day >= GIF_EXPERIMENT.start && productionMethod(s.v) !== 'seedance';
-  });
-}
-/* 「GIFの回とコードの回を交互に」（既定）は、登録済みの回で少ないほうを作る（同じ本数ならGIF）。
-   生成しただけの案は数えない（「別の画風で作る」を押すたびに入れ替わらないように）。
-   再検証は、変えるもの以外を参考回にそろえるため、参考回と同じ作り方にする。 */
+/* 再検証は、変えるもの以外を参考回にそろえるため、参考回の形式（写真N｜…か、画風N｜…か）と同じ作り方にする。 */
 function openingChoice(plan, setting){
-  const list = openingVideos();
-  const gifCount = list.filter(s => productionMethod(s.v) === 'gif').length;
-  const counts = { gif:gifCount, code:list.length-gifCount };
-  const pick = (mode, reason) => ({ mode, setting, reason, counts,
-    label: mode === 'gif' ? '冒頭の3〜5秒をChatGPTのGIFで作る' : '冒頭もコードで描く（GIFなし）' });
-  if (setting === 'gif') return pick('gif', '「毎回、ChatGPTのGIFで」を選んでいます。');
-  if (setting === 'code') return pick('code', '「GIFを使わない（コードだけ）」を選んでいます。');
-  if (plan.mode === 'refine' && plan.example) {
-    const sameAsGif = productionMethod(plan.example.v) === 'gif';
-    return pick(sameAsGif ? 'gif' : 'code', `再検証なので、参考にする回（${plan.example.v.slug}）と同じく${sameAsGif ? 'GIFで' : 'コードだけで'}作ります。`);
-  }
-  const tally = `${GIF_EXPERIMENT.start}からの登録は、GIFの回${counts.gif}本・コードだけの回${counts.code}本です。`;
-  if (counts.gif < counts.code) return pick('gif', tally+'GIFの回のほうが少ないので、GIFで作ります。');
-  if (counts.gif === counts.code) return pick('gif', tally+'同じ本数なので、GIFの回から作ります。');
-  return pick('code', tally+'コードだけの回のほうが少ないので、コードだけで作ります。');
+  const pick = (mode, reason) => ({ mode, setting, reason,
+    label: mode === 'photo' ? 'ChatGPTの実写の画像とGIFで作る' : 'コードだけで描く（イラスト）' });
+  if (plan.mode === 'refine' && plan.example)
+    return pick(plan.photo ? 'photo' : 'code', `再検証なので、参考にする回（${plan.example.v.slug}）と同じく${plan.photo ? '実写の素材で' : 'コードだけで'}作ります。`);
+  return setting === 'code' ? pick('code', '「コードだけで描く（イラスト）」を選んでいます。')
+    : pick('photo', '「実写の画像とGIFで作る」を選んでいます。');
 }
 function openingComparison(){
-  const from = GIF_EXPERIMENT.start, to = jstDay(Date.now());
-  return { from, to,
-    gif: observedPeriod(from, to, v => productionMethod(v) === 'gif'),
-    code: observedPeriod(from, to, v => !['gif','seedance'].includes(productionMethod(v))) };
+  const to = jstDay(Date.now());
+  return { from:PHOTO_EXPERIMENT.start, baseline:PHOTO_EXPERIMENT.baseline, gifFrom:GIF_EXPERIMENT.start, to,
+    photo: observedPeriod(PHOTO_EXPERIMENT.start, to, v => productionMethod(v) === 'photo'),
+    gif: observedPeriod(GIF_EXPERIMENT.start, to, v => productionMethod(v) === 'gif'),
+    code: observedPeriod(PHOTO_EXPERIMENT.baseline, to, v => !['photo','gif','seedance'].includes(productionMethod(v))) };
 }
 function openingDiagnosis(c){
   const paired = period => experimentSummary(period.rows.filter(o => o.stayed != null));
-  const g = paired(c.gif), k = paired(c.code);
-  if (g.n < 3 || k.n < 3) return `判断保留：投稿4日後の「視聴を継続」が記録できた回は、GIFの回${g.n}本・コードだけの回${k.n}本です。各3本以上そろってから比べます。`;
+  const g = paired(c.photo), k = paired(c.code);
+  if (g.n < 3 || k.n < 3) return `判断保留：投稿4日後の「視聴を継続」が記録できた回は、実写の回${g.n}本・コードだけの回${k.n}本です。各3本以上そろってから比べます。`;
   const d = g.stayed - k.stayed;
-  if (d >= 5) return `GIFの回のほうが、視聴を継続が${dec(d,1)}ポイント高い（スワイプして次へが同じだけ低い）傾向です。平均再生率と登録も確かめながら、GIFの回を続けて確かめます。`;
-  if (d <= -5) return `GIFの回のほうが、視聴を継続が${dec(-d,1)}ポイント低い（スワイプして次へが同じだけ高い）傾向です。GIFの場面と一言の合い方やコマのちらつきを見直すか、コードだけに戻します。`;
-  return `GIFの回とコードだけの回の、視聴を継続の差は${dec(Math.abs(d),1)}ポイントで、まだはっきりしません。本数を増やして比べます。`;
+  if (d >= 5) return `実写の回のほうが、視聴を継続が${dec(d,1)}ポイント高い（スワイプして次へが同じだけ低い）傾向です。平均再生率と登録も確かめながら、実写の回を続けて確かめます。`;
+  if (d <= -5) return `実写の回のほうが、視聴を継続が${dec(-d,1)}ポイント低い（スワイプして次へが同じだけ高い）傾向です。素材の場面と一言の合い方や、動きの不自然さを見直します。`;
+  return `実写の回とコードだけの回の、視聴を継続の差は${dec(Math.abs(d),1)}ポイントで、まだはっきりしません。本数を増やして比べます。`;
 }
 const briefSummary = summary => KPI_SPECS.slice(0,3)
   .map(([key,label,unit]) => `${label} ${summary[key] == null ? '未記録' : dec(summary[key],1)+unit}（${summary[key+'N']}本）`).join('・');
 function renderOpeningComparison(){
-  const c = openingComparison(), g = c.gif.summary, k = c.code.summary;
+  const c = openingComparison(), g = c.photo.summary, k = c.code.summary, i = c.gif.summary;
   const cell = (v, key, unit) => v[key] == null ? '—（0本）' : `${dec(v[key],1)}${unit}（${v[key+'N']}本）`;
   const swipe = v => v.stayed == null ? '—' : dec(100-v.stayed,1)+'%';
-  $('#gif-comparison').innerHTML = `<p class="text-xs mb-2">投稿期間 ${c.from}〜${c.to}（日本時間）。投稿72〜120時間後の同じ行から算出した動画別中央値です。</p>
-    <div class="scroll-x"><table class="w-full text-xs"><thead><tr><th>動画別中央値</th><th>GIFの回</th><th>コードだけの回</th><th>差</th></tr></thead><tbody>${KPI_SPECS.map(([key,label,unit]) => {
+  $('#gif-comparison').innerHTML = `<p class="text-xs mb-2">実写の回は ${c.from}〜、コードだけの回は ${c.baseline}〜、冒頭だけGIFの回は ${c.gifFrom}〜 の投稿（日本時間・${c.to}まで）。投稿72〜120時間後の同じ行から算出した動画別中央値です。</p>
+    <div class="scroll-x"><table class="w-full text-xs"><thead><tr><th>動画別中央値</th><th>実写の回</th><th>コードだけの回</th><th>差</th><th>冒頭だけGIFの回</th></tr></thead><tbody>${KPI_SPECS.map(([key,label,unit]) => {
       const delta = g[key] != null && k[key] != null ? g[key]-k[key] : null;
-      return `<tr><th class="py-2">${label}</th><td>${cell(g,key,unit)}</td><td>${cell(k,key,unit)}</td><td>${delta == null ? '—' : (delta>0?'+':'')+dec(delta,1)+(unit==='%'?'ポイント':unit)}</td></tr>`;
+      return `<tr><th class="py-2">${label}</th><td>${cell(g,key,unit)}</td><td>${cell(k,key,unit)}</td><td>${delta == null ? '—' : (delta>0?'+':'')+dec(delta,1)+(unit==='%'?'ポイント':unit)}</td><td>${cell(i,key,unit)}</td></tr>`;
     }).join('')}</tbody></table></div>
-    <p class="text-xs mt-2">スワイプして次へ：GIFの回${swipe(g)}／コードだけの回${swipe(k)}（視聴を継続の補数）。</p>
-    <p class="text-xs mt-2">同条件の計測行なし：GIFの回${c.gif.pending}本／コードだけの回${c.code.pending}本。コードだけの回には、制作手法が未記録の回も含みます。未入力は0ではありません。</p>
+    <p class="text-xs mt-2">スワイプして次へ：実写の回${swipe(g)}／コードだけの回${swipe(k)}（視聴を継続の補数）。</p>
+    <p class="text-xs mt-2">同条件の計測行なし：実写の回${c.photo.pending}本／コードだけの回${c.code.pending}本。コードだけの回には、制作手法が未記録の回も含みます。未入力は0ではありません。</p>
     <p class="text-xs mt-3">${esc(openingDiagnosis(c))}</p>
-    <p class="text-xs mt-2">画風・テーマ・一言の型は毎回ちがうので、差のすべてが冒頭のGIFによるものとは言い切れません。5ポイント・各3本は運用上の目安です。</p>`;
+    <p class="text-xs mt-2">題材・切り口・一言の型なども毎回ちがうので、差のすべてが実写の素材によるものとは言い切れません。5ポイント・各3本は運用上の目安です。</p>`;
 }
 function openingPromptLines(){
   const c = openingComparison();
-  return [`- 冒頭GIFの比較（${c.from}〜、投稿72〜120時間後の動画別中央値）：GIFの回 ${briefSummary(c.gif.summary)}／コードだけの回 ${briefSummary(c.code.summary)}`,
+  return [`- 実写の回とコードだけの回の比較（投稿72〜120時間後の動画別中央値）：実写の回（${c.from}〜） ${briefSummary(c.photo.summary)}／コードだけの回（${c.baseline}〜） ${briefSummary(c.code.summary)}`,
     '- '+openingDiagnosis(c)];
 }
 
 function kpiPromptLines(opening = null){
-  const gif = opening?.mode === 'gif';
+  const photo = opening?.mode === 'photo';
   const study = studyComparison(), recent = recentKpis();
   const lines = ['## 最優先KPIと映像化の検証',
     '- 優先順位：1. 視聴を継続した割合、2. 平均再生率、3. 1,000再生あたりの登録者数。スワイプして次へは100−視聴を継続の補数であり、別の成功指標として二重に数えません。',
@@ -2104,11 +2100,11 @@ function kpiPromptLines(opening = null){
     // 「土台で設定してください」は管理者向けの案内なので、制作するAIには渡さない。
     ...(study.error ? [] : ['- '+studyReferenceText(study.config), '- '+studyDiagnosis(study)]),
     ...(study.error ? ['- 映像化の導入前後の比較は、まだ設定されていません（比べる基準の数字はありません）。'] : []),
-    gif ? '- この指示文の動画は、冒頭の3〜5秒だけ添付のGIF（ChatGPTで作るもの）、残りはコードで描く映像です（Seedance等の動画生成は使いません）。冒頭0〜5秒を1つの検証区間として設計し、最初の1秒から主役の動きや具体的な出来事を見せます。'
+    photo ? '- この指示文の動画は、ChatGPTで作る実写の素材（GIF2つ・写真2枚）を、コードで動かしてつなぐ映像です（Seedance等の動画生成は使いません）。冒頭0〜5秒を1つの検証区間として設計し、最初の1秒から主役の動きや具体的な出来事を見せます。'
       : '- この指示文の動画は、コードで描く映像です（Seedance等の動画生成は使いません）。冒頭0〜5秒を1つの検証区間として設計し、最初の1秒から主役の動きや具体的な出来事を見せます。',
-    '- 既定では毎回ちがう画風で作ります。導入効果を再検証する場合は、尺・テーマ・音・投稿時間をできるだけそろえ、冒頭映像を主な変更点として記録します。途中離脱の場所はStudioの視聴者維持率グラフで確認してください。',
-    `- 制作後は動画の「映像の制作手法」を「${gif ? '冒頭にChatGPTのGIF' : 'コードだけ（GIF・Seedanceなし）'}」と記録してください。APIでの自動取得は未実装なので、視聴を継続・平均視聴時間などをStudioから同じ集計範囲で転記します。`,
-    ...(gif ? openingPromptLines() : [])];
+    '- 既定では毎回ちがう型で作ります。導入効果を再検証する場合は、尺・テーマ・音・投稿時間をできるだけそろえ、冒頭映像を主な変更点として記録します。途中離脱の場所はStudioの視聴者維持率グラフで確認してください。',
+    `- 制作後は動画の「映像の制作手法」を「${photo ? 'ChatGPTの実写の画像とGIF' : 'コードだけ（GIF・Seedanceなし）'}」と記録してください。APIでの自動取得は未実装なので、視聴を継続・平均視聴時間などをStudioから同じ集計範囲で転記します。`,
+    ...(photo ? openingPromptLines() : [])];
   if (!study.error) lines.push(`- 導入前 ${study.beforeFrom}〜${study.config.beforeEnd}：${summaryText(study.before.summary)}`,
     `- 導入後 ${study.config.start}〜${study.afterEnd}（Seedance使用のみ${study.provisional ? '・暫定' : ''}）：${summaryText(study.after.summary)}`,
     '- 前後差だけで映像化の因果効果や投資価値を断定しません。制作費と成果の価値も別に確認します。');
@@ -2251,15 +2247,116 @@ const EXPERIMENT_RECIPES = [
     camera:'地図の上を、道をたどるように移動する',
     sound:'風の音と、紙の地図を広げる音' },
 ];
+/* 2026-11-12 追加。実写の回の「撮り方」。ChatGPT（Images 2.6）に、実写の写真に見えるGIFと写真を作ってもらい、
+   受け取ったAIがそれをカメラで撮った映像のように動かす。画風（イラスト）の代わりに、光・レンズ・色・カメラの置き方を毎回変える。
+   人の顔・高い所・駅や線路・薬やお酒などは、どの撮り方でも写さない（指示文の「描かないもの」と同じ）。 */
+const PHOTO_RECIPES = [
+  { name:'窓辺の自然光', seconds:'15〜20秒', mood:'静かな昼の、少し止まった時間',
+    look:'昼の窓から入るやわらかい自然光だけで撮った室内。標準レンズの自然な遠近感で、窓に近い所は明るく、部屋の奥は暗く落ちる',
+    palette:'白い光と、木や布の落ち着いた色。彩度は低め',
+    text:'白い太めの文字に、ぼかした暗い影。明るい所に重なるときは、文字の後ろに薄い暗い帯を敷く',
+    camera:'ゆっくり寄る。手持ちのカメラのような、ごく小さな揺れを重ねる',
+    sound:'部屋の静かな空気の音と、窓の外の遠い生活音。その上に、やわらかい持続音' },
+  { name:'スタンドの灯りの夜', seconds:'15〜20秒', mood:'夜の部屋の、小さな安心',
+    look:'暗い部屋を、電球色のスタンド1つだけで照らす。灯りのまわりだけが見え、ほかは暗がりに沈む。ピントの合う範囲は浅く、背景は大きくぼける',
+    palette:'暗い茶と紺の影に、電球の橙',
+    text:'白い文字に、ぼかした暗い影（縁取りはしない）',
+    camera:'灯りの当たっている物へ、ゆっくり寄る',
+    sound:'夜の部屋の低い空気の音と、静かな和音' },
+  { name:'真上から見下ろす', seconds:'15〜20秒', mood:'淡々と、記録のような',
+    look:'机・床・寝床を、真上から見下ろして撮る。物の並びと、物どうしのすき間で見せる。影はやわらかく、片側に落ちる',
+    palette:'木の机や畳・床の色と、白い紙や布',
+    text:'白い太めの文字に、ぼかした暗い影。明るい所では、文字の後ろに薄い暗い帯を敷く',
+    camera:'真上のまま、ごくゆっくり回りながら寄る（回るのは2度まで）',
+    sound:'静かな部屋の空気と、物を置く小さな音' },
+  { name:'床の高さから', seconds:'15〜20秒', mood:'動けない日の目線',
+    look:'カメラを床に置いたような低い目線。手前の床が大きくぼけ、奥に物や家具の脚が見える。少し広めのレンズ',
+    palette:'床の木目や畳の色と、部屋の奥の暗がり',
+    text:'白い文字に、ぼかした暗い影',
+    camera:'床をすべるように、横へゆっくり動く',
+    sound:'床に近い低い響き（冷蔵庫の低いうなりのような音）と、遠い物音' },
+  { name:'窓ガラスごし', seconds:'15〜20秒', mood:'外と中のあいだの、遠さ',
+    look:'雨粒や結露のついた窓ガラスごしに撮る。ガラスにピントを合わせて向こうをぼかすか、その逆にする。ガラスに室内の灯りがうっすら映る',
+    palette:'ガラスの青みがかった灰色と、にじんだ外の灯り',
+    text:'白い文字に、ぼかした暗い影',
+    camera:'ガラスの手前から奥へ、ピントがゆっくり移る',
+    sound:'ガラスの向こうの、こもった雨や街の音' },
+  { name:'物の接写', seconds:'15〜20秒', mood:'見ないようにしていた物を、見てしまう',
+    look:'物にぐっと寄った接写。表面の傷・ほこり・水滴まで見え、背景は色のかたまりになるまでぼける',
+    palette:'主役の物の色を1つと、ぼけた背景の落ち着いた色',
+    text:'白い太めの文字に、ぼかした暗い影。背景のぼけた所に置く',
+    camera:'ピントの合う位置が、物の上をゆっくり移っていく',
+    sound:'ごく近い小さな音（布がこすれる、水滴が落ちる）と、静かな持続音' },
+  { name:'夜明け前の青い光', seconds:'15〜20秒', mood:'眠れなかった夜の終わり',
+    look:'日の出前の、青く冷たい光だけの部屋。灯りはつけていない。影はほとんどなく、全体が青い薄明かりに沈む',
+    palette:'青と灰の薄明かり。暖かい色は、最後に1か所だけ',
+    text:'白い文字に、ぼかした暗い影',
+    camera:'ほぼ固定。光がほんの少しずつ明るくなる',
+    sound:'夜明け前の静けさと、遠い鳥やバイクの音を小さく' },
+  { name:'夕方の西日', seconds:'15〜20秒', mood:'一日が終わっていく、取り残された感じ',
+    look:'低い西日が横から差しこみ、壁や床に窓枠の長い影が伸びる。光の当たる所は橙に、影は深く落ちる。空気中のほこりが光る',
+    palette:'橙の光と、こげ茶の深い影',
+    text:'白い文字に、ぼかした暗い影。光の当たらない影の側に置く',
+    camera:'影の伸びる向きへ、ゆっくり横に動く',
+    sound:'夕方の遠い音（子どもの声、遠くのチャイムのような音）を小さく、あたたかい持続音' },
+  { name:'蛍光灯の台所', seconds:'15〜20秒', mood:'夜中の生活の、飾らない明るさ',
+    look:'夜の台所や洗面所を、天井の白い蛍光灯だけで照らす。少し緑がかった、影の浅い生活の光。ステンレスや陶器に灯りが映る',
+    palette:'白と薄い緑がかった灰色、ステンレスの銀',
+    text:'濃い灰色の太い文字を、薄い白の帯の上に置く。暗い所では、白い文字にぼかした暗い影',
+    camera:'正面から、ごくゆっくり寄る',
+    sound:'換気扇や冷蔵庫の低いうなりと、水の滴る音を少し' },
+  { name:'画面の光だけ', seconds:'15〜20秒', mood:'夜中にひとりで起きている',
+    look:'暗い部屋で、スマホやテレビの画面の光だけが、壁・天井・寝具を青白く照らす。画面そのものは写さないか、読めないくらいにぼかす',
+    palette:'黒に近い紺と、青白い光',
+    text:'白い文字に、ぼかした暗い影',
+    camera:'照らされた壁や物から、ゆっくり引く',
+    sound:'静まった部屋の空気と、ごく低い持続音' },
+  { name:'フィルム写真', seconds:'15〜20秒', mood:'少し前の記憶のような',
+    look:'35mmフィルムで撮ったような写り。細かい粒、少し褪せた色、明るい所のやわらかいにじみ。日常をそのまま切り取ったスナップ',
+    palette:'少し褪せた緑と黄みがかった白、やわらかい黒',
+    text:'クリーム色の文字に、ぼかした暗い影',
+    camera:'スナップ写真を見るように、ほぼ固定。ごく小さく揺れる',
+    sound:'やわらかい持続音と、紙や布のかすかな音' },
+  { name:'白黒写真', seconds:'15〜20秒', mood:'言葉の少ない、静かな強さ',
+    look:'白黒の写真。黒をつぶさず白を飛ばさない、やわらかい階調。窓からの光と影の形で見せる',
+    palette:'白から黒までの灰色だけ（最後の1か所も色はつけず、光の明るさで変化を見せる）',
+    text:'白い文字に、ぼかした黒い影',
+    camera:'光の当たる所へ、ゆっくり寄る',
+    sound:'低く静かな持続音だけ。効果音はごく少なく' },
+  { name:'曇りの昼', seconds:'15〜20秒', mood:'何も起きない一日の、平らな時間',
+    look:'曇りの日の、影のない平たい光で撮った室内や窓辺。色は淡く、コントラストは低い。窓の外は白っぽい空',
+    palette:'灰色がかった白と、くすんだ青・緑',
+    text:'濃い灰色の太い文字を、薄い白の帯の上に置く',
+    camera:'横へ、ごくゆっくり動く',
+    sound:'遠くの車の音と、部屋の静かな空気' },
+  { name:'街灯の差す夜', seconds:'15〜20秒', mood:'帰ってきた夜の、玄関先',
+    look:'夜の玄関先・廊下・窓辺に、外の街灯の橙の光が差しこむ。室内の灯りはつけていない。橙の光と青い夜の影が分かれる',
+    palette:'街灯の橙と、夜の青い影',
+    text:'白い文字に、ぼかした暗い影',
+    camera:'光の差す所から、暗い室内へゆっくり向きを変える',
+    sound:'夜の外の遠い音（遠くを走る車）と、静かな和音' },
+  { name:'部屋の引きの定点', seconds:'15〜20秒', mood:'同じ場所で、時間だけが過ぎる',
+    look:'部屋の一角を、少し離れた所から固定で撮る。家具・床・窓が1枚に収まり、主役は小さめでも光の当たる所にある',
+    palette:'その部屋の壁と床の色。差し色は主役の物の1色だけ',
+    text:'白い太めの文字に、ぼかした暗い影。壁の無地の所に置く',
+    camera:'固定。最後だけ、主役へゆっくり寄る',
+    sound:'部屋の静かな空気と、時間が過ぎていくようなゆっくりした和音' },
+];
+const photoFormat = (round, name) => `写真${round}｜${name}`;
+const isPhotoRound = v => /^写真[1-9]\d*｜.+/.test(v?.format || '');
+const ALL_RECIPES = [...PHOTO_RECIPES, ...EXPERIMENT_RECIPES];
 const experimentFormat = (round, name) => `画風${round}｜${name}`;
 // 10/18〜10/23 の「探索N｜…」も、新しい型の記録として同じ仕組みで比べる。
-const isExperiment = v => /^(探索|画風)[1-9]\d*｜.+/.test(v.format || '');
+const isExperiment = v => /^(探索|画風|写真)[1-9]\d*｜.+/.test(v.format || '');
 const isStyleRound = v => /^画風[1-9]\d*｜.+/.test(v.format || '');
-const roundOf = format => Number(String(format || '').match(/^(?:探索|画風)(\d+)｜/)?.[1]) || 0;
-// 動画の「形式」欄の候補は、いまの画風の1周目の名前から作る（名前を変えても食い違わない）。
-$('#dl-format').innerHTML = EXPERIMENT_RECIPES.map(r => `<option value="${esc(experimentFormat(1, r.name))}">`).join('');
-// 10/23 までの探索の履歴（景色・物の案）は引き継がない。新しい画風の順番と、テーマ・一言の型を残す。
-const PROMPT_HISTORY_KEY = 'sv-prompt-style-v3';
+const roundOf = format => Number(String(format || '').match(/^(?:探索|画風|写真)(\d+)｜/)?.[1]) || 0;
+// 動画の「形式」欄の候補は、いまの撮り方・画風の1周目の名前から作る（名前を変えても食い違わない）。
+$('#dl-format').innerHTML = [...PHOTO_RECIPES.map(r => photoFormat(1, r.name)), ...EXPERIMENT_RECIPES.map(r => experimentFormat(1, r.name))]
+  .map(f => `<option value="${esc(f)}">`).join('');
+// 生成した案の履歴。撮り方・画風の順番と、型番・テーマ・一言の型・締めを残す（同じ題材をくり返さないため、200件まで）。
+// 11/12 までの履歴（v3）は型番がないので引き継がない。
+const PROMPT_HISTORY_KEY = 'sv-prompt-style-v4';
+const PROMPT_HISTORY_MAX = 200;
 let promptHistoryMemory = { rounds:{}, recent:[] }, promptHistoryStorageFailed = false;
 function readPromptHistory(){
   if (promptHistoryStorageFailed) return promptHistoryMemory;
@@ -2268,30 +2365,43 @@ function readPromptHistory(){
     if (!raw) return promptHistoryMemory;
     if (!raw.rounds || typeof raw.rounds !== 'object' || !Array.isArray(raw.recent)) throw new Error('invalid history');
     const rounds = {};
-    for (const r of EXPERIMENT_RECIPES) {
+    for (const r of ALL_RECIPES) {
       const n = raw.rounds[r.name];
       if (Number.isSafeInteger(n) && n > 0 && n < 1000000) rounds[r.name] = n;
     }
     const text = (x, max) => typeof x === 'string' ? x.slice(0, max) : '';
     const recent = raw.recent.filter(x => x && typeof x.format === 'string' && typeof x.brief === 'string')
-      .slice(-24).map(x => ({format:x.format.slice(0,200), brief:x.brief.slice(0,2000), theme:text(x.theme,100), hook:text(x.hook,100)}));
+      .slice(-PROMPT_HISTORY_MAX).map(x => ({format:x.format.slice(0,200), brief:x.brief.slice(0,600), theme:text(x.theme,100), hook:text(x.hook,100),
+        ending:text(x.ending,100), slug:text(x.slug,40), code:decodePattern(x.code)?.code || ''}));
     return promptHistoryMemory = { rounds, recent };
   } catch { promptHistoryStorageFailed = true; return promptHistoryMemory; }
 }
 function rememberPrompt(plan){
   const history = readPromptHistory();
   if (plan.recipe && plan.mode === 'explore') history.rounds[plan.recipe.name] = Math.max(history.rounds[plan.recipe.name] || 0, plan.round);
-  history.recent = [...history.recent, {format:plan.format, brief:plan.brief, theme:plan.theme || '', hook:plan.hook?.name || ''}].slice(-24);
+  history.recent = [...history.recent, {format:plan.format, brief:String(plan.brief).slice(0,600), theme:plan.theme || '', hook:plan.hook?.name || '',
+    ending:plan.pattern?.ending.name || '', slug:nextSlug(), code:plan.pattern?.code || ''}].slice(-PROMPT_HISTORY_MAX);
   promptHistoryMemory = history;
   try { localStorage.setItem(PROMPT_HISTORY_KEY, JSON.stringify(history)); promptHistoryStorageFailed = false; }
   catch { promptHistoryStorageFailed = true; }
 }
-function recipeBrief(recipe, round){
-  return `画風：${recipe.look}。色：${recipe.palette}。雰囲気：${recipe.mood}。文字の見せ方：${recipe.text}。カメラ：${recipe.camera}。音：${recipe.sound}。`
-    + (round > 1 ? `この画風は${round}回目です。同じ画風の別の回として比べるため、画風の名前と質感はそろえ、場面・構図・色の配分は前回と変えてください。` : '');
+function recipeBrief(recipe, round, photo = false){
+  const look = photo ? '撮り方' : '画風';
+  return `${look}：${recipe.look}。色：${recipe.palette}。雰囲気：${recipe.mood}。文字の見せ方：${recipe.text}。カメラ：${recipe.camera}。音：${recipe.sound}。`
+    + (round > 1 ? `この${look}は${round}回目です。同じ${look}の別の回として比べるため、${look}の名前と質感はそろえ、場面・構図・色の配分は前回と変えてください。` : '');
 }
 
-/* 最初の一言（0〜3秒）の型。例は、このチャンネルで伸びた回（2026-10-23に確認・再生800〜1,100回）の題名と1枚目。
+/* ========================= 型（2026-11-12〜） =========================
+   2026-11-12 にチャンネルの全171本の題名と再生数を数え直した。10/24からの43本は、
+   テーマが うつ15本・不眠13本・孤独15本 の3つだけで、同じ物（カーテン・枕・時計・布団・スマホ・玄関が3回ずつ）と
+   同じ言い回しをくり返していた（中央値344回・1,200回超は0本・同じ題名が2組）。
+   題材が広かった8〜9月の題名つき14本は中央1,105回。
+   そこで、1本を「題材 × 切り口 × 最初の一言の型 × 展開 × 締め × 撮り方（画風）× 写るもの」の組み合わせ（型）で決め、
+   毎回ちがう組み合わせにする。型番（例 T011-A3-N2-S1）をメモに残し、本数がたまったら項目ごとに比べる。
+   選び方は「まだ使った回数が少ないものから」。同じ回数のものは、その回ごとの乱数（seedHash）で決める。
+   順番どおりに回すと、数が同じ項目どうし（切り口8・展開8）がいつも同じ相手と組になり、どちらが効いたか分けられなくなるため。 */
+
+/* 最初の一言（0〜3秒）の型。例は、このチャンネルの過去の題名（再生は2026-11-12に確認、ほとんどが750〜1,400回）。
    毎回ちがう型を使い、「冒頭の掴み」に型の名前を記録する。 */
 const HOOK_TYPES = [
   { name:'物が語る状態', how:'片づかない物・止まった物で、いまの自分の状態を見せる。気持ちは説明しない',
@@ -2306,31 +2416,336 @@ const HOOK_TYPES = [
     ex:['帰ってきて、上着のまま座っている。', '人に会った日は、帰ると動けない。'] },
   { name:'くり返してしまうこと', how:'分かっているのにくり返してしまう小さな行動を、「また」などで言う',
     ex:['淹れたお茶が、また冷めている。'] },
+  { name:'言われた一言', how:'だれかに言われた言葉を「」で先頭に置き、それがどう残ったかを短く言い切る。言った人を悪者にしない',
+    ex:['「元気そうだね」が、しんどい'] },
+  { name:'逆説', how:'ふつうの予想と反対になることを、「〜ほど、〜」「〜のに、〜」で言い切る',
+    ex:['休みの日ほど、動けなくなる。'] },
+  { name:'言えなかった一言', how:'言おうとして言えなかったこと・送れなかったことを言い切る。だれに言えなかったかは画で見せる',
+    ex:['断りの一文を、まだ送れずにいる。'] },
+  { name:'そのまま認める', how:'できないこと・空いたままのことを、直さずにそのまま認める言い切り。「大丈夫」「頑張ろう」は使わない',
+    ex:['その空欄の、ままでいい', '生きてた。それだけで、はなまる。'] },
+  { name:'からだの感覚', how:'気持ちの名前を使わず、からだに起きていること（のど・手・耳・息・重さ）で言う',
+    ex:['その席だけ、箸が進まなかった。', '夜の風が、やけに大きく聞こえる。'] },
+  { name:'ひとつだけできたこと', how:'できなかった一日の中で、ひとつだけできた小さなことを「だけ」「やっと」で言い切る。自慢にしない',
+    ex:['夜中に、お湯だけ沸かしに起きた。'] },
 ];
-// 登録済みの動画 → この端末の生成履歴の順に並べ、いちばん長く使っていない型を選ぶ。
-function hookChoice(published, history, {avoid} = {}){
-  const used = [...published.slice(0,6).reverse().map(s => s.v.hook_type), ...history.recent.map(h => h.hook)];
-  const lastUse = h => used.lastIndexOf(h.name);
-  return HOOK_TYPES.filter(h => h.name !== avoid)
-    .sort((a,b) => lastUse(a)-lastUse(b) || HOOK_TYPES.indexOf(a)-HOOK_TYPES.indexOf(b))[0];
+
+/* テーマと題材。題材は「一言そのもの」ではなく種で、制作するAIがその状況の中のいちばん具体的な一瞬を選ぶ。
+   題材の番号は テーマの番号×10＋題材の番号（T011〜T208）で、記録に使う。
+   **並びを変えない・途中に足さない**（番号がずれると、過去の記録と突き合わせられなくなる）。
+   足すときは、テーマの題材の末尾（1テーマ9個まで）か、テーマの配列の末尾に足す。
+   薬・お酒・自分を傷つけること・食べ吐きは題材にしない（見ている人の中に、いちばんしんどい夜の途中の人がいる）。
+   tag はハッシュタグに使う言葉。area は場面（どこで・いつ）で、比較の項目にする。 */
+const TOPIC_THEMES = [
+  { theme:'うつ', tag:'うつ', topics:[
+    ['身支度', '歯ブラシを持ったまま、洗面台の前で止まっている'],
+    ['食べる', '冷蔵庫を開けて、何も取らずに閉める'],
+    ['家事', 'ゴミの日を、また見送った'],
+    ['部屋', '好きだった本や漫画を、開く気になれない'],
+    ['身支度', '同じ部屋着のまま、三日目になる'],
+    ['部屋', '床に置いた物を、またいで歩いている'],
+    ['外出', '髪を切りに行く予約を、何か月も入れられない'],
+    ['部屋', '充電が切れたままの物が、少しずつ増えていく'] ] },
+  { theme:'不眠', tag:'不眠', topics:[
+    ['夜', '目覚ましを、何度もセットし直す'],
+    ['夜', '眠るのをあきらめて、台所の床に座る'],
+    ['夜', '新聞配達のバイクの音で、朝が近いと知る'],
+    ['夜', '眠れないまま、窓の外が白くなっていく'],
+    ['朝', 'やっと眠れたのが、起きる時間の一時間前'],
+    ['夜', '寝る前に、明日の失敗を先に考えてしまう'],
+    ['夜', '換気扇や加湿器の音を、ずっと聞いている'],
+    ['朝', '眠れなかった朝、いつもより早く家を出てしまう'] ] },
+  { theme:'孤独', tag:'孤独', topics:[
+    ['店', '店の人の「温めますか」が、今日はじめての会話'],
+    ['店', 'スーパーで、一人ぶんの総菜を選ぶ'],
+    ['連絡', '誕生日に、通知がひとつも鳴らない'],
+    ['外出', '休みの日、行き先がなくて同じ道を一周する'],
+    ['部屋', '隣の部屋の笑い声が、壁ごしに聞こえる'],
+    ['連絡', '連絡先を上から下まで見て、誰にもかけない'],
+    ['食べる', '多めに炊いたごはんを、三日かけて食べる'],
+    ['部屋', '祭りや花火の音を、部屋の中で聞いている'] ] },
+  { theme:'不安', tag:'不安', topics:[
+    ['連絡', '電話が鳴ると、出る前に心臓が速くなる'],
+    ['仕事', '「ちょっといい？」と言われてからの数分間'],
+    ['夜', '明日の予定がひとつあるだけで、前の晩から落ち着かない'],
+    ['連絡', '送ったメッセージを、何度も読み返す'],
+    ['外出', '約束の時間より、一時間も早く着いてしまう'],
+    ['部屋', 'インターホンが鳴っても、息をひそめている'],
+    ['連絡', '既読がつかない時間を、数えてしまう'],
+    ['夜', '最悪の場合を調べはじめて、検索が止まらない'] ] },
+  { theme:'パニック', tag:'パニック障害', topics:[
+    ['外出', 'バスは、すぐ降りられる前の席にしか座れない'],
+    ['店', 'レジの列に並ぶと、息が浅くなる'],
+    ['外出', '髪を切る椅子の上で、「途中で出られない」と考えてしまう'],
+    ['外出', '映画館は、通路側の端の席しか選べない'],
+    ['外出', '水のペットボトルを持たないと、出かけられない'],
+    ['外出', '「また来るかも」と思って、行ける場所が減っていく'],
+    ['夜', '息が苦しくなった日の夜、次が怖くて眠れない'],
+    ['外出', '出口の場所を、入ってすぐに確かめる'] ] },
+  { theme:'会食恐怖', tag:'会食恐怖症', topics:[
+    ['連絡', '誘われたごはんを、理由を作って断る'],
+    ['食べる', '外で食べる前の日から、のどが詰まる感じがする'],
+    ['食べる', '人の前だと、ひと口が飲みこめない'],
+    ['食べる', '「少なめで」と言えなくて、残した皿を見つめる'],
+    ['仕事', '昼休みは、ひとりで食べられる場所を探す'],
+    ['食べる', '家では食べられるのに、店では箸が止まる'],
+    ['食べる', 'メニューを開いて、食べ切れそうな物だけを探す'],
+    ['食べる', '「遠慮しないで食べて」が、いちばんつらい'] ] },
+  { theme:'社交不安', tag:'社交不安', topics:[
+    ['店', 'レジで小銭を出す手が、あせってしまう'],
+    ['外出', '向こうから知り合いが来ると、道を変える'],
+    ['仕事', '会議で一言話すまで、ずっとその台本を考えている'],
+    ['連絡', '電話をかける前に、言うことを紙に書く'],
+    ['店', '店の人の世間話に、うまく返せない'],
+    ['外出', '帰り道、自分の言ったことを全部思い出す'],
+    ['外出', 'エレベーターで二人きりになるのを、遠回りして避ける'],
+    ['店', '店の人に声をかけられなくて、買わずに出る'] ] },
+  { theme:'人づきあい', tag:'人間関係', topics:[
+    ['連絡', 'グループの会話に、入るタイミングが分からない'],
+    ['連絡', '「また今度ね」の今度を、自分からは言えない'],
+    ['外出', '楽しかったはずなのに、帰りはぐったりしている'],
+    ['連絡', '返信を考えているうちに、夜になる'],
+    ['連絡', '断る理由を探しながら、「いいよ」と言ってしまう'],
+    ['連絡', '予定がなくなって、ほっとしている自分がいる'],
+    ['連絡', '「元気？」に、「元気」としか返せない'],
+    ['部屋', '人の機嫌を、ドアの閉め方で読んでしまう'] ] },
+  { theme:'休職', tag:'休職', topics:[
+    ['朝', '平日の朝、通勤の人たちと逆の向きに歩く'],
+    ['部屋', '平日の昼の、子どもの声と布団をたたく音'],
+    ['連絡', '職場からの連絡を、開けないままにしている'],
+    ['手続き', '出さなければいけない書類を、出しに行けない'],
+    ['店', '平日の昼のスーパーで、知り合いに会いたくない'],
+    ['部屋', '戻る日までの日数を、カレンダーで数えてしまう'],
+    ['部屋', '何もしていないのに、夕方には疲れている'],
+    ['連絡', '「ゆっくり休んで」と言われて、休み方が分からない'] ] },
+  { theme:'仕事', tag:'仕事がつらい', topics:[
+    ['夜', '日曜の夕方から、もう月曜が始まっている'],
+    ['仕事', '職場のトイレの個室で、五分だけ目を閉じる'],
+    ['朝', '職場の建物が見えると、歩くのが遅くなる'],
+    ['仕事', 'ミスをひとつすると、その日ずっとそのことを考える'],
+    ['仕事', '「大丈夫です」と言ってから、席で固まっている'],
+    ['店', '帰りの店で、何を買うか決められない'],
+    ['仕事', '昼休み、車の中でひとりになる'],
+    ['夜', '家に帰ったのに、頭の中でまだ仕事をしている'] ] },
+  { theme:'感覚過敏', tag:'HSP', topics:[
+    ['店', '店の音と光で、買う物を忘れてしまう'],
+    ['部屋', '冷蔵庫や秒針の音が、気になって止めたくなる'],
+    ['身支度', '服のタグや縫い目が、一日じゅう気になる'],
+    ['外出', '人ごみのあと、暗い部屋でじっとしている'],
+    ['部屋', '誰かの大きな声で、自分が怒られた気がする'],
+    ['店', '明るすぎる店に、長くいられない'],
+    ['部屋', '隣の生活音を、イヤホンでふさぐ'],
+    ['外出', 'においの強い場所を、息を止めて通る'] ] },
+  { theme:'確認', tag:'強迫', topics:[
+    ['外出', '鍵をかけたか、玄関に三回もどる'],
+    ['家事', 'コンロの火を、写真に撮ってから出かける'],
+    ['連絡', '送る前の文章を、十回読み直す'],
+    ['部屋', '物の位置が少しずれると、直すまで落ち着かない'],
+    ['身支度', '手を洗い終わるタイミングが、分からない'],
+    ['外出', '窓を全部閉めたか、指をさして数える'],
+    ['夜', '目覚ましをかけたか、寝床の中で何度も見る'],
+    ['手続き', '書類に書いた名前を、何度もなぞって確かめる'] ] },
+  { theme:'自己否定', tag:'自己否定', topics:[
+    ['連絡', '褒められても、「いや、でも」と打ち消してしまう'],
+    ['夜', '寝る前に、今日の反省会がはじまる'],
+    ['連絡', '「すみません」が、口ぐせになっている'],
+    ['部屋', '何もできなかった日の欄を、手帳に書けない'],
+    ['連絡', '人のうまくいった話を見て、そっと画面を閉じる'],
+    ['部屋', '休んでいるのに、休んでいる自分を責めている'],
+    ['仕事', '助けてもらうと、借りを作った気がする'],
+    ['部屋', '昔の失敗を急に思い出して、声が出る'] ] },
+  { theme:'気分の波', tag:'気分の波', topics:[
+    ['連絡', '元気な日に入れた予定を、当日に取り消す'],
+    ['家事', '調子のいい日に、片づけすぎて次の日動けない'],
+    ['朝', '昨日できたことが、今日はできない'],
+    ['部屋', '理由もなく、午後から急に沈んでいく'],
+    ['部屋', '調子のいい自分と悪い自分、どちらが本当か分からない'],
+    ['連絡', '元気な日にした約束が、だんだん重くなる'],
+    ['部屋', '手帳に、その日の調子のしるしをつけている'],
+    ['夜', '夕方になると、気持ちが下がってくる'] ] },
+  { theme:'朝がつらい', tag:'起きられない', topics:[
+    ['朝', '目覚ましを五つかけて、全部止めている'],
+    ['朝', '目が覚めてから立ち上がるまで、一時間かかる'],
+    ['朝', '朝の光がまぶしくて、もう一度もぐりこむ'],
+    ['朝', '顔を洗うだけで、ひと仕事終えた気がする'],
+    ['食べる', '朝ごはんを、流しの前で立ったまま食べる'],
+    ['身支度', '出かける服が決まらなくて、座りこむ'],
+    ['朝', '午前中の予定を、入れられなくなった'],
+    ['朝', '目が覚めた瞬間から、今日が重い'] ] },
+  { theme:'先延ばし', tag:'先延ばし', topics:[
+    ['手続き', '簡単な手続きを、期限の前の日までできない'],
+    ['連絡', '返信しなきゃ、と思ったまま一週間たつ'],
+    ['家事', '段ボールを、たたまずに積んでいる'],
+    ['手続き', '払込の用紙を、期限の日に見つける'],
+    ['部屋', 'やることを書き出して、それだけで疲れる'],
+    ['家事', '五分で終わることが、いちばん始められない'],
+    ['外出', '出かける直前に、探し物がはじまる'],
+    ['部屋', '読みかけのページを開いたまま、何日もたつ'] ] },
+  { theme:'通院', tag:'通院', topics:[
+    ['連絡', '予約の電話を、かけられないまま昼になる'],
+    ['外出', '診察で、言いたいことの半分も言えない'],
+    ['外出', '「最近どうですか」に、うまく答えられない'],
+    ['身支度', '通院の日だけ、ちゃんとした服を着る'],
+    ['外出', '待合の椅子で、名前を呼ばれるのを待つ時間'],
+    ['外出', '帰り道、「大丈夫です」と言ったことを後悔する'],
+    ['手続き', '調子を書いたメモを、見せられずに持ち帰る'],
+    ['外出', '通院の帰りに、少しだけ遠回りをする'] ] },
+  { theme:'家族', tag:'家族', topics:[
+    ['連絡', '親からの着信を、鳴りやむまで見ている'],
+    ['連絡', '「これからどうするの」と聞かれるのが怖くて、帰れない'],
+    ['部屋', '家族の足音がすると、部屋の電気を消す'],
+    ['食べる', '食卓で、テレビの音だけがしている'],
+    ['連絡', '心配をかけたくなくて、「元気だよ」と送る'],
+    ['部屋', '実家の自分の部屋が、いちばん落ち着かない'],
+    ['連絡', '分かってほしい人ほど、うまく説明できない'],
+    ['食べる', '家族が寝てから、台所に行く'] ] },
+  { theme:'回復期', tag:'回復途中', topics:[
+    ['家事', 'ひさしぶりに、窓を開けて空気を入れた'],
+    ['外出', '近くのポストまで、歩けた日'],
+    ['食べる', 'ひさしぶりに、あたたかい物を作った'],
+    ['身支度', '三日ぶりに、お風呂に入れた'],
+    ['部屋', '良くなったと思ったら、また動けない日が来る'],
+    ['部屋', '「前はできたのに」と、比べてしまう'],
+    ['夜', '少し笑えた日の夜、反動が怖い'],
+    ['家事', '今日できたのは、ゴミをひとつ捨てたことだけ'] ] },
+  { theme:'天気と季節', tag:'低気圧', topics:[
+    ['朝', '雨の前の日、からだが先に重くなる'],
+    ['部屋', '晴れた日ほど、外に出られない自分がつらい'],
+    ['部屋', '連休や年末、世の中が楽しそうな日に沈む'],
+    ['部屋', '日が短くなると、気持ちも早く暮れていく'],
+    ['身支度', '季節の変わり目、服を入れ替えるのが追いつかない'],
+    ['部屋', '雨の日は、休んでいてもいい気がする'],
+    ['外出', '春、まわりが新しくなる時期に置いていかれる'],
+    ['部屋', '夏の昼、冷房の部屋から出られない'] ] },
+];
+const TOPICS = TOPIC_THEMES.flatMap((t, ti) => t.topics.map(([area, seed], i) =>
+  ({ id:(ti+1)*10+i+1, theme:t.theme, tag:t.tag, area, seed })));
+
+/* 切り口＝その題材を、どの気持ちの側から見るか。 */
+const ANGLES = [
+  { id:1, name:'責めてしまう', how:'できない自分を、自分で責めている。責める言葉を1行だけ入れ、打ち消しも励ましも足さない' },
+  { id:2, name:'隠している', how:'まわりには平気に見せている。見せている自分と、ひとりのときの自分の落差を出す' },
+  { id:3, name:'理由が分からない', how:'自分でも理由を説明できない。「なぜか」を解説せず、分からないまま置く' },
+  { id:4, name:'からだが先に反応する', how:'頭で考えるより先に、からだが動かない・固まる・速くなる。からだの感覚を1つ具体的に入れる' },
+  { id:5, name:'比べてしまう', how:'前の自分や、ふつうにできている人と比べてしまう。比べる相手を1つだけ具体的に出す' },
+  { id:6, name:'ひとりだと思っていた', how:'こんなことをしているのは自分だけだと思っていた。最後に、同じ人がいると分かる' },
+  { id:7, name:'それでも続いている', how:'うまくいかないまま、それでも今日が終わっていく。良くならなくても続いていることを、そのまま見せる' },
+  { id:8, name:'自分なりのやり過ごし方', how:'人には言わない、自分だけの小さなやり過ごし方がある。役に立つ方法として勧めない' },
+];
+/* 展開＝2枚目から最後の手前までを、どう進めるか。 */
+const NARRATIVES = [
+  { id:1, name:'行動から本音へ', how:'1枚目の行動 → その奥にある本音 → そうなってしまう理由、の順に、1枚ずつ深くしていく' },
+  { id:2, name:'時間が進む', how:'同じ場所のまま、時刻だけが進む。テロップの先頭に時刻や時間帯を入れ、画の光も時間に合わせて変える' },
+  { id:3, name:'数える', how:'回数や日数が、1枚ごとに増えていく（または減っていく）。数字を各テロップに入れ、画の中の物の数もそろえる' },
+  { id:4, name:'外と中', how:'人前の自分と、ひとりの自分を交互に見せる。外の場面は明るく短く、ひとりの場面は静かに長く' },
+  { id:5, name:'物が見ていた', how:'部屋の物の側から、「この人は〜」と語る（語り手は物）。最後の1枚だけ「私」に戻る' },
+  { id:6, name:'短い手紙', how:'少し前の自分か、同じ夜のだれかに宛てた短い手紙として読ませる。題名を「〜な人へ」にはしない' },
+  { id:7, name:'心の声と返事', how:'責める声1行 → それに返す静かな声1行、を2往復。返す声は、励まさずに事実だけを言う' },
+  { id:8, name:'あとから分かる', how:'結果の場面から始め、なぜそうなったかが最後に分かる順に並べる。1枚目では理由を言わない' },
+];
+/* 締め＝最後の1枚。名前を「締め」（cta_type）に記録する。 */
+const ENDINGS = [
+  { name:'私も＋毎晩1本', how:'最後の1枚は2行。1行目は「私も」で始まる、同じ側にいることが分かる一言。2行目は「毎晩1本、置いてます。」' },
+  { name:'画で答える', how:'最後の1枚の文字は、事実を短く言うだけ（気持ちは書かない）。1枚目の引っかかりへの答えは、画の中の小さな変化だけで見せる' },
+  { name:'ゆるして終わる', how:'最後の1枚は、できなさをそのまま置く一言（「今日は、ここまで。」のような形）。「大丈夫」「頑張ろう」は使わない' },
+  { name:'明日へ持ち越す', how:'解決しないまま終える。最後の1枚は、明日もたぶん同じだと認めたうえでの、小さな一言' },
+  { name:'1枚目へ戻る', how:'最後の画とテロップが、1枚目にそのままつながるループにする。最後は1枚目の一言を少し言いかえ、0.0秒と同じ構図へ戻る' },
+  { name:'同じ夜のだれか', how:'最後の1枚で、いま同じことをしている人がほかにもいることを、事実として置く（「あなたもですか」と問いかけない）' },
+];
+/* 写るもの＝実写の素材に、人をどこまで写すか。顔は写さない。コードだけで描く回は、いつも「物と光だけ」。 */
+const SUBJECTS = [
+  { id:1, name:'物と光だけ', how:'人は写しません。物と、そこに当たる光だけで語ります',
+    ask:'人は写さないでください（手や体の一部も）。物と光だけで見せます。' },
+  { id:2, name:'手元', how:'手と物だけを写します（手首から先。顔や体は写さない）',
+    ask:'人は手元だけ（手首から先）にしてください。大人の自然な手で、指の数や形が不自然にならないように。袖が写るときは無地の部屋着で、4つとも同じ色に。顔や体は写さないでください。' },
+  { id:3, name:'後ろ姿', how:'後ろ姿か肩ごしに、その人が見ているものを写します（顔は写さない）',
+    ask:'人は後ろ姿か肩ごしだけにしてください。年齢や性別を強く感じさせない大人で、無地の部屋着（色を1つ決めて、4つとも同じ）。顔・横顔は写さないでください。' },
+  { id:4, name:'足もと', how:'ひざから下と、床や足もとの物を写します',
+    ask:'人はひざから下だけにしてください（靴下か素足、無地の部屋着のすそ。4つとも同じ服）。顔や上半身は写さないでください。' },
+];
+
+const PATTERN_CODE = /T(\d{3})-A(\d{1,2})-N(\d{1,2})-S(\d)/;
+const patternCode = (topic, angle, narr, subj) => `T${String(topic.id).padStart(3,'0')}-A${angle.id}-N${narr.id}-S${subj.id}`;
+// 知らない番号は型として扱わない（手で打ち間違えた型番を、別の題材として数えない）。
+function decodePattern(code){
+  const m = String(code || '').match(PATTERN_CODE);
+  if (!m) return null;
+  const topic = TOPICS.find(t => t.id === Number(m[1])), angle = ANGLES.find(a => a.id === Number(m[2]));
+  const narr = NARRATIVES.find(n => n.id === Number(m[3])), subj = SUBJECTS.find(s => s.id === Number(m[4]));
+  return topic && angle && narr && subj ? { code:patternCode(topic, angle, narr, subj), topic, angle, narr, subj } : null;
 }
-/* テーマは、投稿から2日以降の記録がある直近120日の回で、再生の中央値が高い順に4つまで（2本以上あるもの）。
-   直前2本と同じテーマは続けない（同じテーマが続くと落ちた。2026-09-10の実測）。 */
-const FALLBACK_THEMES = ['うつ', '孤独', '不眠'];
-function themeChoice(published, history, fixed = null){
+// 動画の型は、メモの中の型番（【型:T011-A3-N2-S1】）で持つ（列を足さずに済むため）。
+const patternOf = v => decodePattern(v?.note);
+const lookOf = v => String(v?.format || '').match(/^(?:探索|画風|写真)[1-9]\d*｜(.+)$/)?.[1] || null;
+const withPattern = (note, code) => {
+  const rest = String(note || '').replace(/【型:[^】]*】\s*/g, '').trim();
+  return (decodePattern(code) ? `【型:${decodePattern(code).code}】` + (rest ? ' ' : '') : '') + rest;
+};
+
+function seedHash(text){
+  let h = 2166136261;
+  for (const ch of String(text)) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+// 使った回数がいちばん少ないものを選ぶ。同じ回数なら seed で決める（毎回ちがう並びになる）。
+function pickBalanced(levels, idOf, used, seed, avoid = []){
+  const count = new Map();
+  used.forEach(x => count.set(x, (count.get(x) || 0) + 1));
+  const pool = levels.filter(l => !avoid.includes(idOf(l)));
+  return (pool.length ? pool : levels)
+    .map(l => ({ l, n:count.get(idOf(l)) || 0, h:seedHash(seed+'|'+idOf(l)) }))
+    .sort((a,b) => a.n-b.n || a.h-b.h)[0].l;
+}
+/* これまでに使った型（古い順）。型番を記録した動画と、この端末で生成した案を合わせる。
+   型番のない昔の動画は数えない（うつ・不眠・孤独を何十本も作っているので、数えるとその3つが長いあいだ選ばれなくなる）。 */
+function patternRows(history){
+  const rows = [], known = new Set();
+  state.videos.slice().sort((a,b) => postedTime(a)-postedTime(b)).forEach(v => {
+    const p = patternOf(v);
+    if (!p) return;
+    known.add(v.slug);
+    rows.push({ theme:p.topic.theme, topic:p.topic.id, angle:p.angle.id, narr:p.narr.id, subj:p.subj.id,
+      hook:v.hook_type || null, ending:v.cta_type || null });
+  });
+  history.recent.forEach(h => {
+    const p = decodePattern(h.code);
+    if (!p || known.has(h.slug)) return;
+    rows.push({ theme:p.topic.theme, topic:p.topic.id, angle:p.angle.id, narr:p.narr.id, subj:p.subj.id,
+      hook:h.hook || null, ending:h.ending || null });
+  });
+  return rows;
+}
+/* 今回の型を決める。fixed に入っている項目は、そのまま使う（再検証で参考回にそろえるとき）。
+   avoid に入っている名前は選ばない（再検証で「冒頭の掴み」「締め」だけを変えるとき）。 */
+function choosePattern(history, { photo = true, fixed = {}, avoid = {} } = {}){
+  const rows = patternRows(history), seed = 'n'+rows.length;
+  const col = key => rows.map(r => r[key]).filter(x => x != null);
+  const theme = TOPIC_THEMES.find(t => t.theme === fixed.theme)
+    || pickBalanced(TOPIC_THEMES, t => t.theme, col('theme'), seed+'theme', col('theme').slice(-2));
+  const topic = pickBalanced(TOPICS.filter(t => t.theme === theme.theme), t => t.id, col('topic'), seed+'topic');
+  const angle = fixed.angle || pickBalanced(ANGLES, a => a.id, col('angle'), seed+'angle', col('angle').slice(-1));
+  const narr = fixed.narr || pickBalanced(NARRATIVES, n => n.id, col('narr'), seed+'narr', col('narr').slice(-1));
+  const hook = fixed.hook || pickBalanced(HOOK_TYPES, h => h.name, col('hook'), seed+'hook', [...col('hook').slice(-1), avoid.hook].filter(Boolean));
+  const ending = fixed.ending || pickBalanced(ENDINGS, e => e.name, col('ending'), seed+'ending', [...col('ending').slice(-1), avoid.ending].filter(Boolean));
+  const subj = !photo ? SUBJECTS[0] : fixed.subj || pickBalanced(SUBJECTS, s => s.id, col('subj'), seed+'subj');
+  return { code:patternCode(topic, angle, narr, subj), topic, angle, narr, subj, hook, ending,
+    tried:rows.length, topicsUsed:new Set(col('topic')).size };
+}
+const PATTERN_COUNT = TOPICS.length * ANGLES.length * HOOK_TYPES.length * NARRATIVES.length * ENDINGS.length;
+/* テーマ別の実績（参考として指示文に出す）。投稿から2日以降の記録がある直近120日の回で、2本以上あるテーマ。
+   次のテーマは、これでは決めない（伸びたテーマだけを選び続けて、3つのテーマのくり返しになったため）。 */
+function themeRanking(published){
   const byTheme = new Map();
   published.filter(s => s.v.theme && typeof s.views === 'number' && hasMatureMeasurement(s)
       && Date.now()-new Date(s.postedAt) <= 120*864e5)
     .forEach(s => { const k = String(s.v.theme).trim(); byTheme.set(k, [...(byTheme.get(k) || []), s.views]); });
-  const ranked = [...byTheme].filter(([,views]) => views.length >= 2)
+  return [...byTheme].filter(([,views]) => views.length >= 2)
     .map(([theme, views]) => ({ theme, n:views.length, med:median(views) }))
-    .sort((a,b) => b.med-a.med || b.n-a.n || a.theme.localeCompare(b.theme)).slice(0,4);
-  if (fixed) return { theme:fixed, ranked };
-  // 記録が少ないうちは、これまで伸びたテーマで補って、同じテーマが続かないようにする。
-  const pool = [...new Set([...ranked.map(r => r.theme), ...(ranked.length >= 3 ? [] : FALLBACK_THEMES)])];
-  const recent = [...history.recent.slice(-2).map(h => h.theme), ...published.slice(0,2).map(s => s.v.theme)].filter(Boolean);
-  return { theme:pool.find(t => !recent.includes(t)) || pool[0], ranked };
+    .sort((a,b) => b.med-a.med || b.n-a.n || a.theme.localeCompare(b.theme)).slice(0,6);
 }
+// 動画の編集欄の候補（冒頭の掴み・締め）。いまの型の名前を先に、昔の呼び名を後ろに並べる。
+$('#dl-hook').innerHTML = [...HOOK_TYPES.map(h => h.name), '問いかけ', '共感', '断言', '数字', '体験談', '場面描写'].map(x => `<option value="${esc(x)}">`).join('');
+$('#dl-cta').innerHTML = [...ENDINGS.map(e => e.name), 'ループ（1枚目へ戻る）', 'リンクへ', 'コメント促し', '登録の約束', 'なし'].map(x => `<option value="${esc(x)}">`).join('');
 // 実写・動画生成で作った回は、コードで描く制作では同じ型を作り直せない。
 // 一覧と比較には残し、再検証の候補にだけしない。
 const codeReproducible = format => !/実写/.test(format || '');
@@ -2365,12 +2780,13 @@ function experimentSummary(rows){
   }
   return summary;
 }
-// 画風・テーマ・一言の型を決めたあと、冒頭の3〜5秒をGIFにするかを決める（openingChoice）。
+// 撮り方（画風）と型を決めたあと、実写の素材で作るか、コードだけで描くかを決める（openingChoice）。
 function experimentPlan(mode = $('#prompt-mode').value, opening = $('#prompt-opening').value){
-  const plan = stylePlan(mode);
-  return { ...plan, opening:openingChoice(plan, opening) };
+  const setting = OPENING_SETTINGS.includes(opening) ? opening : 'photo';
+  const plan = stylePlan(mode, setting);
+  return { ...plan, opening:openingChoice(plan, setting) };
 }
-function stylePlan(mode){
+function stylePlan(mode, setting = 'photo'){
   const published = allStats().list.filter(s => s.postedAt && +new Date(s.postedAt) <= Date.now())
     .sort((a,b) => new Date(b.postedAt)-new Date(a.postedAt) || String(a.v.id).localeCompare(String(b.v.id)));
   // 90日より古い成功だけを理由に、今も同じ型へ戻し続けない。
@@ -2397,56 +2813,70 @@ function stylePlan(mode){
     && !(recentFormats.length === 2 && recentFormats.every(f => f === g.format)))
     .sort((a,b) => (b.summary.stayed-b.baseline.stayed) - (a.summary.stayed-a.baseline.stayed) || a.format.localeCompare(b.format))[0];
   const history = readPromptHistory();
+  const themes = themeRanking(published);
   if (candidate && mode === 'refine'){
     const example = candidate.strong[0].s;
-    const recipe = EXPERIMENT_RECIPES.find(r => candidate.format.endsWith('｜'+r.name));
+    const recipe = ALL_RECIPES.find(r => candidate.format.endsWith('｜'+r.name));
+    const photo = isPhotoRound({ format:candidate.format });
     const axis = ['冒頭の掴み','尺','締めの誘導'][candidate.made % 3];
-    // 変えるもの以外は参考回にそろえる。テーマと一言の型も、記録があれば参考回のものを使う。
+    // 変えるもの以外は参考回にそろえる。テーマ・一言の型・締め・切り口・展開・写るものは、記録があれば参考回のものを使う。
+    const was = patternOf(example.v);
     const exampleHook = HOOK_TYPES.find(h => h.name === example.v.hook_type) || null;
-    const hook = axis === '冒頭の掴み' ? hookChoice(published, history, {avoid:exampleHook?.name})
-      : exampleHook || hookChoice(published, history);
-    const theme = themeChoice(published, history, example.v.theme || null);
-    return { mode:'refine', label:'手応えのある型を再検証', format:candidate.format, recipe,
-      brief:recipe ? recipeBrief(recipe, 1) : '参考回の画風と構成を、コードで描く映像で再検証する。参考回と画風や作り方が違う場合は、その違いも記録する。',
+    const exampleEnding = ENDINGS.find(e => e.name === example.v.cta_type) || null;
+    const pattern = choosePattern(history, { photo,
+      fixed:{ theme:example.v.theme || null, angle:was?.angle, narr:was?.narr, subj:was?.subj,
+        hook:axis === '冒頭の掴み' ? null : exampleHook, ending:axis === '締めの誘導' ? null : exampleEnding },
+      avoid:{ hook:axis === '冒頭の掴み' ? exampleHook?.name : null, ending:axis === '締めの誘導' ? exampleEnding?.name : null } });
+    const themeFixed = pattern.topic.theme === example.v.theme;
+    return { mode:'refine', label:'手応えのある型を再検証', format:candidate.format, recipe, photo,
+      brief:recipe ? recipeBrief(recipe, 1, photo) : '参考回の画風と構成を、コードで描く映像で再検証する。参考回と画風や作り方が違う場合は、その違いも記録する。',
       seconds:example.v.duration_sec ? `${example.v.duration_sec}秒前後` : '15〜20秒',
-      axis, example, candidate, groups, hook, theme:theme.theme, themes:theme.ranked, themeFixed:!!example.v.theme,
+      axis, example, candidate, groups, pattern, hook:pattern.hook, theme:pattern.topic.theme, themes, themeFixed,
       reason:`直近${candidate.summary.n}本のうち${candidate.strong.length}本で、同じ計測期間の別形式の視聴継続中央値（${candidate.baseline.stayedN}本）を5ポイント以上上回りました。平均再生率と登録も併記し、改善効果や費用対効果の確定ではなく再検証候補とします。`,
     };
   }
-  // 生成済みの案と登録済みの動画を予約として扱い、未投稿でも同じ画風に戻さない。
-  const options = EXPERIMENT_RECIPES.map((recipe, index) => {
+  // 実写の回は「撮り方」、コードだけの回は「画風」を1つずつ回す。
+  const photo = setting !== 'code';
+  const recipes = photo ? PHOTO_RECIPES : EXPERIMENT_RECIPES;
+  const formatOf = photo ? photoFormat : experimentFormat;
+  // 生成済みの案と登録済みの動画を予約として扱い、未投稿でも同じ撮り方（画風）に戻さない。
+  const options = recipes.map((recipe, index) => {
     const recorded = state.videos.map(v => v.format || '').filter(f => f.endsWith('｜'+recipe.name)).map(roundOf);
     const round = Math.max(history.rounds[recipe.name] || 0, ...recorded, 0) + 1;
-    return { recipe, index, round, format:experimentFormat(round, recipe.name) };
+    return { recipe, index, round, format:formatOf(round, recipe.name) };
   }).sort((a,b) => a.round-b.round || a.index-b.index);
   const lastFormat = history.recent.at(-1)?.format || published[0]?.v.format || '';
   const avoided = history.recent.length ? history.recent.slice(-10).map(h => h.format) : published.slice(0,10).map(s => s.v.format || '');
   const next = options.find(o => !avoided.some(f => f.endsWith('｜'+o.recipe.name)))
     || options.find(o => !lastFormat.endsWith('｜'+o.recipe.name)) || options[0];
-  const theme = themeChoice(published, history);
-  return { mode:'explore', label:'毎回ちがう画風で作る', format:next.format,
-    brief:recipeBrief(next.recipe, next.round), recipe:next.recipe,
-    seconds:next.recipe.seconds, axis:'画風', round:next.round, groups,
-    hook:hookChoice(published, history), theme:theme.theme, themes:theme.ranked, themeFixed:false,
+  const pattern = choosePattern(history, { photo });
+  return { mode:'explore', label:'毎回ちがう型で作る', format:next.format, photo,
+    brief:recipeBrief(next.recipe, next.round, photo), recipe:next.recipe,
+    seconds:next.recipe.seconds, axis:'型の探索', round:next.round, groups,
+    pattern, hook:pattern.hook, theme:pattern.topic.theme, themes, themeFixed:false,
     reason:mode === 'refine'
-      ? '今は比較条件を満たす再検証候補がないため、次の画風で作ります。記録不足を失敗とは決めつけません。'
-      : '画風は毎回まったく別のものにし、題材と最初の一言は伸びた回の作り方にそろえます。好調だった過去の画風にも自動では戻りません。',
+      ? '今は比較条件を満たす再検証候補がないため、次の型で作ります。記録不足を失敗とは決めつけません。'
+      : '題材・切り口・最初の一言の型・展開・締め・'+(photo ? '撮り方・写るもの' : '画風')+'を、毎回ちがう組み合わせにします。まだ使った回数の少ないものから選び、好調だった過去の型にも自動では戻りません。',
   };
 }
+const patternBrief = p => `題材：${p.topic.seed}（テーマ：${p.topic.theme}・場面：${p.topic.area}）／切り口：${p.angle.name}／最初の一言の型：${p.hook.name}／展開：${p.narr.name}／締め：${p.ending.name}／写るもの：${p.subj.name}`;
 
-const groupStatus = g => !g.promising ? '判断保留・別の画風も継続'
+const groupStatus = g => !g.promising ? '判断保留・別の型も継続'
   : g.reproducible ? '手応えあり・再検証候補' : '手応えあり（実写の回のため、コードで描く制作では再検証しない）';
 function renderTestPlan(plan = experimentPlan()){
+  const p = plan.pattern, photo = plan.opening.mode === 'photo';
   $('#test-design').innerHTML = `<div class="rounded-2xl p-4" style="background:rgba(23,69,107,.06)">
-    <h3 class="text-sm font-bold">${esc(plan.label)}：${esc(plan.format)}</h3>
+    <h3 class="text-sm font-bold">${esc(plan.label)}：型番 ${esc(p.code)}</h3>
     <p class="text-xs mt-2">${esc(plan.reason)}</p>
-    <p class="text-xs mt-2"><b>テーマ</b>：${esc(plan.theme)} ／ <b>最初の一言の型</b>：${esc(plan.hook?.name)}（${esc(plan.hook?.how)}）</p>
-    <p class="text-xs mt-2"><b>冒頭の3〜5秒</b>：${esc(plan.opening.label)}。${esc(plan.opening.reason)}${plan.opening.mode === 'gif' ? ' 制作後は、映像の制作手法を「冒頭にChatGPTのGIF」にしてください。' : ''}</p>
-    <p class="text-xs mt-2">${esc(plan.brief)}</p>
+    <p class="text-xs mt-2"><b>テーマ</b>：${esc(plan.theme)} ／ <b>題材</b>：${esc(p.topic.seed)}（場面：${esc(p.topic.area)}）</p>
+    <p class="text-xs mt-2"><b>切り口</b>：${esc(p.angle.name)} ／ <b>最初の一言の型</b>：${esc(plan.hook?.name)}（${esc(plan.hook?.how)}）</p>
+    <p class="text-xs mt-2"><b>展開</b>：${esc(p.narr.name)} ／ <b>締め</b>：${esc(p.ending.name)} ／ <b>写るもの</b>：${esc(p.subj.name)}</p>
+    <p class="text-xs mt-2"><b>作り方</b>：${esc(plan.opening.label)}。${esc(plan.opening.reason)}${photo ? ' 制作後は、映像の制作手法を「ChatGPTの実写の画像とGIF」にしてください。' : ''}</p>
+    <p class="text-xs mt-2"><b>${photo ? '撮り方' : '画風'}</b>：${esc(plan.format)}。${esc(plan.brief)}</p>
     <p class="text-xs mt-2">${plan.mode === 'explore'
-      ? '画風は毎回まったく別のものにします。題材と最初の一言は伸びた回の作り方にそろえ、画風・テーマ・一言の型を1本ずつ記録します。どれが効いたかの断定は、同じ画風の再検証まで保留します。'
-      : `今回は「${esc(plan.axis)}」だけを変え、ほかは参考にした回にそろえます。2本続けたら別の画風に戻ります。`}</p>
-    <p class="text-xs mt-2">制作後は「形式」に <b>${esc(plan.format)}</b>、「冒頭の掴み」に <b>${esc(plan.hook?.name)}</b> と記録してください。生成の履歴と投稿の実績は別です。生成だけでは下の投稿本数や成績には数えません。</p>
+      ? `型は、題材${TOPICS.length}個 × 切り口${ANGLES.length} × 一言の型${HOOK_TYPES.length} × 展開${NARRATIVES.length} × 締め${ENDINGS.length}（${num(PATTERN_COUNT)}通り）に、撮り方${PHOTO_RECIPES.length}種と写るもの${SUBJECTS.length}種を掛け合わせます。これまでに型を決めた回は${num(p.tried)}本（使った題材 ${p.topicsUsed}/${TOPICS.length}）。どの項目が効いたかは、下の「何が効いているか」で項目ごとに比べます。`
+      : `今回は「${esc(plan.axis)}」だけを変え、ほかは参考にした回にそろえます。2本続けたら別の型に戻ります。`}</p>
+    <p class="text-xs mt-2">制作後は、返ってきた<b>記録用の1行</b>を「動画」タブの「記録用の1行から入力する」に貼ると、型番・テーマ・冒頭の掴み・形式・締めがまとめて入ります。生成の履歴と投稿の実績は別です。生成だけでは下の投稿本数や成績には数えません。</p>
   </div>`;
   $('#test-matrix').innerHTML = plan.groups.length ? plan.groups.map(g => `<div class="text-xs mb-3">
     <b>${esc(g.format)}</b>：投稿${g.made}本 ／ 直近3本の比較可能な記録${g.summary.n}本 ／ 他の形式の比較対象${g.baseline.n}本
@@ -2467,8 +2897,9 @@ const passGate = views => {
 };
 /* 表と指示文で同じ並び・同じ呼び名を使います */
 const FORMAT_GROUPS = [
+  { key:'pho', label:'実写の素材（11/12〜）', test: v => isPhotoRound(v) },
   { key:'sty', label:'画風を毎回変える（10/24〜）', test: v => isStyleRound(v) },
-  { key:'exp', label:'探索（10/18〜10/23）', test: v => isExperiment(v) && !isStyleRound(v) },
+  { key:'exp', label:'探索（10/18〜10/23）', test: v => isExperiment(v) && !isStyleRound(v) && !isPhotoRound(v) },
   { key:'win', label:'窓と灯り',           test: v => isWindow(v) && !isExperiment(v) },
   { key:'vis', label:'映像（ほかの場面）', test: v => isVisual(v) && !isWindow(v) && !isExperiment(v) },
   { key:'chr', label:'ともり',             test: v => isCharacter(v) && !isExperiment(v) },
@@ -2561,11 +2992,11 @@ function renderAdvice(){
   const study = studyComparison();
   out.push(card('info','🎬','冒頭と視聴時間を分けて見る',esc(studyDiagnosis(study))));
   out.push(card('info','🧪',esc(plan.label),esc(plan.reason)));
-  out.push(card('info','🎞️','冒頭GIFの比較',esc(openingDiagnosis(openingComparison()))));
+  out.push(card('info','🎞️','実写の回とコードだけの回の比較',esc(openingDiagnosis(openingComparison()))));
   out.push(card('info','📊','投稿4日後の数字を記録する',
     '比較は投稿72〜120時間後の同じ行の数字で行います。最優先の視聴を継続と、平均視聴秒数・登録の増加・再生数を記録してください。未入力は0ではありません。'));
   out.push(card('flat','🌱','一度の当たりを固定化しない',
-    '既定では毎回ちがう画風で作ります。有望な画風は一覧で確認し、「数字に手応えのある画風を再検証する」を選んだ場合だけ戻ります。再検証でも同じ画風を2本投稿したら、別の画風に戻ります。'));
+    '既定では毎回ちがう型（題材・切り口・一言の型・展開・締め・撮り方・写るもの）で作ります。有望な撮り方・画風は一覧で確認し、「数字に手応えのある撮り方・画風を再検証する」を選んだ場合だけ戻ります。再検証でも同じものを2本投稿したら、別の型に戻ります。'));
   $('#advice-list').innerHTML = out.join('');
 
   renderTestPlan();
@@ -2855,6 +3286,8 @@ function openVideo(id){
   $('#vm-strategy-note').classList.toggle('hidden', state.hasStrategy);
   $('#vm-url').value = p?.url || '';
   $('#vm-at').value = p?.posted_at ? toLocalInput(p.posted_at) : '';
+  $('#vm-paste').value = '';
+  $('#vm-paste-msg').textContent = '';
   $('#vm-msg').textContent = '';
   $('#vm-delete').classList.toggle('hidden', !v);
   $('#video-modal').classList.remove('hidden');
@@ -2907,6 +3340,56 @@ $('#vm-save').addEventListener('click', async () => {
   closeVideo();
   await loadAll();
 });
+/* 記録用の1行（「識別子: v172 ／ 型番: T011-A3-N2-S1 ／ テーマ: うつ ／ …」）を読み取って、編集欄に入れる。
+   手で写すと型番やテーマが抜け、あとで型ごとに比べられなくなるため。値は入力欄に入れるだけで、HTMLとしては扱わない。
+   「___」のまま残っている所と、知らない値（選択肢にない音・役割など）は入れない。保存は「保存」を押すまで行わない。 */
+const RECORD_KEYS = ['識別子','型番','テーマ','冒頭の掴み','音','形式','尺','締め','役割','今回変えたもの','制作手法','メモ'];
+function parseRecordLine(text){
+  const src = String(text || '').slice(0, 4000).replace(/\s*\n\s*/g, ' ');
+  const marks = RECORD_KEYS.map(key => {
+    const m = new RegExp('(?:^|／)\\s*' + key + '\\s*[:：]\\s*').exec(src);
+    return m ? { key, start:m.index, end:m.index+m[0].length } : null;
+  }).filter(Boolean).sort((a,b) => a.start-b.start);
+  const out = {};
+  marks.forEach((m, i) => {
+    const value = src.slice(m.end, i+1 < marks.length ? marks[i+1].start : src.length).trim();
+    if (value && !/^_/.test(value)) out[m.key] = value;   // 「___」「___（実測秒）」のように埋めていない所は読まない
+  });
+  return out;
+}
+function applyRecordLine(){
+  const rec = parseRecordLine($('#vm-paste').value), done = [], skipped = [];
+  const put = (label, el, value, ok = true) => { if (value == null) return; if (!ok) { skipped.push(label); return; } el.value = value; done.push(label); };
+  const hasOption = (el, value) => [...el.options].some(o => o.value === value);
+  put('識別子', $('#vm-slug'), rec['識別子'], /^[A-Za-z0-9_-]{1,40}$/.test(rec['識別子'] || ''));
+  put('テーマ', $('#vm-theme'), rec['テーマ']?.slice(0, 100));
+  put('冒頭の掴み', $('#vm-hook'), rec['冒頭の掴み']?.slice(0, 100));
+  put('形式', $('#vm-format'), rec['形式']?.slice(0, 200));
+  put('締め', $('#vm-cta'), rec['締め']?.slice(0, 100));
+  const seconds = Number(rec['尺']?.match(/\d+(?:\.\d+)?/)?.[0]);
+  if (rec['尺'] != null) put('尺', $('#vm-dur'), Math.round(seconds), Number.isFinite(seconds) && seconds > 0 && seconds <= 600);
+  if (state.hasStrategy) {
+    put('音', $('#vm-audio'), rec['音'], hasOption($('#vm-audio'), rec['音']));
+    put('役割', $('#vm-role'), rec['役割'], hasOption($('#vm-role'), rec['役割']));
+    put('今回変えたもの', $('#vm-axis'), rec['今回変えたもの'], hasOption($('#vm-axis'), rec['今回変えたもの']));
+  }
+  const method = Object.keys(METHOD_TAGS).find(key => METHOD_TAGS[key] === rec['制作手法']);
+  if (rec['制作手法'] != null) put('制作手法', $('#vm-method'), method || '', !!method);
+  const pattern = decodePattern(rec['型番']);
+  if (rec['型番'] != null && !pattern) skipped.push('型番');
+  if (rec['メモ'] != null || pattern) {
+    const note = rec['メモ'] != null ? rec['メモ'].slice(0, 1500) : $('#vm-note').value;
+    $('#vm-note').value = withPattern(note, pattern ? pattern.code : decodePattern($('#vm-note').value)?.code);
+    done.push(pattern ? '型番・メモ' : 'メモ');
+  }
+  const msg = $('#vm-paste-msg');
+  msg.style.color = done.length ? '#2b7f8c' : '#b7472a';
+  msg.textContent = done.length
+    ? `入れました：${done.join('・')}。${skipped.length ? `読み取れなかった項目：${skipped.join('・')}（手で入れてください）。` : ''}題名・YouTubeのURL・投稿した日時を確かめて「保存」を押してください。`
+    : '読み取れる項目がありませんでした。「識別子: … ／ 型番: … ／ テーマ: …」の行を貼ってください。';
+}
+$('#vm-paste-apply').addEventListener('click', applyRecordLine);
+
 function failVm(e){ $('#vm-save').disabled=false; $('#vm-msg').className='text-xs mt-2 text-rose-400';
   $('#vm-msg').textContent='保存できませんでした：'+e.message; }
 
@@ -3191,48 +3674,87 @@ function formatResultLines(){
     + (fc[g.key].stayed != null ? `・視聴を継続${dec(fc[g.key].stayed,0)}%` : ''));
 }
 
-/* 冒頭GIFの回だけに入れる2つの章。1回目は ChatGPT に渡す指示文を書かせて止め、2回目にGIFを受け取ってmp4を作る。
-   先に1枚目の一言を決めてからGIFを作る（いちばん効いたのは題材と一言なので、画に一言を合わせる順にはしない）。
-   GIFの弱点（コマ数が少ない・コマどうしの揺れ・減色の縞）は、受け取ったAIが溶かしてならす。 */
-function gifRequestLines(){
+/* 過去の題名（新しい順・ハッシュタグなし・同じものは1つに）。題名のなかった初期の回（「星と海」だけ）は除く。
+   制作するAIに渡して、同じ行動・同じ物・同じ言い回しをくり返さないようにする。 */
+function usedTitles(limit = 200){
+  const seen = new Set();
+  return state.videos.slice().sort((a,b) => postedTime(b)-postedTime(a))
+    .map(v => stripTags(v.title).replace(/\s+/g, ' ').slice(0, 60))
+    .filter(t => t && !/^星[との]海$/.test(t) && !seen.has(t) && seen.add(t)).slice(0, limit);
+}
+
+/* 実写の回だけに入れる2つの章（2026-11-12〜）。1回目は ChatGPT に渡す指示文を書かせて止め、2回目に素材を受け取ってmp4を作る。
+   素材は4つ：冒頭のGIF・あいだの写真2枚・最後のGIF。先に1枚目の一言を決めてから素材を頼む（画に一言を合わせる順にはしない）。
+   11/09〜11/12 のGIFは「絵が少し動くだけ」になった。イラストの画風で頼み、動きを「ゆっくり変わるもの1つか2つ」に絞っていたため。
+   そこで、実写の写真に見えること・1コマ目から最後まで続くはっきりした動きが1つあること、を頼む。
+   GIFの弱点（コマ数が少ない・コマどうしのずれ）は、受け取ったAIが「動いていない所だけ」ならして隠す。 */
+function photoRequestLines(plan){
+  const r = plan.recipe, subj = plan.pattern.subj;
   return [
-    '## 冒頭のGIF（1回目：ChatGPTに渡す指示文を書きます）',
-    '- ChatGPTのGIFは、数枚〜十数枚の画を順に見せるパラパラ漫画です（APIでは2〜16コマ、標準は9コマ×0.2秒＝1.8秒）。コマどうしで形や色が揺れやすいのが弱点なので、動きは小さく、ゆっくりにしてもらいます。',
-    '- GIFに描いてもらうのは、1枚目の一言の場面そのもの（0.0秒に写る画）です。文字は動画の側で重ねるので、GIFには入れません。',
-    '- 画風は「今回」の章の画風・色・雰囲気を、画像生成AIに伝わる短い言葉に言い換えて入れます。写真のような実写にはしません（あとに続くコードの場面と見た目をそろえるため）。',
-    '- 一言の場面が夜の部屋や窓辺のときの例：雨の降る夜、暗い部屋の窓から見た向かいの建物。ひとつの窓だけに、ゆっくり明かりが灯る（10月前半に伸びた「窓と灯り」の回と同じ場所です）。',
+    '## ChatGPTに頼む素材（1回目：ChatGPTに渡す指示文を書きます）',
+    '- 素材は4つです。素材1＝冒頭のアニメーションGIF（0.0秒から3〜4秒）、素材2・3＝あいだの場面の写真（静止画）、素材4＝最後の場面のアニメーションGIF（小さな変化が起きる瞬間）。4つとも、同じ場所・同じ時間帯・同じ光で撮った実写に見えるようにそろえます。',
+    '- これまでのGIFは「絵が少し動くだけ」になっていました（2026-11-12）。イラストの画風で頼み、動きを「ゆっくり変わるもの1つか2つだけ」に絞っていたためです。今回は、①実写の写真に見えること ②1コマ目から最後のコマまで続く、はっきりした動きが1つあること、の2つを必ず頼みます。',
+    '- ChatGPTのGIFは、数枚〜十数枚の画を順に見せる形です（コマ数や長さの上限は公表されていません）。コマどうしで物の形や位置がずれやすいので、構図と物の位置は固定し、動くものを1つに決めて具体的に書きます（何が・どこからどこへ・最初のコマと最後のコマで何が違うか）。',
+    '- 動きの例（そのまま使わず、題材の場面に合わせて新しく考えます）：手がカップへ伸びて、触れる前に止まる／カーテンのすきまが少し開いて、床に光の筋が伸びる／画面が点いて、暗い天井が青白く照らされる／やかんの湯気が立ちのぼり、窓がくもっていく／ドアがゆっくり閉まり、廊下の光が細くなる。',
+    `- 今回の写るものは「${subj.name}」です。${subj.how}。人が写らない回は、物や光そのものが動く場面にします。`,
+    '- 素材2・3は、展開の型に合わせた場面にします（同じ部屋の別の物・別の角度・少し時間が進んだ様子）。素材4は締めの場面で、小さなものがひとつだけ変わる瞬間をGIFにします（灯りがつく・湯気が立つ・カーテンが少し開く など。良くなりすぎない変化）。',
+    '- GIFにも写真にも文字は入れません（文字は動画の側で重ねます）。',
     '- 下の形をそのまま使い、【】の中だけを埋めて、コードブロック1つで渡してください。こちらはそれをコピーしてChatGPTに貼ります。',
     '```',
-    'アニメーションGIFを1つ作ってください。縦長のショート動画の、最初の3〜4秒に使います。',
-    '場面：【1枚目の一言の場面を1〜2文で。何が主役で、何がゆっくりどう変わるか】',
-    '画風：【今回の画風を短く】',
-    '色：【今回の色を短く】',
-    '- 縦長（9:16）。できなければ縦長の2:3で。',
-    '- カメラは動かさず固定。動くのは、ゆっくり変わるもの1つか2つだけにしてください（明かりが少しずつ灯る、カーテンが揺れる、湯気が立つ など）。',
-    '- 建物・家具・物の形と位置は、すべてのコマで同じにしてください（コマごとに形が変わると、ちらついて見えます）。',
-    '- 雨・雪・舞う粒のような、速く細かい動きは描かなくて構いません（あとで動画の側で足します）。',
-    '- コマはできるだけ多く（16コマ前後）、1コマ0.2秒前後に。最後のコマから最初のコマへ、自然につながるループにしてください。',
-    '- 主役は画面の上のほう（上から15〜35%）か下のほう（上から60〜75%）に置き、真ん中（上から40〜57%）は模様の少ない落ち着いた所（無地に近い壁・空・床など）にしてください。あとで文字を重ねます。',
-    '- 文字・数字・看板・ロゴ・透かしは入れないでください。',
-    '- 人・顔・手・人影は描かないでください。',
+    '縦長のショート動画に使う素材を4つ、順番に作ってください。素材1と素材4はアニメーションGIF、素材2と素材3は写真（静止画）です。',
+    '4つとも、同じ場所・同じ時間帯・同じ光・同じ色味で撮った、実写の写真に見える画にしてください。イラスト・アニメ・絵画・3DCGの見た目にはしないでください。',
+    '',
+    '■ 4つに共通',
+    '- 場所と時間：【どこの、何時ごろか。部屋の広さ・家具・窓の位置まで具体的に】',
+    `- 撮り方：${r.look}`,
+    `- 色：${r.palette}`,
+    `- 写るもの：${subj.ask}`,
+    '- 実際に人が暮らしている日本の住まいの生活感を出してください（使いこんだ物、少しの散らかり、生活の跡）。モデルルームや広告写真のように整えすぎないでください。',
+    '- スマホやカメラでそのまま撮ったような自然な写りにしてください（その場にある光だけ、わずかなノイズ、ピントの外はぼける）。彩度・コントラスト・シャープさを上げすぎず、HDR風や、演出の強すぎる光にしないでください。',
+    '- 縦長（9:16）。できなければ縦長の2:3で。4つとも同じ縦横比にしてください。',
+    '- 主役は画面の上のほう（上から15〜35%）か下のほう（上から60〜75%）に置き、真ん中（上から40〜57%）は模様の少ない落ち着いた所（無地に近い壁・床・暗がりなど）にしてください。あとで文字を重ねます。',
+    '- 文字・数字・ロゴ・透かし・読める看板・読める画面は入れないでください（時計の文字盤や画面は、読めないくらいにぼかすか、写さない）。',
+    '- 人の顔は写さないでください（横顔、鏡や画面に映った顔も）。',
     '- 点滅や、急に明るくなる変化はなしで。明るさはゆっくり変えてください。',
-    '- 描かないもの：薬・お酒・刃物・ロープ・血、高い所・駅・線路・踏切、水の中へ入っていく画、怖く見える画。',
+    '- 描かないもの：薬・お酒・刃物・ロープ・血や傷、高い所（屋上・ベランダの手すり・橋の上）・駅のホーム・線路・踏切、水の中へ入っていく画、暗がりに立つ人影、怖く見える画。',
+    '',
+    '■ 素材1：アニメーションGIF（動画の最初の3〜4秒）',
+    '- 場面：【1枚目の一言の場面。何が主役か】',
+    '- 動き：【はっきり分かる動きを1つ。何が、どこからどこへ動くか。最初のコマと最後のコマで何が違うか】',
+    '- 実際に撮った動画から、コマを順に切り出したように見せてください。コマはできるだけ多く（16コマ前後）、1コマ0.15〜0.2秒、全体で3秒前後に。',
+    '- カメラは三脚に固定です。構図、家具や物の位置と形、光の向きは、すべてのコマで同じにしてください。変わるのは、上の動きと、それに伴う影や反射だけです。',
+    '- 1コマ目から動きが始まり、コマごとに少しずつ進み、最後のコマで動きが終わるようにしてください。同じ画のコマを続けないでください。最初の状態へ戻すループにはしなくて構いません。',
+    '- 雨・雪・ほこりのような、速く細かい動きは描かなくて構いません（あとで動画の側で足します）。',
+    '',
+    '■ 素材2・素材3：写真（静止画）',
+    '- 素材2：【2つ目の場面】',
+    '- 素材3：【3つ目の場面】',
+    '- 素材1と同じ部屋・同じ物・同じ時間帯に見えるようにしてください。',
+    '',
+    '■ 素材4：アニメーションGIF（動画の最後の3〜4秒）',
+    '- 場面：【最後の場面】',
+    '- 動き：【小さなものがひとつだけ変わる。何が、どう変わるか。最初のコマと最後のコマで何が違うか】',
+    '- 作り方は素材1と同じです（固定のカメラ、16コマ前後、1コマ目から動きはじめ、最後のコマで終わる）。変化はゆっくり起こしてください。',
+    '',
+    '一度に4つ出せないときは、できた分だけで構いません。こちらが「続き」と送ったら、残りを作ってください。',
     '```',
-    '- 1回目に返すもの（これだけ）：①決めた1枚目の一言 ②その場面を1行 ③ChatGPTに貼る指示文（上の形の【】を埋めたもの・コードブロック1つ）④「GIFができたら、この会話に添付してください。」の1行。',
+    '- 1回目に返すもの（これだけ）：①決めた1枚目の一言 ②4つの素材の場面を1行ずつ ③ChatGPTに貼る指示文（上の形の【】を埋めたもの・コードブロック1つ）④「素材が4つできたら、この会話に添付してください。」の1行。',
     '',
   ];
 }
-function gifUseLines(){
+function photoUseLines(){
   return [
-    '## 冒頭のGIFの使い方（2回目）',
-    "1. Pillow で開き、コマ数・大きさ・各コマの表示時間（info['duration']。無いときや10ミリ秒以下のときは100ミリ秒として扱う）を確かめます。コマは ImageSequence で順に読み、1枚ずつ convert('RGB') した全体の画にしてから使います。",
-    '2. 人・顔・手・人影や、上の「描かないもの」が写っていたら、そのGIFは使いません。直した指示文を出して、作り直しをお願いしてください（聞き返してよいのはここだけです）。小さな読めない文字や透かしは、切り取りかぼかしで外せるなら外して使います。',
-    '3. 縦1080×1920に合わせます。縦横比を保ったまま画面を覆う大きさに拡大し（LANCZOS）、主役が切れない位置で切り取ります。カメラが寄るぶん、1割ほど大きくしておきます。拡大したあと半径1〜2pxで軽くぼかし、明るさ±2の薄い粒（数枚を先に作り、3フレームごとに入れ替え）を重ねて、GIFの減色による縞やザラつきを目立たなくします。',
-    '4. GIFは1秒に5コマ前後なので、そのまま30fpsに並べるとカクつきます。各フレームの時刻に合わせて、となりのコマを重ねて溶かします（a＝いまのコマの中で経った割合として、(1−a)×いまのコマ＋a×次のコマ）。速さは0.5〜2倍の範囲で変えて構いません。GIFが冒頭の区間より短いときは、遅くするか、最後のコマで止めてカメラとコードの動きで続けます。最後のコマから最初のコマへ戻してループするのは、GIFの最後と最初の画がつながっているときだけです（灯りが点いたあとに戻すと、一度消えてまた点いて見えます）。',
-    '5. コマどうしで、同じはずの所の色や形が揺れる（ちらつく）ときは、前後のコマと0.25・0.5・0.25の重みで平均してならします。最初と最後のコマには反対の端のコマを混ぜず、端のコマ自身をもう一度使います（最後の画が最初に混ざると、0.0秒から灯りが点いて見えたりします）。それでも目立つときは、いちばん良い1コマを静止画として使い、動きはカメラと、コードで描く光・粒で出します（記録用の1行のメモに「GIF→静止画」と書きます）。',
-    '6. 0.0秒から、GIFの場面と1枚目の一言を両方出します。カメラは今回の画風の動きを小さめにします（拡大率は1.00〜1.06の範囲、イージング）。GIFの中でいちばん目立つ変化（明かりが灯る など）が0.8〜1.5秒に来るよう、始めるコマを選びます。GIFに出来事がないときは、コードで小さな出来事を足します。雨・雪・粒のような速く細かい動きが要るときは、コードで描いて30fpsで重ねます。',
-    '7. GIFを使うのは、0.0秒から3〜5秒まで。2.5〜3.2秒の最初の切り替えは、テロップだけを替えてGIFの場面のまま続けて構いません。GIFからコードの場面へは、テロップが替わるところで0.4〜0.6秒かけて溶かしてつなぎます（黒や白をはさみません）。',
-    '8. そのあとは、いつもどおりコードで描きます。色はGIFから取ります（GIFのコマを数色に減色し、多い色をパレットにする）。GIFのコマを背景に使い回すのは、最後に冒頭と同じ場所へ戻るときだけにし、そのときはコードで変化を1つだけ足します。',
+    '## 素材の使い方（2回目）',
+    "1. 素材を確かめます。GIFは Pillow で開き、コマ数・大きさ・各コマの表示時間（info['duration']。無いときや10ミリ秒以下のときは100ミリ秒として扱う）を調べ、ImageSequence で順に読んで、1枚ずつ convert('RGB') した全体の画にします。写真も RGB にします。どれが素材1〜4か分からないときは、内容から判断します。",
+    '2. 人の顔や、上の「描かないもの」が写っている素材、イラストや3DCGに見える素材は使いません。直した指示文を出して、その素材だけ作り直しをお願いしてください（聞き返してよいのはここだけです）。小さな読めない文字や透かしは、切り取りかぼかしで外せるなら外して使います。',
+    '3. 縦1080×1920に合わせます。縦横比を保ったまま画面を覆う大きさに拡大し（LANCZOS）、主役が切れない位置で切り取ります。カメラを動かすぶん、1割ほど大きくしておきます。写真の細かさを残すため、全体はぼかしません（GIFに減色の縞が見えるときだけ、半径1px以内で軽くぼかします）。',
+    '4. GIFは1秒に5〜7コマなので、そのまま30fpsに並べるとカクつきます。各フレームの時刻に合わせて、となりのコマを重ねて溶かします（a＝いまのコマの中で経った割合として、(1−a)×いまのコマ＋a×次のコマ）。速さは0.5〜2倍の範囲で変えて構いません。GIFが区間より短いときは、遅くするか、最後のコマで止めてカメラの動きで続けます。最初のコマへ戻すループにはしません（終わった動きが巻き戻って見えます）。',
+    '5. 動いていないはずの所のちらつきを止めます。全コマの画素ごとの中央値を「動かない背景」とし、各コマで中央値との差が小さい画素は中央値に置き換え、差が大きい画素（動いているもの）は元のコマのまま使います。境目は、ぼかしたマスクでなじませます。動きのある所まで平均すると、動きが二重にぶれて見えるので、平均でならすのは動いていない所だけです。それでも形の揺れが目立つときは、いちばん良い1コマを写真として使い、動きはカメラと光で出します（記録用の1行のメモに「GIF→写真」と書きます）。',
+    '6. 写真（素材2・3）は、止めたまま置きません（スライドショーに見えます）。1枚ごとに、今回の撮り方のカメラの動き（拡大率は1.00〜1.08の範囲、ゆっくり始まってゆっくり止まる）をつけ、手持ちのカメラのようなごく小さな揺れ（位置±2〜4px、傾き±0.15度まで、2〜3秒で1往復するなめらかな動き）を重ねます。カットの頭の0.5秒だけ、ピントが合っていくようにぼかしを戻しても構いません。',
+    '7. 光と空気を、コードで足します。その写真にあるはずのものを、1カットに1つまで：明るさのゆっくりした呼吸（±3%）／窓からの光の筋がゆっくり動く／画面の光のゆらぎ（0.5秒以上かけて変える）／湯気／光の中のほこり／窓の外の雨。物・家具・人のような形のあるものは描き足しません（そこだけ絵に見えます）。',
+    '8. 4つの素材の色をそろえます。素材1の1コマ目を基準に、ほかの素材の明るさと色の平均・ばらつきを近づけます。そのあと全体に同じ仕上げをかけます：明るさ±2〜3の薄い粒（数枚を先に作り、3フレームごとに入れ替え）と、弱い周辺減光。彩度やシャープさは上げません。',
+    '9. 時間の割り当て：0.0秒から3〜5秒まで素材1（0.0秒から動いていること。1枚目の一言も0.0秒から出す）。素材1の中でいちばん目立つ動きが0.8〜1.5秒に来るよう、始めるコマと速さを選びます。2.5〜3.2秒の最初の切り替えは、テロップだけを替えて素材1のまま続けて構いません。素材2・3は各3〜5秒、最後の3〜5秒が素材4です。素材4の変化は、最後のテロップが出てから起こします。',
+    '10. 素材のつなぎは、テロップが替わるところでのカットか、0.3〜0.5秒かけて溶かすディゾルブにします（黒や白をはさみません）。明るさが大きくちがう素材どうしは、ディゾルブにします。',
     '',
   ];
 }
@@ -3247,34 +3769,36 @@ function buildPrompt(plan = experimentPlan()){
     .sort((a,b) => new Date(b.postedAt)-new Date(a.postedAt)).slice(0,10);
   const ch = state.channel.at(-1);
   const dates = state.metrics.map(m => m.measured_on).filter(Boolean).sort();
+  const p = plan.pattern;
   const hook = plan.hook || HOOK_TYPES[0];
-  const theme = plan.theme || FALLBACK_THEMES[0];
+  const theme = plan.theme || p.topic.theme;
   const styleName = plan.recipe?.name || plan.format.replace(/^[^｜]*｜/, '');
-  // 冒頭の3〜5秒を ChatGPT のGIFにする回（2026-11-09〜）。コードだけの回の文面は変えない。
-  const gif = plan.opening?.mode === 'gif';
+  // 実写の回（2026-11-12〜）は、ChatGPT の実写の画像とGIFを素材にする。コードだけの回は、画風のとおりにコードで描く。
+  const photo = plan.opening?.mode === 'photo';
+  const look = photo ? '撮り方' : '画風';
   const L = [];
   L.push('あなたは「星の海」のYouTubeショート動画を企画し、映像と音をコードで作ってmp4に書き出す担当です。次の1本を制作してください。');
   L.push('企画案だけで終わらず、音入りのmp4を1本完成させ、ダウンロードできる形で渡してください。候補の動画を全部作る必要はありません。');
-  if (gif) {
-    L.push('今回は冒頭の3〜5秒だけ、ChatGPT（Images 2.6）で作ったアニメーションGIFを使います。GIFはこちらがChatGPTで作り、この会話に添付します。それ以外の映像と音は、この会話で使えるコード実行環境（Python の numpy・Pillow と ffmpeg）で作ります。添付のGIFのほかに、動画生成AI・画像生成AI・実写の素材は使いません。作り方は下の「冒頭のGIF」「作れる範囲」「作り方」の章のとおりです。');
+  if (photo) {
+    L.push('今回は、実写に見える映像で作ります。素材は、ChatGPT（Images 2.6）で作る実写の写真のようなアニメーションGIF 2つ（冒頭と最後）と、同じ場所の写真2枚です。素材はこちらがChatGPTで作り、この会話に添付します。あなたは、その素材を実際にカメラで撮った映像に見えるように動かし、文字と音をつけて、この会話で使えるコード実行環境（Python の numpy・Pillow と ffmpeg）でmp4にします。添付の素材のほかに、動画生成AI・画像生成AI・ダウンロードした素材は使いません。作り方は下の「ChatGPTに頼む素材」「作れる範囲」「素材の使い方」の章のとおりです。');
     L.push('');
     L.push('## 今回の進め方（2回に分けます）');
-    L.push('1. 1回目（この指示文を受け取ったとき）：「いちばん大事なこと」の決め方で1枚目の一言と冒頭の場面を決め、「冒頭のGIF」の章の形で、ChatGPTに渡す指示文を書いて止まってください。mp4・題名・説明文は、まだ作りません。');
-    L.push('2. 2回目（こちらがGIFを添付したとき）：GIFを確かめて冒頭に使い、mp4を最後まで作ります。ここからは途中で聞き返さないでください。');
-    L.push('- この指示文と一緒にGIFが添付されていたら、1回目は飛ばします。そのGIFの場面に合う一言を同じ決め方で選び、そのまま最後まで作ります。');
-    L.push('- こちらが「GIFなしで」と返したら、冒頭もいつもどおりコードで描いて最後まで作り、記録用の1行のメモに「GIFなし」と書きます。');
+    L.push('1. 1回目（この指示文を受け取ったとき）：「いちばん大事なこと」の決め方で1枚目の一言を決め、場面を4つに割り、「ChatGPTに頼む素材」の章の形で、ChatGPTに渡す指示文を書いて止まってください。mp4・題名・説明文は、まだ作りません。');
+    L.push('2. 2回目（こちらが素材を添付したとき）：素材を確かめ、mp4を最後まで作ります。ここからは途中で聞き返さないでください。');
+    L.push('- この指示文と一緒に素材が添付されていたら、1回目は飛ばします。その素材の場面に合う一言を同じ決め方で選び、そのまま最後まで作ります。');
+    L.push('- 素材が足りないとき：GIFが1つしかなければ、それを冒頭に使い、最後は写真をコードの光で変化させます。GIFがなく写真だけのときは、写真をコードで動かして作ります。記録用の1行のメモに、使った素材（例「GIF1・写真3」）を書きます。素材が1つもないときは作り始めず、素材をお願いしてください（実写に見える画を、コードで描くことはできません）。');
   } else L.push('映像も音も、この会話で使えるコード実行環境（Python の numpy・Pillow と ffmpeg）だけで作れる範囲で設計します。動画生成AI・画像生成AI・実写の素材は使いません。作り方は下の「作れる範囲」と「作り方」の章のとおりです。');
   L.push('');
   L.push('## この発信の土台');
   if (st.purpose) L.push(`- 目的：${st.purpose}`);
   if (st.goal) L.push(`- ゴール：${st.goal}`);
-  if (st.keep) L.push(`- 続けたい部分（入力原文。見た目の指定があっても、画風は下の「今回の画風」を優先）：${st.keep}`);
+  if (st.keep) L.push(`- 続けたい部分（入力原文。見た目の指定があっても、見た目は下の「今回の${look}」を優先）：${st.keep}`);
   L.push('- 精神障害の当事者本人が、チャンネルと相談ページ「星の海」をひとりで運営しています。同じ立場から「私も」と語れる言葉を使ってください。');
   L.push('- 診断・治療効果・相談対応を約束せず、病名や等級を勝手に加えないでください。煽りや説教、つらさの見世物にせず、共感と小さな発見を大切にします。');
   L.push('- 再生だけでなく、次も見たいと思うことや星の海への関心につながるかを見ます。数字のために上の土台を変えないでください。');
-  L.push(`- 制作負担の目安は1本${st.minutes}分。${gif
-    ? 'こちらはこの指示文を貼り、ChatGPTでGIFを1つ作って添付し、できたmp4を投稿するだけにしたいので、GIFを受け取るところ以外は途中で聞き返さず最後まで進めてください。'
-    : 'こちらはこの指示文を貼り、できたmp4を投稿するだけにしたいので、途中で聞き返さず最後まで進めてください。'}重くて書き出せそうにないときは、描く物の数や細部を減らして調整します。`);
+  L.push(`- 制作負担の目安は1本${st.minutes}分。${photo
+    ? 'こちらはこの指示文を貼り、ChatGPTで素材を4つ作って添付し、できたmp4を投稿するだけにしたいので、素材を受け取るところ以外は途中で聞き返さず最後まで進めてください。'
+    : 'こちらはこの指示文を貼り、できたmp4を投稿するだけにしたいので、途中で聞き返さず最後まで進めてください。'}重くて書き出せそうにないときは、${photo ? '足す光や粒を減らして' : '描く物の数や細部を減らして'}調整します。`);
   L.push(`- 今回の役割：${role.role}。${role.why}`);
   const rivals = (st.rivals || []).filter(r => r.name || r.views || r.subs);
   if (rivals.length) {
@@ -3282,27 +3806,41 @@ function buildPrompt(plan = experimentPlan()){
     rivals.forEach(r => L.push(`  ${r.name || '名称未入力'}：最高再生${r.views || '未入力'}／登録者${r.subs || '未入力'}${r.url ? '／'+r.url : ''}`));
   }
   L.push('');
-  /* 10/18〜の探索で再生が落ちた理由の読みと、そこから決めた作り方。
-     数字は確認した日付つきで書き、理由づけは仮説と明記する（以前、仮説を事実として書いて型を壊したため）。 */
+  /* 数字は確認した日付つきで書き、理由づけは仮説と明記する（以前、仮説を事実として書いて型を壊したため）。 */
   L.push('## これまでの結果から決めたこと');
   L.push(...formatResultLines());
-  L.push('- 2026-10-23の確認：10/18からの探索の回（落ち葉・綿毛・お茶の色が広がる・蛍など）は110〜250回前後、その前の窓と灯りの回は8本中5本が1,000回前後でした。探索の回は、題名も1枚目の文字も景色や物の描写で、見る人が「私のことだ」と思える行動がありませんでした。同じお茶でも「淹れたお茶が、また冷めている。」は1,054回、「透明なカップで、お茶の色が少しずつ広がった。」は155回です。');
-  L.push('- そこで、差は画風より「題材と最初の一言」にあると見ています（仮説）。今回からは、画風（見た目・色・質感・文字の見せ方・カメラ・音色）は毎回まったく別のものにし、題材と最初の一言は伸びた回の作り方にそろえます。');
-  L.push('- 1本ごとに画風の名前を1つ記録します。伸びた回が出たら、その画風を名前で選んで作り直せるようにするためです。1本の中で画風を混ぜたり、前回の画風に寄せたりしないでください。');
+  L.push('- 2026-11-12の確認（チャンネルの全171本の題名と再生数）：10/24からの43本は、テーマが うつ15本・不眠13本・孤独15本 の3つだけでした。同じ物（カーテン・枕・時計・布団・スマホ・玄関が3回ずつ、洗濯物・洗い物・封筒・鉢植え・テレビ・鞄が2回ずつ）と、同じ言い回し（「〜つもりだった」「夜◯時、まだ〜」「外では〜。家では〜」）をくり返し、同じ題名も2組あります。再生の中央値は344回、最高は1,141回で、1,200回を超えた回はありません。');
+  L.push('- 題材が広かった8〜9月の題名つき14本（人に会ったあと寝こむ・お風呂に入れない・休職して曜日がわからない・「元気そうだね」がしんどい・また来るかもと身構える夜 など）は中央1,105回で、14本とも900回以上でした。時期も作り方もちがうので、題材の広さが原因とは言い切れません（仮説）。');
+  L.push('- 景色や物のきれいさを描いただけの回は伸びませんでした（2026-10-23の確認：落ち葉・綿毛・お茶の色が広がる・蛍 の回は110〜250回前後）。同じお茶でも「淹れたお茶が、また冷めている。」は1,054回、「透明なカップで、お茶の色が少しずつ広がった。」は155回です。題材は、当事者の暮らしの中の行動や状態にします。');
+  L.push(`- そこで今回からは、題材・切り口・最初の一言の型・展開・締め・${photo ? '撮り方・写るもの' : '画風'}を、毎回ちがう組み合わせ（型）にします。1本ごとに型番を記録し、本数がたまったら、どの題材・どの型が伸びたかを項目ごとに比べます。`);
+  L.push('- 型は検証のためのものです。指定された型を、別のものに取り替えないでください。型どうしが噛み合いにくいときも、型は変えず、題材の中で場面を選び直して合わせます。');
   L.push('- 「1000回を超えたら成功」という絶対基準は使いません。同じ投稿後日数の自分の他の動画と比べ、視聴や登録も確認します。');
+  L.push('');
+  L.push(`## 今回の型（型番 ${p.code}）`);
+  L.push(`- テーマ：${theme}（ハッシュタグに使う言葉：${p.topic.tag}）`);
+  L.push(`- 題材：${p.topic.seed}（場面：${p.topic.area}）`);
+  L.push(`- 切り口：${p.angle.name}。${p.angle.how}`);
+  L.push(`- 最初の一言の型：${hook.name}。${hook.how}`);
+  L.push(`- 展開の型：${p.narr.name}。${p.narr.how}`);
+  L.push(`- 締めの型：${p.ending.name}。${p.ending.how}`);
+  L.push(`- ${look}：${styleName}（記録する形式名：${plan.format}）`);
+  L.push(`- 写るもの：${p.subj.name}。${p.subj.how}`);
+  L.push(`- これまでに型を決めた回は${num(p.tried)}本で、題材は${TOPICS.length}個のうち${p.topicsUsed}個を使いました。今回の題材は、まだ使った回数がいちばん少ないものです。`);
+  L.push('- 題材は「一言そのもの」ではなく種です。この状況の中で起きる、いちばん具体的な一瞬（何時ごろ、どこで、何を前にして、からだがどうなっているか）を選んでください。題材の文をそのまま1枚目や題名にしません。');
   L.push('');
   L.push('## いちばん大事なこと：最初の一言（0〜3秒）');
   L.push('見る人は最初の1〜2秒で、指を止めるか流すかを決めます。0.0秒から画面にある1枚目の一言で、続きを見たくさせてください。');
   const themeLine = plan.themeFixed ? '参考にする回と同じテーマです。'
-    : plan.themes?.length ? `直近120日で再生の中央値が高いテーマ：${plan.themes.map(t => `${t.theme} ${num(Math.round(t.med))}回（${t.n}本）`).join('／')}。直前の2本と同じテーマは続けません（同じテーマが続くと落ちました）。`
-    : '記録が少ないため、これまで伸びたテーマ（うつ・孤独・不眠）から順に選んでいます。';
+    : 'テーマは20個を順にまわし、直前の2本と同じテーマは続けません（同じテーマが続くと落ちました。2026-09-10の実測）。';
   L.push(`- 今回のテーマ：${theme}。${themeLine}`);
-  L.push(`- 今回の一言の型：${hook.name}。${hook.how}。例（このチャンネルで伸びた回。同じ言葉は使わない）：${hook.ex.map(x => '「'+x+'」').join(' ')}`);
+  if (plan.themes?.length) L.push(`- 参考（直近120日のテーマ別の再生の中央値。次のテーマは、これでは決めません）：${plan.themes.map(t => `${t.theme} ${num(Math.round(t.med))}回（${t.n}本）`).join('／')}`);
+  L.push(`- 今回の一言の型：${hook.name}。${hook.how}。例（このチャンネルの過去の題名。同じ言葉は使わない）：${hook.ex.map(x => '「'+x+'」').join(' ')}`);
   L.push('- 一言は、当事者が自分の部屋や暮らしの中でやってしまう具体的な行動か、いまの状態そのもの。見た人が「これ、私だ」と思えるものにします。主語を書かなくても「私」の話だと分かる言い切りにします。');
   L.push('- 続きが気になる引っかかりを1つだけ入れます（なぜそうなるのか、このあとどうなるのか）。その答えや、ほんの少しの変化は最後の画で見せます。');
   L.push('- 15〜20字、1〜2行。1行目だけ読んでも意味が分かるところで改行します。');
   L.push('- 使わない一言：景色や物のきれいさの描写だけ（「落ち葉が風に運ばれていく」「光がひとつずつ増えていく」）、比喩や抽象語だけ（時間・色・心）、「〜な日がある」のような気持ちの説明だけ（行動や物が見えない）、問いかけ、挨拶や前置き、「〜な人へ」「大丈夫」などの励まし、病名・診断名。');
-  L.push('- 決め方：テーマに当てはまる行動を5つ書き出し、①具体的な行動・状態か ②当事者が「私だ」と思うか ③続きが気になるか ④下の直近の題名と同じ行動になっていないか ⑤今回の画風で、0.0秒に一目で分かる画にできるか、の5点で採点して、いちばん高いものを1枚目にします（候補はこちらに渡さなくて構いません）。');
+  L.push('- ここ1か月でくり返した物（カーテン・枕・時計・布団・伏せたスマホ・封筒・鉢植え・テレビ・鞄・洗濯物・洗い物・お茶）は、今回の題材がそれを指していない限り、1枚目の主役にしません。');
+  L.push(`- 決め方：題材の中で起きる行動や状態を5つ書き出し、①具体的な行動・状態か ②当事者が「私だ」と思うか ③続きが気になるか ④下の「過去の題名」と同じ行動・同じ物・同じ言い回しになっていないか ⑤今回の${look}で、0.0秒に一目で分かる画にできるか、の5点で採点して、いちばん高いものを今回の一言の型で1枚目にします（候補はこちらに渡さなくて構いません）。`);
   L.push('- 1枚目の画は、その一言の場面そのものにします（冷めたお茶なら、湯気の消えたカップが画面の主役）。一言と画がずれると、どちらも伝わりません。');
   const examples = hookExamples();
   if (examples) {
@@ -3312,46 +3850,57 @@ function buildPrompt(plan = experimentPlan()){
     examples.bottom.forEach(x => L.push('  '+x));
   }
   L.push('');
-  L.push(`## 今回：${plan.label}（画風：${styleName}）`);
+  L.push(`## 今回の${look}：${styleName}（${plan.label}）`);
   L.push(`- 記録する形式名：${plan.format}`);
-  if (gif) L.push('- 冒頭の3〜5秒：添付のGIF（ChatGPTで作るもの）。比べたいのは冒頭だけなので、画風・テーマ・一言の決め方・構成・音は、いつもどおりにします。');
+  if (photo) L.push('- 実写に見える画は、ChatGPTで作る素材（GIF2つ・写真2枚）から作ります。下の撮り方は、ChatGPTへの指示文と、コードでつけるカメラの動き・色の仕上げ・音の両方に使います。');
   if (plan.recipe) {
     const r = plan.recipe;
-    L.push(`- 画風：${r.look}`, `- 色：${r.palette}`, `- 雰囲気：${r.mood}`, `- 文字の見せ方：${r.text}`, `- カメラ：${r.camera}`, `- 音：${r.sound}`);
-    if (plan.round > 1) L.push(`- この画風は${plan.round}回目です。同じ画風の別の回として比べるため、画風の名前と質感はそろえ、場面・構図・色の配分は前回と変えてください。`);
+    L.push(`- ${look}：${r.look}`, `- 色：${r.palette}`, `- 雰囲気：${r.mood}`, `- 文字の見せ方：${r.text}`, `- カメラ：${r.camera}`, `- 音：${r.sound}`);
+    if (plan.round > 1) L.push(`- この${look}は${plan.round}回目です。同じ${look}の別の回として比べるため、${look}の名前と質感はそろえ、場面・構図・色の配分は前回と変えてください。`);
   } else L.push(`- 画風の中身：${plan.brief}`);
   if (plan.mode === 'explore') {
-    L.push('- 前回までの画風（下の履歴）と並べたとき、サムネイル1枚で別のチャンネルに見えるくらい変えます。色・質感・線・文字の見せ方・カメラの動き・音色を、この画風に合わせて全部作り直します。前回の画を色だけ変えて使い回すのは不可です。');
+    L.push(photo
+      ? '- 前回までの回と並べたとき、サムネイル1枚で別の場所・別の時間に見えるくらい変えます。場所・光・色・カメラの置き方・音を、この撮り方に合わせて全部決め直します。'
+      : '- 前回までの画風（下の履歴）と並べたとき、サムネイル1枚で別のチャンネルに見えるくらい変えます。色・質感・線・文字の見せ方・カメラの動き・音色を、この画風に合わせて全部作り直します。前回の画を色だけ変えて使い回すのは不可です。');
   } else {
     const g = plan.candidate;
     L.push(`- 参考にする回：${promptLineOf(plan.example)}`);
-    L.push(`- 今回だけ変えるもの：${plan.axis}。画風・テーマ・音・投稿時刻など、それ以外は参考回にできるだけそろえます。`);
+    L.push(`- 今回だけ変えるもの：${plan.axis}。${look}・テーマ・音・投稿時刻など、それ以外は参考回にできるだけそろえます（題材は、同じテーマの別のものです）。`);
     L.push('- 尺を変える回は参考回の約±20%を目安に、内容を削る／間を作る仮説を1つだけ試します。冒頭や締めの回は、尺をむやみに変えません。');
     L.push(`- 同じ計測期間のこの型の中央値：${summaryText(g.summary)}`);
     L.push(`- 同じ計測期間の他形式の中央値：${summaryText(g.baseline)}。小標本の仮説で、因果関係や再現性の証明ではありません。`);
     L.push('- 比較に使えたこの型の記録：');
     g.samples.forEach(o => L.push(`  ${o.s.v.slug}「${o.s.v.title}」計測日${o.date}（投稿後約${dec(o.age,0)}時間）：再生${num(o.views)}回／視聴を継続${dec(o.stayed)}%／平均再生率${dec(o.retention)}%／1000再生あたり登録${dec(o.subRate)}人`));
   }
-  L.push('- 画風が変わっても、題材は上の「最初の一言」で決めた暮らしの場面です。画風に合わせて、題材を景色や物のきれいさに変えないでください。');
+  L.push(`- ${look}が変わっても、題材は上の「今回の型」で決めた暮らしの場面です。${look}に合わせて、題材を景色や物のきれいさに変えないでください。`);
   L.push(`- 選んだ理由：${plan.reason}`);
   L.push(`- 尺の設計目安：${plan.seconds}。内容と読める速さから決めて、実際の書き出し秒数を記録してください。`);
   L.push('');
-  L.push('## 構成（伸びた回と同じ流れ）');
+  L.push('## 構成（今回の展開と締め）');
   L.push('- 1枚目（0.0〜約3秒）：上で決めた一言と、その場面。');
-  L.push('- 2〜3枚目：その奥にある本音や、そうなってしまう理由を、説明しすぎずに。説教・励まし・解決策の押しつけはしません。');
-  L.push('- 最後の1枚：「私も」と同じ側にいることが分かる一言と、画の中で小さなものがひとつだけ良いほうへ変わる瞬間（灯りがつく・湯気が立つ・カーテンが少し開く など）。2行目は「毎晩1本、置いてます。」にします（10月前半に1,000回前後まで伸びた窓と灯りの回の締めです）。');
+  L.push(`- 2枚目から最後の手前まで：展開の型「${p.narr.name}」で進めます。${p.narr.how}。`);
+  L.push(`- 切り口「${p.angle.name}」を、どこか1枚で言葉にします（${p.angle.how}）。説明しすぎず、説教・励まし・解決策の押しつけはしません。`);
+  L.push(`- 最後：締めの型「${p.ending.name}」。${p.ending.how}。`);
+  L.push('- どの締めでも、最後に画の中で小さなものがひとつだけ変わります（灯りがつく・湯気が立つ・カーテンが少し開く など。良くなりすぎない変化）。');
   L.push('- テロップは全部で4〜6枚。1枚に言うことは1つだけにします。');
   L.push('');
-  if (gif) L.push(...gifRequestLines());
+  if (photo) L.push(...photoRequestLines(plan));
   L.push('## 重複を避けるための生成履歴（未制作・未投稿の案を含む。成績ではない）');
-  const history = readPromptHistory().recent;
-  L.push('- 履歴やメモに実写・動画生成向けの案があっても、今回は下の「作れる範囲」の作り方で作ります。');
-  L.push('- 下の履歴にある画風の質感・色・文字の見せ方は、今回の画風と同じ名前でない限り引き継ぎません。最初の一言と題名は、下の直近10本の題名と同じ行動にしないでください。');
+  const history = readPromptHistory().recent.slice(-10);
+  L.push(photo
+    ? '- 履歴やメモにコードで描く案や別の作り方の案があっても、今回は下の「作れる範囲」の作り方で作ります。'
+    : '- 履歴やメモに実写・動画生成向けの案があっても、今回は下の「作れる範囲」の作り方で作ります。');
+  L.push(`- 下の履歴にある${look}の質感・色・文字の見せ方は、今回の${look}と同じ名前でない限り引き継ぎません。`);
   if (!history.length) L.push('このブラウザーの生成履歴はまだありません。以下の登録済み動画も参照してください。');
-  history.forEach(h => L.push(`- ${h.format}${h.theme ? '／テーマ：'+h.theme : ''}${h.hook ? '／一言の型：'+h.hook : ''}`));
+  history.forEach(h => L.push(`- ${h.format}${h.code ? '／型番：'+h.code : ''}${h.theme ? '／テーマ：'+h.theme : ''}${h.hook ? '／一言の型：'+h.hook : ''}`));
   // 制作手法の印は記録用なので外し、改行は1行にまとめる（箇条書きが崩れないように）。
   recent.map(s => ({ slug:s.v.slug, note:stripMethod(s.v.note || '').replace(/\s*\n\s*/g, ' ').trim() }))
     .filter(x => x.note).forEach(x => L.push(`- 投稿メモ ${x.slug}：${x.note}`));
+  const titles = usedTitles();
+  if (titles.length) {
+    L.push(`- 過去の題名（新しい順・${titles.length}本）。1枚目の一言と題名は、このどれとも同じ行動・同じ物・同じ言い回しにしないでください：`);
+    L.push('  '+titles.join('／'));
+  }
   L.push('');
   L.push(...kpiPromptLines(plan.opening));
   L.push('');
@@ -3370,62 +3919,84 @@ function buildPrompt(plan = experimentPlan()){
   L.push('');
   L.push('## 次の判断に必要な計測');
   L.push('- 投稿24時間後と投稿4日後に、再生数・視聴を継続・平均視聴秒数・登録増加を記録します。選定は、日単位の記録から投稿72〜120時間後の同じ行を使います。');
+  L.push('- 型の項目（テーマ・場面・切り口・一言の型・展開・締め・撮り方・写るもの）ごとに、同じ項目の回を集めて比べます。1つの項目に3本たまるまでは「参考」とし、1本の当たり外れで型の優劣を決めません。');
   L.push('- 直近90日の他の形式を最大30本比較対象にします。候補の直近3本のうち2本以上で、他形式の視聴継続中央値より5ポイント以上高く、候補全体の中央値も5ポイント以上高ければ再検証候補とします。再生数を入口の合否にせず、平均再生率と登録を別途確認します。');
   L.push('- 他形式は3本以上の比較可能な記録を必要とし、補助指標も3本以上ある項目だけ使います。5ポイントは運用上の目安で、統計的有意差や伸びる保証ではありません。');
   L.push('- 有望な型でも2本続けたら別の型を試します。直近の結果が弱まった場合や記録が足りない場合は候補から外し、別の型を探します。記録不足は、その型が失敗したという意味ではありません。');
   L.push('- サイトへの到達は別の成果として見ます。再生と計測期間がそろわない到達数を、今回の再生期間の成果と混同しないでください。');
   L.push('');
-  /* ここから下が「Claude が作れる範囲」。2026-10-21 に実写・動画生成の前提をやめ、
-     2026-09〜10 に試作して確かめた作り方（層を重ねる・粒を薄く・ffmpeg へパイプ・numpy で音）に戻した。 */
+  /* ここから下が「Claude が作れる範囲」。コードだけの回は、2026-09〜10 に試作して確かめた作り方（層を重ねる・粒を薄く・ffmpeg へパイプ・numpy で音）。
+     実写の回は、添付の素材を動かす作り方（2026-11-12〜）。 */
   L.push('## 作れる範囲（ここを外すと書き出せません）');
-  L.push('- 使う道具：Python（numpy・Pillow）で1フレームずつ画を描き、ffmpeg で mp4 にします。音も numpy で合成して wav にし、ffmpeg で映像と合わせます。');
+  L.push(photo
+    ? '- 使う道具：Python（numpy・Pillow）で、添付の素材から1フレームずつ画を作り、ffmpeg で mp4 にします。音は numpy で合成して wav にし、ffmpeg で映像と合わせます。'
+    : '- 使う道具：Python（numpy・Pillow）で1フレームずつ画を描き、ffmpeg で mp4 にします。音も numpy で合成して wav にし、ffmpeg で映像と合わせます。');
   L.push('- 最初に python・numpy・Pillow・ffmpeg・ffprobe と、日本語の入ったフォント（例：fc-list :lang=ja）が使えるか確かめます。足りない道具は、入れられる環境なら入れて構いません。');
   L.push('- 足りない道具があって入れることもできない、または日本語フォントがない場合だけ、足りないものを書いて止めてください。文字化け（□）のまま書き出したり、未完成のmp4を完成と言ったりしないでください。');
-  L.push(gif
-    ? '- 使わないもの：添付のGIFのほかの動画生成AI・画像生成AI、写真・動画・イラスト・音源のダウンロード、有料サービス。権利の分からない素材は使えません。こちらが添付したファイル（GIF・自作の曲など）は使って構いません。'
+  L.push(photo
+    ? '- 使わないもの：添付の素材のほかの動画生成AI・画像生成AI、写真・動画・イラスト・音源のダウンロード、有料サービス。権利の分からない素材は使えません。こちらが添付したファイル（素材・自作の曲など）は使って構いません。'
     : '- 使わないもの：動画生成AI・画像生成AI、写真・動画・イラスト・音源のダウンロード、有料サービス。権利の分からない素材は使えません。こちらが添付したファイル（自作の曲など）があれば使って構いません。');
-  L.push('- 写真のような写実や実写の再現は狙いません（コードで写実をやると、どこか不気味になります）。今回の画風の質感・色・光・動きの気持ちよさで見せます。');
-  L.push('- 人物・顔・手は描きません。物・景色・光・天気・小さな生き物の気配（足あと、蛍の光など）で語ります。');
+  if (photo) {
+    L.push('- 実写に見える画は、添付の素材だけで作ります。コードで物・家具・人を描き足しません（描き足すと、そこだけ絵に見えます）。コードで足してよいのは、光・影・湯気・雨・ほこり・粒のような、形のはっきりしないものだけです。');
+    L.push('- 人が写るのは、「写るもの」で決めた範囲（素材に写っている手元・後ろ姿・足もと）だけです。顔は写しません。コードで人・手・顔を描き足しません。');
+  } else {
+    L.push('- 写真のような写実や実写の再現は狙いません（コードで写実をやると、どこか不気味になります）。今回の画風の質感・色・光・動きの気持ちよさで見せます。');
+    L.push('- 人物・顔・手は描きません。物・景色・光・天気・小さな生き物の気配（足あと、蛍の光など）で語ります。');
+  }
   L.push('- 描かないもの（見ている人の中には、いちばんしんどい夜の途中にいる人がいます）：薬・お酒・刃物・ロープ・血や傷／高い場所（屋上・ベランダの手すり・橋の上）・駅のホーム・線路・踏切／水の中へ入っていく画・沈んでいく画／人影・急に現れるもの・画面が乱れるノイズ・赤い光など怖く見える画／点滅や急な明るさの変化（灯りがつくときも0.5秒以上かけてゆっくり）。');
   L.push('- 実在の商品名・ロゴ・アプリの画面・読める看板は描きません。');
   L.push('');
   L.push('## 画と文字の決まり');
   L.push('- 0.0秒の1フレーム目から、場面と1枚目のテロップの両方が写っていること。黒からのフェードイン・タイトルカード・ロゴから始めません。');
-  L.push('- 0.0秒から画が動いていること（カメラがゆっくり動く、粒や光が揺れている、など）。0.8〜1.5秒に画の中で小さな出来事を1つ起こし、「なんだろう」を作ります。');
+  L.push(photo
+    ? '- 0.0秒から画が動いていること（冒頭のGIFの動きと、カメラのゆっくりした動き）。0.8〜1.5秒に、GIFの中のいちばん目立つ動きが来るようにして、「なんだろう」を作ります。'
+    : '- 0.0秒から画が動いていること（カメラがゆっくり動く、粒や光が揺れている、など）。0.8〜1.5秒に画の中で小さな出来事を1つ起こし、「なんだろう」を作ります。');
   L.push('- 1枚目の一言（上で決めたもの）は0.0秒から表示し、2.5〜3.2秒に最初の切り替え（テロップかカット）を置きます。');
-  L.push('- カメラの動きは「今回の画風」のとおりにします。動きはゆっくり始まってゆっくり止まる曲線（イージング）にします。主役はスマホで何か分かる大きさ（画面の幅の3分の1以上が目安）にします。');
-  L.push('- 尺の真ん中あたりに2つ目の小さな出来事を置き、最後は1枚目の引っかかりに画で答えます。ループは内容に合うときだけ使います。最後のフレームにも場面と文字を残し、黒画面・ロゴ・「ご視聴ありがとうございました」で終えません。');
+  L.push(`- カメラの動きは「今回の${look}」のとおりにします。動きはゆっくり始まってゆっくり止まる曲線（イージング）にします。主役はスマホで何か分かる大きさ（画面の幅の3分の1以上が目安）にします。`);
+  L.push('- 尺の真ん中あたりに2つ目の小さな出来事を置き、最後は1枚目の引っかかりに画で答えます。ループは、締めの型が「1枚目へ戻る」のときだけ使います。最後のフレームにも場面と文字を残し、黒画面・ロゴ・「ご視聴ありがとうございました」で終えません。');
   L.push('- テロップと画はセットです。テロップは1枚1〜2行・15〜24字、読み終わって少し間があるくらいの表示時間（目安2.5〜3.5秒）にします。');
-  L.push('- 文字は84〜110px。色・書体・文字の後ろ（紙片・吹き出し・帯など）は「今回の画風」の文字の見せ方に合わせ、どの画風でも夜のスマホで一瞬で読める濃淡の差をつけます。明朝体は、明朝体の日本語フォントがあるときだけ使います（なければ太めのゴシック）。');
-  L.push('- 文字のかたまりの中心は x=540（左右の余白を同じに）、行ごとに中央そろえ。中央は字の枠ではなく、実際に描かれた字の画素の左端・右端で合わせます（行末の「、」「。」で約27px左に寄るため）。紙片・吹き出し・帯も中心を x=540 にそろえ、幅は900px以内にします。');
+  L.push(`- 文字は84〜110px。色・書体・文字の後ろ（${photo ? '薄い帯など' : '紙片・吹き出し・帯など'}）は「今回の${look}」の文字の見せ方に合わせ、${photo ? 'どの撮り方でも' : 'どの画風でも'}夜のスマホで一瞬で読める濃淡の差をつけます。明朝体は、明朝体の日本語フォントがあるときだけ使います（なければ太めのゴシック）。`);
+  L.push(`- 文字のかたまりの中心は x=540（左右の余白を同じに）、行ごとに中央そろえ。中央は字の枠ではなく、実際に描かれた字の画素の左端・右端で合わせます（行末の「、」「。」で約27px左に寄るため）。${photo ? '帯' : '紙片・吹き出し・帯'}も中心を x=540 にそろえ、幅は900px以内にします。`);
   L.push('- 縦は文字の中心を y=760〜1100 に置き、右のボタン列（x=900〜1050・y=1150〜1750）と下の題名（y=1550より下）を縦の位置で避けます。横にずらして避けないでください。');
-  L.push('- 画の主役は文字のかたまりと重ねません。主役は文字の上側（y=250〜700）か下側（y=1150〜1500。x=900より右のボタン列は避ける）に置き、動く主役も文字の上を横切らないよう、文字の上か下を通します。');
-  L.push('- 明るい画風でも、いちばん明るいところは真っ白（255）に飛ばさず、紙の白は明るさ235前後までにします。暗い画風でも、主役と文字ははっきり見える明るさにします。');
+  L.push(photo
+    ? '- 画の主役は文字のかたまりと重ねません。素材を切り取る位置とカメラの動きで、主役が文字の上側（y=250〜700）か下側（y=1150〜1500。x=900より右のボタン列は避ける）に来るようにします。文字の後ろが明るい・模様が細かいときは、文字の後ろに薄い暗い帯を敷くか、その部分だけ少し暗くします。'
+    : '- 画の主役は文字のかたまりと重ねません。主役は文字の上側（y=250〜700）か下側（y=1150〜1500。x=900より右のボタン列は避ける）に置き、動く主役も文字の上を横切らないよう、文字の上か下を通します。');
+  L.push(photo
+    ? '- 素材の明るい所が白く飛んでいたり、暗い所が黒くつぶれていたりするときは、全体の明るさを少し整えます。主役と文字が、夜のスマホではっきり見える明るさにします。'
+    : '- 明るい画風でも、いちばん明るいところは真っ白（255）に飛ばさず、紙の白は明るさ235前後までにします。暗い画風でも、主役と文字ははっきり見える明るさにします。');
   L.push('- 投稿する時間帯や説明文の基本条件はできるだけそろえます。');
   L.push('');
   L.push('## 音（無音のmp4は不可）');
   L.push('- BGMも効果音も numpy で合成します（例：正弦波の和音をゆっくりにじませる、ホワイトノイズにフィルタをかけて雨や風にする、減衰する正弦波で鈴や余韻）。読み上げナレーションは入れません。');
-  L.push('- 音色は「今回の画風」の音に合わせ、前回と同じ音にしません。');
+  if (photo) L.push('- 実写に見える画には、その場所の音が要ります。場面にあるはずの環境音（部屋の空気・冷蔵庫の低いうなり・換気扇・雨・遠い車など）を numpy で合成し、BGMより少し下で、最後まで鳴らし続けます。');
+  L.push(`- 音色は「今回の${look}」の音に合わせ、前回と同じ音にしません。`);
   L.push('- 冒頭0.8秒でフェードイン（0から1へ2乗の曲線）。冒頭に効果音は置きません。夜、イヤホンで聞いている人が驚かない入り方にします。');
   L.push('- ビート・打楽器は入れません。メロディは短い音型をゆっくり鳴らす程度までにします。効果音は3秒より後に4つまで、BGMより目立たせず、立ち上がりに50ms以上かけます。8kHzより上と80Hzより下は落とします。');
   L.push('- 仕上げに全体を ebur128 で測り、volume で -20 LUFS 前後（-21〜-19）にそろえます（SNS標準の -14 LUFS より、あえて静かめ）。loudnorm は静かな出だしを持ち上げてしまうので使いません。ピークは -3dBFS 以下。最後まで鳴らし続け、最後の0.5秒だけ少し下げます。');
   L.push('');
-  if (gif) L.push(...gifUseLines());
+  if (photo) L.push(...photoUseLines());
   L.push('## 作り方（書き出しまでたどり着くために）');
   L.push('1. 先に秒ごとの絵コンテ（何が見えるか・カメラ・出来事・テロップ・音）を決めます。こちらには渡さなくて構いません。');
-  L.push('2. 動かない物は、層ごとに先に1枚ずつ描いておきます（奥・中・手前の3〜5層）。カメラが動いても端が切れないよう画面より2割ほど大きく描き、切り取る範囲を絵の内側に収めます。');
-  L.push('3. 毎フレームは層をずらして重ねるだけにします（手前の層ほど大きく動かすと奥行きが出ます）。光のにじみは、縮めた画像をぼかしてから拡大すると速く作れます。雨・粒・湯気など細かい物だけを毎フレーム描きます。');
+  if (photo) {
+    L.push('2. 素材は、先に1080×1920より1割大きい画像（GIFはコマごと）に整えて、メモリに持っておきます。色合わせと、動いていない所のならしも、ここで済ませます。');
+    L.push('3. 毎フレームは、整えた素材を切り取ってずらす・溶かす・光や粒を重ねるだけにします。光のにじみは、縮めた画像をぼかしてから拡大すると速く作れます。雨・ほこり・湯気など細かい物だけを毎フレーム描きます。');
+  } else {
+    L.push('2. 動かない物は、層ごとに先に1枚ずつ描いておきます（奥・中・手前の3〜5層）。カメラが動いても端が切れないよう画面より2割ほど大きく描き、切り取る範囲を絵の内側に収めます。');
+    L.push('3. 毎フレームは層をずらして重ねるだけにします（手前の層ほど大きく動かすと奥行きが出ます）。光のにじみは、縮めた画像をぼかしてから拡大すると速く作れます。雨・粒・湯気など細かい物だけを毎フレーム描きます。');
+  }
   L.push('4. フィルムの粒を入れるなら、明るさ±2〜3のごく薄いものにし、数枚を先に作って3フレームごとに入れ替えます（強い粒を毎フレーム変えると、書き出しが10倍以上遅くなり、ファイルも何倍も重くなります）。');
   L.push('5. フレームはPNGに保存せず、生の画素をffmpegにパイプで流します（-preset veryfast -crf 20〜23）。1回の実行に時間の制限がある環境では、カットごと（数秒ずつ）に書き出して最後につなぎます。');
   L.push('6. 本番の前に、冒頭3秒だけを540×960で試しに書き出してコマを確かめます（試しのファイルは渡さなくて構いません）。');
-  L.push('7. 凝りすぎて書き出せないのが、いちばんの失敗です。重いときは、描く物の数・細部・粒を減らしてください。凝った未完成より、簡素でも最後まで書き出した1本のほうがずっと価値があります。');
+  L.push(photo
+    ? '7. 凝りすぎて書き出せないのが、いちばんの失敗です。重いときは、足す光や粒を減らしてください。凝った未完成より、簡素でも最後まで書き出した1本のほうがずっと価値があります。'
+    : '7. 凝りすぎて書き出せないのが、いちばんの失敗です。重いときは、描く物の数・細部・粒を減らしてください。凝った未完成より、簡素でも最後まで書き出した1本のほうがずっと価値があります。');
   L.push('');
   L.push('## mp4の書き出し方');
   L.push(`- 縦1080×1920、30fps、mp4（H.264・yuv420p・+faststart）、音声 AAC 48kHz ステレオ。尺は今回の目安（${plan.seconds}）の範囲にし、17秒に固定しません。`);
   L.push('- ダウンロードしやすいよう、ファイルは30MB以下を目安にします（大きいときは crf を上げて書き出し直します）。');
   L.push(`- 出力フォルダは識別子${slug}ごとに分け、既存ファイルを上書きしません。`);
   L.push('');
-  const checks = gif ? 9 : 8;
+  const checks = photo ? 9 : 8;
   L.push('## 書き出したあとの自己点検（ここまでやって完成です）');
   L.push(`次の${checks}つを実際に測り、外れていたら直してから渡してください。数字の報告は要りません。渡すときに「自己点検 ${checks}/${checks} 通過」のように1行だけ書きます。測っていない項目を通過と書かないでください。`);
   L.push('1. 尺が目安の範囲に入り、1080×1920・30fps か（ffprobe）');
@@ -3433,23 +4004,23 @@ function buildPrompt(plan = experimentPlan()){
   L.push('3. 冒頭0.2秒の平均の音量（mean_volume）が -40dB 以下か（フェードインが効いているか）');
   L.push('4. 0.0秒のフレームに、場面と1枚目の一言の両方が写っているか（真っ黒や一色だけになっていないか）');
   L.push('5. 0.0・1.0・2.0・3.0秒のフレームを書き出し、となり同士の画素の差の平均がゼロでないか（最初の3秒で画が動いているか）');
-  L.push('6. フレームごとの平均の明るさ（0〜255）で、となりのフレームとの差が12を超えるところがないか（点滅していないか）');
+  L.push(`6. フレームごとの平均の明るさ（0〜255）で、となりのフレームとの差が12を超えるところがないか（点滅していないか${photo ? '。素材の切り替えで超えるときは、ディゾルブにする' : ''}）`);
   L.push('7. 文字の層だけ（透明の上に文字だけを描いたもの）で測って、テロップ3枚ぶんの文字の左端と右端の中心が 540±30px に入っているか');
   L.push('8. 日本語が□に化けていないか、最後のフレームに場面と文字が残っているか');
-  if (gif) L.push('9. 0.0秒からGIFの区間の終わり（3〜5秒）までが、添付のGIFのコマからできているか。GIFからコードの場面へ移るところに、黒や白だけのフレームがないか');
+  if (photo) L.push('9. 全編が添付の素材からできているか（物や人をコードで描き足していないか）。素材の切り替えに、黒や白だけのフレームがないか。写真の区間も、となりのフレームと画素の差があるか（止め絵になっていないか）');
   L.push('');
   L.push('## 返してほしいもの');
-  if (gif) L.push('1回目は「冒頭のGIF」の章のものだけを返します。次の5つは、2回目にmp4ができたときに返してください。');
+  if (photo) L.push('1回目は「ChatGPTに頼む素材」の章のものだけを返します。次の5つは、2回目にmp4ができたときに返してください。');
   L.push('1. 完成した音入りのmp4を1本。ダウンロードリンクまたは保存先を示します。音だけ・音なし・絵コンテ・試しの書き出し・制作コードなどの別ファイルは不要です。');
-  L.push('2. 題名を1つ。1枚目の一言と同じ場面を、当事者の行動の言い切りで書きます（本体13〜18字。2026-09-10の実測で、問いかけの題名3本は中央285回、言い切り31本は中央1,011回でした）。景色の描写・問いかけ・「〜な人へ」にせず、最近の題名と同じ行動にしません。ハッシュタグは4個（1つはテーマの言葉）、全体で100文字以内。');
+  L.push(`2. 題名を1つ。1枚目の一言と同じ場面を、当事者の行動の言い切りで書きます（本体13〜18字。2026-09-10の実測で、問いかけの題名3本は中央285回、言い切り31本は中央1,011回でした）。景色の描写・問いかけ・「〜な人へ」にせず、上の「過去の題名」と同じ行動・同じ物にしません。ハッシュタグは4個（#ショート と、テーマの言葉 #${p.topic.tag} を入れる）、全体で100文字以内。`);
   L.push('3. 概要欄へ一度でコピーできる完成した説明文を1つ。動画の紹介・答えやすい問い・当事者本人が運営していること・星の海の案内を自然につなぎます。固定コメントは別に出しません。');
   L.push('   次の計測リンクを本文に1回、そのまま入れてください。URLやUTMのパラメータを変更せず、識別子の解説は貼り付け用の説明文に含めません。');
   L.push(url);
-  L.push('4. 記録用の1行（下の形式）。実際に作った内容を書き、形式名・テーマ・冒頭の掴みは正確に引き継いでください。');
-  L.push(`識別子: ${slug} ／ テーマ: ${theme} ／ 冒頭の掴み: ${hook.name} ／ 音: ___ ／ 形式: ${plan.format} ／ 尺: ___（実測秒）／ 締め: ___ ／ 役割: ${role.role} ／ 今回変えたもの: ${plan.axis} ／ メモ: ${plan.label}・1枚目「___」・画風:${styleName}・場面___・仮説___${gif ? '・冒頭:ChatGPTのGIF（___コマ・0〜___秒）' : ''}${plan.example ? '・参考:'+plan.example.v.slug : ''}`);
-  L.push(gif
-    ? '   「動画」タブの形式欄は自由入力できます。上のメモも残し、「映像の制作手法」は「冒頭にChatGPTのGIF」を選びます（GIFを使えず、冒頭もコードで描いたときは「コードだけ（GIF・Seedanceなし）」）。YouTubeのURLと投稿日時を登録しないと、投稿後日数をそろえて比較できません。'
-    : '   「動画」タブの形式欄は自由入力できます。上のメモも残し、「映像の制作手法」は「コードだけ（GIF・Seedanceなし）」を選びます。YouTubeのURLと投稿日時を登録しないと、投稿後日数をそろえて比較できません。');
+  L.push('4. 記録用の1行（下の形式）。___ のところだけを実際に作った内容で埋め、型番・テーマ・冒頭の掴み・形式・締めは、この行のまま変えないでください（こちらは、この1行をそのまま登録画面に貼ります）。「音」は「BGM＋効果音」「BGMのみ」「効果音のみ」のどれかで書き、「尺」は数字で書きます。');
+  L.push(`識別子: ${slug} ／ 型番: ${p.code} ／ テーマ: ${theme} ／ 冒頭の掴み: ${hook.name} ／ 音: ___ ／ 形式: ${plan.format} ／ 尺: ___（実測秒）／ 締め: ${p.ending.name} ／ 役割: ${role.role} ／ 今回変えたもの: ${plan.axis} ／ 制作手法: ${METHOD_TAGS[photo ? 'photo' : 'other']} ／ メモ: ${plan.label}・題材「${p.topic.seed}」・切り口:${p.angle.name}・展開:${p.narr.name}・写るもの:${p.subj.name}・1枚目「___」・場面___・仮説___${photo ? '・素材:GIF___・写真___' : ''}${plan.example ? '・参考:'+plan.example.v.slug : ''}`);
+  L.push(photo
+    ? '   「動画」タブの「記録用の1行から入力する」に貼ると、各欄に入ります。「映像の制作手法」は「ChatGPTの実写の画像とGIF」になります。YouTubeのURLと投稿日時を登録しないと、投稿後日数をそろえて比較できません。'
+    : '   「動画」タブの「記録用の1行から入力する」に貼ると、各欄に入ります。「映像の制作手法」は「コードだけ（GIF・Seedanceなし）」になります。YouTubeのURLと投稿日時を登録しないと、投稿後日数をそろえて比較できません。');
   L.push(`5. 自己点検を1行（「自己点検 ${checks}/${checks} 通過」の形）。あわせて、実際に書き出した尺と、今回試した仮説をひとことで。`);
   return { text:L.join('\n'), slug };
 }
@@ -3477,12 +4048,12 @@ async function showPrompt(){
     rememberPrompt(plan);
     renderTestPlan(plan);
     $('#prompt-box').classList.remove('hidden');
-    $('#prompt-gif-steps').classList.toggle('hidden', plan.opening.mode !== 'gif');
+    $('#prompt-gif-steps').classList.toggle('hidden', plan.opening.mode !== 'photo');
     $('#prompt-out').value = text;
     $('#prompt-slug').textContent = slug;
     $('#prompt-msg').textContent = '保存済みの数字と現在の土台から作成しました。生成履歴は投稿成績には数えません。'
-      + (promptHistoryStorageFailed ? ' 生成履歴を端末に保存できません。この画面では別案へ進みますが、再読み込み後は履歴を引き継げない場合があります。' : plan.mode === 'explore' ? ' 次の生成では別の画風を選びます。' : ' 別の画風に進む場合は「別の画風で作る」を押してください。')
-      + ` 冒頭の3〜5秒：${plan.opening.mode === 'gif' ? 'ChatGPTのGIF' : 'コードだけ'}（${plan.opening.reason}）`;
+      + (promptHistoryStorageFailed ? ' 生成履歴を端末に保存できません。この画面では別案へ進みますが、再読み込み後は履歴を引き継げない場合があります。' : plan.mode === 'explore' ? ' 次の生成では別の型を選びます。' : ' 別の型に進む場合は「別の型で作る」を押してください。')
+      + ` 型番：${plan.pattern.code}／作り方：${plan.opening.mode === 'photo' ? 'ChatGPTの実写の画像とGIF' : 'コードだけ'}（${plan.opening.reason}）`;
   } finally { $('#prompt-build').disabled = false; $('#prompt-build2').disabled = false; }
 }
 $('#prompt-build').addEventListener('click', showPrompt);
