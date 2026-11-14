@@ -526,7 +526,11 @@ test('the pattern catalog is safe and well formed, and 160 generations use every
     const tally=key=>{const m=new Map();rows.forEach(r=>m.set(r[key],(m.get(r[key])||0)+1));return [...m.values()];};
     assert.equal(new Set(rows.map(r=>r.topic)).size,160,'every topic is used once before any repeats');
     assert.deepEqual(tally('theme'),Array(20).fill(8));
-    assert.deepEqual(tally('angle'),Array(8).fill(20));assert.deepEqual(tally('narr'),Array(8).fill(20));assert.deepEqual(tally('subj'),Array(4).fill(40));
+    assert.deepEqual(tally('angle'),Array(8).fill(20));assert.deepEqual(tally('narr'),Array(8).fill(20));{const t=tally('subj');assert.equal(t.length,4);assert.ok(Math.max(...t)-Math.min(...t)<=1,'subj '+t);}
+    // A first line about the body is never paired with a picture that shows no body (2026-11-14: v211).
+    assert.equal(rows.filter(r=>r.hook==='からだの感覚').length>=13,true);assert.equal(rows.some(r=>r.hook==='からだの感覚'&&r.subj===1),false);
+    assert.equal(await a.page.evaluate(()=>HOOK_TYPES.filter(h=>h.body).map(h=>h.name).join()),'からだの感覚');
+    assert.equal(await a.page.evaluate(()=>choosePattern({recent:[]},{photo:false}).subj.id),1); // drawn rounds never show people, whatever the first line
     for(const key of ['hook','ending']){const t=tally(key);assert.ok(Math.max(...t)-Math.min(...t)<=1,key+' '+t);}
     assert.equal(tally('hook').length,12);assert.equal(tally('ending').length,6);
     for(let n=2;n<160;n++) assert.ok(rows[n].theme!==rows[n-1].theme&&rows[n].theme!==rows[n-2].theme,'theme repeats at '+n);
@@ -681,6 +685,7 @@ test('production method is saved with the original note and never inferred from 
     await a.page.locator('#vm-save').click();await a.page.waitForFunction(()=>!document.querySelector('#vm-save').disabled);
     await a.page.waitForFunction(()=>document.querySelector('#video-modal').classList.contains('hidden'));
     assert.equal(db.sv_videos[0].note,'【制作手法:Seedance】\n大事なメモ\n2行目');
+    await a.page.waitForFunction(()=>state.videos.some(v=>v.id==='experiment-1'&&/^【制作手法:Seedance】/.test(v.note||''))); // the modal closes before the saved row is read back
     await a.page.evaluate(()=>openVideo('experiment-1'));
     assert.equal(await a.page.locator('#vm-method').inputValue(),'seedance');
     assert.equal(await a.page.locator('#vm-note').inputValue(),'大事なメモ\n2行目');
@@ -854,6 +859,28 @@ test('by default the next video is built from photoreal ChatGPT material: two st
     assert.doesNotMatch(block,/動くのは、ゆっくり変わるもの1つか2つだけ|カメラは動かさず固定。動くのは/); // the wording that produced barely moving pictures
     const subject=await a.page.evaluate(code=>decodePattern(code).subj,one.code);
     assert.ok(block.includes('写るもの：'+subject.ask));
+    // The four pieces come back as one zip named after this video; ChatGPT must not redraw, shrink or fake them, and may hand them over one by one if it cannot zip.
+    for(const rule of [/■ 渡し方（4つを1つのzipにまとめてください）/,/zipの名前は v004_sozai\.zip にしてください/,/素材1＝sozai1\.gif、素材2＝sozai2\.png、素材3＝sozai3\.png、素材4＝sozai4\.gif/,
+      /作り直し・縮小・減色・コマの間引き・形式の変換はしないでください。GIFを静止画に変えないでください/,/中身を1行ずつ書いてください（ファイル名・縦横の大きさ・GIFはコマ数）/,
+      /別の画をコードで描いて代わりに入れたりせず、「zipにできませんでした」と書いて、4つを1つずつダウンロードできる形で/,/4つがそろったところでzipにまとめてください。\n$/]) assert.match(block,rule);
+    assert.ok(block.indexOf('■ 素材4')<block.indexOf('■ 渡し方'));
+    assert.match(p,/1つのzip（v004_sozai\.zip）にまとめて、この会話に添付します（zipにできなかったときは、1つずつ添付します）/);
+    assert.match(p,/「■ 渡し方」は、書き換えずにそのまま入れてください/);assert.match(p,/④「素材のzip（v004_sozai\.zip）ができたら、この会話に添付してください。zipにならなかったときは、4つを1つずつ添付してください。」/);
+    // Unpacking is limited to image files and to the work folder; loose attachments still work.
+    assert.match(p,/1\. 素材を取り出して確かめます。zipが添付されていたら、新しい作業フォルダに展開します。取り出すのは画像（\.gif \.png \.jpg \.jpeg \.webp）だけ/);
+    assert.match(p,/フォルダの部分を外してファイル名だけにします/);assert.match(p,/zipの中のほかのファイルは開かず、実行もしません/);
+    assert.match(p,/素材1〜4は sozai1〜sozai4 の名前で決めます。名前がちがうときや、zipではなく1つずつ添付されたときは、内容から判断します/);
+    // What the first four photoreal videos showed (2026-11-14), stated as a hypothesis, and the first line matched to who is in the picture.
+    assert.match(p,/2026-11-14の確認（19時。チャンネルページの再生数と動画のコマ画像）：実写の素材で作った回は、まだ4本です/);
+    assert.match(p,/投稿から2日たっておらず、テーマもちがうので、まだ仮説です/);assert.match(p,/一言の型「からだの感覚」と、人が写らない「物と光だけ」が組み合わさっていたためで、この組み合わせは今後は選びません/);
+    if(subject.body){
+      assert.ok(p.includes(`今回は「${subject.name}」が写ります。1枚目の一言の行動を、その最中の${subject.body}で見せます。0.0秒のフレームに${subject.body}が写っていて`));
+      assert.ok(block.includes(`- 1コマ目から、${subject.body}が画面に入っているようにしてください（あとから画面に入ってくる動きにはしないでください）。`));
+      assert.doesNotMatch(p,/今回は人が写りません/);
+    }else{
+      assert.match(p,/今回は人が写りません。1枚目の一言は、画に写る物の状態か、物に残った行動の跡で言い切ります/);
+      assert.doesNotMatch(block,/1コマ目から、.+が画面に入っているようにしてください/);assert.doesNotMatch(p,/が写ります。1枚目の一言の行動を/);
+    }
     // Turning flipbook frames and stills into footage: dissolve, steady only what should not move, never leave a photo frozen.
     assert.match(p,/## 素材の使い方（2回目）/);assert.match(p,/ImageSequence/);assert.match(p,/\(1−a\)×いまのコマ＋a×次のコマ/);
     assert.match(p,/全コマの画素ごとの中央値を「動かない背景」とし/);assert.match(p,/平均でならすのは動いていない所だけ/);
@@ -868,6 +895,17 @@ test('by default the next video is built from photoreal ChatGPT material: two st
     assert.match(p,/実写の回とコードだけの回の比較（投稿72〜120時間後の動画別中央値）/);
     // The page shows the extra steps and how this video is made.
     assert.equal(await a.page.locator('#prompt-gif-steps').isVisible(),true);
+    assert.equal(await a.page.locator('#prompt-zip-name').textContent(),'v004_sozai.zip');
+    assert.match(await a.page.locator('#prompt-gif-steps').textContent(),/zip を解凍せずに、Claude の同じ会話に添付して送る/);
+    assert.equal(await a.page.evaluate(()=>materialZipName('v9/../<img src=x>')),'v9imgsrcx_sozai.zip');
+    // Every choice of who is in the picture gets its own first-line rule; only the object-only rounds are told to speak about the object.
+    const bySubject=await a.page.evaluate(()=>SUBJECTS.map(subj=>{const plan=experimentPlan('explore','photo');plan.pattern={...plan.pattern,subj};return {id:subj.id,body:subj.body||null,text:buildPrompt(plan).text};}));
+    assert.deepEqual(bySubject.map(x=>!!x.body),[false,true,true,true]);
+    for(const x of bySubject){
+      assert.equal(/今回は人が写りません/.test(x.text),!x.body,'S'+x.id);
+      assert.equal(/1コマ目から、(手|後ろ姿（頭や肩）|足)が画面に入っているようにしてください/.test(x.text),!!x.body,'S'+x.id);
+      assert.equal(x.text.split('```').length,3,'S'+x.id);
+    }
     assert.match(await a.page.locator('#prompt-msg').textContent(),/作り方：ChatGPTの実写の画像とGIF/);
     assert.match(await a.page.locator('#test-design').textContent(),/ChatGPTの実写の画像とGIFで作る/);
     // Choosing "code" goes back to the code-only prompt with the drawn styles, and is remembered.
@@ -875,6 +913,7 @@ test('by default the next video is built from photoreal ChatGPT material: two st
     await a.page.locator('#prompt-build').click();await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
     const code=await a.page.locator('#prompt-out').inputValue();
     assert.match(code,/自己点検 8\/8 通過/);assert.doesNotMatch(code,/## ChatGPTに頼む素材|## 素材の使い方|```/);
+    assert.doesNotMatch(code,/sozai|_sozai\.zip|今回は人が写りません|が写ります。1枚目の一言の行動を/);
     assert.match(code,/形式: 画風1｜墨と和紙/);assert.match(code,/写るもの：物と光だけ/);assert.match(code,/制作手法: その他 ／/);
     assert.match(code,/「映像の制作手法」は「コードだけ（GIF・Seedanceなし）」になります/);
     assert.equal(await a.page.locator('#prompt-gif-steps').isVisible(),false);
@@ -980,6 +1019,7 @@ test('the photoreal comparison uses age-matched medians per method, waits for th
     await a.page.locator('#vm-save').click();
     await a.page.waitForFunction(()=>document.querySelector('#video-modal').classList.contains('hidden'));
     assert.equal(db.sv_videos[3].note,'【制作手法:ChatGPT 実写】\nメモ');
+    await a.page.waitForFunction(id=>state.videos.some(v=>v.id===id&&/^【制作手法:ChatGPT 実写】/.test(v.note||'')),id); // the modal closes before the saved row is read back
     await a.page.evaluate(id=>openVideo(id),id);
     assert.equal(await a.page.locator('#vm-method').inputValue(),'photo');assert.equal(await a.page.locator('#vm-note').inputValue(),'メモ');
     assert.deepEqual(await a.page.evaluate(()=>['【制作手法:Seedance】x','【制作手法:その他】x','【制作手法:ChatGPT GIF】x','【制作手法:ChatGPT 実写】x','ChatGPT 実写','【制作手法:GIF】x'].map(note=>productionMethod({note}))),
