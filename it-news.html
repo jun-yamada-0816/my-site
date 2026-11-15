@@ -407,6 +407,15 @@ let ready = false, busy = false;
 
 const $  = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* 記事のリンク先は、よそのサイトのフィードに書かれていた文字列です。
+   http(s) のアドレスだけをリンクにし、それ以外（javascript: など）は開けないリンクにします。
+   DB側（it_news_fetch_source）でも同じ絞り込みをしていますが、画面でももう一度確かめます。 */
+const safeHref = u => {
+  try {
+    const url = new URL(String(u ?? ''));
+    return (url.protocol === 'https:' || url.protocol === 'http:') ? url.href : '#';
+  } catch { return '#'; }
+};
 const missing = /does not exist|schema cache|could not find|relation/i;
 
 /* ========================= 起動 ========================= */
@@ -593,10 +602,10 @@ function drawList(list){
     const sum = niceSummary(x);
     const xq  = encodeURIComponent(String(x.title || '').slice(0, 60));
     html += `
-      <div class="item${x.read_at ? ' read' : ''}" data-id="${x.id}">
-        <button class="star${x.starred ? ' on' : ''}" data-star="${x.id}" title="気になる">${x.starred ? '★' : '☆'}</button>
+      <div class="item${x.read_at ? ' read' : ''}" data-id="${esc(x.id)}">
+        <button class="star${x.starred ? ' on' : ''}" data-star="${esc(x.id)}" title="気になる">${x.starred ? '★' : '☆'}</button>
         <div class="item-body">
-          <a class="title" href="${esc(x.url)}" target="_blank" rel="noopener" data-open="${x.id}">${esc(x.title)}</a>
+          <a class="title" href="${esc(safeHref(x.url))}" target="_blank" rel="noopener noreferrer" data-open="${esc(x.id)}">${esc(x.title)}</a>
           ${sum ? `<div class="summary">${esc(sum)}</div>` : ''}
           <div class="meta">
             <span class="src g-${esc(x.genre || 'other')}">${esc(x.source_name || '—')}</span>
@@ -714,8 +723,8 @@ function drawSources(){
             ${esc(s.last_status || 'まだ読んでいません')}
           </span>
         </span>
-        <button class="btn tiny" style="padding:.2rem .5rem;" data-toggle="${s.id}">${s.enabled ? '休む' : '使う'}</button>
-        <button class="btn tiny" style="padding:.2rem .5rem;" data-del="${s.id}">消す</button>
+        <button class="btn tiny" style="padding:.2rem .5rem;" data-toggle="${esc(s.id)}">${s.enabled ? '休む' : '使う'}</button>
+        <button class="btn tiny" style="padding:.2rem .5rem;" data-del="${esc(s.id)}">消す</button>
       </div>`;
   }).join('') || '<p class="small muted" style="padding:.6rem 0;">まだありません。</p>';
 
@@ -735,9 +744,23 @@ function drawSources(){
     }));
 }
 
+function isFeedUrl(u){
+  if (u.length > 500) return false;
+  let url;
+  try { url = new URL(u); } catch { return false; }
+  const host = url.hostname.toLowerCase();
+  return url.protocol === 'https:' && !url.username && !url.password && !url.port
+    && /^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z][a-z0-9-]*[a-z0-9]$/.test(host)   // IPアドレスや localhost は不可
+    && !/\.(local|localhost|internal|lan|home|corp|test|invalid|example)$/.test(host);
+}
+
 $('#ns-add').addEventListener('click', async () => {
   const name = $('#ns-name').value.trim(), url = $('#ns-url').value.trim();
-  if (!name || !/^https?:\/\//.test(url)) { showMsg('名前と、http で始まる URL を入れてください。', 'warn'); return; }
+  // 読みに行くのは Supabase の中からなので、暗号化された https の、名前で引けるサイトだけにする
+  // （DB側の admin-rpc.sql にも同じ決まりがあり、そちらが本番の関門です）。
+  if (!name || name.length > 80 || !isFeedUrl(url)) {
+    showMsg('名前（80字まで）と、https:// で始まるフィードの URL を入れてください。', 'warn'); return;
+  }
   const { error } = await sb.from('it_news_sources')
     .insert({ name, url, genre: $('#ns-genre').value, sort_order: 90 });
   if (error) { showMsg('足せませんでした：' + error.message, 'ng'); return; }

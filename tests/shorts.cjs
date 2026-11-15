@@ -3,6 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const fs = require('node:fs/promises');
+const { applyHeaders, watchCsp } = require('./site-headers.cjs');
 const path = require('node:path');
 const os = require('node:os');
 const http = require('node:http');
@@ -27,6 +28,7 @@ before(async () => {
     assert(response.ok); cdn = Buffer.from(await response.arrayBuffer());
   }
   server = http.createServer(async (req,res) => {
+    applyHeaders(res,'/shorts.html');
     res.setHeader('Content-Type','text/html; charset=utf-8');
     res.end(await fs.readFile(path.join(__dirname,'../shorts.html')));
   });
@@ -41,7 +43,7 @@ async function open(db, storage={}) {
   storage = {'sv-opening-v2':'code', ...storage};
   const context = await browser.newContext();
   const flags = {failMetrics:false, failWrites:false, nullVerification:false, nullSubs:false, pauseWrite:null, pageSize:1000, participation:null};
-  const writes = [], errors = [], reads=[];
+  const writes = [], errors = [], reads=[], keyCalls=[];
   await context.addInitScript(({token,user,storage})=>{
     if (!sessionStorage.getItem('test-seeded')) {
       localStorage.setItem('sb-qnmzjwgacnfxwlbgwxcr-auth-token',JSON.stringify({access_token:token,refresh_token:'test',token_type:'bearer',expires_at:Math.floor(Date.now()/1000)+3600,user}));
@@ -57,6 +59,16 @@ async function open(db, storage={}) {
     const send=(body,status=200)=>route.fulfill({status,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(body)});
     if(url.pathname==='/auth/v1/user') return send(user);
     // The site's participation.sql: answers only when a test provides a summary, otherwise "not installed".
+    // The site's admin-rpc.sql: the API key goes through three functions and is never read back.
+    // Without flags.keyRpc the functions are "not installed" and the page falls back to the sv_config table.
+    const keyRpc=url.pathname.match(/\/rpc\/(youtube_api_key_status|set_youtube_api_key|clear_youtube_api_key)$/);
+    if(keyRpc){
+      if(!flags.keyRpc) return send({code:'PGRST202',message:'Could not find the function'},404);
+      keyCalls.push({name:keyRpc[1],body:req.postDataJSON()});
+      if(keyRpc[1]==='set_youtube_api_key') flags.keyRpc.value=req.postDataJSON().p_key;
+      if(keyRpc[1]==='clear_youtube_api_key') flags.keyRpc.value=null;
+      return send(keyRpc[1]==='youtube_api_key_status'?{registered:!!flags.keyRpc.value,tail:flags.keyRpc.value?flags.keyRpc.value.slice(-4):null}:null);
+    }
     if(url.pathname.endsWith('/rpc/participation_summary')) return flags.participation ? send(flags.participation) : send({code:'PGRST202',message:'Could not find the function'},404);
     const table=url.pathname.split('/').at(-1);
     assert(table in db, 'unexpected endpoint '+url.pathname);
@@ -95,12 +107,12 @@ async function open(db, storage={}) {
     return send(incoming,201);
   });
   const page=await context.newPage();
-  page.on('pageerror',e=>errors.push(e.message));
+  page.on('pageerror',e=>errors.push(e.message));watchCsp(page,errors);
   await page.goto(base+'/shorts.html');
   await page.waitForFunction(()=>state.ready);
   await page.addStyleTag({content:'.hidden{display:none !important}'});
   async function tab(name){await page.evaluate(name=>showTab(name),name);}
-  return {page,context,flags,writes,reads,errors,tab};
+  return {page,context,flags,writes,reads,errors,keyCalls,tab};
 }
 const fillMetric=(page,post,key,value)=>page.locator(`.entry-in[data-post="${post}"][data-metric="${key}"]`).fill(value);
 async function saveEntries(page){await page.locator('#entry-save').click();await page.waitForFunction(()=>!document.querySelector('#entry-save').disabled);}
@@ -1102,5 +1114,41 @@ test('the participation card shows the site counts to the admin, guides to the S
     await a.page.evaluate(()=>loadParticipation());
     assert.match(await a.page.locator('#participation').textContent(),/participation.sql/);
     assert.deepEqual(a.writes,[]);assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
+
+test('the YouTube API key is written through admin-rpc.sql functions and never read back', async()=>{
+  const realistic='TESTONLY_not-a-real-key_0123456789';
+  const db=fixture();const a=await open(db);
+  try{
+    // Before admin-rpc.sql: the functions are missing, so the page keeps using the sv_config table.
+    await a.tab('entry');await a.page.locator('details:has(#apikey-input) summary').click();
+    await a.page.waitForFunction(()=>/まだ登録されていません/.test(document.querySelector('#apikey-state').textContent));
+    await a.page.locator('#apikey-input').fill('short key <script>');
+    await a.page.locator('#apikey-save').click();
+    await a.page.waitForFunction(()=>/APIキーの形ではない/.test(document.querySelector('#apikey-msg').textContent));
+    assert.deepEqual(db.sv_config,[],'a malformed key is refused before any request');
+    await a.page.locator('#apikey-input').fill(realistic);
+    await a.page.locator('#apikey-save').click();
+    await a.page.waitForFunction(()=>/末尾 …6789/.test(document.querySelector('#apikey-state').textContent));
+    assert.equal(db.sv_config.find(x=>x.key==='youtube_api_key').value,realistic);
+    assert.equal(await a.page.locator('#apikey-input').inputValue(),'','the field is cleared after saving');
+
+    // After admin-rpc.sql: only the three functions are used; the table is not touched for the key.
+    db.sv_config.length=0;a.flags.keyRpc={value:null};a.reads.length=0;a.writes.length=0;
+    await a.page.evaluate(()=>renderApiKey());
+    await a.page.waitForFunction(()=>/まだ登録されていません/.test(document.querySelector('#apikey-state').textContent));
+    await a.page.locator('#apikey-input').fill('  '+realistic+'  ');
+    await a.page.locator('#apikey-save').click();
+    await a.page.waitForFunction(()=>/末尾 …6789/.test(document.querySelector('#apikey-state').textContent));
+    assert.equal(a.flags.keyRpc.value,realistic);
+    await a.page.locator('#apikey-clear').click();
+    await a.page.waitForFunction(()=>/まだ登録されていません/.test(document.querySelector('#apikey-state').textContent));
+    assert.equal(a.flags.keyRpc.value,null);
+    assert.deepEqual(a.keyCalls.map(x=>x.name).filter(n=>n!=='youtube_api_key_status'),['set_youtube_api_key','clear_youtube_api_key']);
+    assert.equal(a.reads.filter(x=>x.table==='sv_config').length,0,'the key row is never read from the table');
+    assert.deepEqual(a.writes.filter(x=>x.table==='sv_config'),[]);
+    assert.ok(!(await a.page.content()).includes(realistic),'the key is nowhere in the page');
+    assert.deepEqual(a.errors,[]);
   }finally{await a.context.close();}
 });

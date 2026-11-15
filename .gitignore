@@ -3,3 +3,9 @@
 !.env.example
 .vercel/
 node_modules/
+# macOS が勝手に作るファイル。「git add -A」で紛れ込まないようにする
+.DS_Store
+# 鍵・証明書の類は、置いてしまってもコミットされないようにする
+*.pem
+*.key
+*.p12

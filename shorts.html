@@ -1260,12 +1260,30 @@ $('#sync-btn').addEventListener('click', async () => {
 });
 
 /* ── 取り込みの設定（APIキー） ────────────────────────────
-   キーは sv_config に置きます。ログインしている本人だけが読み書きできる表です。
-   画面には出しません（末尾の4文字だけ、入っていることの確認用に見せます）。 */
-async function renderApiKey(){
-  const st = $('#apikey-state');
+   キーは画面に読み出しません。admin-rpc.sql を実行してあれば、キーの行はこのページからは
+   読めも書けもせず、「入っているか・末尾4文字」「登録」「削除」の3つの関数だけを使います
+   （ページに悪いスクリプトが紛れ込んでも、キーそのものは持ち出せないようにするためです）。
+   admin-rpc.sql をまだ実行していないときだけ、以前のとおり sv_config を直接読み書きします。 */
+const rpcMissing = error => !!error && (error.code === 'PGRST202' || error.code === '42883'
+  || /could not find the function|function .* does not exist/i.test(error.message || ''));
+const API_KEY_SHAPE = /^[A-Za-z0-9_-]{20,200}$/;   // admin-rpc.sql の set_youtube_api_key と同じ決まり
+
+async function apiKeyStatus(){
+  const viaRpc = await sb.rpc('youtube_api_key_status');
+  if (!rpcMissing(viaRpc.error)){
+    if (viaRpc.error) return { error: viaRpc.error };
+    return { registered: !!viaRpc.data?.registered, tail: String(viaRpc.data?.tail || '') };
+  }
   const { data, error } = await sb.from('sv_config')
     .select('value').eq('key', 'youtube_api_key').maybeSingle();
+  if (error) return { error };
+  const v = (data?.value || '').trim();
+  return { registered: !!v, tail: v.slice(-4) };
+}
+
+async function renderApiKey(){
+  const st = $('#apikey-state');
+  const { registered, tail, error } = await apiKeyStatus();
   if (error){
     st.style.color = '#9a7420';
     st.textContent = /does not exist|schema cache/i.test(error.message)
@@ -1273,10 +1291,9 @@ async function renderApiKey(){
       : '状態を読めませんでした：' + error.message;
     return;
   }
-  const v = (data?.value || '').trim();
-  if (v){
+  if (registered){
     st.style.color = '#2b7f8c';
-    st.textContent = `登録済みです（末尾 …${esc(v.slice(-4))}）。取り込みは YouTube API を使います。`;
+    st.textContent = `登録済みです（末尾 …${tail}）。取り込みは YouTube API を使います。`;
   } else {
     st.style.color = '#6b7280';
     st.textContent = 'まだ登録されていません。いまはチャンネルのページを読んで取り込んでいます。';
@@ -1287,9 +1304,17 @@ $('#apikey-save').addEventListener('click', async () => {
   const msg = $('#apikey-msg'), input = $('#apikey-input');
   const v = (input.value || '').trim();
   if (!v){ msg.style.color = '#b7472a'; msg.textContent = 'キーが空です。'; return; }
-  const { error } = await sb.from('sv_config')
-    .upsert({ key:'youtube_api_key', value:v, updated_at:new Date().toISOString() },
-            { onConflict:'key' });
+  if (!API_KEY_SHAPE.test(v)){
+    msg.style.color = '#b7472a';
+    msg.textContent = 'APIキーの形ではないようです（英数字と - _ だけ、20文字以上）。貼り付けた文字を確かめてください。';
+    return;
+  }
+  let { error } = await sb.rpc('set_youtube_api_key', { p_key: v });
+  if (rpcMissing(error)){
+    ({ error } = await sb.from('sv_config')
+      .upsert({ key:'youtube_api_key', value:v, updated_at:new Date().toISOString() },
+              { onConflict:'key' }));
+  }
   if (error){ msg.style.color = '#b7472a'; msg.textContent = '保存できませんでした：' + error.message; return; }
   input.value = '';
   msg.style.color = '#2b7f8c';
@@ -1299,7 +1324,10 @@ $('#apikey-save').addEventListener('click', async () => {
 
 $('#apikey-clear').addEventListener('click', async () => {
   const msg = $('#apikey-msg');
-  const { error } = await sb.from('sv_config').delete().eq('key', 'youtube_api_key');
+  let { error } = await sb.rpc('clear_youtube_api_key');
+  if (rpcMissing(error)){
+    ({ error } = await sb.from('sv_config').delete().eq('key', 'youtube_api_key'));
+  }
   if (error){ msg.style.color = '#b7472a'; msg.textContent = '消せませんでした：' + error.message; return; }
   msg.style.color = '#6b7280';
   msg.textContent = '消しました。これからはチャンネルのページを読んで取り込みます。';

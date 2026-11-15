@@ -27,6 +27,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.10/dist/umd/supabase.min.js" integrity="sha384-ARQ6JMpleHd1EQUxL9V4CSjKPqSyRfswRYBiVKcn1MT6zUD+BdOm/NYzic64PuF4" crossorigin="anonymous"></script>
+<script>
+  /* Supabase のつなぎ先は、このページではここ1か所だけに書く。
+     キーは公開してよい sb_publishable_ のもの。sb_secret_ のキーは絶対に置かない（ページのソースは誰でも読める）。
+     つなぎ先を変えるときは vercel.json の Content-Security-Policy（connect-src）も同じ値に直す。 */
+  window.HOSHI_CONFIG = Object.freeze({
+    supabaseUrl: 'https://qnmzjwgacnfxwlbgwxcr.supabase.co',
+    supabaseKey: 'sb_publishable_BG0n_GkXIwMBUlSN-W5vzA_vb4rbPKq'
+  });
+</script>
   <link rel="stylesheet" href="retro.css" />
   <!-- Tailwind は tools/tailwind で作ったファイルを読む（以前はブラウザで毎回組み立てていた）。
        Play CDN が retro.css のあとに差し込んでいたのと同じ順番にするため、retro.css より後に置く。 -->
@@ -972,10 +981,9 @@
   (function () {
     'use strict';
 
-    /* ── ここを書き換えてください ── */
-    const SUPABASE_URL     = 'https://qnmzjwgacnfxwlbgwxcr.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_BG0n_GkXIwMBUlSN-W5vzA_vb4rbPKq';
-    /* ─────────────────────────── */
+    /* つなぎ先は <head> の window.HOSHI_CONFIG に1か所だけ書いてある */
+    const SUPABASE_URL      = String(window.HOSHI_CONFIG?.supabaseUrl || 'YOUR_SUPABASE_URL');
+    const SUPABASE_ANON_KEY = String(window.HOSHI_CONFIG?.supabaseKey || '');
 
     const configured = !SUPABASE_URL.startsWith('YOUR_');
 
@@ -1707,6 +1715,8 @@
 
     // 一覧の日記1件ぶん
     function postCardHtml(p) {
+      // ID はこのあと onclick や id= に入る。決まった文字以外を含む行は描かない（attrId の説明を参照）
+      if (!attrId(p.id)) return '';
       return `
         <article onclick="openPost('${p.id}')"
                  class="glass rule-card cursor-pointer group">
@@ -1905,6 +1915,8 @@
 
     // 1件ぶんの本文。管理者が編集中ならテキストエリアに差し替わる。
     function messageBodyHtml(m, isReply) {
+      // ID はこのあと onclick や id= に入る。決まった文字以外を含む行は描かない（attrId の説明を参照）
+      if (!attrId(m.id)) return '';
       if (editingMessageId === m.id) {
         return `
           <div>
@@ -1964,6 +1976,7 @@
 
     // 「返信する」ボタン、または開いている返信フォーム
     function replyAreaHtml(id) {
+      if (!attrId(id)) return '';
       if (replyOpenFor !== id) {
         return `
           <button onclick="openReply('${id}')"
@@ -2473,9 +2486,16 @@
 
     /* ══ UTILS ══ */
     function esc(str) {
-      return String(str)
+      return String(str ?? '')
         .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+    // onclick="openPost('…')" のように、ID を属性やスクリプトの文字列に入れる前に必ず通す。
+    // esc() では足りない（属性の中の &#39; は、スクリプトとして読まれる前に ' に戻る）ので、
+    // UUID に使われる文字だけを通し、それ以外は空にする。DB から来た値でも信用しない。
+    function attrId(id) {
+      const s = String(id ?? '');
+      return /^[A-Za-z0-9_-]{1,64}$/.test(s) ? s : '';
     }
     function fmtDate(iso) {
       return new Date(iso).toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric' });
@@ -3662,9 +3682,11 @@
 
       // ログイン状態を持たない専用のつなぎ口を作る
       // （サイト本体のログインと取り合いにならないようにするため）
+      var cfg = window.HOSHI_CONFIG;
+      if (!cfg || !/^https:\/\//.test(cfg.supabaseUrl) || /^sb_secret_/.test(cfg.supabaseKey)) return;
       var tracker = window.supabase.createClient(
-        'https://qnmzjwgacnfxwlbgwxcr.supabase.co',
-        'sb_publishable_BG0n_GkXIwMBUlSN-W5vzA_vb4rbPKq',
+        cfg.supabaseUrl,
+        cfg.supabaseKey,
         { auth: { persistSession: false, autoRefreshToken: false } }
       );
 

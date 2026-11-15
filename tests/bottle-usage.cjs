@@ -9,6 +9,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const http = require('node:http');
 const os = require('node:os');
+const { applyHeaders, watchCsp } = require('./site-headers.cjs');
 
 const root = path.resolve(__dirname, '..');
 const PROFILE_ID = '00000000-0000-4000-8000-000000000095';
@@ -32,6 +33,7 @@ before(async () => {
     if (!file.startsWith(root + path.sep)) { res.writeHead(403).end(); return; }
     try {
       const body = await fs.readFile(file);
+      applyHeaders(res, pathname);
       res.setHeader('Content-Type', { '.html':'text/html; charset=utf-8', '.css':'text/css', '.svg':'image/svg+xml', '.png':'image/png' }[path.extname(file)] || 'application/octet-stream');
       res.end(body);
     } catch { res.writeHead(404).end(); }
@@ -98,6 +100,7 @@ async function open({ rpc = {}, admin = false, width = 390, storage = {}, time =
   });
   const page = await context.newPage();
   page.on('pageerror', error => errors.push(error.message));
+  watchCsp(page, errors);
   await page.goto(base + pagePath + query);
   if (pagePath === '/') await page.waitForFunction(() => document.querySelector('#posts-container article') && document.querySelector('#messages-container [data-report-open], #messages-container .report-done, #messages-container p'));
   return { context, page, calls, posts, errors, tables };
@@ -309,6 +312,9 @@ test('bottle: thanks goes to the bottle once; tampered device storage is never t
   const b = await open({ storage:{ hoshiumi_bottle:tampered }, rpc:{ bottle_status:[{ key:KEY(4), picks:'many', thanks:null }, { key:'x' }, null] } });
   try {
     await b.page.waitForFunction(() => document.querySelectorAll('#bottle-mine-list li').length === 1);
+    // The list is drawn from the device first and the question to the server follows; wait for it
+    // instead of assuming it has already left (it had not yet in WebKit once the page gained response headers).
+    for (let i = 0; i < 60 && !rpcCalls(b.calls, 'bottle_status').length; i++) await b.page.waitForTimeout(50);
     assert.deepEqual(bodies(b.calls, 'bottle_status'), [{ p_keys:[KEY(4)] }], 'only well-formed keys are asked about');
     assert.match(await b.page.locator('#bottle-mine-list').textContent(), /疲れているだれかへ.*流した小瓶：まだ、波の上をただよっています/s);
     assert.equal(await b.page.locator('#bottle-mine-list b, #bottle-mine-list i').count(), 0);

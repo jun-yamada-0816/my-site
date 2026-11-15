@@ -11,6 +11,67 @@
 `next-business-expo.html`（展示会の旅程）には列車・ホテルの予約番号と最寄り駅が書かれていて、管理者メニューから隠していても URL を知っていれば誰でも開ける状態だったため、2026-10-03 に公開をやめ、管理者メニューのリンクも外しました。手元のファイルをブラウザで開けば読めます。以前はSQLやテストのファイルも `https://hoshinoumi.vercel.app/bbs-moderation.sql` のように誰でも開けて、管理者のメールアドレスも読める状態でした。
 `index.html` の先頭にあったSupabaseのセットアップ手順（メールアドレス入り）も、`docs/supabase-setup.md` に移しました。**公開するHTMLのコメントには、手順やメールアドレスを書かないでください。** ページのソースは誰でも見られます。
 
+## セキュリティの点検（2026-11-15）
+
+`~/.claude/CLAUDE.md`（AI Secure Development Rules 1.0）と、もう一度ぜんぶ照らし合わせました。秘密の鍵は、いまのファイルにも Git の履歴にも見つかっていません。**下の「Supabase でやること」が済むまで、DB側の2つ（関数を管理者だけに・APIキーを読めなくする）は効きません。**
+
+### Supabase でやること（要対応）
+
+SQL Editor で **`admin-rpc.sql`** を全体実行します（前提：`admin-only.sql` を実行済み。置き換える値はありません。何度実行しても安全です）。
+
+1. **管理用の関数を管理者だけに**：`sync_youtube()`・`restore_metrics_from_log()`・`refresh_it_news()`・`it_news_queue_all()` は、ログインさえしていれば管理者でなくても呼べました。関数の先頭に「管理者か」を確かめる関所（`require_site_admin()`）を足します。中身は書き直さず、もとの中身をそのまま包みます。通すのは、管理者のログイン・サーバー側の鍵・SQL Editor と pg_cron だけです。
+2. **部品は画面から呼べなく**：`sv_youtube_write()` や `it_news_fetch_source()` などは画面から呼ぶものではないのに、ログインしていれば呼べました（Supabase は作った関数をログイン済みの人にも実行できるようにするため）。実行できる人から外します。
+3. **YouTube の APIキーを画面に読み出さない**：これまでは末尾4文字を出すために、キー全体を画面に読み込んでいました。キーの行は API からは誰にも読み書きできなくし、分析ページは「入っているか・末尾4文字」「登録」「削除」の3つの関数だけを使います。取り込みはこれまでどおり動きます。
+4. **ITニュースの収集元は https の、名前で引けるサイトだけ**：フィードを読みに行くのは Supabase の中からなので、`http://`・数字だけの宛先・`localhost`・ポート番号つき・ID/パスワードつきは登録できなくします。いま登録されているもので決まりに合わないものは、消さずに「休む」にします。
+
+最後に出る一覧で、上の関数の `guarded` が true になっていることと、`visitor_can`（ログインしていない人が呼べる）が true なのが訪問者のための関数（星の灯り・星の小瓶・足あと・利用回数など）だけであることを確かめてください。
+
+**`sync-youtube.sql`・`保存を守る.sql`・`it-news.sql` を実行し直すと関所が外れます。そのあとに `admin-rpc.sql` をもう一度実行してください。**
+
+実行するまでは、分析ページは以前のとおり `sv_config` を直接読み書きします（動かなくなることはありません）。
+
+```sh
+docker run --rm --network none --tmpfs /var/lib/postgresql/data \
+  --mount "type=bind,source=$PWD,target=/work,readonly" \
+  -e POSTGRES_HOST_AUTH_METHOD=trust postgres:16 sh /work/tests/run-admin-rpc-db.sh
+```
+
+### 応答ヘッダー（Content-Security-Policy）
+
+`vercel.json` の Content-Security-Policy を、「書いてある宛先だけ許す」形に変えました。ページに悪いスクリプトが紛れ込んでも、よそのサイトからスクリプトを読み込む・よそのサイトへ通信する・画像の読み込みを装って持ち出す・別のサイトを枠に埋め込む・文字列をプログラムとして実行する（`eval`）ことを、ブラウザーが止めます。
+
+| 種類 | 許している宛先 |
+| --- | --- |
+| スクリプト | 自分のサイト、ページ内のスクリプト、`cdn.jsdelivr.net` の supabase-js 2.49.10 だけ |
+| スタイル・フォント | 自分のサイト、Google Fonts |
+| 通信 | 自分のサイト（`/api/bulletin`）、自分の Supabase プロジェクトだけ |
+| 画像 | 自分のサイト、`data:` |
+| `shorts.html` だけ追加 | Tailwind の CDN（`cdn.tailwindcss.com/3.4.17`）、YouTube の埋め込み、`i.ytimg.com` のサムネイル |
+
+- **ページで新しい外部の宛先（画像・埋め込み・API・フォント）を使うときは、`vercel.json` にも足してください。** 足し忘れると、その読み込みだけ黙って止まります。テスト用のサーバーも同じヘッダーを付けるので（`tests/site-headers.cjs`）、テストを流せば「止められた読み込み」がエラーになって気づけます。
+- **Supabase のプロジェクトを変えるときは、各ページのつなぎ先と `vercel.json` の `connect-src` をそろえてください**（`tests/csp.cjs` が食い違いを見つけます）。`index.html` のつなぎ先は `<head>` の `window.HOSHI_CONFIG` の1か所だけです。
+- ページ内のスクリプトと `onclick` が多いため、`'unsafe-inline'` は残しています。ページ内に差し込まれたスクリプトそのものは、この設定では止まりません（だから下の「文字の扱い」が要ります）。
+
+確認：`node --test tests/csp.cjs`（`BROWSER=webkit` でも）。全ページを開いて、ふだんの読み込みが1つも止まらないこと、許していない宛先はすべて止まることを確かめます。
+
+### 文字の扱い
+
+- `index.html`：`esc()` が `'` も置き換えるようにしました。`onclick="openPost('…')"` のように ID をスクリプトの文字列に入れるところは、決まった文字（英数字・`-`・`_`）だけの ID かを確かめ、そうでない行は描きません（`attrId()`）。ID は DB が作る UUID ですが、DB から来た値でも信用しない、という決まりに合わせました。
+- `it-news.html`：記事のリンク先は、よそのサイトのフィードに書かれていた文字列です。`http(s)` のアドレスだけをリンクにし、それ以外（`javascript:` など）は開けないリンクにします（DB側でも絞っていますが、画面でも確かめます）。収集元の追加は、画面でも https の、名前で引けるサイトだけ受け付けます。
+
+### そのほか
+
+- `.gitignore` に `.DS_Store` と鍵の類（`*.pem`・`*.key`・`*.p12`）を足しました。`サイトに反映.command` は `git add -A` をするため、置いてあるものが全部コミットされます。
+- `tools/tailwind` の部品に出ていた注意（postcss-selector-parser、中程度）を `npm audit fix` で解消しました。作り直した `tailwind.css` は同じ内容です。
+
+### 残っていること・決めたこと
+
+- **`shorts.html` の Tailwind は CDN のまま**です（このCDNは `integrity` を付けられません）。分析ページは1つのファイルだけで動く作り（`shorts-analytics/index.html` をダブルクリックでも開く）で、頻繁にクラスを足すため、`index.html` のような作り置きにはしていません。管理者のログインがあるページでよそのスクリプトを動かしている、という弱点は残ります。CSP で、このスクリプトを読めるのは `shorts.html` だけに絞りました。
+- 収集元のサイトが別の宛先へ**転送（リダイレクト）**した場合までは、DB側の決まりでは止められません。収集元は自分で選んだものだけにしてください。
+- YouTube の APIキーは、Supabase の表（`sv_config`）に置いたままです（暗号化された保管庫 Vault には移していません。移すには `sync-youtube.sql` の書き直しが要ります）。API からは読めなくなりますが、SQL Editor からは読めます。キーには Google Cloud 側で「YouTube Data API v3 だけ」の制限を付けておいてください。
+- `next-business-expo.html`（予約番号入り）は公開していませんが、GitHub のリポジトリ（private）には入っています。リポジトリを公開にしないでください。
+- この README の決まりを守っても「安全」と言い切れるわけではありません。Supabase の設定（新規登録オフ・`site_admins`）、Vercel の環境変数、パスワードの管理に依ります。
+
 ## セキュリティの点検（2026-10-03）
 
 `~/.claude/CLAUDE.md` の開発ルールと照らし合わせて見直しました。**下の「管理者だけに絞る」は、Supabase側の操作が済むまで効きません。**
@@ -31,7 +92,7 @@ docker run --rm --network none --tmpfs /var/lib/postgresql/data \
   -e POSTGRES_HOST_AUTH_METHOD=trust postgres:16 sh /work/tests/run-admin-only-db.sh
 ```
 
-残っていること：`sync_youtube()`・`refresh_it_news()`・`restore_metrics_from_log()` などのRPCは `security definer` で、ログインしていれば管理者でなくても呼べます。管理者が設定した取り込みを動かすだけで、データを読み出したり収集元を足したりはできませんが、新規登録をオフにしておくことが前提です。
+残っていたこと（2026-11-15 に `admin-rpc.sql` で対応）：`sync_youtube()`・`refresh_it_news()`・`restore_metrics_from_log()` などのRPCは `security definer` で、ログインしていれば管理者でなくても呼べました。
 
 ### カフェ一覧は管理者だけに
 
@@ -45,7 +106,7 @@ docker run --rm --network none --tmpfs /var/lib/postgresql/data \
 
 - **音楽の再生ボタン**：曲のURLを `onclick` の文字列に埋め込んでいたため、`'` を含むURLが登録されるとスクリプトとして動く状態でした。URLは読み込んだ一覧から引き、`https:` 以外は再生しないようにしました。
 - **外部スクリプトの固定**：supabase-js を `@2.49`（中身が更新されうる指定）から `@2.49.10` に固定し、`integrity`（SRI）を付けました。CDNの中身が書き換わると、ブラウザが読み込みを止めます。`shorts.html` のTailwindも `cdn.tailwindcss.com/3.4.17` に固定しました（このCDNはCORSに対応していないためSRIは付けられません）。**supabase-js の版を上げるときは、`index.html`・`it-news.html`・`shorts.html`（と `../shorts-analytics/index.html`）・`tests/retro.cjs` の版と `integrity` をそろえて直してください。** ハッシュは `curl -s <URL> | openssl dgst -sha384 -binary | openssl base64 -A` で作れます。
-- **応答ヘッダー**（`vercel.json`）：ほかのサイトの枠（iframe）に埋め込ませない（`X-Frame-Options`・`frame-ancestors`）、種類の推測をさせない（`nosniff`）、`object`・`base` の差し込みを止める、カメラ・マイク・位置情報を使わない、を全ページに付けました。インラインのスクリプトが多いため、スクリプトの読み込み元を絞る指定（`script-src`）までは入れていません。
+- **応答ヘッダー**（`vercel.json`）：ほかのサイトの枠（iframe）に埋め込ませない（`X-Frame-Options`・`frame-ancestors`）、種類の推測をさせない（`nosniff`）、`object`・`base` の差し込みを止める、カメラ・マイク・位置情報を使わない、を全ページに付けました。読み込み元を絞る指定（`script-src`・`connect-src` など）は 2026-11-15 に入れました（上の「応答ヘッダー」）。
 - **YouTube分析**：動画IDを画像・リンクのURLに入れる前に、YouTubeのIDに使われる文字だけかを確かめるようにしました。
 - 訪問の記録で送る値を、DB側の上限と同じ長さに切ってから送るようにしました。
 

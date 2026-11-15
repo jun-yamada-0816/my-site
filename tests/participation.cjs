@@ -9,6 +9,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const http = require('node:http');
 const os = require('node:os');
+const { applyHeaders, watchCsp } = require('./site-headers.cjs');
 
 const root = path.resolve(__dirname, '..');
 const PROFILE_ID = '00000000-0000-4000-8000-000000000095';
@@ -32,6 +33,7 @@ before(async () => {
     if (!file.startsWith(root + path.sep)) { res.writeHead(403).end(); return; }
     try {
       const body = await fs.readFile(file);
+      applyHeaders(res, pathname);
       res.setHeader('Content-Type', { '.html':'text/html; charset=utf-8', '.css':'text/css', '.svg':'image/svg+xml', '.png':'image/png' }[path.extname(file)] || 'application/octet-stream');
       res.end(body);
     } catch { res.writeHead(404).end(); }
@@ -97,6 +99,7 @@ async function open({ rpc = {}, admin = false, width = 390, storage = {}, time =
   });
   const page = await context.newPage();
   page.on('pageerror', error => errors.push(error.message));
+  watchCsp(page, errors);
   await page.goto(base + '/');
   await page.waitForFunction(() => document.querySelector('#posts-container article') && document.querySelector('#messages-container [data-report-open], #messages-container .report-done, #messages-container p'));
   return { context, page, calls, posts, errors };
