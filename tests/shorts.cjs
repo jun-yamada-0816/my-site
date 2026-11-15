@@ -3,6 +3,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const fs = require('node:fs/promises');
+const { applyHeaders, watchCsp } = require('./site-headers.cjs');
 const path = require('node:path');
 const os = require('node:os');
 const http = require('node:http');
@@ -27,6 +28,7 @@ before(async () => {
     assert(response.ok); cdn = Buffer.from(await response.arrayBuffer());
   }
   server = http.createServer(async (req,res) => {
+    applyHeaders(res,'/shorts.html');
     res.setHeader('Content-Type','text/html; charset=utf-8');
     res.end(await fs.readFile(path.join(__dirname,'../shorts.html')));
   });
@@ -41,7 +43,7 @@ async function open(db, storage={}) {
   storage = {'sv-opening-v2':'code', ...storage};
   const context = await browser.newContext();
   const flags = {failMetrics:false, failWrites:false, nullVerification:false, nullSubs:false, pauseWrite:null, pageSize:1000, participation:null};
-  const writes = [], errors = [], reads=[];
+  const writes = [], errors = [], reads=[], keyCalls=[];
   await context.addInitScript(({token,user,storage})=>{
     if (!sessionStorage.getItem('test-seeded')) {
       localStorage.setItem('sb-qnmzjwgacnfxwlbgwxcr-auth-token',JSON.stringify({access_token:token,refresh_token:'test',token_type:'bearer',expires_at:Math.floor(Date.now()/1000)+3600,user}));
@@ -57,6 +59,16 @@ async function open(db, storage={}) {
     const send=(body,status=200)=>route.fulfill({status,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(body)});
     if(url.pathname==='/auth/v1/user') return send(user);
     // The site's participation.sql: answers only when a test provides a summary, otherwise "not installed".
+    // The site's admin-rpc.sql: the API key goes through three functions and is never read back.
+    // Without flags.keyRpc the functions are "not installed" and the page falls back to the sv_config table.
+    const keyRpc=url.pathname.match(/\/rpc\/(youtube_api_key_status|set_youtube_api_key|clear_youtube_api_key)$/);
+    if(keyRpc){
+      if(!flags.keyRpc) return send({code:'PGRST202',message:'Could not find the function'},404);
+      keyCalls.push({name:keyRpc[1],body:req.postDataJSON()});
+      if(keyRpc[1]==='set_youtube_api_key') flags.keyRpc.value=req.postDataJSON().p_key;
+      if(keyRpc[1]==='clear_youtube_api_key') flags.keyRpc.value=null;
+      return send(keyRpc[1]==='youtube_api_key_status'?{registered:!!flags.keyRpc.value,tail:flags.keyRpc.value?flags.keyRpc.value.slice(-4):null}:null);
+    }
     if(url.pathname.endsWith('/rpc/participation_summary')) return flags.participation ? send(flags.participation) : send({code:'PGRST202',message:'Could not find the function'},404);
     const table=url.pathname.split('/').at(-1);
     assert(table in db, 'unexpected endpoint '+url.pathname);
@@ -95,12 +107,12 @@ async function open(db, storage={}) {
     return send(incoming,201);
   });
   const page=await context.newPage();
-  page.on('pageerror',e=>errors.push(e.message));
+  page.on('pageerror',e=>errors.push(e.message));watchCsp(page,errors);
   await page.goto(base+'/shorts.html');
   await page.waitForFunction(()=>state.ready);
   await page.addStyleTag({content:'.hidden{display:none !important}'});
   async function tab(name){await page.evaluate(name=>showTab(name),name);}
-  return {page,context,flags,writes,reads,errors,tab};
+  return {page,context,flags,writes,reads,errors,keyCalls,tab};
 }
 const fillMetric=(page,post,key,value)=>page.locator(`.entry-in[data-post="${post}"][data-metric="${key}"]`).fill(value);
 async function saveEntries(page){await page.locator('#entry-save').click();await page.waitForFunction(()=>!document.querySelector('#entry-save').disabled);}
@@ -871,8 +883,8 @@ test('by default the next video is built from photoreal ChatGPT material: two st
     assert.match(p,/フォルダの部分を外してファイル名だけにします/);assert.match(p,/zipの中のほかのファイルは開かず、実行もしません/);
     assert.match(p,/素材1〜4は sozai1〜sozai4 の名前で決めます。名前がちがうときや、zipではなく1つずつ添付されたときは、内容から判断します/);
     // What the first four photoreal videos showed (2026-11-14), stated as a hypothesis, and the first line matched to who is in the picture.
-    assert.match(p,/2026-11-14の確認（19時。チャンネルページの再生数と動画のコマ画像）：実写の素材で作った回は、まだ4本です/);
-    assert.match(p,/投稿から2日たっておらず、テーマもちがうので、まだ仮説です/);assert.match(p,/一言の型「からだの感覚」と、人が写らない「物と光だけ」が組み合わさっていたためで、この組み合わせは今後は選びません/);
+    assert.match(p,/2026-11-15の確認（チャンネルページ・動画ページの再生数と、動画のコマ画像）：実写の素材で作った回は7本です/);
+    assert.match(p,/本数が少なく、テーマもちがうので、まだ仮説です/);assert.match(p,/一言の型「からだの感覚」と、人が写らない「物と光だけ」の組み合わせは選びません/);
     if(subject.body){
       assert.ok(p.includes(`今回は「${subject.name}」が写ります。1枚目の一言の行動を、その最中の${subject.body}で見せます。0.0秒のフレームに${subject.body}が写っていて`));
       assert.ok(block.includes(`- 1コマ目から、${subject.body}が画面に入っているようにしてください（あとから画面に入ってくる動きにはしないでください）。`));
@@ -1103,4 +1115,90 @@ test('the participation card shows the site counts to the admin, guides to the S
     assert.match(await a.page.locator('#participation').textContent(),/participation.sql/);
     assert.deepEqual(a.writes,[]);assert.deepEqual(a.errors,[]);
   }finally{await a.context.close();}
+});
+
+test('the YouTube API key is written through admin-rpc.sql functions and never read back', async()=>{
+  const realistic='TESTONLY_not-a-real-key_0123456789';
+  const db=fixture();const a=await open(db);
+  try{
+    // Before admin-rpc.sql: the functions are missing, so the page keeps using the sv_config table.
+    await a.tab('entry');await a.page.locator('details:has(#apikey-input) summary').click();
+    await a.page.waitForFunction(()=>/まだ登録されていません/.test(document.querySelector('#apikey-state').textContent));
+    await a.page.locator('#apikey-input').fill('short key <script>');
+    await a.page.locator('#apikey-save').click();
+    await a.page.waitForFunction(()=>/APIキーの形ではない/.test(document.querySelector('#apikey-msg').textContent));
+    assert.deepEqual(db.sv_config,[],'a malformed key is refused before any request');
+    await a.page.locator('#apikey-input').fill(realistic);
+    await a.page.locator('#apikey-save').click();
+    await a.page.waitForFunction(()=>/末尾 …6789/.test(document.querySelector('#apikey-state').textContent));
+    assert.equal(db.sv_config.find(x=>x.key==='youtube_api_key').value,realistic);
+    assert.equal(await a.page.locator('#apikey-input').inputValue(),'','the field is cleared after saving');
+
+    // After admin-rpc.sql: only the three functions are used; the table is not touched for the key.
+    db.sv_config.length=0;a.flags.keyRpc={value:null};a.reads.length=0;a.writes.length=0;
+    await a.page.evaluate(()=>renderApiKey());
+    await a.page.waitForFunction(()=>/まだ登録されていません/.test(document.querySelector('#apikey-state').textContent));
+    await a.page.locator('#apikey-input').fill('  '+realistic+'  ');
+    await a.page.locator('#apikey-save').click();
+    await a.page.waitForFunction(()=>/末尾 …6789/.test(document.querySelector('#apikey-state').textContent));
+    assert.equal(a.flags.keyRpc.value,realistic);
+    await a.page.locator('#apikey-clear').click();
+    await a.page.waitForFunction(()=>/まだ登録されていません/.test(document.querySelector('#apikey-state').textContent));
+    assert.equal(a.flags.keyRpc.value,null);
+    assert.deepEqual(a.keyCalls.map(x=>x.name).filter(n=>n!=='youtube_api_key_status'),['set_youtube_api_key','clear_youtube_api_key']);
+    assert.equal(a.reads.filter(x=>x.table==='sv_config').length,0,'the key row is never read from the table');
+    assert.deepEqual(a.writes.filter(x=>x.table==='sv_config'),[]);
+    assert.ok(!(await a.page.content()).includes(realistic),'the key is nowhere in the page');
+    assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
+});
+
+test('past 1,000 views: the prompt puts its weight where the Studio numbers of the photoreal videos are weakest, and on the first second until three are recorded', async()=>{
+  const wallFixture=(stayed,watch)=>{
+    const db=fixture();
+    db.sv_videos=[1,2,3].map(i=>({id:'video-'+i,slug:'v'+i,title:'動画'+i,produced_on:'2026-11-12',duration_sec:16,format:'写真1｜窓辺の自然光',theme:'うつ',hook_type:'数字で言い切る',note:photoNote}));
+    db.sv_posts=[1,2,3].map(i=>({id:'post-'+i,video_id:'video-'+i,platform:'youtube',posted_at:'2026-11-12T10:00:00Z',platform_video_id:'testvideo0'+i}));
+    db.sv_metrics=stayed==null?[]:[1,2,3].map(i=>({post_id:'post-'+i,measured_on:date,views:1000+i*10,likes:1,comments:0,subs_gained:0,avg_watch_sec:watch,stayed_pct:stayed}));
+    return db;
+  };
+  const cases=[
+    {stayed:null,watch:null,key:'first',measured:false,label:'最初の1秒'},
+    {stayed:58,watch:16,key:'first',measured:true,label:'最初の1秒'},
+    {stayed:82,watch:9,key:'middle',measured:true,label:'まん中'},
+    {stayed:82,watch:16,key:'again',measured:true,label:'もう一度見たくなる終わり方'},
+  ];
+  for(const c of cases){
+    const a=await open(wallFixture(c.stayed,c.watch),{'sv-opening-v2':'photo'});
+    try{
+      const w=await a.page.evaluate(()=>wallFocus());
+      assert.equal(w.key,c.key,JSON.stringify(c));assert.equal(w.measured,c.measured);assert.equal(w.n,3);
+      await a.tab('advice');
+      assert.match(await a.page.locator('#wall-focus').textContent(),new RegExp('今回の重点：'+c.label));
+      await a.page.locator('#prompt-build').click();
+      await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
+      const p=await a.page.locator('#prompt-out').inputValue();
+      assert.ok(p.indexOf('## 1,000回の先へ（今回の重点）')>p.indexOf('## これまでの結果から決めたこと')&&p.indexOf('## 1,000回の先へ（今回の重点）')<p.indexOf('## 今回の型'),'the focus comes right after the findings');
+      assert.ok(p.includes(`- 今回の重点：${c.label}。`));
+      // Exactly one of the three levers carries the mark; the other two are still in the prompt.
+      assert.equal(p.split('【今回の重点】').length-1,1);
+      assert.ok(p.includes(`- 【今回の重点】${c.label}：`));
+      for(const lever of ['最初の1秒：','まん中：','もう一度見たくなる終わり方：']) assert.ok(p.includes(lever),lever);
+      if(c.measured){
+        assert.ok(p.includes(`視聴を継続 ${c.stayed}%（3本・目安70%）／平均再生率 ${Math.round(c.watch/16*100)}%（3本・目安90%）`));
+      }else{
+        assert.match(p,/実写の回ではまだ0本しか記録がありません（3本から判断します）/);
+        assert.match(await a.page.locator('#wall-focus').textContent(),/Studio の「視聴を継続」と平均視聴時間を書き写すと/);
+      }
+      // Stated as a reading, not as YouTube's rule; no begging for likes; the tone and the pattern stay.
+      assert.match(p,/YouTubeは基準を公表していないので、下の目安は一般に言われる水準です/);
+      assert.match(p,/高評価・コメント・登録を、画面の文字で頼みません/);assert.match(p,/静かで急かさない語り口は変えません/);
+      // The first second: motion peaks earlier, the first line is one step larger, the material starts mid-motion.
+      assert.match(p,/0\.3〜1\.0秒に、GIFの中のいちばん目立つ動きが来るようにして/);assert.doesNotMatch(p,/動きが0\.8〜1\.5秒に来るよう/);
+      assert.match(p,/1枚目の一言だけは、一段大きく太くします（100〜124px/);
+      assert.match(p,/1コマ目は、動きがもう始まっている途中の瞬間にしてください/);
+      assert.match(p,/0\.0秒と0\.5秒のフレームで、主役の位置や形がはっきり違うか/);
+      assert.match(p,/固定コメントは別に出しません/);
+      assert.deepEqual(a.errors,[]);
+    }finally{await a.context.close();}
+  }
 });

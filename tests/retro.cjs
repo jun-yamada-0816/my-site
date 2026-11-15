@@ -5,6 +5,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const http = require("node:http");
 const os = require("node:os");
+const { applyHeaders, watchCsp } = require("./site-headers.cjs");
 
 const root = path.resolve(__dirname, "..");
 const profileId = "00000000-0000-4000-8000-000000000095";
@@ -94,6 +95,7 @@ const assets = [
     }
     try {
       const body = await fs.readFile(file);
+      applyHeaders(res, pathname);
       res.setHeader(
         "Content-Type",
         {
@@ -275,7 +277,7 @@ const assets = [
       return send([]);
     });
     context.on("page", (page) =>
-      page.on("pageerror", (error) => errors.push(error.message)),
+      (page.on("pageerror", (error) => errors.push(error.message)), watchCsp(page, errors)),
     );
     return context;
   }

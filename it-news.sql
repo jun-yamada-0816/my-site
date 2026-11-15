@@ -6,6 +6,10 @@
 --  RSS / Atom / RDF フィードを Supabase 自身が読みに行きます。
 --  YouTube 分析の sync_youtube と同じ仕組み（http 拡張）です。
 --
+--  ※ このファイルを実行し直したら、続けて admin-rpc.sql も実行してください。
+--    更新の関数を「管理者本人だけ」に絞る関所と、収集元の URL の決まり
+--    （https の、名前で引けるサイトだけ）は admin-rpc.sql が足しています。
+--
 --  ※ SQL Editor が長い関数定義を途中で切って
 --    「syntax error at end of input」を出すことがあります。
 --    そのときは ── の区切りごとに 1 つずつ実行してください。
@@ -332,8 +336,10 @@ begin
 end;
 $fn$;
 
--- 画面から呼べるのはログイン済みの本人だけにする
-revoke execute on function it_news_fetch_source(uuid) from public, anon;
+-- 画面から呼べるのはログイン済みの本人だけにする（管理者かどうかの確認は admin-rpc.sql が足す）。
+-- フィードを読みに行く本体は画面からは呼ばせない。Supabase は作った関数をログイン済みの人にも
+-- 実行できるようにするので、authenticated からも明示して外す。
+revoke execute on function it_news_fetch_source(uuid) from public, anon, authenticated;
 revoke execute on function it_news_queue_all()         from public, anon;
 revoke execute on function refresh_it_news(int)        from public, anon;
 grant  execute on function it_news_queue_all()         to authenticated;
@@ -364,7 +370,7 @@ begin
 end;
 $fn$;
 
-revoke execute on function it_news_cron() from public, anon;
+revoke execute on function it_news_cron() from public, anon, authenticated;
 
 create extension if not exists pg_cron;
 

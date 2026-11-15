@@ -7,6 +7,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const http = require("node:http");
 const os = require("node:os");
+const { applyHeaders, watchCsp } = require("./site-headers.cjs");
 
 const root = path.resolve(__dirname, "..");
 const output = process.env.TEST_OUTPUT || path.join(os.tmpdir(), "my-site-check");
@@ -33,6 +34,7 @@ const rows = [
     const file = path.resolve(root, "." + pathname);
     if (!file.startsWith(root + path.sep)) return res.writeHead(403).end();
     try {
+      applyHeaders(res, pathname);
       res.setHeader("Content-Type", file.endsWith(".html") ? "text/html; charset=utf-8" : "application/octet-stream");
       res.end(await fs.readFile(file));
     } catch { res.writeHead(404).end(); }
@@ -69,6 +71,7 @@ const rows = [
     });
     const page = await context.newPage();
     page.on("pageerror", (e) => errors.push(String(e)));
+    watchCsp(page, errors);
     await page.goto(url);
     await page.waitForFunction(() => document.getElementById("countBar").textContent !== "読み込み中…");
     return { context, page, requests, errors };

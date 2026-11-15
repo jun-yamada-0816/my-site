@@ -1,16 +1,47 @@
 {
   "functions": {
-    "api/bulletin.js": { "maxDuration": 30 }
+    "api/bulletin.js": {
+      "maxDuration": 30
+    }
   },
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Content-Security-Policy", "value": "frame-ancestors 'none'; object-src 'none'; base-uri 'self'" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=()" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+        }
+      ]
+    },
+    {
+      "source": "/((?!shorts\\.html$).*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.10/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://qnmzjwgacnfxwlbgwxcr.supabase.co wss://qnmzjwgacnfxwlbgwxcr.supabase.co; frame-src 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+        }
+      ]
+    },
+    {
+      "source": "/shorts.html",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.10/ https://cdn.tailwindcss.com/3.4.17; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://i.ytimg.com; connect-src 'self' https://qnmzjwgacnfxwlbgwxcr.supabase.co wss://qnmzjwgacnfxwlbgwxcr.supabase.co; frame-src https://www.youtube.com; form-action 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+        }
       ]
     }
   ]

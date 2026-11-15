@@ -8,11 +8,12 @@
 3. Authentication > Users で管理者アカウントを作成する（メールアドレスとパスワードを設定）。
    作ったら **Authentication > Sign In / Providers で「Allow new users to sign up」をオフ**にする。
    下のSQLの権限は「ログインしている人＝管理者」という前提なので、登録が開いていると誰でも管理者になれてしまう
-4. Project Settings > API から URL と anon key（`sb_publishable_…`）をコピーし、`index.html` の `SUPABASE_URL` と `SUPABASE_ANON_KEY` を書き換える
+4. Project Settings > API から URL と anon key（`sb_publishable_…`）をコピーし、`index.html` の `<head>` にある `window.HOSHI_CONFIG`（ほかのページは各ファイルの `SUPABASE_URL`・`SUPABASE_ANON_KEY`）と、`vercel.json` の Content-Security-Policy の `connect-src` を書き換える。**`sb_secret_…` のキーはページに書かない**（Vercel の環境変数にだけ置く）
 
 掲示板の保護：最後に `bbs-moderation.sql` を実行し、README の「BBSの公開前チェック」の設定手順に従ってください。
 
 管理者だけに絞る：すべてのSQLのあとに `admin-only.sql`（管理者のUIDを入れて）を実行してください。README の「管理者だけに絞る」を参照。
+続けて `admin-rpc.sql` を実行すると、取り込みなどの管理用の関数も管理者だけになり、YouTube の APIキーが画面から読めなくなります（README の「セキュリティの点検（2026-11-15）」）。`sync-youtube.sql`・`保存を守る.sql`・`it-news.sql` を実行し直したときは、そのあとにもう一度 `admin-rpc.sql` を実行します。
 カフェ一覧を使う場合は、そのあとに `admin-cafes.sql` を実行します。
 
 > Supabase の SQL Editor は、関数の定義を途中で区切って `syntax error at end of input` を出すことがあります。そのときは1文ずつ実行してください。
