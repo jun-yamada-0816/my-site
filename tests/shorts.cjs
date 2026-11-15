@@ -883,8 +883,8 @@ test('by default the next video is built from photoreal ChatGPT material: two st
     assert.match(p,/フォルダの部分を外してファイル名だけにします/);assert.match(p,/zipの中のほかのファイルは開かず、実行もしません/);
     assert.match(p,/素材1〜4は sozai1〜sozai4 の名前で決めます。名前がちがうときや、zipではなく1つずつ添付されたときは、内容から判断します/);
     // What the first four photoreal videos showed (2026-11-14), stated as a hypothesis, and the first line matched to who is in the picture.
-    assert.match(p,/2026-11-14の確認（19時。チャンネルページの再生数と動画のコマ画像）：実写の素材で作った回は、まだ4本です/);
-    assert.match(p,/投稿から2日たっておらず、テーマもちがうので、まだ仮説です/);assert.match(p,/一言の型「からだの感覚」と、人が写らない「物と光だけ」が組み合わさっていたためで、この組み合わせは今後は選びません/);
+    assert.match(p,/2026-11-15の確認（チャンネルページ・動画ページの再生数と、動画のコマ画像）：実写の素材で作った回は7本です/);
+    assert.match(p,/本数が少なく、テーマもちがうので、まだ仮説です/);assert.match(p,/一言の型「からだの感覚」と、人が写らない「物と光だけ」の組み合わせは選びません/);
     if(subject.body){
       assert.ok(p.includes(`今回は「${subject.name}」が写ります。1枚目の一言の行動を、その最中の${subject.body}で見せます。0.0秒のフレームに${subject.body}が写っていて`));
       assert.ok(block.includes(`- 1コマ目から、${subject.body}が画面に入っているようにしてください（あとから画面に入ってくる動きにはしないでください）。`));
@@ -1151,4 +1151,54 @@ test('the YouTube API key is written through admin-rpc.sql functions and never r
     assert.ok(!(await a.page.content()).includes(realistic),'the key is nowhere in the page');
     assert.deepEqual(a.errors,[]);
   }finally{await a.context.close();}
+});
+
+test('past 1,000 views: the prompt puts its weight where the Studio numbers of the photoreal videos are weakest, and on the first second until three are recorded', async()=>{
+  const wallFixture=(stayed,watch)=>{
+    const db=fixture();
+    db.sv_videos=[1,2,3].map(i=>({id:'video-'+i,slug:'v'+i,title:'動画'+i,produced_on:'2026-11-12',duration_sec:16,format:'写真1｜窓辺の自然光',theme:'うつ',hook_type:'数字で言い切る',note:photoNote}));
+    db.sv_posts=[1,2,3].map(i=>({id:'post-'+i,video_id:'video-'+i,platform:'youtube',posted_at:'2026-11-12T10:00:00Z',platform_video_id:'testvideo0'+i}));
+    db.sv_metrics=stayed==null?[]:[1,2,3].map(i=>({post_id:'post-'+i,measured_on:date,views:1000+i*10,likes:1,comments:0,subs_gained:0,avg_watch_sec:watch,stayed_pct:stayed}));
+    return db;
+  };
+  const cases=[
+    {stayed:null,watch:null,key:'first',measured:false,label:'最初の1秒'},
+    {stayed:58,watch:16,key:'first',measured:true,label:'最初の1秒'},
+    {stayed:82,watch:9,key:'middle',measured:true,label:'まん中'},
+    {stayed:82,watch:16,key:'again',measured:true,label:'もう一度見たくなる終わり方'},
+  ];
+  for(const c of cases){
+    const a=await open(wallFixture(c.stayed,c.watch),{'sv-opening-v2':'photo'});
+    try{
+      const w=await a.page.evaluate(()=>wallFocus());
+      assert.equal(w.key,c.key,JSON.stringify(c));assert.equal(w.measured,c.measured);assert.equal(w.n,3);
+      await a.tab('advice');
+      assert.match(await a.page.locator('#wall-focus').textContent(),new RegExp('今回の重点：'+c.label));
+      await a.page.locator('#prompt-build').click();
+      await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
+      const p=await a.page.locator('#prompt-out').inputValue();
+      assert.ok(p.indexOf('## 1,000回の先へ（今回の重点）')>p.indexOf('## これまでの結果から決めたこと')&&p.indexOf('## 1,000回の先へ（今回の重点）')<p.indexOf('## 今回の型'),'the focus comes right after the findings');
+      assert.ok(p.includes(`- 今回の重点：${c.label}。`));
+      // Exactly one of the three levers carries the mark; the other two are still in the prompt.
+      assert.equal(p.split('【今回の重点】').length-1,1);
+      assert.ok(p.includes(`- 【今回の重点】${c.label}：`));
+      for(const lever of ['最初の1秒：','まん中：','もう一度見たくなる終わり方：']) assert.ok(p.includes(lever),lever);
+      if(c.measured){
+        assert.ok(p.includes(`視聴を継続 ${c.stayed}%（3本・目安70%）／平均再生率 ${Math.round(c.watch/16*100)}%（3本・目安90%）`));
+      }else{
+        assert.match(p,/実写の回ではまだ0本しか記録がありません（3本から判断します）/);
+        assert.match(await a.page.locator('#wall-focus').textContent(),/Studio の「視聴を継続」と平均視聴時間を書き写すと/);
+      }
+      // Stated as a reading, not as YouTube's rule; no begging for likes; the tone and the pattern stay.
+      assert.match(p,/YouTubeは基準を公表していないので、下の目安は一般に言われる水準です/);
+      assert.match(p,/高評価・コメント・登録を、画面の文字で頼みません/);assert.match(p,/静かで急かさない語り口は変えません/);
+      // The first second: motion peaks earlier, the first line is one step larger, the material starts mid-motion.
+      assert.match(p,/0\.3〜1\.0秒に、GIFの中のいちばん目立つ動きが来るようにして/);assert.doesNotMatch(p,/動きが0\.8〜1\.5秒に来るよう/);
+      assert.match(p,/1枚目の一言だけは、一段大きく太くします（100〜124px/);
+      assert.match(p,/1コマ目は、動きがもう始まっている途中の瞬間にしてください/);
+      assert.match(p,/0\.0秒と0\.5秒のフレームで、主役の位置や形がはっきり違うか/);
+      assert.match(p,/固定コメントは別に出しません/);
+      assert.deepEqual(a.errors,[]);
+    }finally{await a.context.close();}
+  }
 });
