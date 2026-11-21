@@ -502,9 +502,10 @@
         <li><span>02</span>プロンプトをコピー</li>
         <li><span>03</span>使いたいAIに渡す</li>
       </ol>
-      <p class="prompt-note">生成するたびに、<b>題材・切り口・最初の一言の型・展開・締め・撮り方・写るもの</b>を、まだ使っていない組み合わせ（型）に変えます。
-        題材は20のテーマに160個、切り口8・一言の型12・展開8・締め6・撮り方15・写るもの4。同じ題材や同じ物のくり返しにはしません。
-        型は<b>型番</b>（例：T011-A3-N2-S1）で記録するので、本数がたまると、どの題材・どの型が伸びたかを下の「何が効いているか」で項目ごとに比べられます。</p>
+      <p class="prompt-note">生成するたびに、<b>題材・切り口・最初の一言の型・展開・締め・撮り方・写るもの・伸ばし方</b>を、まだ使っていない組み合わせ（型）に変えます。
+        題材は20のテーマに160個、切り口8・一言の型12・展開8・締め6・撮り方15・写るもの4・伸ばし方8。同じ題材や同じ物のくり返しにはしません。
+        <b>伸ばし方</b>は、1,000回の先へ広げるための仕掛けです（送りたくなる・自分の数で返せる・短く見切る・二度見の細部・答えは最後の2秒・今の季節・そばにいる人にも届く・題名と表紙の一コマ）。
+        型は<b>型番</b>（例：T011-A3-N2-S1-G4）で記録するので、本数がたまると、どの題材・どの型が伸びたかを下の「何が効いているか」で項目ごとに比べられます。</p>
       <p class="prompt-note"><b>映像は、実写に見える素材から作ります。</b>ChatGPT（Images 2.6）に、実写の写真のようなアニメーションGIF 2つ（冒頭と最後）と写真2枚を作ってもらい、
         受け取ったAI（Claude・Codex）が、カメラで撮った映像に見えるように動かして、文字と音をつけます。
         受け取るファイルは<b>音入りの mp4 1本だけ</b>。ほかに返ってくるのは、投稿に使う題名・説明文と、登録用の1行（文字だけ）です。
@@ -1051,6 +1052,8 @@ const AXES = [
   { key:'angle',   name:'切り口',         of: s => patternOf(s.v)?.angle.name },
   { key:'narr',    name:'展開の型',       of: s => patternOf(s.v)?.narr.name },
   { key:'subj',    name:'写るもの',       of: s => patternOf(s.v)?.subj.name },
+  // 2026-11-21〜：型番の末尾の -G。それより前の型番の回は入らない。
+  { key:'growth',  name:'伸ばし方',       of: s => patternOf(s.v)?.growth?.name },
   { key:'hour',    name:'投稿した時間帯', of: s => hourBucket(s.postedAt) },
   { key:'weekday', name:'投稿した曜日',   of: s => s.postedAt ? WEEKDAYS[new Date(s.postedAt).getDay()]+'曜' : null },
 ];
@@ -2697,15 +2700,86 @@ const SUBJECTS = [
     ask:'人はひざから下だけにしてください（靴下か素足、無地の部屋着のすそ。4つとも同じ服）。顔や上半身は写さないでください。' },
 ];
 
-const PATTERN_CODE = /T(\d{3})-A(\d{1,2})-N(\d{1,2})-S(\d)/;
-const patternCode = (topic, angle, narr, subj) => `T${String(topic.id).padStart(3,'0')}-A${angle.id}-N${narr.id}-S${subj.id}`;
+/* 伸ばし方（2026-11-21〜）＝1,000回の先へ広げるために、今回いちばん力を入れる仕掛け。型番の G1〜G8。
+   実写の回が毎回1,000回前後まで届くようになった（運営者の確認、2026-11-21）。その先は、見た人の反応
+   （流さずに見たか・どれだけ見たか・もう一度見たか・送ったか・何か書いたか・登録したか）で決まる、と読んだ（仮説）。
+   どの反応が足りないかは、まだ分からない。そこで毎回ちがう仕掛けを1つ選び、型番に残して、どれが1,000回の先へ
+   届いたかを「何が効いているか」で比べる。選び方は、ほかの項目と同じく「まだ使った回数の少ないもの」から。
+   どの仕掛けも、静かな語り口・煽らない・画面の文字で高評価やコメントや登録を頼まない、の決まりの中で行う。
+   aim＝どの反応を増やす仮説か。how＝絵コンテで先に決めること（指示文に箇条書きで入る）。
+   ask＝実写の回に ChatGPT へ頼む素材に足す1行。seconds＝尺を変える仕掛けだけ（探索の回のみ）。
+   番号は記録に使うので、並びを変えたり途中に足したりしないこと（足すときは末尾に）。 */
+const GROWTH_LEVERS = [
+  { id:1, name:'送りたくなる', aim:'共有（見た人が、だれかに送る）',
+    how:['最後の1枚を、見た人が家族や友だちに「これ、私のこと」と黙って送れる一言にします。病名・専門の言葉・説明を使わず、送られた人が読んで状態が分かる言い切りにします。',
+      '題名も、送られた人が読んで意味が分かる言葉にします（チャンネルを知らない人が読む前提）。',
+      '「送ってね」「シェアして」とは、画面でも説明文でも頼みません。送りたくなるかどうかは、言葉の正確さだけで決まります。'] },
+  { id:2, name:'自分の数で返せる', aim:'コメント（見た人が、自分のことを一言書く）',
+    how:['1枚目か2枚目に、見た人が「私は◯回」「私は◯時」と自分の数で返したくなる具体的な数を1つ入れます（回数・時刻・日数・何歩・何通など）。暮らしの中で本当にありそうな数にし、誇張しません。',
+      '数は画にも出します（アラームの回数なら、止めた回数ぶんの小さな変化を画で見せる、など）。',
+      '画面ではコメントを頼みません。説明文の「答えやすい問い」を、その数を聞く形にします（例「あなたは何回目で起きられますか」のように、数ひとつで答えられる問い）。'] },
+  { id:3, name:'短く見切る', aim:'もう一周（最後まで見て、そのまま2周目に入る）',
+    how:['尺を9〜13秒に縮め、テロップは3〜4枚にします（ほかの章の「4〜6枚」より優先）。言うことを削り、間は残します。',
+      '最後のフレームの構図・明るさ・音を、0.0秒のフレームにできるだけ近づけ、2周目に切れ目なく入れるようにします（テロップの言葉は締めの型のまま。画と音だけをつなげます）。',
+      'まん中の出来事は、尺が短いぶん、全体の4〜6割に1つだけにします。'],
+    ask:'素材4は、素材1と同じカメラ位置・同じ構図で撮ってください。素材4の最後のコマが、素材1の1コマ目にそのままつながるようにします（動画の最後から最初へ、切れ目なく戻すためです）。',
+    seconds:'9〜13秒' },
+  { id:4, name:'二度見の細部', aim:'もう一度見る（最後で意味が分かり、最初から見直す）',
+    how:['1枚目の画の中に、最後のテロップを読んで初めて意味が分かる小さな細部を、0.0秒から置いておきます（例：カレンダーの同じ曜日だけについた印、二つ並んだままのカップ、玄関に出したままの靴。題材に合わせて新しく考えます）。',
+      '途中では、その細部に触れません。最後の1枚で、その細部を言葉で指します（「最初から、そこにあった」と分かる一言）。',
+      '細部は小さすぎず、2回目に見たとき一目で見つかる大きさにします（主役の近く、文字に重ならない所）。'],
+    ask:'素材1と素材4の両方に、同じ小さな細部【何か。どこにあるか】が、同じ位置に写るようにしてください（読める文字にはしないでください）。' },
+  { id:5, name:'答えは最後の2秒', aim:'最後まで見る（平均視聴時間をのばす）',
+    how:['1枚目の引っかかり（なぜ？ このあとどうなる？）の答えを、最後の2秒まで言わず、見せません。',
+      '2枚目からのテロップは、答えに一歩ずつ近づきます（ただし途中で答えを言わない）。1枚ごとに「あと少しで分かる」と感じる情報を1つずつ足します。',
+      '最後の画の変化と、答えの一言を、同じ瞬間に出します。答えのあとは1.5秒以内で終えます。'] },
+  { id:6, name:'今の季節', aim:'いま見る理由（同じ時期に同じことをしている人に届く）',
+    how:['投稿する時期の暮らしの出来事を、場面の光・小物・服・音に入れます（下の「今の時期」から1つ選ぶか、同じ時期の別のことを考えます）。',
+      '題名か1枚目の一言にも、その時期の言葉を1つだけ入れます（「12月」「年末」「寒くなって」など）。題材そのものは変えず、題材がその時期に起きている場面にします。',
+      'お酒・初詣の人混み・イルミネーションの点滅など、描かないものの決まりに触れる季節の物は使いません。'],
+    ask:'今の時期の暮らしの手がかり【何か。例：出しっぱなしの厚手の上着、早い日暮れの光】を、4つの素材のどれにも自然に写してください。' },
+  { id:7, name:'そばにいる人にも届く', aim:'見る人を広げる（当事者のまわりの人にも見られる）',
+    how:['主役は当事者のまま、家族・同僚・友だちが見ても「そういうことだったのか」と分かる1枚を入れます。外から見える姿（なまけている・元気そう・返事が遅い）と、内側で起きていることの差を、事実だけで見せます。',
+      '見ている人を責めず、説教せず、「〜してあげて」「わかってほしい」と頼みません。分かる人には分かる、という静けさのまま置きます。',
+      '題名は当事者の行動の言い切りのまま（「家族へ」「周りの人へ」にしません）。'] },
+  { id:8, name:'題名と表紙の一コマ', aim:'見つけてもらう（検索・チャンネルページ・関連から入ってくる）',
+    how:['題名に、同じ状態の人がスマホで検索しそうな暮らしの言葉を、自然な言い切りの中に1つ入れます（例「お風呂に入れない」「朝起きられない」「返信できない」。題材に合う言葉を新しく選びます）。ハッシュタグの言葉と重ねて構いません。',
+      '動画の中に、表紙にする一コマを作ります：1枚目の一言（大きく太く）と主役が一目で分かり、画面全体がほかのコマより少し明るい瞬間。0.0〜3秒の中に置きます。',
+      '返すものに「表紙にするコマの秒数」（例：1.2秒）を足します。スマホのYouTubeアプリで投稿するとき、動画の中のコマを表紙（サムネイル）に選べます。'] },
+];
+// 今の時期の暮らしの出来事（伸ばし方「今の季節」で使う）。月は日本時間。描かないもの（お酒・点滅など）は入れない。
+const SEASON_NOTES = {
+  1:'正月休みの終わり・仕事始め・帰省のあと・いちばん寒い朝・暖房の前から動けない',
+  2:'寒さが続く・日が少し長くなる・乾燥・年度末の手前のあわただしさ',
+  3:'年度末・異動や卒業の知らせ・寒暖差・花粉',
+  4:'新年度・新しい人間関係・まわりだけが新しく始まる感じ・花見の話題',
+  5:'大型連休のあと・連休明けの朝・急に暑い日',
+  6:'梅雨・湿気・洗濯物が乾かない・低気圧',
+  7:'暑さ・冷房の部屋から出られない・夏休みの予定の話',
+  8:'お盆・帰省・猛暑・夜も暑い・休み明けが近い',
+  9:'連休・季節の変わり目・台風・夏の疲れ',
+  10:'衣替え・朝晩の冷え・日が短くなり始める',
+  11:'日暮れが早い・急に寒くなる・暖房をつけるか迷う・年末の予定が入り始める',
+  12:'年末・大掃除・年賀状・帰省の予定・仕事納め・街のにぎやかさと部屋の静けさ',
+};
+const seasonOf = (date = new Date()) => {
+  const m = Number(new Intl.DateTimeFormat('en-US', { timeZone:'Asia/Tokyo', month:'numeric' }).format(date));
+  return { month:m, note:SEASON_NOTES[m] || '' };
+};
+
+const PATTERN_CODE = /T(\d{3})-A(\d{1,2})-N(\d{1,2})-S(\d)(?:-G(\d{1,2}))?/;
+// 型番の末尾の -G は 2026-11-21 から。それより前の型番（-G なし）も、そのまま読める。
+const patternCode = (topic, angle, narr, subj, growth = null) =>
+  `T${String(topic.id).padStart(3,'0')}-A${angle.id}-N${narr.id}-S${subj.id}` + (growth ? `-G${growth.id}` : '');
 // 知らない番号は型として扱わない（手で打ち間違えた型番を、別の題材として数えない）。
 function decodePattern(code){
   const m = String(code || '').match(PATTERN_CODE);
   if (!m) return null;
   const topic = TOPICS.find(t => t.id === Number(m[1])), angle = ANGLES.find(a => a.id === Number(m[2]));
   const narr = NARRATIVES.find(n => n.id === Number(m[3])), subj = SUBJECTS.find(s => s.id === Number(m[4]));
-  return topic && angle && narr && subj ? { code:patternCode(topic, angle, narr, subj), topic, angle, narr, subj } : null;
+  const growth = m[5] == null ? null : GROWTH_LEVERS.find(g => g.id === Number(m[5])) || false;
+  return topic && angle && narr && subj && growth !== false
+    ? { code:patternCode(topic, angle, narr, subj, growth), topic, angle, narr, subj, growth } : null;
 }
 // 動画の型は、メモの中の型番（【型:T011-A3-N2-S1】）で持つ（列を足さずに済むため）。
 const patternOf = v => decodePattern(v?.note);
@@ -2737,13 +2811,13 @@ function patternRows(history){
     const p = patternOf(v);
     if (!p) return;
     known.add(v.slug);
-    rows.push({ theme:p.topic.theme, topic:p.topic.id, angle:p.angle.id, narr:p.narr.id, subj:p.subj.id,
+    rows.push({ theme:p.topic.theme, topic:p.topic.id, angle:p.angle.id, narr:p.narr.id, subj:p.subj.id, growth:p.growth?.id ?? null,
       hook:v.hook_type || null, ending:v.cta_type || null });
   });
   history.recent.forEach(h => {
     const p = decodePattern(h.code);
     if (!p || known.has(h.slug)) return;
-    rows.push({ theme:p.topic.theme, topic:p.topic.id, angle:p.angle.id, narr:p.narr.id, subj:p.subj.id,
+    rows.push({ theme:p.topic.theme, topic:p.topic.id, angle:p.angle.id, narr:p.narr.id, subj:p.subj.id, growth:p.growth?.id ?? null,
       hook:h.hook || null, ending:h.ending || null });
   });
   return rows;
@@ -2762,10 +2836,12 @@ function choosePattern(history, { photo = true, fixed = {}, avoid = {} } = {}){
   const ending = fixed.ending || pickBalanced(ENDINGS, e => e.name, col('ending'), seed+'ending', [...col('ending').slice(-1), avoid.ending].filter(Boolean));
   // 体のことを言う一言の型（body）は、人が写らない「物と光だけ」と組み合わせない（一言を画にできないため）。
   const subj = !photo ? SUBJECTS[0] : fixed.subj || pickBalanced(SUBJECTS, s => s.id, col('subj'), seed+'subj', hook.body ? [SUBJECTS[0].id] : []);
-  return { code:patternCode(topic, angle, narr, subj), topic, angle, narr, subj, hook, ending,
+  // 伸ばし方（2026-11-21〜）も、まだ使った回数の少ないものから。直前の回と同じものは続けない。
+  const growth = fixed.growth || pickBalanced(GROWTH_LEVERS, g => g.id, col('growth'), seed+'growth', col('growth').slice(-1));
+  return { code:patternCode(topic, angle, narr, subj, growth), topic, angle, narr, subj, growth, hook, ending,
     tried:rows.length, topicsUsed:new Set(col('topic')).size };
 }
-const PATTERN_COUNT = TOPICS.length * ANGLES.length * HOOK_TYPES.length * NARRATIVES.length * ENDINGS.length;
+const PATTERN_COUNT = TOPICS.length * ANGLES.length * HOOK_TYPES.length * NARRATIVES.length * ENDINGS.length * GROWTH_LEVERS.length;
 /* テーマ別の実績（参考として指示文に出す）。投稿から2日以降の記録がある直近120日の回で、2本以上あるテーマ。
    次のテーマは、これでは決めない（伸びたテーマだけを選び続けて、3つのテーマのくり返しになったため）。 */
 function themeRanking(published){
@@ -2858,7 +2934,7 @@ function stylePlan(mode, setting = 'photo'){
     const exampleHook = HOOK_TYPES.find(h => h.name === example.v.hook_type) || null;
     const exampleEnding = ENDINGS.find(e => e.name === example.v.cta_type) || null;
     const pattern = choosePattern(history, { photo,
-      fixed:{ theme:example.v.theme || null, angle:was?.angle, narr:was?.narr, subj:was?.subj,
+      fixed:{ theme:example.v.theme || null, angle:was?.angle, narr:was?.narr, subj:was?.subj, growth:was?.growth,
         hook:axis === '冒頭の掴み' ? null : exampleHook, ending:axis === '締めの誘導' ? null : exampleEnding },
       avoid:{ hook:axis === '冒頭の掴み' ? exampleHook?.name : null, ending:axis === '締めの誘導' ? exampleEnding?.name : null } });
     const themeFixed = pattern.topic.theme === example.v.theme;
@@ -2893,7 +2969,7 @@ function stylePlan(mode, setting = 'photo'){
       : '題材・切り口・最初の一言の型・展開・締め・'+(photo ? '撮り方・写るもの' : '画風')+'を、毎回ちがう組み合わせにします。まだ使った回数の少ないものから選び、好調だった過去の型にも自動では戻りません。',
   };
 }
-const patternBrief = p => `題材：${p.topic.seed}（テーマ：${p.topic.theme}・場面：${p.topic.area}）／切り口：${p.angle.name}／最初の一言の型：${p.hook.name}／展開：${p.narr.name}／締め：${p.ending.name}／写るもの：${p.subj.name}`;
+const patternBrief = p => `題材：${p.topic.seed}（テーマ：${p.topic.theme}・場面：${p.topic.area}）／切り口：${p.angle.name}／最初の一言の型：${p.hook.name}／展開：${p.narr.name}／締め：${p.ending.name}／写るもの：${p.subj.name}${p.growth ? '／伸ばし方：'+p.growth.name : ''}`;
 
 const groupStatus = g => !g.promising ? '判断保留・別の型も継続'
   : g.reproducible ? '手応えあり・再検証候補' : '手応えあり（実写の回のため、コードで描く制作では再検証しない）';
@@ -2905,12 +2981,13 @@ function renderTestPlan(plan = experimentPlan()){
     <p class="text-xs mt-2"><b>テーマ</b>：${esc(plan.theme)} ／ <b>題材</b>：${esc(p.topic.seed)}（場面：${esc(p.topic.area)}）</p>
     <p class="text-xs mt-2"><b>切り口</b>：${esc(p.angle.name)} ／ <b>最初の一言の型</b>：${esc(plan.hook?.name)}（${esc(plan.hook?.how)}）</p>
     <p class="text-xs mt-2"><b>展開</b>：${esc(p.narr.name)} ／ <b>締め</b>：${esc(p.ending.name)} ／ <b>写るもの</b>：${esc(p.subj.name)}</p>
+    <p class="text-xs mt-2" id="growth-lever"><b>伸ばし方（1,000回の先へ）</b>：${esc(p.growth?.name || '指定なし')}${p.growth ? `（ねらう反応：${esc(p.growth.aim)}）` : ''}</p>
     <p class="text-xs mt-2"><b>作り方</b>：${esc(plan.opening.label)}。${esc(plan.opening.reason)}${photo ? ' 制作後は、映像の制作手法を「ChatGPTの実写の画像とGIF」にしてください。' : ''}</p>
     <p class="text-xs mt-2"><b>${photo ? '撮り方' : '画風'}</b>：${esc(plan.format)}。${esc(plan.brief)}</p>
     <p class="text-xs mt-2">${plan.mode === 'explore'
-      ? `型は、題材${TOPICS.length}個 × 切り口${ANGLES.length} × 一言の型${HOOK_TYPES.length} × 展開${NARRATIVES.length} × 締め${ENDINGS.length}（${num(PATTERN_COUNT)}通り）に、撮り方${PHOTO_RECIPES.length}種と写るもの${SUBJECTS.length}種を掛け合わせます。これまでに型を決めた回は${num(p.tried)}本（使った題材 ${p.topicsUsed}/${TOPICS.length}）。どの項目が効いたかは、下の「何が効いているか」で項目ごとに比べます。`
+      ? `型は、題材${TOPICS.length}個 × 切り口${ANGLES.length} × 一言の型${HOOK_TYPES.length} × 展開${NARRATIVES.length} × 締め${ENDINGS.length} × 伸ばし方${GROWTH_LEVERS.length}（${num(PATTERN_COUNT)}通り）に、撮り方${PHOTO_RECIPES.length}種と写るもの${SUBJECTS.length}種を掛け合わせます。これまでに型を決めた回は${num(p.tried)}本（使った題材 ${p.topicsUsed}/${TOPICS.length}）。どの項目が効いたかは、下の「何が効いているか」で項目ごとに比べます。`
       : `今回は「${esc(plan.axis)}」だけを変え、ほかは参考にした回にそろえます。2本続けたら別の型に戻ります。`}</p>
-    <p class="text-xs mt-2" id="wall-focus"><b>1,000回の先へ・今回の重点</b>：${esc(wallFocusNote())}</p>
+    <p class="text-xs mt-2" id="wall-focus"><b>1,000回の先へ・今回の重点</b>：${esc(wallFocusNote(p.tried))}</p>
     <p class="text-xs mt-2">制作後は、返ってきた<b>記録用の1行</b>を「動画」タブの「記録用の1行から入力する」に貼ると、型番・テーマ・冒頭の掴み・形式・締めがまとめて入ります。生成の履歴と投稿の実績は別です。生成だけでは下の投稿本数や成績には数えません。</p>
   </div>`;
   $('#test-matrix').innerHTML = plan.groups.length ? plan.groups.map(g => `<div class="text-xs mb-3">
@@ -3725,47 +3802,67 @@ function usedTitles(limit = 200){
    高評価は1本に0〜2。ショートの「視聴回数」は2025年3月から、再生が始まった回数（すぐスワイプされた回も含む）。
    → 読み（仮説）：最初の約1,000回ぶんは表示されるようになったが、その人たちの反応が次の配信に進む水準に届いていない。
    どこが足りないかは、Studio の「視聴を継続」と平均視聴時間で分かる。記録があれば、いちばん弱いところを今回の重点にする。
-   目安の数字は、YouTube が公表している基準ではない（一般に言われる水準）。3本たまるまでは決めつけず、最初の1秒を重点にする。 */
+   目安の数字は、YouTube が公表している基準ではない（一般に言われる水準）。3本たまるまでは決めつけない（2026-11-21〜は3つを順に重点にする）。 */
 const WALL_GUIDE = { stayed:70, retention:90, min:3 };
-function wallFocus(){
+const WALL_KEYS = ['first', 'middle', 'again'];
+const WALL_LABELS = { first:'最初の1秒', middle:'まん中', again:'もう一度見たくなる終わり方' };
+/* turn＝これまでに型を決めた回の数。記録が3本たまるまでは、3つを回ごとに順に重点にする
+   （2026-11-15〜11-20 は「最初の1秒」に固定していたが、Studio の数字を書き写さないと、ずっと同じ重点のままだった）。
+   記録がたまったら、いちばん弱いところ。 */
+function wallFocus(turn = 0){
   const rows = allStats().list.filter(s => s.postedAt && productionMethod(s.v) === 'photo');
   const of = key => rows.map(s => s[key]).filter(v => typeof v === 'number' && isFinite(v));
   const stayed = of('stayed'), retention = of('retention'), views = of('views');
   const out = { n:rows.length, viewsN:views.length, views:views.length ? median(views) : null,
     stayedN:stayed.length, stayed:stayed.length ? median(stayed) : null,
     retentionN:retention.length, retention:retention.length ? median(retention) : null };
-  out.key = out.stayedN < WALL_GUIDE.min ? 'first'            // まだ分からない → 最初の1秒
+  out.measured = out.stayedN >= WALL_GUIDE.min;
+  const n = Number.isSafeInteger(turn) && turn > 0 ? turn : 0;
+  out.key = !out.measured ? WALL_KEYS[n % 3]                    // まだ分からない → 回ごとに順に
     : out.stayed < WALL_GUIDE.stayed ? 'first'                 // 冒頭で流されている
     : out.retentionN < WALL_GUIDE.min ? 'middle'               // 冒頭は足りている。見続けた長さはまだ分からない
     : out.retention < WALL_GUIDE.retention ? 'middle'          // 途中で離れている
     : 'again';                                                 // どちらも足りている → もう一度見たくなる終わり方
-  out.measured = out.stayedN >= WALL_GUIDE.min;
-  out.label = { first:'最初の1秒', middle:'まん中', again:'もう一度見たくなる終わり方' }[out.key];
+  out.label = WALL_LABELS[out.key];
   return out;
 }
 // 画面（次に作る動画）に出す1〜2文。何を見て重点を決めたかと、数字を入れると変わることを伝える。
-function wallFocusNote(){
-  const w = wallFocus();
-  if (!w.measured) return `${w.label}。実写の回の「視聴を継続」が${WALL_GUIDE.min}本たまるまでは、いちばん手前の最初の1秒を重点にします（いま${w.stayedN}本）。「数字を入力」タブで、Studio の「視聴を継続」と平均視聴時間を書き写すと、いちばん弱いところに切り替わります。`;
+function wallFocusNote(turn = 0){
+  const w = wallFocus(turn);
+  if (!w.measured) return `${w.label}。実写の回の「視聴を継続」が${WALL_GUIDE.min}本たまるまでは、3つ（最初の1秒・まん中・終わり方）を回ごとに順に重点にします（いま${w.stayedN}本）。「数字を入力」タブで、Studio の「視聴を継続」と平均視聴時間を書き写すと、いちばん弱いところに切り替わります。`;
   return `${w.label}。実写の回の中央値は、視聴を継続 ${dec(w.stayed,0)}%（${w.stayedN}本・目安${WALL_GUIDE.stayed}%）、平均再生率 ${w.retention == null ? '未記録' : dec(w.retention,0)+'%'}（${w.retentionN}本・目安${WALL_GUIDE.retention}%）。目安は YouTube が公表した基準ではありません。`;
 }
-function wallPromptLines(photo){
-  const w = wallFocus();
-  const L = ['## 1,000回の先へ（今回の重点）',
-    '- 2026-11-15の確認（チャンネルページと動画ページ）：実写で体の一部が写る回は、投稿から18〜41時間たった4本がそろって1,002〜1,171回でした（歯ブラシ1,066回・「すみません」1,002回・社員証1,171回・靴下1,028回）。どれも投稿から5〜24時間で約1,000回に届き、そのあとはほとんど増えていません（「すみません」は5時間で904回 → 24時間で1,002回、社員証は11時間で1,141回 → 30時間で1,171回）。高評価は1本に0〜2でした。',
-    '- ショートの視聴回数は、再生が始まった回数です（すぐスワイプされた回も数えます。2025年3月から）。つまり、最初の約1,000回ぶんは表示されるようになったけれど、その先には広がっていません。',
-    '- 読み（仮説）：表示された人のうち、流さずに見た人の割合と、見続けた長さが、次に広げてもらえる水準に届いていない。YouTubeは基準を公表していないので、下の目安は一般に言われる水準です。'];
-  if (w.measured) {
-    L.push(`- Studioの記録（実写の回・動画ごとの最新値の中央値）：視聴を継続 ${dec(w.stayed,0)}%（${w.stayedN}本・目安${WALL_GUIDE.stayed}%）／平均再生率 ${w.retention == null ? '未記録' : dec(w.retention,0)+'%'}（${w.retentionN}本・目安${WALL_GUIDE.retention}%）／再生 ${w.views == null ? '未記録' : num(Math.round(w.views))+'回'}（${w.viewsN}本）。`);
-  } else {
-    L.push(`- Studioの「視聴を継続」は、実写の回ではまだ${w.stayedN}本しか記録がありません（${WALL_GUIDE.min}本から判断します）。どこが弱いかはまだ分からないので、いちばん手前の「最初の1秒」を重点にします。`);
+/* 1,000回の先へ（2026-11-15〜、2026-11-21 に伸ばし方を追加）。
+   11-15：実写で体の一部が写る4本が、そろって1,002〜1,171回で止まった。
+   11-21：実写の回が、ほぼ毎回1,000回前後まで届くようになった（運営者の確認）。次は、その先へ広げる。
+   どの反応が足りないかは分からないので、伸ばし方（GROWTH_LEVERS）を毎回変えて比べる。下限の3つ（最初の1秒・まん中・終わり方）は毎回守る。 */
+function wallPromptLines(photo, p = null){
+  const w = wallFocus(p?.tried || 0), g = p?.growth;
+  const L = ['## 1,000回の先へ（今回の伸ばし方と重点）',
+    '- 2026-11-21の時点で、実写の回は、ほぼ毎回1,000回前後まで届くようになりました（運営者の確認）。2026-11-15に確かめた4本は1,002〜1,171回で、どれも投稿から5〜24時間で約1,000回に届き、そのあとはほとんど増えていません。高評価は1本に0〜2でした。',
+    '- ショートの視聴回数は、再生が始まった回数です（すぐスワイプされた回も数えます。2025年3月から）。最初の約1,000回ぶんは、毎回表示されるようになりました。次は、その先へ広げることです。',
+    '- 読み（仮説）：その先に広がるかは、表示された人の反応で決まります。反応には種類があります：流さずに見た／長く見た／もう一周見た／だれかに送った／一言書いた／登録した。どれが足りないのかは、まだ分かりません。YouTubeは基準を公表していないので、下の目安は一般に言われる水準です。',
+    `- そこで、毎回ちがう「伸ばし方」を1つ選んで、その仕掛けに力を入れます（${GROWTH_LEVERS.length}つを、まだ使った回数の少ないものから回します）。型番の末尾（-G）に残し、どの伸ばし方の回が1,000回の先へ届いたかを、同じ投稿後日数で比べます。`];
+  if (g) {
+    L.push(`### 今回の伸ばし方：${g.name}（G${g.id}）`);
+    L.push(`- ねらう反応：${g.aim}。`);
+    g.how.forEach(x => L.push('- '+x));
+    if (g.id === 6) { const season = seasonOf(); L.push(`- 今の時期（${season.month}月・日本）：${season.note}。`); }
+    L.push('- 伸ばし方は、絵コンテでいちばん先に決めます。型（題材・切り口・一言の型・展開・締め・写るもの）と、静かで急かさない語り口は変えません。伸ばし方と型が噛み合いにくいときも、型は変えず、場面の選び方と言葉で伸ばし方を実現します（尺とテロップの枚数を変える伸ばし方だけは、ほかの章より優先します）。');
+    L.push('- 仕掛けの中身（数・細部・季節の物・言葉）は、下の「過去の題名」や投稿メモと同じものにせず、今回の題材で新しく作ってください。');
   }
-  L.push(`- 今回の重点：${w.label}。下の3つのうち、重点のものを絵コンテでいちばん先に決め、残りの2つも守ります。型（題材・切り口・一言の型・展開・締め・写るもの）と、静かで急かさない語り口は変えません。`);
+  L.push('### 毎回守る下限（3つ）');
+  if (w.measured) {
+    L.push(`- Studioの記録（実写の回・動画ごとの最新値の中央値）：視聴を継続 ${dec(w.stayed,0)}%（${w.stayedN}本・目安${WALL_GUIDE.stayed}%）／平均再生率 ${w.retention == null ? '未記録' : dec(w.retention,0)+'%'}（${w.retentionN}本・目安${WALL_GUIDE.retention}%）／再生 ${w.views == null ? '未記録' : num(Math.round(w.views))+'回'}（${w.viewsN}本）。いちばん弱いところを重点にします。`);
+  } else {
+    L.push(`- Studioの「視聴を継続」は、実写の回ではまだ${w.stayedN}本しか記録がありません（${WALL_GUIDE.min}本から判断します）。どこが弱いかはまだ分からないので、3つを回ごとに順に重点にします。`);
+  }
+  L.push(`- 今回の重点：${w.label}。重点のものを伸ばし方の次に決め、残りの2つも守ります。`);
   const mark = key => w.key === key ? '【今回の重点】' : '';
   L.push(`- ${mark('first')}最初の1秒：0.0秒のフレームで、行動がもう始まっています（${photo ? '体の一部が動きの途中にある' : '物や光が動きの途中にある'}。構えているだけ・置いてあるだけの画から始めない）。いちばん目立つ動きは0.3〜1.0秒に置きます。1枚目の一言は、ほかのテロップより一段大きく太くして、0.5秒で読み取れるようにします。音は静かなままで構いません。`);
   L.push(`- ${mark('middle')}まん中：尺の4〜6割のところに、続きを見る理由をもう1つ置きます。1枚目の見え方が変わる一言（「理由」ではなく、知らなかった事実がひとつ足される）と、それに合わせた画の変化（${photo ? '素材の切り替えか、カメラの寄り' : 'カットの切り替えか、カメラの寄り'}）を同じ瞬間に起こします。同じ画・同じテロップのまま4秒を超えて止まる区間を作りません。`);
   L.push(`- ${mark('again')}もう一度見たくなる終わり方：最後の画の小さな変化は、最後の1.5〜2.5秒の中で起こし、起きてすぐ終わらせます（変化のあとを長く見せない）。最後のテロップは、1枚目の一言をもう一度読むと意味が少し変わって見える一言にします。締めの型の決まりはそのまま守ります。`);
-  L.push('- 見せ方で引きつけても、煽り・大げさな言葉・つらさの見世物にはしません。高評価・コメント・登録を、画面の文字で頼みません。');
+  L.push('- 見せ方で引きつけても、煽り・大げさな言葉・つらさの見世物にはしません。高評価・コメント・登録・共有を、画面の文字で頼みません。');
   return L;
 }
 
@@ -3780,6 +3877,8 @@ function wallPromptLines(photo){
 const materialZipName = slug => String(slug).replace(/[^A-Za-z0-9_-]/g, '') + '_sozai.zip';
 function photoRequestLines(plan, slug){
   const r = plan.recipe, subj = plan.pattern.subj, zip = materialZipName(slug);
+  // 伸ばし方に素材が要るとき（同じ細部・季節の手がかり・最後から最初へつながる構図）は、ChatGPTへの指示文にも足す。
+  const growth = plan.pattern.growth || null;
   return [
     '## ChatGPTに頼む素材（1回目：ChatGPTに渡す指示文を書きます）',
     '- 素材は4つです。素材1＝冒頭のアニメーションGIF（0.0秒から3〜4秒）、素材2・3＝あいだの場面の写真（静止画）、素材4＝最後の場面のアニメーションGIF（小さな変化が起きる瞬間）。4つとも、同じ場所・同じ時間帯・同じ光で撮った実写に見えるようにそろえます。',
@@ -3800,6 +3899,7 @@ function photoRequestLines(plan, slug){
     `- 撮り方：${r.look}`,
     `- 色：${r.palette}`,
     `- 写るもの：${subj.ask}`,
+    ...(growth?.ask ? ['- '+growth.ask] : []),
     '- 実際に人が暮らしている日本の住まいの生活感を出してください（使いこんだ物、少しの散らかり、生活の跡）。モデルルームや広告写真のように整えすぎないでください。',
     '- スマホやカメラでそのまま撮ったような自然な写りにしてください（その場にある光だけ、わずかなノイズ、ピントの外はぼける）。彩度・コントラスト・シャープさを上げすぎず、HDR風や、演出の強すぎる光にしないでください。',
     '- 縦長（9:16）。できなければ縦長の2:3で。4つとも同じ縦横比にしてください。',
@@ -3876,6 +3976,10 @@ function buildPrompt(plan = experimentPlan()){
   // 実写の回（2026-11-12〜）は、ChatGPT の実写の画像とGIFを素材にする。コードだけの回は、画風のとおりにコードで描く。
   const photo = plan.opening?.mode === 'photo';
   const look = photo ? '撮り方' : '画風';
+  // 伸ばし方が尺を決めるのは探索の回だけ（再検証の回は、参考回の尺にそろえる）。
+  const growth = p.growth || null;
+  const seconds = plan.mode === 'explore' && growth?.seconds || plan.seconds;
+  const short = plan.mode === 'explore' && !!growth?.seconds;
   const L = [];
   L.push('あなたは「星の海」のYouTubeショート動画を企画し、映像と音をコードで作ってmp4に書き出す担当です。次の1本を制作してください。');
   L.push('企画案だけで終わらず、音入りのmp4を1本完成させ、ダウンロードできる形で渡してください。候補の動画を全部作る必要はありません。');
@@ -3920,7 +4024,7 @@ function buildPrompt(plan = experimentPlan()){
   L.push('- 型は検証のためのものです。指定された型を、別のものに取り替えないでください。型どうしが噛み合いにくいときも、型は変えず、題材の中で場面を選び直して合わせます。');
   L.push('- 「1000回を超えたら成功」という絶対基準は使いません。同じ投稿後日数の自分の他の動画と比べ、視聴や登録も確認します。');
   L.push('');
-  L.push(...wallPromptLines(photo));
+  L.push(...wallPromptLines(photo, p));
   L.push('');
   L.push(`## 今回の型（型番 ${p.code}）`);
   L.push(`- テーマ：${theme}（ハッシュタグに使う言葉：${p.topic.tag}）`);
@@ -3931,6 +4035,7 @@ function buildPrompt(plan = experimentPlan()){
   L.push(`- 締めの型：${p.ending.name}。${p.ending.how}`);
   L.push(`- ${look}：${styleName}（記録する形式名：${plan.format}）`);
   L.push(`- 写るもの：${p.subj.name}。${p.subj.how}`);
+  if (growth) L.push(`- 伸ばし方：${growth.name}（G${growth.id}）。ねらう反応は${growth.aim}。中身は上の「1,000回の先へ」のとおりです。`);
   L.push(`- これまでに型を決めた回は${num(p.tried)}本で、題材は${TOPICS.length}個のうち${p.topicsUsed}個を使いました。今回の題材は、まだ使った回数がいちばん少ないものです。`);
   L.push('- 題材は「一言そのもの」ではなく種です。この状況の中で起きる、いちばん具体的な一瞬（何時ごろ、どこで、何を前にして、からだがどうなっているか）を選んでください。題材の文をそのまま1枚目や題名にしません。');
   L.push('');
@@ -3984,7 +4089,7 @@ function buildPrompt(plan = experimentPlan()){
   }
   L.push(`- ${look}が変わっても、題材は上の「今回の型」で決めた暮らしの場面です。${look}に合わせて、題材を景色や物のきれいさに変えないでください。`);
   L.push(`- 選んだ理由：${plan.reason}`);
-  L.push(`- 尺の設計目安：${plan.seconds}。内容と読める速さから決めて、実際の書き出し秒数を記録してください。`);
+  L.push(`- 尺の設計目安：${seconds}。${short ? '伸ばし方「'+growth.name+'」のため、いつもより短くします。' : ''}内容と読める速さから決めて、実際の書き出し秒数を記録してください。`);
   L.push('');
   L.push('## 構成（今回の展開と締め）');
   L.push('- 1枚目（0.0〜約3秒）：上で決めた一言と、その場面。');
@@ -3992,7 +4097,7 @@ function buildPrompt(plan = experimentPlan()){
   L.push(`- 切り口「${p.angle.name}」を、どこか1枚で言葉にします（${p.angle.how}）。説明しすぎず、説教・励まし・解決策の押しつけはしません。`);
   L.push(`- 最後：締めの型「${p.ending.name}」。${p.ending.how}。`);
   L.push('- どの締めでも、最後に画の中で小さなものがひとつだけ変わります（灯りがつく・湯気が立つ・カーテンが少し開く など。良くなりすぎない変化）。');
-  L.push('- テロップは全部で4〜6枚。1枚に言うことは1つだけにします。');
+  L.push(short ? '- テロップは全部で3〜4枚（伸ばし方「'+growth.name+'」）。1枚に言うことは1つだけにします。' : '- テロップは全部で4〜6枚。1枚に言うことは1つだけにします。');
   L.push('');
   if (photo) L.push(...photoRequestLines(plan, slug));
   L.push('## 重複を避けるための生成履歴（未制作・未投稿の案を含む。成績ではない）');
@@ -4063,7 +4168,7 @@ function buildPrompt(plan = experimentPlan()){
     : '- 0.0秒から画が動いていること（カメラがゆっくり動く、粒や光が揺れている、など）。0.3〜1.0秒に画の中で小さな出来事を1つ起こし、「なんだろう」を作ります（2026-11-15から。それまでは0.8〜1.5秒でした。最初の1秒で流されないための仮説です）。');
   L.push('- 1枚目の一言（上で決めたもの）は0.0秒から表示し、2.5〜3.2秒に最初の切り替え（テロップかカット）を置きます。');
   L.push(`- カメラの動きは「今回の${look}」のとおりにします。動きはゆっくり始まってゆっくり止まる曲線（イージング）にします。主役はスマホで何か分かる大きさ（画面の幅の3分の1以上が目安）にします。`);
-  L.push('- 尺の4〜6割のところに2つ目の出来事を置き（上の「1,000回の先へ」の「まん中」）、最後は1枚目の引っかかりに画で答えます。ループは、締めの型が「1枚目へ戻る」のときだけ使います。最後のフレームにも場面と文字を残し、黒画面・ロゴ・「ご視聴ありがとうございました」で終えません。');
+  L.push('- 尺の4〜6割のところに2つ目の出来事を置き（上の「1,000回の先へ」の「まん中」）、最後は1枚目の引っかかりに画で答えます。ループは、締めの型が「1枚目へ戻る」か、伸ばし方が「短く見切る」のときだけ使います（「短く見切る」では画と音だけをつなげ、言葉は締めの型のまま）。最後のフレームにも場面と文字を残し、黒画面・ロゴ・「ご視聴ありがとうございました」で終えません。');
   L.push('- テロップと画はセットです。テロップは1枚1〜2行・15〜24字、読み終わって少し間があるくらいの表示時間（目安2.5〜3.5秒）にします。');
   L.push(`- 文字は84〜110px。1枚目の一言だけは、一段大きく太くします（100〜124px、いちばん太い字の重さ。2行に収まり、幅900px以内）。色・書体・文字の後ろ（${photo ? '薄い帯など' : '紙片・吹き出し・帯など'}）は「今回の${look}」の文字の見せ方に合わせ、${photo ? 'どの撮り方でも' : 'どの画風でも'}夜のスマホで一瞬で読める濃淡の差をつけます。明朝体は、明朝体の日本語フォントがあるときだけ使います（なければ太めのゴシック）。`);
   L.push(`- 文字のかたまりの中心は x=540（左右の余白を同じに）、行ごとに中央そろえ。中央は字の枠ではなく、実際に描かれた字の画素の左端・右端で合わせます（行末の「、」「。」で約27px左に寄るため）。${photo ? '帯' : '紙片・吹き出し・帯'}も中心を x=540 にそろえ、幅は900px以内にします。`);
@@ -4102,7 +4207,7 @@ function buildPrompt(plan = experimentPlan()){
     : '7. 凝りすぎて書き出せないのが、いちばんの失敗です。重いときは、描く物の数・細部・粒を減らしてください。凝った未完成より、簡素でも最後まで書き出した1本のほうがずっと価値があります。');
   L.push('');
   L.push('## mp4の書き出し方');
-  L.push(`- 縦1080×1920、30fps、mp4（H.264・yuv420p・+faststart）、音声 AAC 48kHz ステレオ。尺は今回の目安（${plan.seconds}）の範囲にし、17秒に固定しません。`);
+  L.push(`- 縦1080×1920、30fps、mp4（H.264・yuv420p・+faststart）、音声 AAC 48kHz ステレオ。尺は今回の目安（${seconds}）の範囲にし、17秒に固定しません。`);
   L.push('- ダウンロードしやすいよう、ファイルは30MB以下を目安にします（大きいときは crf を上げて書き出し直します）。');
   L.push(`- 出力フォルダは識別子${slug}ごとに分け、既存ファイルを上書きしません。`);
   L.push('');
@@ -4123,15 +4228,17 @@ function buildPrompt(plan = experimentPlan()){
   if (photo) L.push('1回目は「ChatGPTに頼む素材」の章のものだけを返します。次の5つは、2回目にmp4ができたときに返してください。');
   L.push('1. 完成した音入りのmp4を1本。ダウンロードリンクまたは保存先を示します。音だけ・音なし・絵コンテ・試しの書き出し・制作コードなどの別ファイルは不要です。');
   L.push(`2. 題名を1つ。1枚目の一言と同じ場面を、当事者の行動の言い切りで書きます（本体13〜18字。2026-09-10の実測で、問いかけの題名3本は中央285回、言い切り31本は中央1,011回でした）。景色の描写・問いかけ・「〜な人へ」にせず、上の「過去の題名」と同じ行動・同じ物にしません。ハッシュタグは4個（#ショート と、テーマの言葉 #${p.topic.tag} を入れる）、全体で100文字以内。`);
-  L.push('3. 概要欄へ一度でコピーできる完成した説明文を1つ。動画の紹介・答えやすい問い・当事者本人が運営していること・星の海の案内を自然につなぎます。固定コメントは別に出しません。');
+  L.push('3. 概要欄へ一度でコピーできる完成した説明文を1つ。動画の紹介・答えやすい問い・当事者本人が運営していること・星の海の案内を自然につなぎます。固定コメントは別に出しません。'
+    + (growth?.id === 2 ? '答えやすい問いは、動画の中の数を、見た人自身の数で答えられる形にします（数ひとつで答えられる問い）。' : ''));
   L.push('   次の計測リンクを本文に1回、そのまま入れてください。URLやUTMのパラメータを変更せず、識別子の解説は貼り付け用の説明文に含めません。');
   L.push(url);
   L.push('4. 記録用の1行（下の形式）。___ のところだけを実際に作った内容で埋め、型番・テーマ・冒頭の掴み・形式・締めは、この行のまま変えないでください（こちらは、この1行をそのまま登録画面に貼ります）。「音」は「BGM＋効果音」「BGMのみ」「効果音のみ」のどれかで書き、「尺」は数字で書きます。');
-  L.push(`識別子: ${slug} ／ 型番: ${p.code} ／ テーマ: ${theme} ／ 冒頭の掴み: ${hook.name} ／ 音: ___ ／ 形式: ${plan.format} ／ 尺: ___（実測秒）／ 締め: ${p.ending.name} ／ 役割: ${role.role} ／ 今回変えたもの: ${plan.axis} ／ 制作手法: ${METHOD_TAGS[photo ? 'photo' : 'other']} ／ メモ: ${plan.label}・題材「${p.topic.seed}」・切り口:${p.angle.name}・展開:${p.narr.name}・写るもの:${p.subj.name}・1枚目「___」・場面___・仮説___${photo ? '・素材:GIF___・写真___' : ''}${plan.example ? '・参考:'+plan.example.v.slug : ''}`);
+  L.push(`識別子: ${slug} ／ 型番: ${p.code} ／ テーマ: ${theme} ／ 冒頭の掴み: ${hook.name} ／ 音: ___ ／ 形式: ${plan.format} ／ 尺: ___（実測秒）／ 締め: ${p.ending.name} ／ 役割: ${role.role} ／ 今回変えたもの: ${plan.axis} ／ 制作手法: ${METHOD_TAGS[photo ? 'photo' : 'other']} ／ メモ: ${plan.label}・題材「${p.topic.seed}」・切り口:${p.angle.name}・展開:${p.narr.name}・写るもの:${p.subj.name}${growth ? '・伸ばし方:'+growth.name : ''}・1枚目「___」・場面___・仮説___${photo ? '・素材:GIF___・写真___' : ''}${plan.example ? '・参考:'+plan.example.v.slug : ''}`);
   L.push(photo
     ? '   「動画」タブの「記録用の1行から入力する」に貼ると、各欄に入ります。「映像の制作手法」は「ChatGPTの実写の画像とGIF」になります。YouTubeのURLと投稿日時を登録しないと、投稿後日数をそろえて比較できません。'
     : '   「動画」タブの「記録用の1行から入力する」に貼ると、各欄に入ります。「映像の制作手法」は「コードだけ（GIF・Seedanceなし）」になります。YouTubeのURLと投稿日時を登録しないと、投稿後日数をそろえて比較できません。');
   L.push(`5. 自己点検を1行（「自己点検 ${checks}/${checks} 通過」の形）。あわせて、実際に書き出した尺と、今回試した仮説をひとことで。`);
+  if (growth?.id === 8) L.push('6. 表紙にするコマの秒数（例「1.2秒」）と、そのコマに何が写っているかをひとことで。');
   return { text:L.join('\n'), slug };
 }
 
@@ -4164,7 +4271,7 @@ async function showPrompt(){
     $('#prompt-zip-name').textContent = materialZipName(slug);
     $('#prompt-msg').textContent = '保存済みの数字と現在の土台から作成しました。生成履歴は投稿成績には数えません。'
       + (promptHistoryStorageFailed ? ' 生成履歴を端末に保存できません。この画面では別案へ進みますが、再読み込み後は履歴を引き継げない場合があります。' : plan.mode === 'explore' ? ' 次の生成では別の型を選びます。' : ' 別の型に進む場合は「別の型で作る」を押してください。')
-      + ` 型番：${plan.pattern.code}／作り方：${plan.opening.mode === 'photo' ? 'ChatGPTの実写の画像とGIF' : 'コードだけ'}（${plan.opening.reason}）`;
+      + ` 型番：${plan.pattern.code}${plan.pattern.growth ? '／伸ばし方：'+plan.pattern.growth.name : ''}／作り方：${plan.opening.mode === 'photo' ? 'ChatGPTの実写の画像とGIF' : 'コードだけ'}（${plan.opening.reason}）`;
   } finally { $('#prompt-build').disabled = false; $('#prompt-build2').disabled = false; }
 }
 $('#prompt-build').addEventListener('click', showPrompt);
