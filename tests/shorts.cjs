@@ -304,7 +304,7 @@ test('new prompt picks a new pattern and visual style each time, keeps deliverab
     await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
     const first=await a.page.locator('#prompt-out').inputValue();
     const one=await a.page.evaluate(()=>readPromptHistory().recent.at(-1));
-    assert.match(one.code,/^T\d{3}-A\d-N\d-S1$/); // code-drawn videos never show people
+    assert.match(one.code,/^T\d{3}-A\d-N\d-S1-G[1-8]$/); // code-drawn videos never show people; every new code carries its growth lever
     assert.ok(first.includes(`## 今回の型（型番 ${one.code}）`));
     assert.match(first,/## 今回の画風：墨と和紙（毎回ちがう型で作る）/);
     assert.match(first,/形式: 画風1｜墨と和紙/);
@@ -848,7 +848,7 @@ test('by default the next video is built from photoreal ChatGPT material: two st
     const one=await a.page.evaluate(()=>readPromptHistory().recent.at(-1));
     // The shooting style replaces the drawn style; the pattern, the first line and tracking stay.
     assert.match(p,/形式: 写真1｜窓辺の自然光/);assert.match(p,/## 今回の撮り方：窓辺の自然光（毎回ちがう型で作る）/);
-    assert.match(one.code,/^T\d{3}-A\d-N\d-S[1-4]$/);assert.ok(p.includes(`## 今回の型（型番 ${one.code}）`));
+    assert.match(one.code,/^T\d{3}-A\d-N\d-S[1-4]-G[1-8]$/);assert.ok(p.includes(`## 今回の型（型番 ${one.code}）`));
     assert.match(p,/## いちばん大事なこと：最初の一言（0〜3秒）/);
     assert.ok(p.includes('https://hoshinoumi.org/?utm_source=youtube&utm_medium=short&utm_content=v004'));
     // Two steps: decide the first line, write the ChatGPT request and stop; then build the mp4 from the material.
@@ -1177,7 +1177,8 @@ test('past 1,000 views: the prompt puts its weight where the Studio numbers of t
       await a.page.locator('#prompt-build').click();
       await a.page.waitForFunction(()=>!document.querySelector('#prompt-build').disabled);
       const p=await a.page.locator('#prompt-out').inputValue();
-      assert.ok(p.indexOf('## 1,000回の先へ（今回の重点）')>p.indexOf('## これまでの結果から決めたこと')&&p.indexOf('## 1,000回の先へ（今回の重点）')<p.indexOf('## 今回の型'),'the focus comes right after the findings');
+      const head='## 1,000回の先へ（今回の伸ばし方と重点）';
+      assert.ok(p.indexOf(head)>p.indexOf('## これまでの結果から決めたこと')&&p.indexOf(head)<p.indexOf('## 今回の型'),'the focus comes right after the findings');
       assert.ok(p.includes(`- 今回の重点：${c.label}。`));
       // Exactly one of the three levers carries the mark; the other two are still in the prompt.
       assert.equal(p.split('【今回の重点】').length-1,1);
@@ -1186,12 +1187,12 @@ test('past 1,000 views: the prompt puts its weight where the Studio numbers of t
       if(c.measured){
         assert.ok(p.includes(`視聴を継続 ${c.stayed}%（3本・目安70%）／平均再生率 ${Math.round(c.watch/16*100)}%（3本・目安90%）`));
       }else{
-        assert.match(p,/実写の回ではまだ0本しか記録がありません（3本から判断します）/);
+        assert.match(p,/実写の回ではまだ0本しか記録がありません（3本から判断します）。どこが弱いかはまだ分からないので、3つを回ごとに順に重点にします/);
         assert.match(await a.page.locator('#wall-focus').textContent(),/Studio の「視聴を継続」と平均視聴時間を書き写すと/);
       }
       // Stated as a reading, not as YouTube's rule; no begging for likes; the tone and the pattern stay.
       assert.match(p,/YouTubeは基準を公表していないので、下の目安は一般に言われる水準です/);
-      assert.match(p,/高評価・コメント・登録を、画面の文字で頼みません/);assert.match(p,/静かで急かさない語り口は変えません/);
+      assert.match(p,/高評価・コメント・登録・共有を、画面の文字で頼みません/);assert.match(p,/静かで急かさない語り口は変えません/);
       // The first second: motion peaks earlier, the first line is one step larger, the material starts mid-motion.
       assert.match(p,/0\.3〜1\.0秒に、GIFの中のいちばん目立つ動きが来るようにして/);assert.doesNotMatch(p,/動きが0\.8〜1\.5秒に来るよう/);
       assert.match(p,/1枚目の一言だけは、一段大きく太くします（100〜124px/);
@@ -1201,4 +1202,55 @@ test('past 1,000 views: the prompt puts its weight where the Studio numbers of t
       assert.deepEqual(a.errors,[]);
     }finally{await a.context.close();}
   }
+});
+
+test('past 1,000 views: every prompt pushes one different growth lever, recorded as -G in the pattern code, rotated evenly and compared by item', async()=>{
+  const db=baselineFixture(),a=await open(db,{'sv-opening-v2':'photo'});
+  try{
+    const c=await a.page.evaluate(()=>({levers:GROWTH_LEVERS,count:PATTERN_COUNT,base:TOPICS.length*ANGLES.length*HOOK_TYPES.length*NARRATIVES.length*ENDINGS.length}));
+    assert.equal(c.levers.length,8);assert.deepEqual(c.levers.map(g=>g.id),[1,2,3,4,5,6,7,8]);assert.equal(c.count,c.base*8);
+    assert.equal(new Set(c.levers.map(g=>g.name)).size,8);
+    for(const g of c.levers){
+      assert.ok(g.name&&g.aim&&g.how.length>=2,g.name);
+      // Every lever stays inside the channel's rules: no begging on screen, no hype words, nothing that is never drawn.
+      assert.doesNotMatch(g.how.join(''),/高評価してください|登録してください|チャンネル登録を|拡散|バズ|絶対|今すぐ/,g.name);
+    }
+    // Old codes still read, new codes round-trip, unknown levers are refused.
+    assert.deepEqual(await a.page.evaluate(()=>[decodePattern('T011-A3-N2-S1')?.growth,decodePattern('【型:T011-A3-N2-S1-G4】メモ')?.code,decodePattern('T011-A3-N2-S1-G4')?.growth.name,decodePattern('T011-A3-N2-S1-G9'),withPattern('メモ','T011-A3-N2-S1-G2')]),
+      [null,'T011-A3-N2-S1-G4','二度見の細部',null,'【型:T011-A3-N2-S1-G2】 メモ']);
+    // 48 plans: each lever 6 times, never the same lever twice in a row, not tied to any other item.
+    const rows=await a.page.evaluate(()=>{const out=[];for(let n=0;n<48;n++){const plan=experimentPlan('explore','photo');rememberPrompt(plan);
+      out.push({g:plan.pattern.growth.id,angle:plan.pattern.angle.id,narr:plan.pattern.narr.id,code:plan.pattern.code});}return out;});
+    const t=new Map();rows.forEach(r=>t.set(r.g,(t.get(r.g)||0)+1));
+    assert.deepEqual([...t.values()],Array(8).fill(6));
+    for(let n=1;n<rows.length;n++) assert.notEqual(rows[n].g,rows[n-1].g,'lever repeats at '+n);
+    assert.ok(new Set(rows.map(r=>r.g+'|'+r.angle)).size>=24,'growth×angle');assert.ok(new Set(rows.map(r=>r.g+'|'+r.narr)).size>=24,'growth×narr');
+    assert.ok(rows.every(r=>/-G[1-8]$/.test(r.code)));
+    // Each lever reaches the prompt with its own instructions, and the levers that need material ask ChatGPT for it.
+    const prompts=await a.page.evaluate(()=>GROWTH_LEVERS.map(g=>{const plan=experimentPlan('explore','photo');plan.pattern={...plan.pattern,growth:g,code:plan.pattern.code.replace(/-G\d+$/,'-G'+g.id)};
+      return {id:g.id,name:g.name,ask:g.ask||null,text:buildPrompt(plan).text};}));
+    for(const x of prompts){
+      assert.ok(x.text.includes(`### 今回の伸ばし方：${x.name}（G${x.id}）`),x.name);
+      assert.ok(x.text.includes(`- 伸ばし方：${x.name}（G${x.id}）。`),x.name);
+      assert.ok(x.text.includes(`・伸ばし方:${x.name}・1枚目「___」`),x.name);
+      assert.equal(x.ask?x.text.includes('- '+x.ask):true,true,x.name);
+      assert.ok(x.text.indexOf('### 今回の伸ばし方')<x.text.indexOf('### 毎回守る下限（3つ）'),x.name);
+      assert.equal(/尺の設計目安：9〜13秒/.test(x.text),x.id===3,'only the short lever shortens: '+x.name);
+      assert.equal(/テロップは全部で3〜4枚/.test(x.text),x.id===3,x.name);
+      assert.equal(/表紙にするコマの秒数/.test(x.text),x.id===8,x.name);
+      assert.equal(/動画の中の数を、見た人自身の数で答えられる形/.test(x.text),x.id===2,x.name);
+      assert.equal(/今の時期（\d{1,2}月・日本）：/.test(x.text),x.id===6,x.name);
+      assert.match(x.text,/高評価・コメント・登録・共有を、画面の文字で頼みません/);
+    }
+    assert.match(prompts[2].text,/尺は今回の目安（9〜13秒）の範囲/);assert.match(prompts[2].text,/伸ばし方が「短く見切る」のときだけ使います/);
+    // Until three Studio rows exist, the focus of the three basics rotates with each plan instead of staying on the first second.
+    const keys=await a.page.evaluate(()=>[0,1,2,3,4].map(n=>wallFocus(n).key));
+    assert.deepEqual(keys,['first','middle','again','first','middle']);
+    // The plan card shows the lever; a saved video is compared by lever.
+    await a.tab('advice');
+    assert.match(await a.page.locator('#growth-lever').textContent(),/伸ばし方（1,000回の先へ）：.+（ねらう反応：/);
+    assert.equal(await a.page.evaluate(()=>AXES.find(x=>x.key==='growth').of({v:{note:'【型:T011-A3-N2-S1-G5】'}})),'答えは最後の2秒');
+    assert.equal(await a.page.evaluate(()=>AXES.find(x=>x.key==='growth').of({v:{note:'【型:T011-A3-N2-S1】'}})),undefined);
+    assert.deepEqual(a.writes,[]);assert.deepEqual(a.errors,[]);
+  }finally{await a.context.close();}
 });
